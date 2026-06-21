@@ -1,0 +1,31 @@
+{
+  "name": "zk-fighter",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "packageManager": "pnpm@10.33.0",
+  "scripts": {
+    "preinstall": "node scripts/enforce-pnpm.mjs",
+    "dev": "pnpm --filter @zk-fighter/web dev",
+    "build": "pnpm -r run build",
+    "lint": "pnpm -r run lint && pnpm docs:check && pnpm files:check && pnpm secrets:check",
+    "typecheck": "pnpm -r run typecheck",
+    "test": "pnpm -r run test",
+    "preview": "pnpm --filter @zk-fighter/web preview",
+    "prover:stage": "node scripts/stage-nethermind-prover-assets.mjs",
+    "testnet-usdc-funder:setup": "node scripts/setup-testnet-usdc-funder.mjs",
+    "extension:runtime": "node scripts/check-extension-runtime.mjs",
+    "extension:dapp": "node scripts/check-extension-dapp-bridge.mjs",
+    "extension:quickshield": "node scripts/check-extension-quickshield.mjs",
+    "extension:quickshield:usdc": "ZKF_QUICKSHIELD_ASSET=USDC node scripts/check-extension-quickshield.mjs",
+    "extension:bridge": "node scripts/check-extension-bridge-handoff.mjs",
+    "extension:runtime:deep": "node scripts/check-extension-deep-proof.mjs",
+    "docs:check": "node scripts/check-docs.mjs",
+    "files:check": "node scripts/check-file-size.mjs",
+    "secrets:check": "node scripts/secret-scan.mjs"
+  },
+  "devDependencies": {
+    "typescript": "~6.0.2",
+    "vitest": "^4.0.16"
+  }
+}

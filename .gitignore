@@ -1,0 +1,18 @@
+# Reference clones — kept on disk for grep/handover, not part of this repo's history
+/reference/
+
+# Node / build
+node_modules/
+dist/
+.cache/
+.output/
+.wxt/
+*.log
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store
