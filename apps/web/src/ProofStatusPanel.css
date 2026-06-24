@@ -1,0 +1,66 @@
+.proof-panel {
+  grid-column: 1 / -1;
+}
+
+.proof-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.proof-actions span {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.proof-results {
+  display: grid;
+  gap: 16px;
+}
+
+.blocker-list,
+.artifact-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.blocker-list li {
+  padding: 10px 12px;
+  border: 1px solid var(--warning-border);
+  border-radius: 6px;
+  background: var(--warning-bg);
+  color: var(--text-strong);
+}
+
+.artifact-list li {
+  display: grid;
+  grid-template-columns: minmax(170px, 0.5fr) minmax(160px, 0.5fr) minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+}
+
+.artifact-list strong {
+  color: var(--text-strong);
+}
+
+.artifact-list span {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.artifact-list code {
+  margin: 0;
+}
+
+@media (max-width: 760px) {
+  .artifact-list li {
+    grid-template-columns: 1fr;
+  }
+}

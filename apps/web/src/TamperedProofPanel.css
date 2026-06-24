@@ -1,0 +1,16 @@
+.tamper-panel {
+  grid-column: 1 / -1;
+}
+
+.tamper-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.tamper-actions span {
+  color: var(--muted);
+  font-size: 14px;
+}

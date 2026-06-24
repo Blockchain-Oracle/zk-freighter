@@ -1,0 +1,44 @@
+.shield-panel {
+  grid-column: 1 / -1;
+}
+
+.boundary-note,
+.shield-actions,
+.explorer-link {
+  display: flex;
+  align-items: center;
+}
+
+.boundary-note {
+  gap: 10px;
+  margin-bottom: 18px;
+  padding: 12px;
+  border: 1px solid var(--warning-border);
+  border-radius: 6px;
+  background: var(--warning-bg);
+  color: var(--text-strong);
+}
+
+.boundary-note svg {
+  flex: 0 0 auto;
+  color: #8a5d00;
+}
+
+.shield-actions {
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.shield-actions span {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.explorer-link {
+  width: fit-content;
+  gap: 8px;
+  color: var(--accent);
+  font-weight: 700;
+  text-decoration: none;
+}

@@ -1,0 +1,90 @@
+.disclosure-panel {
+  grid-column: 1 / -1;
+}
+
+.disclosure-panel .boundary-note {
+  margin-bottom: 18px;
+}
+
+.disclosure-grid {
+  display: grid;
+  gap: 22px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.disclosure-section {
+  align-content: start;
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.disclosure-section h2 {
+  font-size: 18px;
+}
+
+.review-copy {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.nonce-row {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.disclosure-status {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.artifact-output {
+  display: grid;
+  gap: 10px;
+}
+
+.artifact-output textarea,
+.disclosure-section textarea {
+  min-height: 120px;
+}
+
+.verification-result {
+  border-top: 1px solid var(--border);
+  display: grid;
+  gap: 8px;
+  padding-top: 14px;
+}
+
+.verification-result strong {
+  color: var(--text-strong);
+}
+
+.verification-result span {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.viewing-key-note {
+  align-items: center;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  display: flex;
+  gap: 10px;
+  margin-top: 22px;
+  padding-top: 16px;
+}
+
+.viewing-key-note svg {
+  color: var(--accent);
+  flex: 0 0 auto;
+}
+
+@media (max-width: 860px) {
+  .disclosure-grid,
+  .nonce-row {
+    grid-template-columns: 1fr;
+  }
+}
