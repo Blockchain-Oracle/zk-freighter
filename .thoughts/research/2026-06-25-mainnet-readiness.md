@@ -103,13 +103,21 @@ Check whether ZK Fighter can safely move from testnet evidence to mainnet testin
 - Stellar docs state one base reserve is currently `0.5 XLM`, an account minimum is two base reserves (`1 XLM`), and each trustline adds another base reserve (`0.5 XLM`).
 - To receive mainnet Stellar USDC in a normal G-address, the account needs to exist and have a USDC trustline first.
 
+### Mainnet public plumbing follow-up
+
+- Abu funded `GB3VMAPRJDHLRG2VKNCUUNOPBKJAAZCELU5TIF4QVPCTMYO5TGECGLVM` with `10.0000000 XLM`.
+- Mainnet USDC trustline transaction succeeded:
+  - `ca4fe0556c8a71c32c4634c3e8ad282a230e71377c6d7771e50daced7aeb4ef7`
+- A tiny mainnet Stellar DEX path payment converted `1.0000000 XLM` into `0.1817950 USDC`:
+  - `439b8b609c03ab890da55912529b767eeb6974128d9c9afbdf860416f9ecefae`
+- Final observed QA balances:
+  - XLM: `8.9999800`
+  - USDC: `0.1817950`
+- This proves public mainnet USDC plumbing only. It still does not prove mainnet CCTP, mainnet shielded pools, or mainnet bridge-to-shield.
+
 ## Inferences
 
-- We can verify public mainnet plumbing first without claiming shielded mainnet support:
-  1. Fund the QA address with real XLM.
-  2. Submit a mainnet USDC trustline transaction from the QA address.
-  3. Send or bridge a small amount of real USDC to the QA address.
-  4. Verify public USDC arrival by Horizon/RPC and record tx hashes.
+- Public mainnet XLM funding, USDC trustline creation, and a tiny Stellar DEX XLM-to-USDC path payment are now verified without claiming shielded mainnet support.
 - A real mainnet CCTP public bridge from Ethereum mainnet to Stellar mainnet should be feasible after code config is extended with Ethereum mainnet source values and the mainnet-only guards are relaxed for public mint-and-forward.
 - A real mainnet bridge-to-shield demo is not currently feasible because no mainnet privacy pool is deployed/configured.
 - A real mainnet shield/send/unshield demo requires a separate mainnet pool-deployment phase, real XLM for contract deployment/rent/fees, and a new evidence pass. It should remain opt-in because it uses real funds and unaudited privacy-pool code.
@@ -125,9 +133,7 @@ Check whether ZK Fighter can safely move from testnet evidence to mainnet testin
 ## Not Included
 
 - No mainnet spend.
-- No mainnet account creation.
-- No mainnet USDC trustline creation.
-- No mainnet USDC transfer.
+- No mainnet CCTP bridge transaction.
 - No mainnet CCTP burn/mint.
 - No mainnet privacy-pool deployment.
 - No mainnet shielded transfer claim.

@@ -1591,3 +1591,57 @@ Result:
 - An earlier funded run sent `1.0000000` USDC to temporary account `GCBEF26GYDS3QEDSCSQP5UAOWASWTQGQTF5CIH3IPM3DZL7A4TI6K4AX` with tx `09e9638c2e1ccb4835863a45c83963fee66e5b9bf8bb42ee7969eaf9077dc74e`, then failed with `Unlock ZK Fighter before shielding`.
 - Root cause: Chrome dropped the background runtime's in-memory unlocked mnemonic after the long funding wait.
 - Fix: `scripts/check-extension-quickshield.mjs` now explicitly unlocks the stored extension vault after funding waits and again before shield submission.
+
+## 2026-06-25 11:08 UTC - Mainnet public USDC plumbing proof
+
+- **Phase:** Mainnet readiness.
+- **Kind:** Real mainnet public-account funding, USDC trustline creation, and tiny XLM-to-USDC path-payment proof.
+- **Network:** Stellar mainnet.
+- **QA public account:** `GB3VMAPRJDHLRG2VKNCUUNOPBKJAAZCELU5TIF4QVPCTMYO5TGECGLVM`.
+- **Secret posture:** the local Stellar CLI identity alias is `zkf-mainnet-qa`; the seed/secret was not printed and remains outside the repo at `/Users/abu/.config/stellar/identity/zkf-mainnet-qa.toml`.
+- **Mainnet USDC issuer:** `GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN`.
+- **Mainnet USDC SAC:** `CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI75`.
+
+### Funding verification
+
+- Abu funded the QA account with `10.0000000 XLM`.
+- Horizon account lookup confirmed the account exists on mainnet with native balance `10.0000000 XLM` before the trustline transaction.
+
+### USDC trustline
+
+- **Transaction hash:** `ca4fe0556c8a71c32c4634c3e8ad282a230e71377c6d7771e50daced7aeb4ef7`.
+- **Explorer:** `https://stellar.expert/explorer/public/tx/ca4fe0556c8a71c32c4634c3e8ad282a230e71377c6d7771e50daced7aeb4ef7`.
+- **Ledger:** `63190637`.
+- **Result:** successful.
+- **Post-trustline balances:**
+  - XLM: `9.9999900`.
+  - USDC: `0.0000000`, authorized.
+
+### Tiny XLM-to-USDC swap
+
+- **Operation:** `path_payment_strict_send`.
+- **Source account:** `GB3VMAPRJDHLRG2VKNCUUNOPBKJAAZCELU5TIF4QVPCTMYO5TGECGLVM`.
+- **Destination account:** `GB3VMAPRJDHLRG2VKNCUUNOPBKJAAZCELU5TIF4QVPCTMYO5TGECGLVM`.
+- **Sent:** `1.0000000 XLM`.
+- **Received:** `0.1817950 USDC`.
+- **Path used:** `SIG:G...ODSIG` intermediate path from Horizon strict-send quote.
+- **Transaction hash:** `439b8b609c03ab890da55912529b767eeb6974128d9c9afbdf860416f9ecefae`.
+- **Explorer:** `https://stellar.expert/explorer/public/tx/439b8b609c03ab890da55912529b767eeb6974128d9c9afbdf860416f9ecefae`.
+- **Ledger:** `63190644`.
+- **Result:** successful.
+- **Final balances after swap:**
+  - XLM: `8.9999800`.
+  - USDC: `0.1817950`.
+
+### What this proves
+
+- ZK Fighter's recorded mainnet USDC issuer/SAC facts are usable against a real funded mainnet account.
+- A mainnet account can be funded, configured with a USDC trustline, and receive real USDC via a public Stellar DEX path payment.
+- This is public mainnet plumbing only. It does not prove mainnet shielded-pool support, because no mainnet XLM/USDC privacy pool is deployed/configured yet.
+
+### Still not claimed
+
+- No mainnet CCTP bridge transaction.
+- No mainnet privacy-pool deployment.
+- No mainnet shield/deposit, shielded transfer, or unshield/withdraw.
+- No mainnet bridge-to-shield flow.
