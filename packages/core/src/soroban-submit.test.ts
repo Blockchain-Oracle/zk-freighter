@@ -75,6 +75,37 @@ describe('Soroban submit helpers', () => {
     expect(statuses.map((event) => event.stage)).toEqual(['sign_tx', 'submit', 'confirm'])
   })
 
+  it('retries RPC submit responses that ask the client to try again later', async () => {
+    const identity = deriveWalletIdentity(mnemonic, 'testnet')
+    const statuses: SorobanSubmitStatus[] = []
+    let submitAttempts = 0
+    const result = await submitPreparedSorobanTx(
+      {
+        txXdr: unsignedTransactionXdr(identity),
+        authEntries: [],
+        latestLedger: 123,
+      },
+      {
+        identity,
+        network: 'testnet',
+        onStatus: (event) => statuses.push(event),
+        sleep: async () => undefined,
+        serverFactory: () => ({
+          sendTransaction: async () => {
+            submitAttempts += 1
+            return { hash, status: submitAttempts === 1 ? 'TRY_AGAIN_LATER' : 'PENDING' }
+          },
+          getLatestLedger: async () => ({ sequence: 123 }),
+          getTransaction: async () => ({ status: 'SUCCESS' }),
+        }),
+      },
+    )
+
+    expect(result.hash).toBe(hash)
+    expect(submitAttempts).toBe(2)
+    expect(statuses.filter((event) => event.stage === 'submit')).toHaveLength(2)
+  })
+
   it('fails closed for malformed prepared transactions', async () => {
     const identity = deriveWalletIdentity(mnemonic, 'testnet')
 

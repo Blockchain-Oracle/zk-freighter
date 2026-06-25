@@ -10,6 +10,8 @@ import { getNetworkConfig, type NetworkKey } from './networks'
 import type { NethermindPreparedProverTx, PreparedSorobanTx } from './nethermind-runtime'
 
 const authValidityLedgerBuffer = 100
+const defaultSubmissionAttempts = 3
+const defaultSubmissionRetryDelayMs = 1_000
 const defaultConfirmationPolls = 30
 const defaultPollIntervalMs = 1_000
 
@@ -28,7 +30,7 @@ export interface SorobanSubmitResult {
 }
 
 interface SorobanRpcServer {
-  sendTransaction(transaction: Transaction): Promise<{ hash?: string; errorResultXdr?: unknown }>
+  sendTransaction(transaction: Transaction): Promise<{ status?: string; hash?: string; errorResultXdr?: unknown }>
   getTransaction(hash: string): Promise<{ status?: string; resultXdr?: unknown }>
   getLatestLedger(): Promise<{ sequence: number }>
 }
@@ -39,6 +41,8 @@ export interface SubmitPreparedSorobanTxOptions {
   readonly onStatus?: (status: SorobanSubmitStatus) => void
   readonly serverFactory?: (rpcUrl: string) => SorobanRpcServer
   readonly sleep?: (ms: number) => Promise<void>
+  readonly submissionAttempts?: number
+  readonly submissionRetryDelayMs?: number
   readonly confirmationPolls?: number
   readonly pollIntervalMs?: number
 }
@@ -229,17 +233,37 @@ export async function submitPreparedSorobanTx(
   emit({ stage: 'sign_tx', message: 'Signing transaction envelope' })
   const signedTxXdr = signTransactionXdrWithWallet(txXdr, options.identity, network.passphrase)
 
-  emit({ stage: 'submit', message: 'Submitting transaction' })
-  const send = await server.sendTransaction(new Transaction(signedTxXdr, network.passphrase))
-
-  if (!send.hash) {
-    const suffix = optionalDetail(send.errorResultXdr)
-    throw new Error(`Transaction submission failed${suffix}`)
-  }
-
   const sleep = options.sleep ?? defaultSleep
+  const submissionAttempts = options.submissionAttempts ?? defaultSubmissionAttempts
+  const submissionRetryDelayMs = options.submissionRetryDelayMs ?? defaultSubmissionRetryDelayMs
   const polls = options.confirmationPolls ?? defaultConfirmationPolls
   const pollIntervalMs = options.pollIntervalMs ?? defaultPollIntervalMs
+  const tx = new Transaction(signedTxXdr, network.passphrase)
+  let send: { status?: string; hash?: string; errorResultXdr?: unknown } | undefined
+
+  for (let attempt = 1; attempt <= submissionAttempts; attempt += 1) {
+    emit({ stage: 'submit', message: 'Submitting transaction', current: attempt, total: submissionAttempts })
+    send = await server.sendTransaction(tx)
+
+    if (!send.hash || send.status === 'ERROR') {
+      const suffix = optionalDetail(send.errorResultXdr ?? send.status)
+      throw new Error(`Transaction submission failed${suffix}`)
+    }
+
+    if (!send.status || ['PENDING', 'DUPLICATE', 'SUCCESS'].includes(send.status)) {
+      break
+    }
+
+    if (send.status !== 'TRY_AGAIN_LATER' || attempt === submissionAttempts) {
+      throw new Error(`Transaction submission was not accepted (${send.status})`)
+    }
+
+    await sleep(submissionRetryDelayMs)
+  }
+
+  if (!send?.hash) {
+    throw new Error('Transaction submission failed')
+  }
 
   for (let index = 0; index < polls; index += 1) {
     emit({ stage: 'confirm', message: 'Confirming transaction', current: index + 1, total: polls })

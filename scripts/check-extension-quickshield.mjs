@@ -19,6 +19,13 @@ import {
   waitForExit,
 } from './extension-cdp-harness.mjs'
 import { waitForTestnetUsdcBalance } from './extension-quickshield-funding.mjs'
+import {
+  fundUsdcWithMainnetQa,
+  fundWithMainnetQa,
+  recoveryPhraseForMainnetRun,
+  rememberMainnetPublicKey,
+  waitForMainnetUsdcBalance,
+} from './mainnet-quickshield-funding.mjs'
 import { fundTargetFromLocalUsdcFunder } from './testnet-usdc-funder.mjs'
 
 const cftPath = path.resolve(
@@ -32,8 +39,19 @@ const usdcFundingWaitMs = Number(process.env.ZKF_QUICKSHIELD_USDC_WAIT_MS ?? 24 
 const maxAccessAttempts = 3
 const maxShieldAttempts = 3
 const password = 'zkf-extension-quickshield-test'
+const network = process.env.ZKF_QUICKSHIELD_NETWORK === 'mainnet' ? 'mainnet' : 'testnet'
 const asset = process.env.ZKF_QUICKSHIELD_ASSET === 'USDC' ? 'USDC' : 'XLM'
-const amountStroops = asset === 'USDC' ? '10000000' : '1000000'
+const defaultAmountStroops = asset === 'USDC' && network === 'mainnet' ? '100000' : asset === 'USDC' ? '10000000' : '1000000'
+const amountStroops = process.env.ZKF_QUICKSHIELD_AMOUNT_STROOPS ?? defaultAmountStroops
+const mainnetFundStroops = process.env.ZKF_MAINNET_FUND_STROOPS ?? '50000000'
+const mainnetFunder = process.env.ZKF_MAINNET_FUNDER ?? 'zkf-mainnet-qa'
+const mainnetSmokeWalletPath =
+  process.env.ZKF_MAINNET_SMOKE_WALLET_PATH ?? path.join(os.homedir(), '.config', 'zk-fighter', 'mainnet-quickshield-smoke.json')
+const mainnetFundingOptions = {
+  amountStroops: mainnetFundStroops,
+  funder: mainnetFunder,
+  walletPath: mainnetSmokeWalletPath,
+}
 
 async function main() {
   const profileDir = await mkdtemp(path.join(os.tmpdir(), 'zkf-extension-quickshield-'))
@@ -45,30 +63,29 @@ async function main() {
     const cdp = await connect(profileDir)
     const extensionId = await findExtensionId(cdp, profileDir, stderr)
     const pageUrl = `chrome-extension://${extensionId}/sidepanel.html`
-    const recoveryPhrase = generateMnemonic(wordlist, 128)
+    const recoveryPhrase = network === 'mainnet'
+      ? await recoveryPhraseForMainnetRun(mainnetFundingOptions)
+      : generateMnemonic(wordlist, 128)
     const imported = await runtimeMessage(cdp, pageUrl, {
       type: 'zkf.extension.dapp.importVault',
       mnemonic: recoveryPhrase,
       password,
-      network: 'testnet',
+      network,
     })
     if (!imported?.publicKey) {
       throw new Error(`Extension vault import failed: ${JSON.stringify(imported)}`)
     }
+    if (network === 'mainnet') {
+      await rememberMainnetPublicKey(imported.publicKey, mainnetFundingOptions)
+    }
 
-    const friendbot = await fundWithFriendbot(imported.publicKey)
+    const funding = network === 'testnet'
+      ? await fundWithFriendbot(imported.publicKey)
+      : await fundWithMainnetQa(imported.publicKey, mainnetFundingOptions)
     const usdcReceive = asset === 'USDC' ? await prepareUsdcReceive(cdp, pageUrl) : undefined
-    const usdcFunding = asset === 'USDC'
-      ? await fundTargetFromLocalUsdcFunder(imported.publicKey, BigInt(amountStroops), {
-          waitMs: usdcFundingWaitMs,
-          log: console.error,
-        })
-      : undefined
+    const usdcFunding = asset === 'USDC' ? await fundUsdc(imported.publicKey, BigInt(amountStroops)) : undefined
     if (asset === 'USDC') {
-      await waitForTestnetUsdcBalance(imported.publicKey, BigInt(amountStroops), {
-        waitMs: usdcFundingWaitMs,
-        log: console.error,
-      })
+      await waitForUsdcBalance(imported.publicKey, BigInt(amountStroops))
     }
     await ensureVaultUnlocked(cdp, pageUrl, imported.publicKey)
     const access = await runAccessSetupWithRetries(cdp, pageUrl)
@@ -86,9 +103,10 @@ async function main() {
     console.log(JSON.stringify({
       ok: true,
       extensionId,
+      network,
       asset,
       userAddress: imported.publicKey,
-      friendbot,
+      funding,
       usdcReceive: usdcReceive?.report ? summarizeUsdcReceive(usdcReceive.report) : undefined,
       usdcFunding,
       access: summarizeAsp(access.report),
@@ -108,6 +126,27 @@ async function prepareUsdcReceive(cdp, pageUrl) {
     throw new Error(`USDC receive preparation failed: ${JSON.stringify(redactReport(response))}`)
   }
   return response
+}
+
+async function fundUsdc(destination, amount) {
+  if (network === 'mainnet') {
+    return fundUsdcWithMainnetQa(destination, amount, mainnetFundingOptions)
+  }
+
+  return fundTargetFromLocalUsdcFunder(destination, amount, {
+    waitMs: usdcFundingWaitMs,
+    log: console.error,
+  })
+}
+
+async function waitForUsdcBalance(address, amount) {
+  const options = {
+    waitMs: usdcFundingWaitMs,
+    log: console.error,
+  }
+  return network === 'mainnet'
+    ? waitForMainnetUsdcBalance(address, amount, options)
+    : waitForTestnetUsdcBalance(address, amount, options)
 }
 
 async function ensureVaultUnlocked(cdp, pageUrl, publicKey) {
