@@ -76,14 +76,12 @@ Check whether ZK Fighter can safely move from testnet evidence to mainnet testin
 
 ### Current ZK Fighter code state
 
-- `packages/core/src/networks.ts` has mainnet network config and mainnet XLM/USDC SAC IDs.
-- `packages/core/src/networks.ts` does not have mainnet XLM or USDC privacy-pool IDs.
-- Both mainnet XLM and USDC are `shieldedPool: 'pending-deployment'`.
-- `packages/core/src/cctp-bridge.ts` blocks bridge-to-shield on any network other than testnet and also blocks if USDC shielding has no pool ID.
-- `packages/core/src/cctp-stellar.ts` blocks `submitCctpMintAndForward()` unless `options.network === 'testnet'`.
-- `packages/core/src/cctp-stellar.ts` only creates a USDC trustline automatically on testnet; on mainnet it currently returns `ready` without attempting to create a trustline.
-- `packages/core/src/xlm-shield.ts` blocks shield submit unless `options.network === 'testnet'`.
-- Therefore the current product honestly supports testnet shielded-pool evidence, not mainnet shielded-pool claims.
+- `packages/core/src/networks.ts` has mainnet network config, mainnet XLM/USDC SAC IDs, and deployed mainnet XLM/USDC privacy-pool IDs.
+- Mainnet XLM pool: `CCE3VBWTMGS7TZBOMBXVMPZFD4RUWAJDQHV7L2FT5BHMZKHLQUJKHECE`.
+- Mainnet USDC pool: `CDV45TTXDDUKBMK2IWPJRUYQSRVEWHTRPKCN2VZ7GEV2HVMRPBOD2KR7`.
+- Both mainnet XLM and USDC are configured as `shieldedPool: 'enabled'`.
+- `packages/core/src/cctp-bridge.ts`, `packages/core/src/cctp-stellar.ts`, `packages/core/src/xlm-shield.ts`, `packages/core/src/xlm-private.ts`, and `packages/core/src/disclosure.ts` now gate by configured/enabled pools instead of hard-coded testnet-only checks.
+- Mainnet XLM and USDC QuickShield have accepted extension-runtime evidence. Mainnet shielded transfer, mainnet unshield/withdraw, and mainnet bridge-to-shield still need their own evidence before being claimed.
 
 ### Dedicated mainnet QA address
 
@@ -133,18 +131,56 @@ Check whether ZK Fighter can safely move from testnet evidence to mainnet testin
   - `pool.wasm`: `35.6011708 XLM`
   - Total uploads only: `114.2465996 XLM`
 - Practical funding target before retry: at least `130 XLM`; `150 XLM` is safer because it leaves room for contract-instance deployments, ASP setup, small shield deposits, failed attempts, and rent variance.
+- Abu then topped up the QA account and approved mainnet pool deployment/testing.
+- All four reference WASM uploads succeeded on mainnet:
+  - `asp_membership.wasm`: `d73269bbd5d238ab57fb6757dd93ae91f387c9064cd6ee0a2e80dbcb862f431b`
+  - `asp_non_membership.wasm`: `b98df1c7755c87be4ed7cb7fe189f45318940d4b53693665cfd35e0e7b8a102f`
+  - `circom_groth16_verifier.wasm`: `ba498003cd0939218819b3d025318c9cdd0e562e2b10fbb292a8280fc13822b3`
+  - `pool.wasm`: `c5ef4c4f67749a28137216451cc5e8f2a9a5801d4f4860f6ff1179316f5d0cf0`
+- Mainnet deployments succeeded:
+  - ASP membership: `CCYY3LLTVD2UW3Z4QD76PICZNIUH3PXKWJSKJVAENBIYON7QVAQIW5PP`
+  - ASP non-membership: `CBCTBWDS5BXW6NW72763DEIOF5PXDI2FBWK6EESJLHLNMXP5BLN4M2TP`
+  - Verifier: `CD5CIDDHT56FUWK6SBDTAWIA435GAVOWZ6TISQ4KXJ5WN5FIHV5EXIG6`
+  - XLM pool: `CCE3VBWTMGS7TZBOMBXVMPZFD4RUWAJDQHV7L2FT5BHMZKHLQUJKHECE`
+  - USDC pool: `CDV45TTXDDUKBMK2IWPJRUYQSRVEWHTRPKCN2VZ7GEV2HVMRPBOD2KR7`
+- The mainnet ASP membership contract was switched to permissionless insertion:
+  - `2585feaadbaa0b201bf52522bddecdc687b6d3512a9fd6f2a8ac2613484d2e7a`
+
+### Mainnet extension XLM QuickShield follow-up
+
+- The Chrome-for-Testing extension harness used a persistent external smoke wallet:
+  - `GAWDQREHIKPLF6KR7XXNYNANXG7PW2IG5N4HWFB2H3M3J3OFC7SHWH32`
+- The extension offscreen Nethermind browser/WASM runtime generated a real mainnet XLM QuickShield proof and submitted:
+  - ASP membership insert: `8afa10dbcf6c82ba56f0f0abf96d00e5af55190f9a985aecc52147c34271c3ce`
+  - XLM shield/deposit: `269f09422639580ff3b5642b03a02a24c9e20c63dae12507b005352ba4545179`
+- The XLM shield/deposit landed in ledger `63191847` and was confirmed successful by Horizon.
+- A transient submit hash `9517af6322763e3ee637e6a108357861fcf75af2c4f56ab1b687e7c8fa59f2e8` returned `NOT_FOUND` on direct RPC/Horizon lookup and is not counted as evidence.
+- `packages/core/src/soroban-submit.ts` was fixed to retry `TRY_AGAIN_LATER` send responses before confirmation polling.
+
+### Mainnet extension USDC QuickShield follow-up
+
+- The same persistent smoke wallet created a real mainnet USDC trustline, received public USDC from the QA account, inserted ASP membership, generated a USDC QuickShield proof, and submitted the shield/deposit.
+- Transactions:
+  - XLM top-up for smoke wallet fees/reserve: `6a6d490bd0a9efe70f0156c3d362cea004cf7f6c440c6ea8f538bcba03e8c6d4`
+  - Public USDC trustline setup: `1acef069110b3015b72c8ad5df13b9647480e3af952188581921e56cfae555e5`
+  - Public USDC funding transfer: `8581307efcb3ad4f1ed9b9789f595cf6c1a44018dc62432d6372b4463adcd658`
+  - ASP membership insert: `84c33d8ff7798a5be616b0c402265be9cbd9518674dd75f00443cfdc1e56d65c`
+  - USDC shield/deposit: `a3fb0596b7cf5d79f093dcca9ff4faa6c5975499a1d36afdcf1a893f554aedcb`
+- The USDC shield/deposit landed in ledger `63191960` and was confirmed successful by Horizon.
+- Amount shielded: `0.0100000 USDC`.
 
 ## Inferences
 
-- Public mainnet XLM funding, USDC trustline creation, and a tiny Stellar DEX XLM-to-USDC path payment are now verified without claiming shielded mainnet support.
-- A real mainnet CCTP public bridge from Ethereum mainnet to Stellar mainnet should be feasible after code config is extended with Ethereum mainnet source values and the mainnet-only guards are relaxed for public mint-and-forward.
-- A real mainnet bridge-to-shield demo is not currently feasible because no mainnet privacy pool is deployed/configured.
-- A real mainnet shield/send/unshield demo requires a larger mainnet pool-deployment funding tranche, accepted upload/deploy transaction hashes, and a new evidence pass. It should remain opt-in because it uses real funds and unaudited privacy-pool code.
+- Public mainnet XLM funding, USDC trustline creation, and a tiny Stellar DEX XLM-to-USDC path payment are verified.
+- Mainnet XLM/USDC privacy-pool contracts are deployed and configured.
+- Mainnet XLM and USDC QuickShield are proven by real extension-runtime proof generation plus accepted mainnet ASP insert and shield/deposit transactions.
+- A real mainnet CCTP public bridge from Ethereum mainnet to Stellar mainnet should be feasible with the configured Ethereum mainnet CCTP values, but it is not yet evidenced.
+- Mainnet shielded transfer, unshield/withdraw, and bridge-to-shield should remain separate evidence targets, not assumed from the QuickShield runs.
 
 ## Unknowns And Questions
 
-- Whether Abu wants to top up the QA address to the practical deployment target of `130-150 XLM`.
-- Whether the Nethermind pool WASM and dependency path can be reproduced cleanly for mainnet deployment, or whether we reuse already staged/fetched WASM with clear attribution and evidence.
+- Whether to spend additional mainnet USDC/XLM for mainnet bridge-to-shield, shielded transfer, or unshield/withdraw evidence.
+- Whether the reference Nethermind browser runtime patch for mainnet deployments should be upstreamed/documented beyond the staged browser WASM artifacts.
 - Whether `https://mainnet.sorobanrpc.com` is reliable enough for transaction submission under demo pressure, or whether we should configure a dedicated RPC provider.
 - Whether Circle mainnet attestation timing is acceptable for a live demo or should be shown as recorded evidence.
 
@@ -152,5 +188,5 @@ Check whether ZK Fighter can safely move from testnet evidence to mainnet testin
 
 - No mainnet CCTP bridge transaction.
 - No mainnet CCTP burn/mint.
-- No successful mainnet privacy-pool upload or deployment.
 - No mainnet shielded transfer claim.
+- No mainnet unshield/withdraw claim.

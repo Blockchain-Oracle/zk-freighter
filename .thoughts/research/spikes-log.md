@@ -1639,7 +1639,7 @@ Result:
 - A mainnet account can be funded, configured with a USDC trustline, and receive real USDC via a public Stellar DEX path payment.
 - This is public mainnet plumbing only. It does not prove mainnet shielded-pool support, because no mainnet XLM/USDC privacy pool is deployed/configured yet.
 
-### Still not claimed
+### Still not claimed at this timestamp
 
 - No mainnet CCTP bridge transaction.
 - No mainnet privacy-pool deployment.
@@ -1683,8 +1683,137 @@ These are upload/install estimates only. They do not include contract-instance d
 - **Current funded balance:** `8.9999800 XLM`.
 - **Practical funding need:** at least `130 XLM` to cover uploads plus instance deployments and small runtime tests; `150 XLM` gives safer buffer for failed attempts, rent variance, and a tiny shield deposit.
 
-### Current conclusion
+### Conclusion at this timestamp
 
 - Mainnet pool deployment is technically on the right path, but blocked by insufficient funded XLM.
 - No mainnet privacy-pool contract was uploaded, deployed, or configured.
-- ZK Fighter must keep mainnet shielded pools marked `pending-deployment` until funding is topped up, contracts are deployed, and a real mainnet shield test records accepted transaction hashes.
+- At this timestamp, ZK Fighter had to keep mainnet shielded pools marked `pending-deployment` until funding was topped up, contracts were deployed, and a real mainnet shield test recorded accepted transaction hashes.
+- Superseded by the later `2026-06-25 13:05 UTC` entry after Abu topped up the QA account and mainnet deployment/testing succeeded.
+
+## 2026-06-25 13:05 UTC - Mainnet privacy-pool deployment and extension XLM QuickShield
+
+- **Phase:** Mainnet shielded-pool deployment and extension runtime proof.
+- **Kind:** Real mainnet WASM uploads, contract deployments, ASP permission toggle, and Chrome-for-Testing extension QuickShield XLM submit.
+- **Network:** Stellar mainnet.
+- **QA public account:** `GB3VMAPRJDHLRG2VKNCUUNOPBKJAAZCELU5TIF4QVPCTMYO5TGECGLVM`.
+- **Secret posture:** local Stellar CLI identity alias `zkf-mainnet-qa`; secret/seed not printed and stored outside the repo.
+- **RPC:** `https://mainnet.sorobanrpc.com`.
+- **Network passphrase:** `Public Global Stellar Network ; September 2015`.
+
+### Mainnet WASM uploads
+
+| Artifact | Wasm hash | Transaction | Ledger |
+|---|---|---|---:|
+| `asp_membership.wasm` | `e9efa31e13da7dbd92dabf4cd9d6653be3d48efb83498f1d7209a2d6772e664a` | `d73269bbd5d238ab57fb6757dd93ae91f387c9064cd6ee0a2e80dbcb862f431b` | `63190905` |
+| `asp_non_membership.wasm` | `6eb010fb5779d83a858e6fc6a42679936c93e1c6aa243425eb32257231d63b8a` | `b98df1c7755c87be4ed7cb7fe189f45318940d4b53693665cfd35e0e7b8a102f` | `63190928` |
+| `circom_groth16_verifier.wasm` | `81a63040ecac6ad5c8d8441fe1cbd809184b6e47e4c559bf73d06268b0683c49` | `ba498003cd0939218819b3d025318c9cdd0e562e2b10fbb292a8280fc13822b3` | `63190934` |
+| `pool.wasm` | `28c2cfaab1506d1d74d883cd1de3527d2d938c9f85ac4a6eacbfa199cc78c674` | `c5ef4c4f67749a28137216451cc5e8f2a9a5801d4f4860f6ff1179316f5d0cf0` | `63190957` |
+
+### Mainnet contract deployments
+
+| Contract | ID | Transaction | Ledger |
+|---|---|---|---:|
+| ASP membership | `CCYY3LLTVD2UW3Z4QD76PICZNIUH3PXKWJSKJVAENBIYON7QVAQIW5PP` | `6e7038f81c3a6d41c7913c7481f7c7cd9d219e2c48e7320e425edd388f34d907` | `63190988` |
+| ASP non-membership | `CBCTBWDS5BXW6NW72763DEIOF5PXDI2FBWK6EESJLHLNMXP5BLN4M2TP` | `0c5267f6b739b516bea2beb098bf1b34de523f48078eaa70196f9db5fd2ad311` | `63191004` |
+| Verifier | `CD5CIDDHT56FUWK6SBDTAWIA435GAVOWZ6TISQ4KXJ5WN5FIHV5EXIG6` | `61a8748a56cd2c71080774e5f326f3956d7fb53d978223e69403842b80852b7b` | `63191012` |
+| XLM pool | `CCE3VBWTMGS7TZBOMBXVMPZFD4RUWAJDQHV7L2FT5BHMZKHLQUJKHECE` | `7b0b89d8bb798c1db85ed3b4727aeca7614adc787eb5e3ff2231cc75116afd10` | `63191069` |
+| USDC pool | `CDV45TTXDDUKBMK2IWPJRUYQSRVEWHTRPKCN2VZ7GEV2HVMRPBOD2KR7` | `78723afbb9bda65e154f53334d8a5441c38de533c0e07f066fa890cb5ea1647f` | `63191078` |
+
+- **XLM pool token SAC:** `CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA`.
+- **USDC pool token SAC:** `CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI75`.
+- `packages/core/src/networks.ts` now configures both mainnet pool IDs and marks both shielded pools enabled.
+
+### ASP permission fix
+
+- The mainnet ASP membership contract defaulted to admin-only leaf insertion.
+- Extension QuickShield needs the same permissionless ASP insertion posture used by the testnet demo path.
+- Admin toggle transaction:
+  - **Function:** `set_admin_insert_only(false)`.
+  - **Transaction hash:** `2585feaadbaa0b201bf52522bddecdc687b6d3512a9fd6f2a8ac2613484d2e7a`.
+  - **Explorer:** `https://stellar.expert/explorer/public/tx/2585feaadbaa0b201bf52522bddecdc687b6d3512a9fd6f2a8ac2613484d2e7a`.
+  - **Ledger:** `63191800`.
+  - **Result:** successful.
+
+### Extension QuickShield XLM mainnet smoke
+
+- **Harness:** `ZKF_QUICKSHIELD_NETWORK=mainnet ZKF_QUICKSHIELD_ASSET=XLM ZKF_QUICKSHIELD_AMOUNT_STROOPS=1000000 ZKF_MAINNET_FUND_STROOPS=50000000 pnpm extension:quickshield`.
+- **Extension runtime:** Chrome-for-Testing WXT MV3 extension with offscreen Nethermind browser/WASM prover.
+- **Persistent smoke wallet:** `GAWDQREHIKPLF6KR7XXNYNANXG7PW2IG5N4HWFB2H3M3J3OFC7SHWH32`.
+- **Persistent mnemonic storage:** outside repo at `/Users/abu/.config/zk-fighter/mainnet-quickshield-smoke.json`, file mode `0600`.
+- **Funding top-up:** `55bd4b75681d09861108c7ced81cf6d7dfee21a45260f3c6188caa4c696b77ab`.
+- **ASP membership insert:** `8afa10dbcf6c82ba56f0f0abf96d00e5af55190f9a985aecc52147c34271c3ce`.
+- **XLM QuickShield shield/deposit:** `269f09422639580ff3b5642b03a02a24c9e20c63dae12507b005352ba4545179`.
+- **Explorer:** `https://stellar.expert/explorer/public/tx/269f09422639580ff3b5642b03a02a24c9e20c63dae12507b005352ba4545179`.
+- **Ledger:** `63191847`.
+- **Amount:** `0.1000000 XLM`.
+- **Proof generated:** yes.
+- **Submit reached:** yes.
+- **Transaction submitted:** yes.
+- **Duration:** `15,735 ms`.
+- **Final observed smoke-wallet native balance:** `4.8099393 XLM`.
+
+### Failure fixed during this run
+
+- A first mainnet extension smoke funded a disposable Chrome-profile account, then failed because the bundled Nethermind browser runtime still used testnet deployment constants. That disposable account is not counted as reusable evidence.
+- The Nethermind browser WASM artifacts were rebuilt/staged with mainnet deployment selection, then the extension was rebuilt.
+- A later submit attempt produced hash `9517af6322763e3ee637e6a108357861fcf75af2c4f56ab1b687e7c8fa59f2e8`, but direct RPC/Horizon lookups returned `NOT_FOUND`; it is not counted as evidence.
+- Root cause: `sendTransaction` can return `TRY_AGAIN_LATER` with a hash, and the submit helper treated any hash as accepted.
+- Fix: `packages/core/src/soroban-submit.ts` now retries `TRY_AGAIN_LATER` submit responses before confirmation polling, with unit coverage in `packages/core/src/soroban-submit.test.ts`.
+
+### Mainnet claims allowed at this timestamp
+
+- Mainnet XLM/USDC privacy-pool contracts are deployed and configured.
+- Mainnet XLM QuickShield has real extension-runtime proof and accepted transaction evidence.
+- Mainnet USDC pool is deployed/configured, but a mainnet USDC QuickShield transaction is not yet recorded at this timestamp.
+- Mainnet shielded transfer, unshield/withdraw, CCTP bridge-to-shield, and atomic bridge-and-shield are still not claimed.
+
+## 2026-06-25 13:16 UTC - Mainnet extension USDC QuickShield
+
+- **Phase:** Mainnet extension runtime proof.
+- **Kind:** Real mainnet USDC trustline setup, funding, ASP insert, and Chrome-for-Testing extension QuickShield USDC submit.
+- **Network:** Stellar mainnet.
+- **QA public account:** `GB3VMAPRJDHLRG2VKNCUUNOPBKJAAZCELU5TIF4QVPCTMYO5TGECGLVM`.
+- **Smoke wallet:** `GAWDQREHIKPLF6KR7XXNYNANXG7PW2IG5N4HWFB2H3M3J3OFC7SHWH32`.
+- **Secret posture:** local QA identity and smoke wallet recovery phrase remained outside the repo.
+- **Harness:** `ZKF_QUICKSHIELD_NETWORK=mainnet ZKF_QUICKSHIELD_ASSET=USDC pnpm extension:quickshield`.
+- **Amount:** `0.0100000 USDC`.
+
+### Transactions
+
+| Step | Transaction | Ledger | Result |
+|---|---|---:|---|
+| XLM top-up for smoke wallet fees/reserve | `6a6d490bd0a9efe70f0156c3d362cea004cf7f6c440c6ea8f538bcba03e8c6d4` | `63191954` | successful |
+| Public USDC trustline setup | `1acef069110b3015b72c8ad5df13b9647480e3af952188581921e56cfae555e5` | `63191955` | successful |
+| Public USDC funding transfer | `8581307efcb3ad4f1ed9b9789f595cf6c1a44018dc62432d6372b4463adcd658` | `63191956` | successful |
+| ASP membership insert | `84c33d8ff7798a5be616b0c402265be9cbd9518674dd75f00443cfdc1e56d65c` | `63191957` | successful |
+| USDC QuickShield shield/deposit | `a3fb0596b7cf5d79f093dcca9ff4faa6c5975499a1d36afdcf1a893f554aedcb` | `63191960` | successful |
+
+- **USDC pool:** `CDV45TTXDDUKBMK2IWPJRUYQSRVEWHTRPKCN2VZ7GEV2HVMRPBOD2KR7`.
+- **Proof generated:** yes.
+- **Submit reached:** yes.
+- **Transaction submitted:** yes.
+- **Duration:** `17,775 ms`.
+- **Final observed smoke-wallet balances:**
+  - XLM: `4.9096950`.
+  - USDC: `0.0000000` public balance after shielding.
+- **Final observed QA balances:**
+  - XLM: `76.8320587`.
+  - USDC: `0.1717950`.
+
+### Current mainnet claims allowed
+
+- Mainnet XLM and USDC QuickShield both have real extension-runtime proof and accepted mainnet transaction evidence.
+- Mainnet shielded transfer, unshield/withdraw, CCTP bridge-to-shield, and atomic bridge-and-shield are still not claimed.
+
+## 2026-06-25 13:21 UTC - Final extension runtime deep-proof gate rerun
+
+- **Phase:** Verification gate after mainnet QuickShield changes.
+- **Kind:** Chrome-for-Testing extension deep runtime proof rerun.
+- **Network:** Stellar testnet.
+- **Command:** `pnpm extension:runtime:deep`.
+- **Friendbot hash:** `03bc614e4788083ab4a0acb3e6361d0f9e90cef9b70a8cf5ad8e42c48c97ee63`.
+- **Runtime user address:** `GCCLEOW3BMDNSXXL75VWWBJOQ5CFMIJCQJBKINOZKX2EHZP5EQJRBG6S`.
+- **ASP insert:** `be396a79c46b2252ff919050dbd52fc4deb219559f6e0d8f576be8a2eb341fd7`.
+- **Dry proof status:** `proof-generated`.
+- **Proof duration:** `9,912 ms`.
+- **Submit reached:** yes, in dry-proof callback only; no shield/deposit transaction is claimed from this gate.

@@ -8,7 +8,7 @@
 
 **Built for:** Stellar Hacks: Real-World ZK
 
-**Primary demo network:** Stellar testnet and Ethereum Sepolia
+**Primary demo network:** Stellar testnet and Ethereum Sepolia. Mainnet XLM/USDC QuickShield exists as recorded evidence, not the default live demo path.
 
 **Repository focus:** The web app is the safest judged surface. The extension is included as extra runtime evidence for QuickShield and bridge handoff, not as a general dApp signing wallet.
 
@@ -44,6 +44,13 @@ ZK is not decorative here. The wallet uses the Nethermind privacy-pool circuit a
 | Extension QuickShield USDC fund transfer | Stellar testnet | `b8b17c66909ad24d6986408badacfc6986051c281a44a54e9c30d1e4243098cf` |
 | Extension QuickShield USDC setup | Stellar testnet | `4fdc92e9df466d506a3e0c0237f2fd87eddbe65a788a260efaed78b8511b2cfa` |
 | Extension QuickShield USDC shield | Stellar testnet | `0bc63cf0b7212d961d880acae3a3b72ae939e2a0fdf65c538b828684f6010e17` |
+| Mainnet ASP permission toggle | Stellar mainnet | `2585feaadbaa0b201bf52522bddecdc687b6d3512a9fd6f2a8ac2613484d2e7a` |
+| Mainnet Extension QuickShield XLM setup | Stellar mainnet | `8afa10dbcf6c82ba56f0f0abf96d00e5af55190f9a985aecc52147c34271c3ce` |
+| Mainnet Extension QuickShield XLM shield | Stellar mainnet | `269f09422639580ff3b5642b03a02a24c9e20c63dae12507b005352ba4545179` |
+| Mainnet Extension QuickShield USDC receive setup | Stellar mainnet | `1acef069110b3015b72c8ad5df13b9647480e3af952188581921e56cfae555e5` |
+| Mainnet Extension QuickShield USDC fund transfer | Stellar mainnet | `8581307efcb3ad4f1ed9b9789f595cf6c1a44018dc62432d6372b4463adcd658` |
+| Mainnet Extension QuickShield USDC setup | Stellar mainnet | `84c33d8ff7798a5be616b0c402265be9cbd9518674dd75f00443cfdc1e56d65c` |
+| Mainnet Extension QuickShield USDC shield | Stellar mainnet | `a3fb0596b7cf5d79f093dcca9ff4faa6c5975499a1d36afdcf1a893f554aedcb` |
 | Extension bridge handoff | Local Chrome runtime | `pnpm extension:bridge` opened the web bridge route with network, destination, and resume hash. |
 | Extension offscreen dry proof | Local Chrome runtime + Stellar testnet ASP | `pnpm extension:runtime:deep` generated a dry XLM proof after ASP insert `f18a1e7666ef827da5636d810ba26afc4d3808bf8d56a6b2249cbe7b2aaaec17`. |
 
@@ -59,11 +66,11 @@ Full evidence, explorer links, balance notes, and failure fixes are in `.thought
 6. Show CCTP bridge-then-shield evidence: Sepolia approval, burn, Iris attestation, Stellar mint/forward, ASP insert, separate USDC shield.
 7. Show disclosure/export as user-held compliance evidence.
 8. Optionally show the extension: receive plumbing, QuickShield XLM/USDC evidence, and bridge handoff.
-9. Close with honest boundaries: testnet demo, unaudited, no mainnet pool claim, no atomic bridge claim, no public dApp signing claim.
+9. Close with honest boundaries: testnet remains the safest live demo, mainnet XLM/USDC QuickShield has recorded evidence, unaudited, no atomic bridge claim, no public dApp signing claim.
 
 ## Non-Claims
 
-- No mainnet shielded pool deployment is claimed in this repo.
+- No mainnet shielded transfer, unshield/withdraw, or bridge-to-shield is claimed yet.
 - No atomic bridge-and-shield is claimed.
 - No extension-native Ethereum provider bridge is claimed.
 - No Freighter-compatible dApp signing wallet is claimed.
