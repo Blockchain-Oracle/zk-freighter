@@ -135,18 +135,16 @@ Gas token notes:
 
 ## Unknowns And Questions
 
-- Which source-chain wallet/funding will Abu provide first for real testnet evidence: Base Sepolia, Arbitrum Sepolia, OP Sepolia, or all three.
+- Arbitrum Sepolia and OP Sepolia preflight found gas already present on the shared source wallet, but no source-chain USDC yet. Live evidence is blocked until Circle testnet USDC is funded on the chosen route.
 - The headless runner removes the injected-wallet dependency for evidence. Browser wallet network-switching is still useful for manual UI demos, but not required for accepted bridge hashes.
 - Whether Circle faucet availability is currently smooth for every chosen testnet. The docs link the faucet, but live availability must be checked during the actual evidence run.
 - Whether mainnet bridge-to-shield should use Base or Arbitrum first. Base is the current default for user familiarity and cost.
 - Whether to include Polygon/Avalanche in the visible UI immediately or keep them behind an "advanced / more routes" section until they have hashes.
 
-## Not Included
+## Still Not Included
 
-- Original research pass did not include code changes; see implementation follow-up below.
-- No new chain transactions.
-- No Base/Arbitrum/OP/Avalanche/Polygon bridge evidence.
-- No mainnet bridge-to-shield evidence.
+- No Arbitrum Sepolia, OP Sepolia, Avalanche, Polygon, or non-EVM bridge-to-shield evidence yet.
+- No mainnet bridge-to-shield evidence yet.
 - No atomic bridge-and-shield claim.
 - No non-EVM wallet integration plan beyond identifying it as separate work.
 

@@ -22,6 +22,7 @@ import {
   rpcUrlFor,
 } from './cctp-bridge-source-support.ts'
 import { completeShield, completeShieldOnly, prepareDestination, runResume, summarizeBridge } from './cctp-bridge-source-flow.ts'
+import { inspectStellarDestinationReadiness } from './stellar-destination-readiness.ts'
 
 async function main() {
   const network = parseNetwork()
@@ -35,9 +36,40 @@ async function main() {
   const resumeBurnHash = process.env.ZKF_CCTP_RESUME_BURN_HASH?.trim()
   const resumeApproveHash = process.env.ZKF_CCTP_RESUME_APPROVE_HASH?.trim()
   const shieldOnly = process.env.ZKF_CCTP_SHIELD_ONLY === '1'
+  const preflightOnly = process.env.ZKF_CCTP_PREFLIGHT_ONLY === '1'
 
   if (!source) {
     throw new Error(`CCTP source ${sourceKey} is not configured on ${network}.`)
+  }
+
+  if (preflightOnly && (shieldOnly || resumeBurnHash)) {
+    console.log(JSON.stringify({
+      ok: false,
+      status: 'blocked',
+      mode: 'preflight',
+      network,
+      sourceChainKey: sourceKey,
+      sourceChain: source.label,
+      blockers: [
+        'ZKF_CCTP_PREFLIGHT_ONLY cannot be combined with submit-capable resume or shield-only flags.',
+        'Unset ZKF_CCTP_SHIELD_ONLY, ZKF_CCTP_RESUME_BURN_HASH, and ZKF_CCTP_RESUME_APPROVE_HASH before running read-only preflight.',
+      ],
+    }, null, 2))
+    return
+  }
+
+  if (network === 'mainnet' && !preflightOnly && process.env.ZKF_CCTP_MAINNET_APPROVED !== '1') {
+    console.log(JSON.stringify({
+      ok: false,
+      status: 'blocked',
+      network,
+      sourceChainKey: sourceKey,
+      sourceChain: source.label,
+      blockers: [
+        'Mainnet CCTP bridge execution is blocked unless ZKF_CCTP_MAINNET_APPROVED=1 is set after explicit Abu approval for this exact run and funding source.',
+      ],
+    }, null, 2))
+    return
   }
 
   const identity = deriveWalletIdentity(await loadOrCreateDestinationMnemonic(), network)
@@ -91,6 +123,31 @@ async function main() {
     requiredUsdcAtomic: amountAtomic + maxFeeAtomic,
     minGasWei,
   })
+
+  if (preflightOnly) {
+    const destinationReadiness = await inspectStellarDestinationReadiness({
+      destinationAddress: identity.stellarPublicKey,
+      network,
+    })
+    console.log(JSON.stringify({
+      ok: funding.blockers.length === 0 && destinationReadiness.status === 'ready',
+      status: funding.blockers.length === 0 && destinationReadiness.status === 'ready' ? 'ready' : 'blocked',
+      mode: 'preflight',
+      network,
+      sourceChainKey: sourceKey,
+      sourceChain: source.label,
+      rpcUrl,
+      sourceAddress: account.address,
+      destinationAddress: identity.stellarPublicKey,
+      funding,
+      destinationReadiness,
+      faucetHints: faucetHints(network, sourceKey),
+      nextStep: network === 'testnet'
+        ? 'If funding is ready, run without ZKF_CCTP_PREFLIGHT_ONLY to auto-prepare the Stellar testnet destination and submit the bridge.'
+        : 'If funding and destination readiness are ready, get explicit approval before running without ZKF_CCTP_PREFLIGHT_ONLY on mainnet.',
+    }, null, 2))
+    return
+  }
 
   if (funding.blockers.length > 0 || earlyReadiness?.status === 'blocked') {
     console.log(JSON.stringify({

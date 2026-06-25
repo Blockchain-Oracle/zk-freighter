@@ -66,9 +66,9 @@ Replace the singular Ethereum `evmSource` model with a verified source-chain reg
 - Add a `CctpSourceKey` type for source chains.
 - Change network config from `evmSource` to `evmSources`.
 - Add verified config for:
-  - testnet: Ethereum Sepolia, Base Sepolia, Arbitrum Sepolia.
-  - mainnet: Ethereum, Base, Arbitrum.
-- Consider adding OP, Avalanche, and Polygon config in the same registry, but gate visible use until tests/evidence are ready.
+  - testnet: Ethereum Sepolia, Base Sepolia, Arbitrum Sepolia, OP Sepolia.
+  - mainnet: Ethereum, Base, Arbitrum, OP Mainnet.
+- Consider adding Avalanche and Polygon config in the same registry later, but gate visible use until tests/evidence are ready.
 - Keep Stellar CCTP contract IDs unchanged.
 - Add lookup helpers:
   - `getCctpSource(network, sourceKey)`
@@ -304,7 +304,7 @@ No mainnet bridge claim until real hashes are recorded.
 
 ### Stop Condition
 
-Stop before any mainnet spend unless Abu explicitly approves that exact run and funding source.
+Stop before any mainnet spend unless Abu explicitly approves that exact run and funding source. The headless runner must keep non-preflight mainnet CCTP execution blocked unless `ZKF_CCTP_MAINNET_APPROVED=1` is set for the approved run.
 
 ## Phase 7: Later Routes
 
@@ -355,7 +355,6 @@ Before claiming this phase complete:
   - `pnpm extension:runtime`
   - `pnpm extension:dapp`
   - `pnpm extension:runtime:deep`
-- Dispatch a focused review subagent for the completed bridge checkpoint before proceeding to the next route or phase. For CCTP work, focus on source-domain selection, resume safety, chain IDs, contract IDs, secret handling, evidence accuracy, and unsupported-claim leakage.
 - Update `.thoughts/research/spikes-log.md` with real chain evidence only.
 - Update `README.md` and `docs/SUBMISSION-PACKAGE.md` only for routes with accepted evidence.
 

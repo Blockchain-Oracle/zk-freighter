@@ -2037,3 +2037,30 @@ These are upload/install estimates only. They do not include contract-instance d
 
 - Base Sepolia now has full safe-path evidence: public CCTP bridge arrival followed by separate USDC shield/deposit through ZK Fighter.
 - This is not an atomic bridge-and-shield claim.
+
+## 2026-06-25 17:36 UTC - Multichain CCTP read-only preflight
+
+- **Phase:** Multichain bridge evidence.
+- **Kind:** Read-only source-chain and Stellar destination readiness preflight. No approval, burn, mint, ASP insert, shield, or mainnet spend was submitted.
+- **Command shape:** `ZKF_CCTP_PREFLIGHT_ONLY=1 ZKF_CCTP_SOURCE=<source> pnpm cctp:bridge:<network>`.
+- **Destination wallet:** `GD7RLJMFDBT6LCTT5P2QIPQKM2ODT2ZNFSF6XP2JVHAOQBAEXTEX2ILG`.
+- **Secret posture:** local EVM keys and destination mnemonic stayed outside the repo under `/Users/abu/.config/zk-fighter`.
+
+### Results
+
+| Route | Source wallet | Result |
+|---|---|---|
+| Arbitrum Sepolia -> Stellar testnet | `0x368AbfE2B29ee5Bebf94E6296493DFc9eAe9B74c` | gas ready: `0.012 ETH`; source USDC blocked: `0 USDC`; Stellar testnet destination ready with account + USDC trustline |
+| OP Sepolia -> Stellar testnet | `0x368AbfE2B29ee5Bebf94E6296493DFc9eAe9B74c` | gas ready: `0.01 ETH`; source USDC blocked: `0 USDC`; Stellar testnet destination ready with account + USDC trustline |
+| Base mainnet -> Stellar mainnet | `0xA7FCf3F915947E7014d794f5494BBa60c28EF98E` | source gas blocked: `0 ETH`; source USDC blocked: `0 USDC`; Stellar mainnet destination not funded and has no USDC trustline |
+| Arbitrum One -> Stellar mainnet | `0xA7FCf3F915947E7014d794f5494BBa60c28EF98E` | source gas blocked: `0 ETH`; source USDC blocked: `0 USDC`; Stellar mainnet destination not funded and has no USDC trustline |
+
+### Follow-up
+
+- Arbitrum Sepolia and OP Sepolia only need Circle testnet USDC on the shared source address before live testnet bridge attempts.
+- Mainnet bridge-to-shield needs deliberate funding and approval for both the source-chain EVM wallet and the app-derived Stellar CCTP destination before any burn is safe.
+
+### Safety follow-up
+
+- Review found that preflight had to be a stronger no-submit guard. `ZKF_CCTP_PREFLIGHT_ONLY=1` now rejects conflicting submit-capable `ZKF_CCTP_SHIELD_ONLY` or resume flags instead of letting those branches run first.
+- Non-preflight mainnet CCTP execution now fails closed unless `ZKF_CCTP_MAINNET_APPROVED=1` is set after explicit approval for the exact run and funding source.
