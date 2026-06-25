@@ -6,7 +6,9 @@ import { NETWORKS } from './networks'
 
 const mnemonic = 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about'
 const identity = deriveWalletIdentity(mnemonic, 'testnet')
+const mainnetIdentity = deriveWalletIdentity(mnemonic, 'mainnet')
 const usdc = NETWORKS.testnet.assets.USDC
+const mainnetUsdc = NETWORKS.mainnet.assets.USDC
 
 interface TestBalance {
   readonly asset_type: string
@@ -15,8 +17,8 @@ interface TestBalance {
   readonly balance?: string
 }
 
-function horizonAccount(balances: readonly TestBalance[], sequence = '1') {
-  return Object.assign(new Account(identity.stellarPublicKey, sequence), { balances })
+function horizonAccount(balances: readonly TestBalance[], sequence = '1', publicKey = identity.stellarPublicKey) {
+  return Object.assign(new Account(publicKey, sequence), { balances })
 }
 
 describe('CCTP Stellar destination readiness', () => {
@@ -168,5 +170,45 @@ describe('CCTP Stellar destination readiness', () => {
       }),
     ).rejects.toThrow('not funded on mainnet')
     expect(fetchCalls).toBe(0)
+  })
+
+  it('creates mainnet USDC receive setup for funded accounts without Friendbot', async () => {
+    let fetchCalls = 0
+    let loads = 0
+    let submitted: Transaction | undefined
+    const report = await ensureStellarUsdcTrustline({
+      identity: mainnetIdentity,
+      network: 'mainnet',
+      fetch: async () => {
+        fetchCalls += 1
+        return Response.json({ hash: 'unexpected' })
+      },
+      horizonFactory: () => ({
+        loadAccount: async () => {
+          loads += 1
+          return loads === 1
+            ? horizonAccount([{ asset_type: 'native', balance: '5.0000000' }], '1', mainnetIdentity.stellarPublicKey)
+            : horizonAccount([
+                { asset_type: 'native', balance: '4.5000000' },
+                { asset_type: 'credit_alphanum4', asset_code: mainnetUsdc.code, asset_issuer: mainnetUsdc.issuer ?? '' },
+              ], '2', mainnetIdentity.stellarPublicKey)
+        },
+        fetchBaseFee: async () => 100,
+        submitTransaction: async (transaction) => {
+          submitted = transaction
+          return { hash: 'mainnet-trustline-hash' }
+        },
+      }),
+    })
+
+    expect(report).toMatchObject({
+      status: 'created',
+      network: 'mainnet',
+      txHash: 'mainnet-trustline-hash',
+      userAddress: mainnetIdentity.stellarPublicKey,
+    })
+    expect(report.explorerUrl).toContain('stellar.expert/explorer/public/tx/mainnet-trustline-hash')
+    expect(fetchCalls).toBe(0)
+    expect(submitted?.operations[0]?.type).toBe('changeTrust')
   })
 })
