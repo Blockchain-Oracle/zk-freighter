@@ -13,6 +13,7 @@ import {
   type WalletIdentity,
 } from '@zk-fighter/core'
 import { browser } from 'wxt/browser'
+import { runPrivateTransfer, runUnshieldWithdrawal } from './offscreen-private-actions'
 
 const offscreenStatusMessageType = 'zkf.offscreen.status'
 const nethermindProbeMessageType = 'zkf.offscreen.nethermindProbe'
@@ -22,6 +23,8 @@ const aspInsertAndDryProofMessageType = 'zkf.offscreen.aspInsertAndDryProof'
 const submitShieldDepositMessageType = 'zkf.offscreen.submitShieldDeposit'
 const insertAspMembershipMessageType = 'zkf.offscreen.insertAspMembership'
 const prepareUsdcReceiveMessageType = 'zkf.offscreen.prepareUsdcReceive'
+const privateTransferMessageType = 'zkf.offscreen.privateTransfer'
+const unshieldWithdrawalMessageType = 'zkf.offscreen.unshieldWithdrawal'
 const extensionProofAttemptTimeoutMs = 18_000
 const deepProofAttemptTimeoutMs = 180_000
 const statusEventLimit = 8
@@ -63,6 +66,20 @@ browser.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) 
 
     if (payload.type === prepareUsdcReceiveMessageType) {
       void runUsdcReceivePreparation(payload).then(sendResponse, (error: unknown) => {
+        sendResponse({ ok: false, error: error instanceof Error ? error.message : String(error) })
+      })
+      return true
+    }
+
+    if (payload.type === privateTransferMessageType) {
+      void runPrivateTransfer(payload).then(sendResponse, (error: unknown) => {
+        sendResponse({ ok: false, error: error instanceof Error ? error.message : String(error) })
+      })
+      return true
+    }
+
+    if (payload.type === unshieldWithdrawalMessageType) {
+      void runUnshieldWithdrawal(payload).then(sendResponse, (error: unknown) => {
         sendResponse({ ok: false, error: error instanceof Error ? error.message : String(error) })
       })
       return true

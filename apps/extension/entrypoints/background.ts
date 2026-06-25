@@ -21,6 +21,10 @@ const aspInsertAndDryProofMessageType = 'zkf.extension.aspInsertAndDryProof'
 const offscreenSubmitShieldMessageType = 'zkf.offscreen.submitShieldDeposit'
 const offscreenInsertAspMessageType = 'zkf.offscreen.insertAspMembership'
 const offscreenPrepareUsdcReceiveMessageType = 'zkf.offscreen.prepareUsdcReceive'
+const privateTransferMessageType = 'zkf.extension.privateTransfer'
+const unshieldWithdrawalMessageType = 'zkf.extension.unshieldWithdrawal'
+const offscreenPrivateTransferMessageType = 'zkf.offscreen.privateTransfer'
+const offscreenUnshieldWithdrawalMessageType = 'zkf.offscreen.unshieldWithdrawal'
 
 type MessagePayload = {
   readonly type?: string
@@ -96,6 +100,20 @@ export default defineBackground(() => {
 
     if (payload.type === aspInsertAndDryProofMessageType) {
       void sendOffscreenMessage({ type: 'zkf.offscreen.aspInsertAndDryProof' }).then(sendResponse, (error: unknown) => {
+        sendResponse({ ok: false, error: error instanceof Error ? error.message : String(error) })
+      })
+      return true
+    }
+
+    if (payload.type === privateTransferMessageType) {
+      void sendOffscreenMessage({ ...payload, type: offscreenPrivateTransferMessageType }).then(sendResponse, (error: unknown) => {
+        sendResponse({ ok: false, error: error instanceof Error ? error.message : String(error) })
+      })
+      return true
+    }
+
+    if (payload.type === unshieldWithdrawalMessageType) {
+      void sendOffscreenMessage({ ...payload, type: offscreenUnshieldWithdrawalMessageType }).then(sendResponse, (error: unknown) => {
         sendResponse({ ok: false, error: error instanceof Error ? error.message : String(error) })
       })
       return true

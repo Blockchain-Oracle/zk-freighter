@@ -239,6 +239,7 @@ export async function submitXlmPrivateTransfer(
       throw new Error('Nethermind WebClient does not expose executeTransfer')
     }
 
+    await client.syncPoolEvents?.()
     return client.executeTransfer(
       poolContractId,
       options.identity.stellarPublicKey,
@@ -264,6 +265,7 @@ export async function submitXlmUnshieldWithdrawal(
       throw new Error('Nethermind WebClient does not expose executeWithdraw')
     }
 
+    await client.syncPoolEvents?.()
     return client.executeWithdraw(
       poolContractId,
       options.identity.stellarPublicKey,

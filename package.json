@@ -18,6 +18,7 @@
     "extension:dapp": "node scripts/check-extension-dapp-bridge.mjs",
     "extension:quickshield": "node scripts/check-extension-quickshield.mjs",
     "extension:quickshield:usdc": "ZKF_QUICKSHIELD_ASSET=USDC node scripts/check-extension-quickshield.mjs",
+    "extension:private-loop:mainnet": "node scripts/check-mainnet-private-loop.mjs",
     "extension:bridge": "node scripts/check-extension-bridge-handoff.mjs",
     "extension:runtime:deep": "node scripts/check-extension-deep-proof.mjs",
     "docs:check": "node scripts/check-docs.mjs",

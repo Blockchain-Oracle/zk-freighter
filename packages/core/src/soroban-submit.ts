@@ -8,6 +8,7 @@ import {
 import { deriveWalletKeypair, type WalletIdentity } from './identity'
 import { getNetworkConfig, type NetworkKey } from './networks'
 import type { NethermindPreparedProverTx, PreparedSorobanTx } from './nethermind-runtime'
+import { optionalSubmitDetail, sendFailureDetail } from './soroban-submit-errors'
 
 const authValidityLedgerBuffer = 100
 const defaultSubmissionAttempts = 3
@@ -30,7 +31,7 @@ export interface SorobanSubmitResult {
 }
 
 interface SorobanRpcServer {
-  sendTransaction(transaction: Transaction): Promise<{ status?: string; hash?: string; errorResultXdr?: unknown }>
+  sendTransaction(transaction: Transaction): Promise<Record<string, unknown> & { status?: string; hash?: string; errorResultXdr?: unknown }>
   getTransaction(hash: string): Promise<{ status?: string; resultXdr?: unknown }>
   getLatestLedger(): Promise<{ sequence: number }>
 }
@@ -59,10 +60,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function defaultServerFactory(rpcUrl: string): SorobanRpcServer {
   return new rpc.Server(rpcUrl) as unknown as SorobanRpcServer
-}
-
-function optionalDetail(value: unknown): string {
-  return value === undefined ? '' : ` (${String(value)})`
 }
 
 function getSorobanTx(value: PreparedSorobanTx | NethermindPreparedProverTx): PreparedSorobanTx {
@@ -239,14 +236,14 @@ export async function submitPreparedSorobanTx(
   const polls = options.confirmationPolls ?? defaultConfirmationPolls
   const pollIntervalMs = options.pollIntervalMs ?? defaultPollIntervalMs
   const tx = new Transaction(signedTxXdr, network.passphrase)
-  let send: { status?: string; hash?: string; errorResultXdr?: unknown } | undefined
+  let send: (Record<string, unknown> & { status?: string; hash?: string; errorResultXdr?: unknown }) | undefined
 
   for (let attempt = 1; attempt <= submissionAttempts; attempt += 1) {
     emit({ stage: 'submit', message: 'Submitting transaction', current: attempt, total: submissionAttempts })
     send = await server.sendTransaction(tx)
 
     if (!send.hash || send.status === 'ERROR') {
-      const suffix = optionalDetail(send.errorResultXdr ?? send.status)
+      const suffix = optionalSubmitDetail(sendFailureDetail(send))
       throw new Error(`Transaction submission failed${suffix}`)
     }
 
@@ -275,7 +272,7 @@ export async function submitPreparedSorobanTx(
     }
 
     if (response.status === 'FAILED') {
-      const suffix = optionalDetail(response.resultXdr)
+      const suffix = optionalSubmitDetail(response.resultXdr)
       throw new Error(`Transaction ${send.hash} failed${suffix}`)
     }
   }
