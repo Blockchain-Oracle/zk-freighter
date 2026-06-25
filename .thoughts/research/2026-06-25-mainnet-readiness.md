@@ -193,17 +193,31 @@ Check whether ZK Fighter can safely move from testnet evidence to mainnet testin
   - Unshield/withdraw: `0.0010000 USDC`.
 - The first unbounded USDC harness attempt hung without submitting a new transaction. `scripts/check-mainnet-private-loop.mjs` now wraps Chrome runtime messages with a hard timeout.
 
+### Mainnet CCTP destination readiness follow-up
+
+- The app-derived CCTP bridge destination was prepared on Stellar mainnet:
+  - Destination: `GD7RLJMFDBT6LCTT5P2QIPQKM2ODT2ZNFSF6XP2JVHAOQBAEXTEX2ILG`
+  - Account funding from `zkf-mainnet-qa`: `3b827bfe95cc828beb364873e3d0b52044dfe23a5747531e7d9511bebcc6e356`
+  - USDC trustline setup: `659c6933ebc91c623a03e846bc1567ca00e054a7a6cbb99058a2dfe4c8911391`
+- Read-only preflight after setup reports the Stellar destination is ready for Base, Arbitrum, and OP mainnet routes.
+- A submit-capable Base mainnet run with `ZKF_CCTP_MAINNET_APPROVED=1` also reaches the same funding guard and stops before any EVM approval or CCTP burn.
+- The shared mainnet EVM source wallet is still unfunded:
+  - Source wallet: `0xA7FCf3F915947E7014d794f5494BBa60c28EF98E`
+  - Base, Arbitrum One, and OP Mainnet all show `0 ETH` and `0 USDC`.
+- No mainnet CCTP approval, burn, mint/forward, ASP insert, or post-bridge shield has been submitted yet.
+
 ## Inferences
 
 - Public mainnet XLM funding, USDC trustline creation, and a tiny Stellar DEX XLM-to-USDC path payment are verified.
 - Mainnet XLM/USDC privacy-pool contracts are deployed and configured.
 - Mainnet XLM/USDC QuickShield, shielded transfer, and unshield/withdraw smokes are proven by real extension-runtime proof generation plus accepted mainnet transactions.
-- A real mainnet CCTP public bridge from Ethereum mainnet to Stellar mainnet should be feasible with the configured Ethereum mainnet CCTP values, but it is not yet evidenced.
+- A real mainnet CCTP public bridge from a configured EVM mainnet source to Stellar mainnet should be feasible with the configured CCTP values, but it is not yet evidenced because the source-chain EVM wallet still needs gas and native USDC.
+- The current blocker is not source-code routing: tests cover all configured mainnet source-chain configs and the Base mainnet runner reaches funding checks against the real destination.
 - Mainnet bridge-to-shield should remain a separate evidence target, not assumed from the private-loop and QuickShield runs.
 
 ## Unknowns And Questions
 
-- Whether to spend additional mainnet USDC/ETH/XLM for mainnet bridge-to-shield evidence.
+- Whether to fund the shared EVM source wallet on Base, Arbitrum, or OP mainnet with gas and native USDC for mainnet bridge-to-shield evidence. Base is the preferred first route.
 - Whether the reference Nethermind browser runtime patch for mainnet deployments should be upstreamed/documented beyond the staged browser WASM artifacts.
 - Whether `https://mainnet.sorobanrpc.com` is reliable enough for transaction submission under demo pressure, or whether we should configure a dedicated RPC provider.
 - Whether Circle mainnet attestation timing is acceptable for a live demo or should be shown as recorded evidence.

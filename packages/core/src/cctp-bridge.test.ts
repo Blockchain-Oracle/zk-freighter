@@ -70,8 +70,12 @@ describe('CCTP bridge flow', () => {
     expect(report.evmBurnTxHash).toBeUndefined()
   })
 
-  it('does not block mainnet bridge by configuration once pools and CCTP addresses are present', () => {
+  it('does not block any configured mainnet bridge source by configuration', () => {
     expect(getCctpBridgeBlockers('mainnet')).toEqual([])
+    expect(getCctpBridgeBlockers('mainnet', 'ethereum')).toEqual([])
+    expect(getCctpBridgeBlockers('mainnet', 'base')).toEqual([])
+    expect(getCctpBridgeBlockers('mainnet', 'arbitrum')).toEqual([])
+    expect(getCctpBridgeBlockers('mainnet', 'optimism')).toEqual([])
   })
 
   it('polls Circle Iris until an attestation is complete', async () => {

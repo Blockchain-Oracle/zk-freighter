@@ -62,6 +62,12 @@ describe('NETWORKS', () => {
       'arbitrum',
       'optimism',
     ])
+    expect(getEnabledCctpSources('mainnet').map((source) => source.key)).toEqual([
+      'ethereum',
+      'base',
+      'arbitrum',
+      'optimism',
+    ])
     expect(getCctpSource('testnet', 'ethereum')?.domain).toBe(0)
     expect(getCctpSource('testnet', 'ethereum')?.chainIdHex).toBe('0xaa36a7')
     expect(getCctpSource('testnet', 'base')?.domain).toBe(6)

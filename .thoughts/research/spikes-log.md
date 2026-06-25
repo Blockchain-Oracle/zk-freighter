@@ -2146,3 +2146,37 @@ These are upload/install estimates only. They do not include contract-instance d
 
 - OP Sepolia now has full safe-path evidence: public CCTP bridge arrival followed by separate USDC shield/deposit through ZK Fighter.
 - This is not an atomic bridge-and-shield claim.
+
+## 2026-06-25 19:58 UTC - Mainnet CCTP destination readiness
+
+- **Phase:** Mainnet bridge readiness.
+- **Kind:** Real Stellar mainnet account funding and USDC trustline setup for the app-derived CCTP bridge destination. No EVM approval, burn, CCTP mint, ASP insert, shield, or bridge claim was submitted.
+- **Network:** Stellar mainnet.
+- **Destination wallet:** `GD7RLJMFDBT6LCTT5P2QIPQKM2ODT2ZNFSF6XP2JVHAOQBAEXTEX2ILG`.
+- **Source funder:** local Stellar CLI identity `zkf-mainnet-qa`.
+- **Secret posture:** destination mnemonic stayed outside the repo at `/Users/abu/.config/zk-fighter/cctp-bridge-destination.json`; QA identity stayed outside the repo under the local Stellar CLI config.
+
+### Transactions
+
+| Step | Transaction | Result |
+|---|---|---|
+| Destination account funding | `3b827bfe95cc828beb364873e3d0b52044dfe23a5747531e7d9511bebcc6e356` | accepted; funded with `5.0000000 XLM` |
+| Destination USDC trustline | `659c6933ebc91c623a03e846bc1567ca00e054a7a6cbb99058a2dfe4c8911391` | accepted |
+
+### Read-only preflight after setup
+
+| Route | Source wallet | Result |
+|---|---|---|
+| Base mainnet -> Stellar mainnet | `0xA7FCf3F915947E7014d794f5494BBa60c28EF98E` | destination ready; source gas blocked: `0 ETH`; source USDC blocked: `0 USDC` |
+| Arbitrum One -> Stellar mainnet | `0xA7FCf3F915947E7014d794f5494BBa60c28EF98E` | destination ready; source gas blocked: `0 ETH`; source USDC blocked: `0 USDC` |
+| OP Mainnet -> Stellar mainnet | `0xA7FCf3F915947E7014d794f5494BBa60c28EF98E` | destination ready; source gas blocked: `0 ETH`; source USDC blocked: `0 USDC` |
+
+### Submit-capable Base mainnet guard check
+
+`ZKF_CCTP_MAINNET_APPROVED=1 ZKF_CCTP_SOURCE=base pnpm cctp:bridge:mainnet` reached the same source-funding guard and submitted no EVM approval, burn, Stellar mint, ASP insert, or shield transaction.
+
+### Follow-up
+
+- Recommended first mainnet bridge route remains Base mainnet because source-chain fees are lower than Ethereum L1.
+- To run the mainnet bridge, fund `0xA7FCf3F915947E7014d794f5494BBa60c28EF98E` on Base with source-chain gas and native USDC. Current preflight minimum is `0.00005 ETH` and `1.0005 USDC`; use a buffer before live execution.
+- Mainnet CCTP execution remains hard-gated by `ZKF_CCTP_MAINNET_APPROVED=1` for the exact approved route and funding source.
