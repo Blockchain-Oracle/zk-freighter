@@ -21,6 +21,8 @@ export const defaultMinGasWei = 50_000_000_000_000n
 export const bridgeTimeoutMs = 240_000
 export const retryDelayMs = 20_000
 export const maxShieldAttempts = 3
+export const opApprovalGasLimit = 120_000n
+export const opCctpBurnGasLimit = 1_500_000n
 
 const configDir = path.join(os.homedir(), '.config', 'zk-fighter')
 const evmWalletPath = path.join(configDir, 'cctp-evm-wallets.json')
@@ -114,6 +116,35 @@ export function chainFor(network: NetworkKey, sourceKey: CctpSourceKey): Chain {
 
 export function rpcUrlFor(network: NetworkKey, sourceKey: CctpSourceKey): string {
   return process.env.ZKF_CCTP_RPC_URL ?? rpcUrls[network][sourceKey]
+}
+
+export function gasLimitForSourceTransaction(options: {
+  readonly network: NetworkKey
+  readonly sourceKey: CctpSourceKey
+  readonly to: string
+  readonly source: NonNullable<ReturnType<typeof getCctpSource>>
+  readonly approveGasLimit?: bigint
+  readonly burnGasLimit?: bigint
+}): bigint | undefined {
+  const lowerTo = options.to.toLowerCase()
+  const usdcContract = options.source.usdcContract.toLowerCase()
+  const tokenMessenger = options.source.tokenMessenger.toLowerCase()
+  if (lowerTo === usdcContract && options.approveGasLimit) {
+    return options.approveGasLimit
+  }
+  if (lowerTo === tokenMessenger && options.burnGasLimit) {
+    return options.burnGasLimit
+  }
+  if (options.network !== 'testnet' || options.sourceKey !== 'optimism') {
+    return undefined
+  }
+  if (lowerTo === usdcContract) {
+    return opApprovalGasLimit
+  }
+  if (lowerTo === tokenMessenger) {
+    return opCctpBurnGasLimit
+  }
+  return undefined
 }
 
 export async function loadOrCreateEvmAccount(

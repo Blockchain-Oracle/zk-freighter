@@ -8,7 +8,7 @@
 
 **Built for:** Stellar Hacks: Real-World ZK
 
-**Primary demo network:** Stellar testnet plus Ethereum Sepolia and Base Sepolia for recorded bridge-to-shield evidence paths. Arbitrum Sepolia and OP Sepolia are configured bridge sources, but need accepted hashes before they are presented as evidence-backed routes. Mainnet XLM/USDC QuickShield and private-loop smokes exist as recorded evidence, not the default live demo path.
+**Primary demo network:** Stellar testnet plus Ethereum Sepolia, Base Sepolia, Arbitrum Sepolia, and OP Sepolia for recorded bridge-to-shield evidence paths. Mainnet XLM/USDC QuickShield and private-loop smokes exist as recorded evidence, not the default live demo path.
 
 **Repository focus:** The web app is the safest judged surface. The extension is included as extra runtime evidence for QuickShield and bridge handoff, not as a general dApp signing wallet.
 
@@ -44,6 +44,16 @@ ZK is not decorative here. The wallet uses the Nethermind privacy-pool circuit a
 | Base Stellar CCTP mint/forward | Stellar testnet | `08df05fe661f35dcf42c5ab054ae2bd404ed31091a629d963647ca3d5b293e11` |
 | Base ASP membership insert | Stellar testnet | `5acda595f61470a783f4a32e544f493a81f1988dcc3e1572b86c6484895b2ca4` + `4a5930af618344d00f959c4933ce30102cd0ad8ac00e623b9170f789afc8ab1e` |
 | Base post-bridge USDC shield | Stellar testnet | `b1e1ca6e81fb34d2d7218099722c0f9b76e3a7a2debf29e90701592da6acd87a` + `6e9369c5c9e0d3d5226f0af63ec75f4ec49176ede1cc7c0f0b19ce004dda215d` |
+| Arbitrum Sepolia USDC approval | Arbitrum Sepolia | `0x53d17d1ada27bae89036cce765173984b20e1edc24b5c1e8fa872524e4b210a4` |
+| Arbitrum Sepolia CCTP burn | Arbitrum Sepolia | `0xcf0c0e093fc3fc8cfa8310e1b423e400fb157aa263b6d5187488f9d053a2b3a7` |
+| Arbitrum Stellar CCTP mint/forward | Stellar testnet | `730edcfa3b3eddf279f5dc0dd338ef3aa9f96616e0efcbe2f709abefad5e16d1` |
+| Arbitrum ASP membership insert | Stellar testnet | `8a13e5a8d91e447f3ee9a8156be5ab33fa0bdb89a6a91ef0be0f4ce8f523d60b` |
+| Arbitrum post-bridge USDC shield | Stellar testnet | `a2aa117ef0973f979cad85b3c4387fd056d99d5f3fe20af8de107a502c924648` |
+| OP Sepolia USDC approval | OP Sepolia | `0x2e264ca0dbfee0865ae9e32ddd9702693f2b39c37c21804e781d86a96a2111f4` |
+| OP Sepolia CCTP burn | OP Sepolia | `0x817d31c2af0407e35b1279ec731e50ff3665431a444ca5b271e2e3691c2e0a82` |
+| OP Stellar CCTP mint/forward | Stellar testnet | `dc1c3f77bacf4da21035c3059dbb5dae81bc9e8f3dfd83477a5c0fe9069f8b1f` |
+| OP ASP membership insert | Stellar testnet | `3fb620d5ecf5eaa90cdcff3a6b5890b389b2ac79d199c45d36e1e81698b9958c` |
+| OP post-bridge USDC shield | Stellar testnet | `8205379a7d00710820b1b7e96a2eac6c4b7816b29185771bd00328abd18e1344` |
 | Extension QuickShield XLM setup | Stellar testnet | `a63a093009bb9cf337a96f52ceb4e823461e292f035691211bc6994a5f08de90` |
 | Extension QuickShield XLM shield | Stellar testnet | `a66314255cb75f9e15ca6bd5641ec1eeeb6a9419baa1b84890d7003ae78e135b` |
 | Extension QuickShield USDC fund transfer | Stellar testnet | `b8b17c66909ad24d6986408badacfc6986051c281a44a54e9c30d1e4243098cf` |
@@ -72,14 +82,14 @@ Full evidence, explorer links, balance notes, and failure fixes are in `.thought
 3. Show the public boundary copy: shield/deposit and unshield/withdraw are public.
 4. Demonstrate or replay the USDC loop: shield, shielded transfer, unshield.
 5. Show load-bearing ZK evidence: proof generated, valid proof accepted, tampered proof rejected.
-6. Show CCTP bridge-then-shield evidence: source-chain selection, recorded Ethereum Sepolia and Base Sepolia approval, burn, Iris attestation, Stellar mint/forward, ASP inserts, and separate USDC shield deposits; the Base correction run is documented in the evidence log.
+6. Show CCTP bridge-then-shield evidence: source-chain selection, recorded Ethereum Sepolia/Base Sepolia/Arbitrum Sepolia/OP Sepolia approval, burn, Iris attestation, Stellar mint/forward, ASP inserts, and separate USDC shield deposits; the Base correction run and OP gas-limit fix are documented in the evidence log.
 7. Show disclosure/export as user-held compliance evidence.
 8. Optionally show the extension: receive plumbing, QuickShield XLM/USDC evidence, and bridge handoff.
 9. Close with honest boundaries: testnet remains the safest live demo, mainnet XLM/USDC QuickShield and private-loop smokes have recorded evidence, unaudited, no mainnet bridge claim, no atomic bridge claim, no public dApp signing claim.
 
 ## Non-Claims
 
-- No Arbitrum/OP bridge-to-shield evidence is claimed until accepted hashes are recorded.
+- No Avalanche, Polygon, Solana, or non-EVM bridge-to-shield evidence is claimed.
 - No mainnet bridge-to-shield is claimed yet.
 - No atomic bridge-and-shield is claimed.
 - No extension-native Ethereum provider bridge is claimed.

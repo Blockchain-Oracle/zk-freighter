@@ -27,8 +27,8 @@
 - Base is the default source on testnet and mainnet.
 - Resume state now stores `sourceChainKey`, so a burn hash is not resumed against the wrong Circle source domain.
 - Extension handoff now passes source-chain context to the web bridge route.
-- Base Sepolia bridge-to-shield evidence is recorded: public bridge leg, Stellar mint/forward, extension-offscreen ASP insertion, and separate USDC shield/deposit.
-- Still pending: run real Arbitrum Sepolia bridge-to-shield evidence, then optional OP evidence, then a separately approved mainnet route.
+- Base Sepolia, Arbitrum Sepolia, and OP Sepolia bridge-to-shield evidence is recorded: public bridge leg, Stellar mint/forward, extension-offscreen ASP insertion, and separate USDC shield/deposit.
+- Still pending: a separately approved mainnet bridge-to-shield route.
 
 ## Assumptions
 
@@ -41,8 +41,8 @@
 
 ## Open Questions
 
-- Live testnet evidence order is Base Sepolia first, then Arbitrum Sepolia, then OP Sepolia if funding/time permits.
-- OP Sepolia can stay configured in UI, but evidence claims must remain separate until its own accepted hashes exist.
+- Live testnet evidence is recorded for Base Sepolia, Arbitrum Sepolia, and OP Sepolia.
+- OP Sepolia required explicit gas limits in the headless runner because automatic gas estimation failed before submission.
 - Should Avalanche and Polygon appear in the UI immediately, or be configured but hidden until evidence is recorded?
 - Base mainnet is the default first mainnet bridge-to-shield route; Arbitrum One remains the next low-cost alternative.
 
@@ -360,12 +360,13 @@ Before claiming this phase complete:
 
 ## Handoff Notes
 
-- The immediate next build phase is not "bridge everything at once." It is:
+- The multichain testnet bridge phase is now complete for configured EVM testnet sources:
   1. Source-chain registry.
   2. Core bridge selector and resume state.
   3. Web source selector.
   4. Base Sepolia evidence.
   5. Arbitrum Sepolia evidence.
-  6. Mainnet Base or Arbitrum evidence after explicit approval.
+  6. OP Sepolia evidence.
+  7. Mainnet Base or Arbitrum evidence after explicit approval.
 - The safest demo story remains: public bridge arrival, then separate shield. Do not present it as a private bridge.
 - Ethereum is supported, but Base/Arbitrum should become the practical default for mainnet evidence because source-chain gas is lower.

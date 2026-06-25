@@ -2057,10 +2057,92 @@ These are upload/install estimates only. They do not include contract-instance d
 
 ### Follow-up
 
-- Arbitrum Sepolia and OP Sepolia only need Circle testnet USDC on the shared source address before live testnet bridge attempts.
+- Arbitrum Sepolia and OP Sepolia later received Circle testnet USDC and completed live bridge-to-shield evidence; see the Arbitrum and OP entries below.
 - Mainnet bridge-to-shield needs deliberate funding and approval for both the source-chain EVM wallet and the app-derived Stellar CCTP destination before any burn is safe.
 
 ### Safety follow-up
 
 - Review found that preflight had to be a stronger no-submit guard. `ZKF_CCTP_PREFLIGHT_ONLY=1` now rejects conflicting submit-capable `ZKF_CCTP_SHIELD_ONLY` or resume flags instead of letting those branches run first.
 - Non-preflight mainnet CCTP execution now fails closed unless `ZKF_CCTP_MAINNET_APPROVED=1` is set after explicit approval for the exact run and funding source.
+
+## 2026-06-25 18:03 UTC - Arbitrum Sepolia CCTP bridge-to-shield evidence
+
+- **Phase:** Multichain bridge evidence.
+- **Kind:** Real Arbitrum Sepolia -> Stellar testnet CCTP V2 public bridge leg plus separate extension/offscreen USDC shield/deposit.
+- **Network:** Arbitrum Sepolia source, Stellar testnet destination.
+- **Source wallet:** `0x368AbfE2B29ee5Bebf94E6296493DFc9eAe9B74c`.
+- **Destination wallet:** `GD7RLJMFDBT6LCTT5P2QIPQKM2ODT2ZNFSF6XP2JVHAOQBAEXTEX2ILG`.
+- **Secret posture:** EVM private key and destination mnemonic remained outside the repo at `/Users/abu/.config/zk-fighter`.
+- **Amount:** `1 USDC`.
+- **Max CCTP fee:** `0.000500 USDC`.
+- **Commands:**
+  - `ZKF_CCTP_PREFLIGHT_ONLY=1 ZKF_CCTP_SOURCE=arbitrum pnpm cctp:bridge:testnet`
+  - `ZKF_CCTP_SOURCE=arbitrum pnpm cctp:bridge:testnet`
+  - `ZKF_CCTP_AMOUNT_ATOMIC=1000000 pnpm cctp:shield:extension`
+
+### Transactions
+
+| Step | Transaction | Result |
+|---|---|---|
+| Arbitrum Sepolia USDC approval | `0x53d17d1ada27bae89036cce765173984b20e1edc24b5c1e8fa872524e4b210a4` | accepted |
+| Arbitrum Sepolia CCTP burn with Stellar forwarder hook | `0xcf0c0e093fc3fc8cfa8310e1b423e400fb157aa263b6d5187488f9d053a2b3a7` | accepted |
+| Stellar testnet CCTP mint_and_forward | `730edcfa3b3eddf279f5dc0dd338ef3aa9f96616e0efcbe2f709abefad5e16d1` | accepted |
+| ASP membership insert for CCTP destination | `8a13e5a8d91e447f3ee9a8156be5ab33fa0bdb89a6a91ef0be0f4ce8f523d60b` | accepted |
+| USDC shield/deposit | `a2aa117ef0973f979cad85b3c4387fd056d99d5f3fe20af8de107a502c924648` | accepted |
+
+- **Circle Iris attestation status:** `complete`.
+- **Circle Iris event nonce:** `0x0f2b8a79fb4affefe7cbef4b1344ea19f93ae1a64fbc314f5da4c316217ce2ba`.
+- **Node runner blocker after public bridge:** `Cannot find module '/js/web.js' imported from .../packages/core/src/nethermind-runtime.ts`.
+- **Shield runtime:** `pnpm cctp:shield:extension` used Chrome-for-Testing WXT MV3 extension with offscreen Nethermind browser/WASM prover.
+- **Proof/shield result:** `proofGenerated: true`, `submitReached: true`, `transactionSubmitted: true`, duration `18,602 ms`.
+- **Final Horizon balance for destination after shield:** USDC `0.0000000`, XLM `9999.8798219`.
+
+### Claim allowed
+
+- Arbitrum Sepolia now has full safe-path evidence: public CCTP bridge arrival followed by separate USDC shield/deposit through ZK Fighter.
+- This is not an atomic bridge-and-shield claim.
+
+## 2026-06-25 18:43 UTC - OP Sepolia CCTP bridge-to-shield evidence
+
+- **Phase:** Multichain bridge evidence.
+- **Kind:** Real OP Sepolia -> Stellar testnet CCTP V2 public bridge leg plus separate extension/offscreen USDC shield/deposit.
+- **Network:** OP Sepolia source, Stellar testnet destination.
+- **Source wallet:** `0x368AbfE2B29ee5Bebf94E6296493DFc9eAe9B74c`.
+- **Destination wallet:** `GD7RLJMFDBT6LCTT5P2QIPQKM2ODT2ZNFSF6XP2JVHAOQBAEXTEX2ILG`.
+- **Secret posture:** EVM private key and destination mnemonic remained outside the repo at `/Users/abu/.config/zk-fighter`.
+- **Amount:** `1 USDC`.
+- **Max CCTP fee:** `0.000500 USDC`.
+- **Commands:**
+  - `ZKF_CCTP_PREFLIGHT_ONLY=1 ZKF_CCTP_SOURCE=optimism pnpm cctp:bridge:testnet`
+  - `ZKF_CCTP_SOURCE=optimism pnpm cctp:bridge:testnet`
+  - `ZKF_CCTP_AMOUNT_ATOMIC=1000000 pnpm cctp:shield:extension`
+
+### Failure and fix
+
+- First OP attempt failed before any approval hash:
+  - `The amount of gas provided for the transaction exceeds the limit allowed for the block`
+  - `Details: intrinsic gas too high`
+- Context7 `/wevm/viem` docs confirmed `walletClient.sendTransaction` accepts an explicit `gas` limit and estimates automatically when omitted.
+- `scripts/check-cctp-bridge-source.ts` now applies OP-only explicit gas limits for approval and CCTP burn transactions while leaving Base/Arbitrum/Ethereum estimate behavior unchanged.
+
+### Transactions
+
+| Step | Transaction | Result |
+|---|---|---|
+| OP Sepolia USDC approval | `0x2e264ca0dbfee0865ae9e32ddd9702693f2b39c37c21804e781d86a96a2111f4` | accepted |
+| OP Sepolia CCTP burn with Stellar forwarder hook | `0x817d31c2af0407e35b1279ec731e50ff3665431a444ca5b271e2e3691c2e0a82` | accepted |
+| Stellar testnet CCTP mint_and_forward | `dc1c3f77bacf4da21035c3059dbb5dae81bc9e8f3dfd83477a5c0fe9069f8b1f` | accepted |
+| ASP membership insert for CCTP destination | `3fb620d5ecf5eaa90cdcff3a6b5890b389b2ac79d199c45d36e1e81698b9958c` | accepted |
+| USDC shield/deposit | `8205379a7d00710820b1b7e96a2eac6c4b7816b29185771bd00328abd18e1344` | accepted |
+
+- **Circle Iris attestation status:** `complete`.
+- **Circle Iris event nonce:** `0xb05d2d74a645aa095b7a271b53cb209fc0a58be0715bacbfa0bc219724f3a46d`.
+- **Node runner blocker after public bridge:** `Cannot find module '/js/web.js' imported from .../packages/core/src/nethermind-runtime.ts`.
+- **Shield runtime:** `pnpm cctp:shield:extension` used Chrome-for-Testing WXT MV3 extension with offscreen Nethermind browser/WASM prover.
+- **Proof/shield result:** `proofGenerated: true`, `submitReached: true`, `transactionSubmitted: true`, duration `14,371 ms`.
+- **Final Horizon balance for destination after shield:** USDC `0.0000000`, XLM `9999.7735297`.
+
+### Claim allowed
+
+- OP Sepolia now has full safe-path evidence: public CCTP bridge arrival followed by separate USDC shield/deposit through ZK Fighter.
+- This is not an atomic bridge-and-shield claim.

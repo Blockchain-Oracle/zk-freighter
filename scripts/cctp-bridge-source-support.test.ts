@@ -1,7 +1,13 @@
 import { afterEach, describe, expect, it } from 'vitest'
 
+import { getCctpSource } from '../packages/core/src/index.ts'
 import { cctpUsdcAtomicToStellarStroops, postBridgeShieldAmountAtomic } from './cctp-bridge-source-flow.ts'
-import { parseSourceKey } from './cctp-bridge-source-support.ts'
+import {
+  gasLimitForSourceTransaction,
+  opApprovalGasLimit,
+  opCctpBurnGasLimit,
+  parseSourceKey,
+} from './cctp-bridge-source-support.ts'
 import { inspectStellarDestinationReadiness } from './stellar-destination-readiness.ts'
 
 const originalSource = process.env.ZKF_CCTP_SOURCE
@@ -84,5 +90,62 @@ describe('postBridgeShieldAmountAtomic', () => {
   it('converts bridged USDC atomics into Stellar stroops', () => {
     expect(postBridgeShieldAmountAtomic(1_000_000n)).toBe(10_000_000n)
     expect(cctpUsdcAtomicToStellarStroops(900_000n)).toBe(9_000_000n)
+  })
+})
+
+describe('gasLimitForSourceTransaction', () => {
+  it('uses OP gas fallbacks for approval and burn transactions', () => {
+    const source = getCctpSource('testnet', 'optimism')
+    expect(source).toBeDefined()
+
+    expect(gasLimitForSourceTransaction({
+      network: 'testnet',
+      sourceKey: 'optimism',
+      to: source!.usdcContract,
+      source: source!,
+    })).toBe(opApprovalGasLimit)
+    expect(gasLimitForSourceTransaction({
+      network: 'testnet',
+      sourceKey: 'optimism',
+      to: source!.tokenMessenger,
+      source: source!,
+    })).toBe(opCctpBurnGasLimit)
+  })
+
+  it('leaves non-OP routes on viem gas estimation by default', () => {
+    const source = getCctpSource('testnet', 'arbitrum')
+    expect(source).toBeDefined()
+
+    expect(gasLimitForSourceTransaction({
+      network: 'testnet',
+      sourceKey: 'arbitrum',
+      to: source!.usdcContract,
+      source: source!,
+    })).toBeUndefined()
+  })
+
+  it('keeps OP mainnet on estimation unless explicit limits are provided', () => {
+    const source = getCctpSource('mainnet', 'optimism')
+    expect(source).toBeDefined()
+
+    expect(gasLimitForSourceTransaction({
+      network: 'mainnet',
+      sourceKey: 'optimism',
+      to: source!.usdcContract,
+      source: source!,
+    })).toBeUndefined()
+  })
+
+  it('allows explicit gas overrides for any source route', () => {
+    const source = getCctpSource('testnet', 'base')
+    expect(source).toBeDefined()
+
+    expect(gasLimitForSourceTransaction({
+      network: 'testnet',
+      sourceKey: 'base',
+      to: source!.tokenMessenger,
+      source: source!,
+      burnGasLimit: 777_000n,
+    })).toBe(777_000n)
   })
 })

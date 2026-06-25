@@ -121,8 +121,8 @@ Gas token notes:
 - ZK Fighter already has real Sepolia -> Stellar testnet -> USDC shield evidence.
 - ZK Fighter already has mainnet XLM/USDC pool deployments, QuickShield, shielded transfer, and unshield evidence.
 - ZK Fighter does not yet have accepted mainnet bridge-to-shield evidence.
-- ZK Fighter now has Base Sepolia -> Stellar testnet CCTP public bridge evidence and extension-offscreen post-bridge USDC shield evidence.
-- ZK Fighter does not yet have Arbitrum Sepolia, OP Sepolia, Base mainnet, or Arbitrum mainnet CCTP evidence.
+- ZK Fighter now has Base Sepolia, Arbitrum Sepolia, and OP Sepolia -> Stellar testnet CCTP public bridge evidence and extension-offscreen post-bridge USDC shield evidence.
+- ZK Fighter does not yet have Base mainnet, Arbitrum mainnet, OP mainnet, Avalanche, Polygon, or non-EVM CCTP evidence.
 
 ## Inferences
 
@@ -135,7 +135,7 @@ Gas token notes:
 
 ## Unknowns And Questions
 
-- Arbitrum Sepolia and OP Sepolia preflight found gas already present on the shared source wallet, but no source-chain USDC yet. Live evidence is blocked until Circle testnet USDC is funded on the chosen route.
+- Arbitrum Sepolia and OP Sepolia are no longer blocked: both received testnet USDC funding and produced accepted bridge-to-shield hashes.
 - The headless runner removes the injected-wallet dependency for evidence. Browser wallet network-switching is still useful for manual UI demos, but not required for accepted bridge hashes.
 - Whether Circle faucet availability is currently smooth for every chosen testnet. The docs link the faucet, but live availability must be checked during the actual evidence run.
 - Whether mainnet bridge-to-shield should use Base or Arbitrum first. Base is the current default for user familiarity and cost.
@@ -143,7 +143,7 @@ Gas token notes:
 
 ## Still Not Included
 
-- No Arbitrum Sepolia, OP Sepolia, Avalanche, Polygon, or non-EVM bridge-to-shield evidence yet.
+- No Avalanche, Polygon, or non-EVM bridge-to-shield evidence yet.
 - No mainnet bridge-to-shield evidence yet.
 - No atomic bridge-and-shield claim.
 - No non-EVM wallet integration plan beyond identifying it as separate work.
@@ -159,5 +159,5 @@ Gas token notes:
 - Extension bridge handoff can pass the selected source chain to the web route.
 - A headless evidence runner is now available through `pnpm cctp:bridge:testnet` and `pnpm cctp:bridge:mainnet`. It stores EVM private keys and the bridge destination mnemonic under `/Users/abu/.config/zk-fighter`, outside the repo.
 - The runner uses one shared local EVM address per network across configured EVM sources, so Base/Arbitrum/OP/Ethereum testnet funding can target the same public address.
-- Base Sepolia now has accepted bridge-to-shield evidence: approval, burn, Iris attestation, Stellar mint/forward, extension-offscreen ASP insertion, and separate USDC shield/deposit.
-- No Arbitrum/OP chain evidence has been recorded yet.
+- Base Sepolia, Arbitrum Sepolia, and OP Sepolia now have accepted bridge-to-shield evidence: approval, burn, Iris attestation, Stellar mint/forward, extension-offscreen ASP insertion, and separate USDC shield/deposit.
+- OP Sepolia required an explicit gas-limit fallback in the headless runner because automatic viem/RPC gas estimation returned `intrinsic gas too high` before any tx hash existed.

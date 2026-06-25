@@ -13,6 +13,7 @@ import {
   defaultMaxFeeAtomic,
   defaultMinGasWei,
   faucetHints,
+  gasLimitForSourceTransaction,
   inspectFunding,
   loadOrCreateDestinationMnemonic,
   loadOrCreateEvmAccount,
@@ -33,6 +34,12 @@ async function main() {
   const amountAtomic = parseBigIntEnv('ZKF_CCTP_AMOUNT_ATOMIC', defaultAmountAtomic)
   const maxFeeAtomic = parseBigIntEnv('ZKF_CCTP_MAX_FEE_ATOMIC', defaultMaxFeeAtomic)
   const minGasWei = parseBigIntEnv('ZKF_CCTP_MIN_GAS_WEI', defaultMinGasWei)
+  const approveGasLimit = process.env.ZKF_CCTP_APPROVE_GAS_LIMIT
+    ? parseBigIntEnv('ZKF_CCTP_APPROVE_GAS_LIMIT', 1n)
+    : undefined
+  const burnGasLimit = process.env.ZKF_CCTP_BURN_GAS_LIMIT
+    ? parseBigIntEnv('ZKF_CCTP_BURN_GAS_LIMIT', 1n)
+    : undefined
   const resumeBurnHash = process.env.ZKF_CCTP_RESUME_BURN_HASH?.trim()
   const resumeApproveHash = process.env.ZKF_CCTP_RESUME_APPROVE_HASH?.trim()
   const shieldOnly = process.env.ZKF_CCTP_SHIELD_ONLY === '1'
@@ -192,6 +199,14 @@ async function main() {
         chain,
         to: transaction.to as Address,
         data: transaction.data,
+        gas: gasLimitForSourceTransaction({
+          network,
+          sourceKey,
+          to: transaction.to,
+          source,
+          approveGasLimit,
+          burnGasLimit,
+        }),
       })
     },
     async waitForTransaction(txHash) {
