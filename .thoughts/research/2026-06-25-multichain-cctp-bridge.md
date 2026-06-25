@@ -121,7 +121,8 @@ Gas token notes:
 - ZK Fighter already has real Sepolia -> Stellar testnet -> USDC shield evidence.
 - ZK Fighter already has mainnet XLM/USDC pool deployments, QuickShield, shielded transfer, and unshield evidence.
 - ZK Fighter does not yet have accepted mainnet bridge-to-shield evidence.
-- ZK Fighter does not yet have Base Sepolia, Arbitrum Sepolia, Base mainnet, or Arbitrum mainnet CCTP evidence.
+- ZK Fighter now has Base Sepolia -> Stellar testnet CCTP public bridge evidence and extension-offscreen post-bridge USDC shield evidence.
+- ZK Fighter does not yet have Arbitrum Sepolia, OP Sepolia, Base mainnet, or Arbitrum mainnet CCTP evidence.
 
 ## Inferences
 
@@ -160,5 +161,5 @@ Gas token notes:
 - Extension bridge handoff can pass the selected source chain to the web route.
 - A headless evidence runner is now available through `pnpm cctp:bridge:testnet` and `pnpm cctp:bridge:mainnet`. It stores EVM private keys and the bridge destination mnemonic under `/Users/abu/.config/zk-fighter`, outside the repo.
 - The runner uses one shared local EVM address per network across configured EVM sources, so Base/Arbitrum/OP/Ethereum testnet funding can target the same public address.
-- Base Sepolia now has accepted public bridge-leg evidence: approval, burn, Iris attestation, and Stellar mint/forward. It does not yet have the separate post-bridge USDC shield hash.
+- Base Sepolia now has accepted bridge-to-shield evidence: approval, burn, Iris attestation, Stellar mint/forward, extension-offscreen ASP insertion, and separate USDC shield/deposit.
 - No Arbitrum/OP chain evidence has been recorded yet.

@@ -27,8 +27,8 @@
 - Base is the default source on testnet and mainnet.
 - Resume state now stores `sourceChainKey`, so a burn hash is not resumed against the wrong Circle source domain.
 - Extension handoff now passes source-chain context to the web bridge route.
-- Base Sepolia public bridge-leg evidence is recorded. Post-bridge USDC shield is still blocked in the Node runner at ASP membership state read, so Base Sepolia is not yet a full bridge-to-shield evidence route.
-- Still pending: finish the post-Base-bridge USDC shield, then run real Arbitrum Sepolia bridge-to-shield evidence, then optional OP evidence, then a separately approved mainnet route.
+- Base Sepolia bridge-to-shield evidence is recorded: public bridge leg, Stellar mint/forward, extension-offscreen ASP insertion, and separate USDC shield/deposit.
+- Still pending: run real Arbitrum Sepolia bridge-to-shield evidence, then optional OP evidence, then a separately approved mainnet route.
 
 ## Assumptions
 
@@ -349,6 +349,7 @@ Before claiming this phase complete:
 - Run `pnpm build`.
 - Run docs/file/secret checks.
 - Run browser smoke for the bridge selector.
+- Dispatch a focused review subagent for the completed bridge checkpoint before proceeding to the next route or phase. For CCTP work, focus on source-domain selection, resume safety, chain IDs, contract IDs, secret handling, evidence accuracy, unsupported-claim leakage, and CCTP atomic-vs-Stellar-stroop unit conversion.
 - If extension copy or handoff changes, run:
   - `pnpm extension:bridge`
   - `pnpm extension:runtime`

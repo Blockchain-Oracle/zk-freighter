@@ -9,7 +9,7 @@
   - mainnet Stellar destination readiness is checked read-only before any source-chain transaction.
   - CCTP approval and runner funding preflight now account for `amount + maxFee`.
   - resume and shield-only modes were added to avoid replaying accepted burns or mints.
-  - post-bridge shield now uses the actual bridged USDC amount, not a multiplier.
+  - post-bridge shield now converts CCTP USDC atomics into Stellar stroops before submitting the shield.
   - post-feature review gate was added to `AGENTS.md`, the quality profile, current handoff prompts, and the multichain bridge plan.
 
 ## Reviewers
@@ -48,12 +48,12 @@
   - `ZKF_CCTP_RESUME_BURN_HASH=... pnpm cctp:bridge:testnet`
   - `ZKF_CCTP_SHIELD_ONLY=1 pnpm cctp:bridge:testnet`
 
-### Fixed: post-bridge shield amount
+### Corrected: post-bridge shield unit conversion
 
-- Finding: the separate shield step multiplied the bridged USDC amount by `10`, so a default 1 USDC bridge would try to shield 10 USDC.
-- Risk: if the public destination had unrelated pre-funded USDC, the evidence could accidentally prove "shielded available balance" instead of "shielded the bridged amount."
-- Fix: post-bridge shield now passes through the bridged amount exactly.
-- Regression evidence: `scripts/cctp-bridge-source-support.test.ts` covers `postBridgeShieldAmountAtomic(1_000_000n) === 1_000_000n`.
+- Finding: the follow-up review flagged a `10x` shield multiplier, but later runtime evidence showed this was a unit conversion issue. CCTP USDC amounts use 6 decimals; Stellar asset stroops use 7 decimals.
+- Risk: passing CCTP atomics directly into `submitXlmShieldDeposit` shields only one tenth of the bridged Stellar USDC balance.
+- Fix: post-bridge shield now converts `1_000_000` CCTP atomic USDC into `10_000_000` Stellar stroops.
+- Regression evidence: `scripts/cctp-bridge-source-support.test.ts` covers `postBridgeShieldAmountAtomic(1_000_000n) === 10_000_000n`.
 
 ## Evidence Checked
 
@@ -63,9 +63,8 @@
   - Base Sepolia CCTP burn: `0x88028771b02dac65423d638349024930087a7c371c77936b513ddca752f2cd63`.
   - Circle Iris attestation status: `complete`.
   - Stellar testnet mint_and_forward: `08df05fe661f35dcf42c5ab054ae2bd404ed31091a629d963647ca3d5b293e11`.
-- No Base Sepolia ASP insert or USDC shield hash is claimed.
+- Base Sepolia post-bridge shield is now claimed in a later evidence entry after the extension-offscreen CCTP-arrival harness submitted accepted ASP insert and USDC shield transactions.
 
 ## Remaining Risk
 
-- The Node runner completes the public Base bridge leg, but post-bridge USDC shield is blocked because `insertAspMembershipLeaf` cannot read ASP membership contract state in this context.
-- Next investigation should compare the Node runner's Nethermind runtime context with the extension/browser runtime, where ASP state and dry proof evidence have already worked.
+- The pure Node runner completes the public bridge leg, but the Nethermind proof/shield path must run in browser/offscreen runtime. Use `pnpm cctp:shield:extension` for post-bridge shielding from the local CCTP destination wallet.

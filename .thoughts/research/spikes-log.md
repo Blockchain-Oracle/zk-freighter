@@ -1984,4 +1984,56 @@ These are upload/install estimates only. They do not include contract-instance d
 - **Circle Iris attestation status:** `complete`.
 - **Circle Iris event nonce:** `0x52ed7c34b1c37729d0329bed27f23bcebd64cf260dc3118588cd35e8b2403887`.
 - **Failure fixed:** the first Base burn attempt failed before burn submission with `ERC20: transfer amount exceeds allowance`. Root cause was approving only `amount`; CCTP V2 fast-transfer path requires allowance for `amount + maxFee`. Core approval and the runner funding preflight now use `amount + maxFee`.
-- **Remaining blocker:** separate post-bridge USDC shield is blocked in this Node runner because ASP membership preflight returns `ASP membership contract state could not be read.` No ASP insert hash and no USDC shield hash are claimed for Base Sepolia yet.
+- **Follow-up:** separate post-bridge USDC shield is now completed through the extension/offscreen runtime. See `2026-06-25 17:17 UTC - Base Sepolia CCTP arrival shield`.
+
+## 2026-06-25 17:17 UTC - Base Sepolia CCTP arrival shield
+
+- **Phase:** Multichain bridge evidence.
+- **Kind:** Real post-bridge USDC shield/deposit for the Base Sepolia CCTP arrival, using the extension offscreen Nethermind browser/WASM runtime.
+- **Network:** Stellar testnet.
+- **Command:** `pnpm cctp:shield:extension`, then `ZKF_CCTP_AMOUNT_ATOMIC=900000 pnpm cctp:shield:extension` after unit conversion correction.
+- **Destination wallet:** `GD7RLJMFDBT6LCTT5P2QIPQKM2ODT2ZNFSF6XP2JVHAOQBAEXTEX2ILG`.
+- **Source bridge leg:** Base Sepolia burn `0x88028771b02dac65423d638349024930087a7c371c77936b513ddca752f2cd63`, Stellar mint/forward `08df05fe661f35dcf42c5ab054ae2bd404ed31091a629d963647ca3d5b293e11`.
+- **Secret posture:** destination mnemonic remained outside the repo at `/Users/abu/.config/zk-fighter/cctp-bridge-destination.json`.
+- **Runtime:** Chrome-for-Testing WXT MV3 extension with offscreen Nethermind browser/WASM prover.
+- **ASP membership contract:** `CA33KAHNZ3QIG2PSSNUGMGM73CYQD7RLQPRBONOZEOIHIQENX2GNC5XP`.
+- **USDC pool:** `CCY6R2BJQ2LAYINOZZLDLHJCWRRPVQNRTWEWCWO7FIDD3BRDQJCAOHKY`.
+
+### Transactions
+
+| Step | Transaction | Result |
+|---|---|---|
+| ASP membership insert for CCTP destination | `5acda595f61470a783f4a32e544f493a81f1988dcc3e1572b86c6484895b2ca4` | successful |
+| Initial USDC shield/deposit | `b1e1ca6e81fb34d2d7218099722c0f9b76e3a7a2debf29e90701592da6acd87a` | successful; shielded `0.1 USDC` because the first harness run passed CCTP atomics directly as Stellar stroops |
+| ASP membership insert retry during correction run | `4a5930af618344d00f959c4933ce30102cd0ad8ac00e623b9170f789afc8ab1e` | successful |
+| Remaining USDC shield/deposit | `6e9369c5c9e0d3d5226f0af63ec75f4ec49176ede1cc7c0f0b19ce004dda215d` | successful; shielded remaining `0.9 USDC` |
+
+### Runtime evidence
+
+- First run:
+  - `proofGenerated`: `true`
+  - `submitReached`: `true`
+  - `transactionSubmitted`: `true`
+  - Duration: `15,956 ms`
+- Correction run:
+  - `cctpAmountAtomic`: `900000`
+  - `amountStroops`: `9000000`
+  - `proofGenerated`: `true`
+  - `submitReached`: `true`
+  - `transactionSubmitted`: `true`
+  - Duration: `15,692 ms`
+- Final Horizon balance for `GD7RLJMFDBT6LCTT5P2QIPQKM2ODT2ZNFSF6XP2JVHAOQBAEXTEX2ILG`:
+  - USDC: `0.0000000`
+  - XLM: `9999.9318114`
+
+### Fixes made during this checkpoint
+
+- Added `pnpm cctp:shield:extension`, which imports the local CCTP destination wallet into the extension harness and runs ASP insert + USDC QuickShield through Chrome/offscreen Nethermind.
+- Fixed misleading ASP error propagation so browser-runtime import failures are not hidden behind `ASP membership contract state could not be read`.
+- Fixed CCTP-to-Stellar amount conversion: Circle CCTP USDC atomics use 6 decimals; Stellar asset stroops use 7 decimals, so `1_000_000` CCTP atomic USDC shields as `10_000_000` Stellar stroops.
+- Added regression coverage for the conversion in `scripts/cctp-bridge-source-support.test.ts`.
+
+### Claim allowed
+
+- Base Sepolia now has full safe-path evidence: public CCTP bridge arrival followed by separate USDC shield/deposit through ZK Fighter.
+- This is not an atomic bridge-and-shield claim.
