@@ -14,6 +14,8 @@
     "preview": "pnpm --filter @zk-fighter/web preview",
     "prover:stage": "node scripts/stage-nethermind-prover-assets.mjs",
     "testnet-usdc-funder:setup": "node scripts/setup-testnet-usdc-funder.mjs",
+    "cctp:bridge:testnet": "ZKF_NETWORK=testnet tsx scripts/check-cctp-bridge-source.ts",
+    "cctp:bridge:mainnet": "ZKF_NETWORK=mainnet tsx scripts/check-cctp-bridge-source.ts",
     "extension:runtime": "node scripts/check-extension-runtime.mjs",
     "extension:dapp": "node scripts/check-extension-dapp-bridge.mjs",
     "extension:quickshield": "node scripts/check-extension-quickshield.mjs",
@@ -26,7 +28,9 @@
     "secrets:check": "node scripts/secret-scan.mjs"
   },
   "devDependencies": {
+    "tsx": "4.22.4",
     "typescript": "~6.0.2",
+    "viem": "2.53.1",
     "vitest": "^4.0.16"
   }
 }

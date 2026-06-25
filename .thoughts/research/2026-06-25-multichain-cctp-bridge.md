@@ -105,7 +105,7 @@ Gas token notes:
 - Avalanche uses AVAX.
 - Polygon PoS/Amoy uses POL in current Polygon docs.
 
-### Current ZK Fighter code is still single-source-chain
+### Pre-implementation ZK Fighter code was single-source-chain
 
 - `packages/core/src/networks.ts` defines `CctpConfig.evmSource`, singular.
 - Testnet `evmSource` is Ethereum Sepolia only.
@@ -114,6 +114,7 @@ Gas token notes:
 - `resumeCctpBridgeToStellar` polls Iris using the single configured `evmSource.domain`; with multiple source chains, a burn hash alone is not enough. Resume state must also store the selected source chain/domain.
 - `packages/core/src/cctp-types.ts` has `sourceChain?: string` on reports, but run/resume options do not include a source-chain selector.
 - `apps/extension/src/ExtensionBridgePanel.tsx` still says `Ethereum Sepolia USDC via Circle CCTP` for the bridge handoff.
+- This subsection is historical. The implementation follow-up below records the current multichain source registry and handoff changes.
 
 ### Current evidence state
 
@@ -133,10 +134,10 @@ Gas token notes:
 
 ## Unknowns And Questions
 
-- Which source-chain wallet/funding will Abu provide first for real testnet evidence: Base Sepolia, Arbitrum Sepolia, or both?
-- Whether the injected-wallet path will switch networks cleanly for Base Sepolia and Arbitrum Sepolia in the current browser setup, or whether the UI needs manual network instructions first.
+- Which source-chain wallet/funding will Abu provide first for real testnet evidence: Base Sepolia, Arbitrum Sepolia, OP Sepolia, or all three.
+- The headless runner removes the injected-wallet dependency for evidence. Browser wallet network-switching is still useful for manual UI demos, but not required for accepted bridge hashes.
 - Whether Circle faucet availability is currently smooth for every chosen testnet. The docs link the faucet, but live availability must be checked during the actual evidence run.
-- Whether mainnet bridge-to-shield should use Base or Arbitrum first. Base looks like the strongest default for user familiarity; Arbitrum is equally valid technically.
+- Whether mainnet bridge-to-shield should use Base or Arbitrum first. Base is the current default for user familiarity and cost.
 - Whether to include Polygon/Avalanche in the visible UI immediately or keep them behind an "advanced / more routes" section until they have hashes.
 
 ## Not Included
@@ -157,4 +158,6 @@ Gas token notes:
 - The bridge runner accepts a `sourceChainKey` and uses the selected source domain, chain ID, USDC contract, TokenMessenger, and explorer URL.
 - Web bridge resume storage now records the selected source chain with the burn hash.
 - Extension bridge handoff can pass the selected source chain to the web route.
+- A headless evidence runner is now available through `pnpm cctp:bridge:testnet` and `pnpm cctp:bridge:mainnet`. It stores EVM private keys and the bridge destination mnemonic under `/Users/abu/.config/zk-fighter`, outside the repo.
+- The runner uses one shared local EVM address per network across configured EVM sources, so Base/Arbitrum/OP/Ethereum testnet funding can target the same public address.
 - No new Base/Arbitrum/OP chain evidence has been recorded yet.

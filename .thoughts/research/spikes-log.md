@@ -1937,3 +1937,20 @@ These are upload/install estimates only. They do not include contract-instance d
 - **Proof duration:** `9,255 ms`.
 - **Submit reached:** yes, in dry-proof callback only; no shield/deposit transaction is claimed from this gate.
 - **Bridge note:** this verifies the extension runtime after the multichain bridge source-selector implementation. It does not claim a Base, Arbitrum, or OP bridge transaction.
+
+## 2026-06-25 16:22 UTC - Headless multichain CCTP bridge preflight
+
+- **Phase:** Multichain bridge evidence preparation.
+- **Kind:** Read-only EVM source funding preflight through the new headless runner. No bridge transaction is claimed from this entry.
+- **Commands:**
+  - `pnpm cctp:bridge:testnet`
+  - `ZKF_CCTP_SOURCE=arbitrum pnpm cctp:bridge:testnet`
+  - `ZKF_CCTP_SOURCE=optimism pnpm cctp:bridge:testnet`
+  - `ZKF_CCTP_SOURCE=ethereum pnpm cctp:bridge:testnet`
+  - `pnpm cctp:bridge:mainnet`
+- **Testnet EVM source wallet:** `0x368AbfE2B29ee5Bebf94E6296493DFc9eAe9B74c`.
+- **Mainnet Base EVM source wallet:** `0xA7FCf3F915947E7014d794f5494BBa60c28EF98E`.
+- **Bridge destination address:** `GD7RLJMFDBT6LCTT5P2QIPQKM2ODT2ZNFSF6XP2JVHAOQBAEXTEX2ILG`.
+- **Secret posture:** EVM private keys and the bridge destination mnemonic are stored outside the repo at `/Users/abu/.config/zk-fighter`.
+- **Result:** blocked before submission because the EVM source wallets had `0` native gas and `0` USDC.
+- **Next real evidence requirement:** fund `0x368AbfE2B29ee5Bebf94E6296493DFc9eAe9B74c` on the selected testnet source with native gas plus Circle faucet USDC, then rerun the matching `pnpm cctp:bridge:testnet` command. The runner will then use the real core CCTP bridge, ASP insert, and USDC shield/deposit paths.

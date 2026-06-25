@@ -20,13 +20,14 @@
 ## Implementation Status
 
 - 2026-06-25: Phase 1 and the code part of Phases 2, 3, and 5 are implemented for EVM source chains.
+- 2026-06-25: A headless CCTP evidence runner is implemented for testnet/mainnet source-chain preflight and real submission once the source wallet is funded.
 - Active configured source chains:
   - Testnet: Ethereum Sepolia, Base Sepolia, Arbitrum Sepolia, OP Sepolia.
   - Mainnet: Ethereum, Base, Arbitrum One, OP Mainnet.
 - Base is the default source on testnet and mainnet.
 - Resume state now stores `sourceChainKey`, so a burn hash is not resumed against the wrong Circle source domain.
 - Extension handoff now passes source-chain context to the web bridge route.
-- Still pending: real Base Sepolia and Arbitrum Sepolia bridge-to-shield evidence, then optional OP evidence, then a separately approved mainnet route.
+- Still pending: fund the local EVM source wallet, then run real Base Sepolia and Arbitrum Sepolia bridge-to-shield evidence, then optional OP evidence, then a separately approved mainnet route.
 
 ## Assumptions
 
@@ -39,10 +40,10 @@
 
 ## Open Questions
 
-- Which live testnet evidence should run first after implementation: Base Sepolia, Arbitrum Sepolia, or both?
-- Should OP Sepolia ship visibly at the same time as Base/Arbitrum, or only after Base/Arbitrum evidence lands?
+- Live testnet evidence order is Base Sepolia first, then Arbitrum Sepolia, then OP Sepolia if funding/time permits.
+- OP Sepolia can stay configured in UI, but evidence claims must remain separate until its own accepted hashes exist.
 - Should Avalanche and Polygon appear in the UI immediately, or be configured but hidden until evidence is recorded?
-- Which source chain should be the first mainnet bridge-to-shield route: Base mainnet or Arbitrum One?
+- Base mainnet is the default first mainnet bridge-to-shield route; Arbitrum One remains the next low-cost alternative.
 
 ## Prototype Reintegration Gate
 
