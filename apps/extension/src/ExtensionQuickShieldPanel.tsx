@@ -67,7 +67,7 @@ export function ExtensionQuickShieldPanel({ status, sendRuntimeMessage }: Extens
         type: dappMessageTypes.prepareUsdcReceive,
       })) as PrepareUsdcReceiveResponse
       if (!response.ok || !response.report) {
-        setError(response.error ?? 'USDC receive preparation did not return a report.')
+        setError(usdcReceiveErrorText(response.error))
       } else {
         setUsdcReport(response.report)
       }
@@ -120,7 +120,7 @@ export function ExtensionQuickShieldPanel({ status, sendRuntimeMessage }: Extens
             onClick={prepareUsdcReceive}
           >
             <Activity size={16} aria-hidden="true" />
-            {usdcBusy ? 'Preparing USDC...' : 'Prepare USDC receive'}
+            {usdcBusy ? 'Checking USDC...' : 'Enable USDC receiving'}
           </button>
           <p className="copy">{disabledReason || usdcReportLabel(usdcReport)}</p>
           {usdcReport ? <UsdcReport report={usdcReport} /> : null}
@@ -193,7 +193,7 @@ function UsdcReport({ report }: { readonly report: StellarUsdcTrustlineReport })
       </dl>
       {report.explorerUrl ? (
         <a className="explorer-link" href={report.explorerUrl} target="_blank" rel="noreferrer">
-          <ExternalLink size={14} aria-hidden="true" /> View trustline setup
+          <ExternalLink size={14} aria-hidden="true" /> View public setup
         </a>
       ) : null}
     </div>
@@ -254,12 +254,26 @@ function accessReportLabel(report: AspMembershipInsertReport | null): string {
 
 function usdcReportLabel(report: StellarUsdcTrustlineReport | null): string {
   if (!report) {
-    return 'Creates the public USDC trustline. Fund the public Stellar address before shielding USDC.'
+    return 'Checks whether this public address can receive USDC. If needed, it submits the one-time public setup transaction and may reserve 0.5 XLM.'
   }
   if (report.status === 'created') {
-    return `USDC trustline created ${shorten(report.txHash ?? '', 12, 10)}`
+    return `USDC receiving enabled ${shorten(report.txHash ?? '', 12, 10)}`
   }
-  return 'USDC trustline ready. Fund the public address before shielding.'
+  return 'USDC receiving is ready. Fund the public address before shielding.'
+}
+
+function usdcReceiveErrorText(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error ?? '')
+  if (/not funded/i.test(message)) {
+    return 'Fund this Stellar address with XLM first, then enable USDC receiving.'
+  }
+  if (/insufficient|underfunded|tx_insufficient_balance|op_underfunded/i.test(message)) {
+    return 'Add enough XLM for the one-time 0.5 XLM reserve and network fee, then try again.'
+  }
+  if (/friendbot/i.test(message)) {
+    return 'Testnet funding failed. Try again after the faucet recovers.'
+  }
+  return message ? 'USDC receiving setup failed. Check the network and XLM reserve, then try again.' : 'USDC receive preparation did not return a report.'
 }
 
 function reportLabel(report: XlmShieldSubmitReport | null, asset: AssetCode): string {

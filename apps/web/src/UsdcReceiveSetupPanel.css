@@ -1,0 +1,55 @@
+.usdc-receive-setup {
+  display: grid;
+  gap: 10px;
+  margin: 18px 0;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--muted-surface);
+}
+
+.usdc-receive-header {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  align-items: start;
+}
+
+.usdc-receive-header svg {
+  color: var(--accent);
+}
+
+.usdc-receive-header h3 {
+  margin: 0 0 4px;
+  font-size: 16px;
+}
+
+.usdc-receive-header p,
+.usdc-receive-copy {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.usdc-receive-error {
+  margin: 0;
+  padding: 9px 10px;
+  border: 1px solid #f2c4be;
+  border-radius: 6px;
+  background: #fee9e7;
+  color: #7f1d1d;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.usdc-receive-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+  text-decoration: none;
+}

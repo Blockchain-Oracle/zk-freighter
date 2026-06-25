@@ -26,6 +26,7 @@ import {
   vaultStorageKey,
 } from './app-helpers'
 import { CreateWalletPanel, UnlockWalletPanel, type WalletSetupMode } from './AccessPanels'
+import { UsdcReceiveSetupPanel } from './UsdcReceiveSetupPanel'
 import { WalletFlowPanels } from './WalletFlowPanels'
 import './App.css'
 
@@ -239,6 +240,7 @@ function App() {
                 <dd>Loaded from the shielded pool panels</dd>
               </div>
             </dl>
+            <UsdcReceiveSetupPanel key={`${network}:${identity.stellarPublicKey}`} identity={identity} network={network} />
             <button className="button secondary" onClick={() => setIdentity(null)} title="Lock wallet">
               <Lock size={18} aria-hidden="true" />
               Lock

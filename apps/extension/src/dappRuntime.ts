@@ -201,7 +201,7 @@ export class ExtensionDappRuntime {
     }
 
     if (!this.runUsdcTrustline) {
-      return { ok: false, error: 'Extension offscreen USDC trustline runner is unavailable.' }
+      return { ok: false, error: 'Extension offscreen USDC receive setup is unavailable.' }
     }
 
     try {
