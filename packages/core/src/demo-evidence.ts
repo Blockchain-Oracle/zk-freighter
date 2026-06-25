@@ -1,3 +1,5 @@
+import { mainnetXlmPrivateLoopDigest } from './mainnet-demo-evidence'
+
 export type DemoEvidenceKind = 'shield' | 'transfer' | 'unshield' | 'approval' | 'burn' | 'mint' | 'asp-insert'
 
 export interface DemoEvidenceTransaction {
@@ -225,5 +227,5 @@ export function phase8BridgeDemoDigest(evidence: BridgeEvidenceFlow = phase8Cctp
 }
 
 export function submissionEvidenceDigest(): string {
-  return [phase4UsdcDemoDigest(), '', phase8BridgeDemoDigest()].join('\n')
+  return [phase4UsdcDemoDigest(), '', phase8BridgeDemoDigest(), '', mainnetXlmPrivateLoopDigest()].join('\n')
 }

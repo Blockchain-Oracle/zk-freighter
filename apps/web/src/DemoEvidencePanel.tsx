@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { ClipboardCheck, ExternalLink, FileCheck2 } from 'lucide-react'
 import {
+  mainnetXlmPrivateLoopEvidence,
   phase8CctpBridgeEvidence,
   phase4UsdcDemoEvidence,
   submissionEvidenceDigest,
@@ -36,7 +37,7 @@ export function DemoEvidencePanel() {
         <FileCheck2 size={24} aria-hidden="true" />
         <div>
           <h1>Demo proof digest</h1>
-          <p>Recorded testnet evidence for the USDC shielded loop and bridge-to-shield path.</p>
+          <p>Recorded testnet evidence plus the mainnet XLM private-loop smoke.</p>
         </div>
       </div>
 
@@ -112,6 +113,32 @@ export function DemoEvidencePanel() {
               <strong>{artifact.label}</strong>
               <span>bridge artifact</span>
               <code>{truncateMiddle(artifact.value, 16, 12)}</code>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="evidence-notes">
+        <h2>Mainnet XLM extension smoke</h2>
+        <ul>
+          {mainnetXlmPrivateLoopEvidence.boundaryCopy.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+      </div>
+
+      <EvidenceTable
+        label="Recorded mainnet XLM private-loop evidence"
+        transactions={mainnetXlmPrivateLoopEvidence.transactions}
+      />
+
+      <div className="proof-results">
+        <ul className="artifact-list">
+          {mainnetXlmPrivateLoopEvidence.artifacts.map((artifact) => (
+            <li key={artifact.label}>
+              <strong>{artifact.label}</strong>
+              <span>mainnet evidence</span>
+              <code>{artifact.value}</code>
             </li>
           ))}
         </ul>
