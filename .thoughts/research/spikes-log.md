@@ -1645,3 +1645,46 @@ Result:
 - No mainnet privacy-pool deployment.
 - No mainnet shield/deposit, shielded transfer, or unshield/withdraw.
 - No mainnet bridge-to-shield flow.
+
+## 2026-06-25 11:18 UTC - Mainnet privacy-pool deployment funding check
+
+- **Phase:** Mainnet shielded-pool deployment readiness.
+- **Kind:** Real mainnet upload attempt plus decoded fee/rent estimates.
+- **Network:** Stellar mainnet.
+- **QA public account:** `GB3VMAPRJDHLRG2VKNCUUNOPBKJAAZCELU5TIF4QVPCTMYO5TGECGLVM`.
+- **Secret posture:** the local Stellar CLI identity alias is `zkf-mainnet-qa`; the seed/secret was not printed and remains outside the repo at `/Users/abu/.config/stellar/identity/zkf-mainnet-qa.toml`.
+- **RPC:** `https://mainnet.sorobanrpc.com`.
+- **Network passphrase:** `Public Global Stellar Network ; September 2015`.
+
+### What was attempted
+
+- Tried to upload the reference `asp_membership.wasm` to mainnet with:
+  - `stellar contract upload --wasm reference/stellar-private-payments/target/stellar/asp_membership.wasm --source-account zkf-mainnet-qa --rpc-url https://mainnet.sorobanrpc.com --network-passphrase 'Public Global Stellar Network ; September 2015' --cost`
+- The transaction simulated and signed locally, then mainnet submission failed before inclusion:
+  - **Local signed transaction hash:** `d73269bbd5d238ab57fb6757dd93ae91f387c9064cd6ee0a2e80dbcb862f431b`
+  - **Submission result:** `TxInsufficientBalance`
+  - **Ledger:** none; not accepted on-chain.
+- Horizon balance after the failed attempt stayed unchanged:
+  - XLM: `8.9999800`
+  - USDC: `0.1817950`
+
+### Artifact hashes and decoded upload estimates
+
+These are upload/install estimates only. They do not include contract-instance deployment, pool setup, ASP insertion, or any shield transaction.
+
+| Artifact | SHA-256 | Fee estimate |
+|---|---:|---:|
+| `asp_membership.wasm` | `e9efa31e13da7dbd92dabf4cd9d6653be3d48efb83498f1d7209a2d6772e664a` | `245974972` stroops / `24.5974972 XLM` |
+| `asp_non_membership.wasm` | `6eb010fb5779d83a858e6fc6a42679936c93e1c6aa243425eb32257231d63b8a` | `475603573` stroops / `47.5603573 XLM` |
+| `circom_groth16_verifier.wasm` | `81a63040ecac6ad5c8d8441fe1cbd809184b6e47e4c559bf73d06268b0683c49` | `64875743` stroops / `6.4875743 XLM` |
+| `pool.wasm` | `28c2cfaab1506d1d74d883cd1de3527d2d938c9f85ac4a6eacbfa199cc78c674` | `356011708` stroops / `35.6011708 XLM` |
+
+- **Total upload estimate:** `1142465996` stroops / `114.2465996 XLM`.
+- **Current funded balance:** `8.9999800 XLM`.
+- **Practical funding need:** at least `130 XLM` to cover uploads plus instance deployments and small runtime tests; `150 XLM` gives safer buffer for failed attempts, rent variance, and a tiny shield deposit.
+
+### Current conclusion
+
+- Mainnet pool deployment is technically on the right path, but blocked by insufficient funded XLM.
+- No mainnet privacy-pool contract was uploaded, deployed, or configured.
+- ZK Fighter must keep mainnet shielded pools marked `pending-deployment` until funding is topped up, contracts are deployed, and a real mainnet shield test records accepted transaction hashes.

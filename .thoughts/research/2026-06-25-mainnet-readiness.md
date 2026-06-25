@@ -94,7 +94,7 @@ Check whether ZK Fighter can safely move from testnet evidence to mainnet testin
   - This is an operations/funding QA key, not a ZK Fighter seed-derived app wallet identity.
 - Public address:
   - `GB3VMAPRJDHLRG2VKNCUUNOPBKJAAZCELU5TIF4QVPCTMYO5TGECGLVM`
-- Horizon currently returns `404 Resource Missing` for this address, so it is not funded/created yet.
+- The account was initially unfunded during the first readiness pass, then Abu funded it with `10.0000000 XLM`.
 
 ### Mainnet funding facts
 
@@ -115,25 +115,42 @@ Check whether ZK Fighter can safely move from testnet evidence to mainnet testin
   - USDC: `0.1817950`
 - This proves public mainnet USDC plumbing only. It still does not prove mainnet CCTP, mainnet shielded pools, or mainnet bridge-to-shield.
 
+### Mainnet privacy-pool deployment follow-up
+
+- Abu approved real mainnet deployment/testing and funded the QA account with the first tranche.
+- The first real contract upload attempt targeted `reference/stellar-private-payments/target/stellar/asp_membership.wasm`.
+- The transaction simulated and signed locally, but mainnet submission failed before inclusion:
+  - Local signed transaction hash: `d73269bbd5d238ab57fb6757dd93ae91f387c9064cd6ee0a2e80dbcb862f431b`
+  - Result: `TxInsufficientBalance`
+  - No ledger, explorer hash, upload, or contract ID was created.
+- Horizon balance after the failed attempt stayed unchanged:
+  - XLM: `8.9999800`
+  - USDC: `0.1817950`
+- Decoded upload estimates for the four required reference WASM artifacts:
+  - `asp_membership.wasm`: `24.5974972 XLM`
+  - `asp_non_membership.wasm`: `47.5603573 XLM`
+  - `circom_groth16_verifier.wasm`: `6.4875743 XLM`
+  - `pool.wasm`: `35.6011708 XLM`
+  - Total uploads only: `114.2465996 XLM`
+- Practical funding target before retry: at least `130 XLM`; `150 XLM` is safer because it leaves room for contract-instance deployments, ASP setup, small shield deposits, failed attempts, and rent variance.
+
 ## Inferences
 
 - Public mainnet XLM funding, USDC trustline creation, and a tiny Stellar DEX XLM-to-USDC path payment are now verified without claiming shielded mainnet support.
 - A real mainnet CCTP public bridge from Ethereum mainnet to Stellar mainnet should be feasible after code config is extended with Ethereum mainnet source values and the mainnet-only guards are relaxed for public mint-and-forward.
 - A real mainnet bridge-to-shield demo is not currently feasible because no mainnet privacy pool is deployed/configured.
-- A real mainnet shield/send/unshield demo requires a separate mainnet pool-deployment phase, real XLM for contract deployment/rent/fees, and a new evidence pass. It should remain opt-in because it uses real funds and unaudited privacy-pool code.
+- A real mainnet shield/send/unshield demo requires a larger mainnet pool-deployment funding tranche, accepted upload/deploy transaction hashes, and a new evidence pass. It should remain opt-in because it uses real funds and unaudited privacy-pool code.
 
 ## Unknowns And Questions
 
-- How much real XLM Abu wants to risk for mainnet deployment, if any.
-- Whether we should prove only public mainnet USDC arrival before submission, or also attempt mainnet privacy-pool deployment.
+- Whether Abu wants to top up the QA address to the practical deployment target of `130-150 XLM`.
 - Whether the Nethermind pool WASM and dependency path can be reproduced cleanly for mainnet deployment, or whether we reuse already staged/fetched WASM with clear attribution and evidence.
 - Whether `https://mainnet.sorobanrpc.com` is reliable enough for transaction submission under demo pressure, or whether we should configure a dedicated RPC provider.
 - Whether Circle mainnet attestation timing is acceptable for a live demo or should be shown as recorded evidence.
 
 ## Not Included
 
-- No mainnet spend.
 - No mainnet CCTP bridge transaction.
 - No mainnet CCTP burn/mint.
-- No mainnet privacy-pool deployment.
+- No successful mainnet privacy-pool upload or deployment.
 - No mainnet shielded transfer claim.
