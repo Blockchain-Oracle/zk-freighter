@@ -53,6 +53,24 @@ The foundation created project-owned commands before feature work proceeded.
 
 ## Required Local Checks
 
+### Post-Feature Review Gate
+
+Every feature-sized checkpoint or phase must get a focused subagent review before the next feature track starts. Feature-sized checkpoint means a phase, feature commit, new runtime/evidence command, chain-touching path, security-sensitive behavior, or user-visible workflow change.
+
+Review inputs must include:
+
+- feature summary.
+- base/head SHAs or exact file scope.
+- acceptance requirements.
+- risk focus, especially keys, vaults, proofs, bridges, mainnet actions, extension runtime, and secret handling.
+
+Review outputs must be handled as follows:
+
+- Critical and Important findings are fixed before proceeding.
+- Deferred findings require a written technical reason in the final report or a verification note.
+- Tiny edits may be batched into the nearest checkpoint review, but a feature checkpoint cannot be claimed complete without a review result.
+- Record the review result in the final Codex report. For phase, security, chain, runtime, or claim-changing checkpoints, also write or update a `.thoughts/verification/YYYY-MM-DD-<checkpoint>-review.md` note with reviewer scope, findings, fixes/deferred rationale, commands run, and evidence files checked.
+
 ### Before New Source Phases
 
 - Verify no accidental implementation directories exist unless intentionally created:

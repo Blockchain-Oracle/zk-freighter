@@ -160,4 +160,5 @@ Gas token notes:
 - Extension bridge handoff can pass the selected source chain to the web route.
 - A headless evidence runner is now available through `pnpm cctp:bridge:testnet` and `pnpm cctp:bridge:mainnet`. It stores EVM private keys and the bridge destination mnemonic under `/Users/abu/.config/zk-fighter`, outside the repo.
 - The runner uses one shared local EVM address per network across configured EVM sources, so Base/Arbitrum/OP/Ethereum testnet funding can target the same public address.
-- No new Base/Arbitrum/OP chain evidence has been recorded yet.
+- Base Sepolia now has accepted public bridge-leg evidence: approval, burn, Iris attestation, and Stellar mint/forward. It does not yet have the separate post-bridge USDC shield hash.
+- No Arbitrum/OP chain evidence has been recorded yet.

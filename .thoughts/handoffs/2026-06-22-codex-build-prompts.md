@@ -16,6 +16,7 @@ Apply these to every prompt:
 - No mocks in the judged path. Local fixtures are allowed only in tests and must not back product claims.
 - Every milestone that touches chain must log evidence in `.thoughts/research/spikes-log.md`.
 - Evidence means network, accounts with secrets redacted, contract IDs, transaction hashes, explorer links, before/after balances, and failure notes.
+- After every feature-sized checkpoint or phase, dispatch a focused review subagent before continuing. Include feature summary, base/head SHAs or file scope, acceptance gates, tests run, evidence updates, and risk focus. Record the review outcome and fix Critical/Important findings before claiming completion.
 - Pause only for funding/keys, irreversible mainnet actions, final demo network posture, or a real evidence conflict.
 
 ---

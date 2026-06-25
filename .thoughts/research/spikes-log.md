@@ -1954,3 +1954,34 @@ These are upload/install estimates only. They do not include contract-instance d
 - **Secret posture:** EVM private keys and the bridge destination mnemonic are stored outside the repo at `/Users/abu/.config/zk-fighter`.
 - **Result:** blocked before submission because the EVM source wallets had `0` native gas and `0` USDC.
 - **Next real evidence requirement:** fund `0x368AbfE2B29ee5Bebf94E6296493DFc9eAe9B74c` on the selected testnet source with native gas plus Circle faucet USDC, then rerun the matching `pnpm cctp:bridge:testnet` command. The runner will then use the real core CCTP bridge, ASP insert, and USDC shield/deposit paths.
+
+## 2026-06-25 16:55 UTC - Base Sepolia CCTP public bridge leg
+
+- **Phase:** Multichain bridge evidence.
+- **Kind:** Real Base Sepolia -> Stellar testnet CCTP V2 public bridge leg through the headless runner. This entry does not claim the separate USDC shield/deposit.
+- **Network:** Base Sepolia source, Stellar testnet destination.
+- **Source wallet:** `0x368AbfE2B29ee5Bebf94E6296493DFc9eAe9B74c`.
+- **Destination wallet:** `GD7RLJMFDBT6LCTT5P2QIPQKM2ODT2ZNFSF6XP2JVHAOQBAEXTEX2ILG`.
+- **Secret posture:** EVM private key and destination mnemonic remained outside the repo at `/Users/abu/.config/zk-fighter`.
+- **Amount:** `1 USDC`.
+- **Max CCTP fee:** `0.000500 USDC`.
+- **Runner commands:**
+  - `pnpm cctp:bridge:testnet`
+  - `ZKF_CCTP_RESUME_APPROVE_HASH=0xd8b1724e3b65a8169b033aba17eb0536babf38fcddad0f9ae78dfe8870681d3e ZKF_CCTP_RESUME_BURN_HASH=0x88028771b02dac65423d638349024930087a7c371c77936b513ddca752f2cd63 pnpm cctp:bridge:testnet`
+  - `ZKF_CCTP_SHIELD_ONLY=1 pnpm cctp:bridge:testnet`
+
+### Transactions
+
+| Step | Transaction | Result |
+|---|---|---|
+| Stellar testnet Friendbot for destination | `a6beb8ad4c42f6d43e1c116be4aecad9471ef6a6a89569e461c48999c4a7d193` | funded destination |
+| Stellar testnet USDC trustline | `df536841decac7ae1a67cc9bac064f236f7bc4aac0ff6b2dbe26ad4c4ee23594` | destination USDC-ready |
+| Base Sepolia approval before fee fix | `0x242ac1a6b6f47a0697a9a55b5b167236e1c8ee5a1b5d8271f14f9521c8252865` | accepted, but burn preflight failed because allowance covered `amount` only |
+| Base Sepolia approval after fee fix | `0xd8b1724e3b65a8169b033aba17eb0536babf38fcddad0f9ae78dfe8870681d3e` | accepted |
+| Base Sepolia CCTP burn with Stellar forwarder hook | `0x88028771b02dac65423d638349024930087a7c371c77936b513ddca752f2cd63` | accepted |
+| Stellar testnet CCTP mint_and_forward | `08df05fe661f35dcf42c5ab054ae2bd404ed31091a629d963647ca3d5b293e11` | accepted |
+
+- **Circle Iris attestation status:** `complete`.
+- **Circle Iris event nonce:** `0x52ed7c34b1c37729d0329bed27f23bcebd64cf260dc3118588cd35e8b2403887`.
+- **Failure fixed:** the first Base burn attempt failed before burn submission with `ERC20: transfer amount exceeds allowance`. Root cause was approving only `amount`; CCTP V2 fast-transfer path requires allowance for `amount + maxFee`. Core approval and the runner funding preflight now use `amount + maxFee`.
+- **Remaining blocker:** separate post-bridge USDC shield is blocked in this Node runner because ASP membership preflight returns `ASP membership contract state could not be read.` No ASP insert hash and no USDC shield hash are claimed for Base Sepolia yet.

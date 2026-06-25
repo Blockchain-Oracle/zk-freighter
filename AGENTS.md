@@ -120,6 +120,16 @@ Confidential Tokens are a separate future track. If Abu asks to build them, firs
 - Run `pnpm lint`, `pnpm typecheck`, `pnpm test`, and `pnpm build` before claiming a phase complete.
 - Do not show fake balances, transaction hashes, proof success, bridge state, or mainnet support.
 
+## Post-Feature Review Gate
+
+- After every feature-sized checkpoint or phase, dispatch a focused review subagent before moving to the next feature track.
+- Feature-sized checkpoint means a phase, feature commit, new runtime/evidence command, chain-touching path, security-sensitive behavior, or user-visible workflow change.
+- The review prompt must include the feature summary, base/head SHAs or file scope, acceptance requirements, and the specific risks to inspect.
+- For security-sensitive work such as keys, vaults, proofs, bridges, mainnet paths, extension runtime, or secret handling, request a security/reliability-oriented review, not only a style review.
+- Fix Critical and Important findings before proceeding. If a finding is intentionally not fixed, record the technical reason in the final report or a verification note.
+- Tiny edits such as typo fixes, comments, copy-only tweaks that do not change claims, and narrow test-only cleanups can be batched into the nearest checkpoint review.
+- Report the review outcome to Abu with the test/build evidence. Do not claim a feature checkpoint complete without this review result.
+
 Pause only for:
 
 - funding or private keys.
