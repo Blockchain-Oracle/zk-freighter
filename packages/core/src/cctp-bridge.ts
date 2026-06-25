@@ -91,7 +91,7 @@ export async function runCctpBridgeToStellar(options: RunCctpBridgeOptions): Pro
     emit({ stage: 'approve', message: `Submitting ${evmSource.label} USDC approval` })
     approveTx = await evmClient.sendTransaction({
       to: evmSource.usdcContract,
-      data: encodeApproveUsdcData(evmSource.tokenMessenger, amount),
+      data: encodeApproveUsdcData(evmSource.tokenMessenger, amount + maxFee),
       chainIdHex: evmSource.chainIdHex,
     })
     emit({ stage: 'approve', message: `${evmSource.label} USDC approval submitted`, txHash: approveTx })

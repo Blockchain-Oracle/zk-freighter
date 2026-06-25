@@ -10,7 +10,7 @@
     "build": "pnpm -r run build",
     "lint": "pnpm -r run lint && pnpm docs:check && pnpm files:check && pnpm secrets:check",
     "typecheck": "pnpm -r run typecheck",
-    "test": "pnpm -r run test",
+    "test": "vitest run scripts/cctp-bridge-source-support.test.ts && pnpm -r run test",
     "preview": "pnpm --filter @zk-fighter/web preview",
     "prover:stage": "node scripts/stage-nethermind-prover-assets.mjs",
     "testnet-usdc-funder:setup": "node scripts/setup-testnet-usdc-funder.mjs",

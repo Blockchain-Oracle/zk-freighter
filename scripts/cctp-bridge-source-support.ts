@@ -2,7 +2,7 @@ import { mkdir, open, readFile, rm, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 
-import { createPublicClient, erc20Abi, formatUnits, type Address, type Chain, type PublicClient } from 'viem'
+import { erc20Abi, formatUnits, type Address, type Chain, type PublicClient } from 'viem'
 import { privateKeyToAccount, generatePrivateKey, type PrivateKeyAccount } from 'viem/accounts'
 import { arbitrum, arbitrumSepolia, base, baseSepolia, mainnet, optimism, optimismSepolia, sepolia } from 'viem/chains'
 
@@ -16,8 +16,8 @@ import {
 } from '../packages/core/src/index.ts'
 
 export const defaultAmountAtomic = 1_000_000n
+export const defaultMaxFeeAtomic = 500n
 export const defaultMinGasWei = 50_000_000_000_000n
-export const shieldAmountMultiplier = 10n
 export const bridgeTimeoutMs = 240_000
 export const retryDelayMs = 20_000
 export const maxShieldAttempts = 3
@@ -75,14 +75,19 @@ export interface FundingSnapshot {
   readonly blockers: readonly string[]
 }
 
+const cctpSourceKeys: readonly CctpSourceKey[] = ['ethereum', 'base', 'arbitrum', 'optimism']
+
 export function parseNetwork(): NetworkKey {
   return process.env.ZKF_NETWORK === 'mainnet' ? 'mainnet' : 'testnet'
 }
 
 export function parseSourceKey(network: NetworkKey): CctpSourceKey {
-  const configured = process.env.ZKF_CCTP_SOURCE
-  if (isCctpSourceKey(configured)) {
+  const configured = process.env.ZKF_CCTP_SOURCE?.trim()
+  if (configured && isCctpSourceKey(configured)) {
     return configured
+  }
+  if (configured) {
+    throw new Error(`Invalid ZKF_CCTP_SOURCE "${configured}". Allowed values: ${cctpSourceKeys.join(', ')}.`)
   }
   const fallback = getDefaultCctpSource(network)?.key
   if (!fallback) {
@@ -149,7 +154,7 @@ export async function inspectFunding(options: {
   readonly account: PrivateKeyAccount
   readonly publicClient: PublicClient
   readonly source: NonNullable<ReturnType<typeof getCctpSource>>
-  readonly amountAtomic: bigint
+  readonly requiredUsdcAtomic: bigint
   readonly minGasWei: bigint
 }): Promise<FundingSnapshot> {
   const [nativeBalance, usdcBalance] = await Promise.all([
@@ -165,8 +170,8 @@ export async function inspectFunding(options: {
   if (nativeBalance < options.minGasWei) {
     blockers.push(`Fund ${options.account.address} with at least ${formatUnits(options.minGasWei, 18)} ${options.source.gasToken}.`)
   }
-  if (usdcBalance < options.amountAtomic) {
-    blockers.push(`Fund ${options.account.address} with at least ${formatUnits(options.amountAtomic, 6)} USDC on ${options.source.label}.`)
+  if (usdcBalance < options.requiredUsdcAtomic) {
+    blockers.push(`Fund ${options.account.address} with at least ${formatUnits(options.requiredUsdcAtomic, 6)} USDC on ${options.source.label}.`)
   }
   return {
     sourceAddress: options.account.address,

@@ -3,6 +3,7 @@ import { bytesToUtf8, hexToBytes } from './bytes'
 import {
   bridgeAmountDisplay,
   buildCctpForwarderHookData,
+  encodeApproveUsdcData,
   encodeDepositForBurnWithHookData,
   stellarContractStrkeyToBytes32,
 } from './cctp-encoding'
@@ -127,6 +128,7 @@ describe('CCTP bridge flow', () => {
       getCctpSource('testnet', 'base')?.usdcContract,
       getCctpSource('testnet', 'base')?.tokenMessenger,
     ])
+    expect(sent[0]?.data).toBe(encodeApproveUsdcData(getCctpSource('testnet', 'base')?.tokenMessenger ?? '', 1_000_500n))
     expect(sent.every((transaction) => transaction.chainIdHex === '0x14a34')).toBe(true)
     expect(progress).toContain('Base Sepolia USDC approval submitted')
     expect(progress).toContain('Base Sepolia CCTP burn submitted')
