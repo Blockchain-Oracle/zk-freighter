@@ -32,6 +32,9 @@ const transferAmountStroops =
 const withdrawAmountStroops =
   process.env.ZKF_PRIVATE_LOOP_WITHDRAW_STROOPS ?? (asset === 'USDC' ? '10000' : '50000')
 const privateActionTimeoutMs = Number(process.env.ZKF_PRIVATE_LOOP_TIMEOUT_MS ?? 240_000)
+const runtimeMessageTimeoutMs = Number(
+  process.env.ZKF_PRIVATE_LOOP_RUNTIME_TIMEOUT_MS ?? privateActionTimeoutMs + 60_000,
+)
 const retryDelayMs = 20_000
 const maxAttempts = 3
 
@@ -146,7 +149,13 @@ async function readRecoveryPhrase() {
 }
 
 async function runtimeMessage(cdp, pageUrl, message) {
-  return evaluateOnPage(cdp, pageUrl, `chrome.runtime.sendMessage(${JSON.stringify(message)})`)
+  const label = typeof message.type === 'string' ? message.type : 'runtime message'
+  return evaluateOnPage(
+    cdp,
+    pageUrl,
+    `chrome.runtime.sendMessage(${JSON.stringify(message)})`,
+    label,
+  )
 }
 
 async function connect(profileDir) {
@@ -157,13 +166,25 @@ async function connect(profileDir) {
   return cdp
 }
 
-async function evaluateOnPage(cdp, url, expression) {
+async function evaluateOnPage(cdp, url, expression, label) {
   const page = await openPage(cdp, url)
   try {
-    return await evalPage(cdp, page, expression)
+    return await withTimeout(
+      evalPage(cdp, page, expression),
+      runtimeMessageTimeoutMs,
+      `${label} did not resolve within ${runtimeMessageTimeoutMs} ms.`,
+    )
   } finally {
     await closePage(cdp, page)
   }
+}
+
+function withTimeout(promise, timeoutMs, message) {
+  let timer
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(message)), timeoutMs)
+  })
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer))
 }
 
 main().catch((error) => {
