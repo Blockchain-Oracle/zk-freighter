@@ -18,6 +18,7 @@ const pageTimeoutMs = 5_000
 const waitStepMs = 100
 const password = 'zkf-extension-bridge-test'
 const resumeBurnHash = `0x${'c'.repeat(64)}`
+const sourceChainKey = 'base'
 
 async function main() {
   const profileDir = await mkdtemp(path.join(os.tmpdir(), 'zkf-extension-bridge-'))
@@ -42,6 +43,7 @@ async function main() {
 
     const opened = await runtimeMessage(cdp, extensionUrl, {
       type: 'zkf.extension.bridge.open',
+      sourceChainKey,
       resumeBurnHash,
     })
     if (!opened?.ok || !opened.url) {
@@ -62,6 +64,7 @@ async function main() {
       handoff: {
         action: 'bridge',
         network: 'testnet',
+        sourceChainKey,
         destination: imported.publicKey,
         resumeBurnHash,
       },
@@ -78,6 +81,7 @@ function assertBridgeUrl(value, publicKey) {
   if (url.origin !== 'http://localhost:5173') throw new Error(`Unexpected bridge origin: ${value}`)
   if (url.searchParams.get('zkfAction') !== 'bridge') throw new Error(`Missing bridge action: ${value}`)
   if (url.searchParams.get('network') !== 'testnet') throw new Error(`Missing testnet handoff: ${value}`)
+  if (url.searchParams.get('sourceChain') !== sourceChainKey) throw new Error(`Source chain mismatch: ${value}`)
   if (url.searchParams.get('destination') !== publicKey) throw new Error(`Destination mismatch: ${value}`)
   if (url.searchParams.get('resumeBurnHash') !== resumeBurnHash) throw new Error(`Resume hash mismatch: ${value}`)
 }

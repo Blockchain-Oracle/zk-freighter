@@ -1,4 +1,4 @@
-import type { NetworkKey } from '@zk-fighter/core'
+import { getCctpSource, isCctpSourceKey, type CctpSourceKey, type NetworkKey } from '@zk-fighter/core'
 
 export function bridgeResumeBurnHashFromUrl(network: NetworkKey, publicKey: string): string | undefined {
   const params = bridgeParams()
@@ -7,6 +7,16 @@ export function bridgeResumeBurnHashFromUrl(network: NetworkKey, publicKey: stri
   }
 
   return params.get('resumeBurnHash')?.trim() || undefined
+}
+
+export function bridgeSourceChainFromUrl(network: NetworkKey, publicKey: string): CctpSourceKey | undefined {
+  const params = bridgeParams()
+  if (!params || !handoffMatches(params, network, publicKey)) {
+    return undefined
+  }
+
+  const sourceChain = params.get('sourceChain')?.trim()
+  return isCctpSourceKey(sourceChain) && getCctpSource(network, sourceChain) ? sourceChain : undefined
 }
 
 export function bridgeHandoffNotice(network: NetworkKey, publicKey: string): string | undefined {
@@ -19,7 +29,9 @@ export function bridgeHandoffNotice(network: NetworkKey, publicKey: string): str
     return 'Extension bridge handoff opened, but this unlocked wallet does not match the destination in the handoff URL.'
   }
 
-  return 'Opened from the extension. The bridge leg is still public; shielding is the separate privacy step after USDC arrives.'
+  const source = bridgeSourceChainFromUrl(network, publicKey)
+  const label = source ? getCctpSource(network, source)?.label : 'the selected source chain'
+  return `Opened from the extension for ${label}. The bridge leg is still public; shielding is the separate privacy step after USDC arrives.`
 }
 
 function bridgeParams(): URLSearchParams | undefined {

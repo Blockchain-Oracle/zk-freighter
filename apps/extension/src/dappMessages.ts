@@ -1,6 +1,7 @@
 import type {
   AspMembershipInsertReport,
   AssetCode,
+  CctpSourceKey,
   FreighterBridgeRequest,
   FreighterBridgeResponse,
   NetworkKey,
@@ -92,6 +93,7 @@ export type DappRuntimeMessage =
     }
   | {
       readonly type: typeof dappMessageTypes.openBridgeHandoff
+      readonly sourceChainKey?: CctpSourceKey
       readonly resumeBurnHash?: string
     }
 

@@ -8,7 +8,7 @@
 
 **Built for:** Stellar Hacks: Real-World ZK
 
-**Primary demo network:** Stellar testnet and Ethereum Sepolia. Mainnet XLM/USDC QuickShield and private-loop smokes exist as recorded evidence, not the default live demo path.
+**Primary demo network:** Stellar testnet and Ethereum Sepolia for the recorded bridge evidence path. Base Sepolia, Arbitrum Sepolia, and OP Sepolia are configured bridge sources, but need accepted hashes before they are presented as evidence-backed routes. Mainnet XLM/USDC QuickShield and private-loop smokes exist as recorded evidence, not the default live demo path.
 
 **Repository focus:** The web app is the safest judged surface. The extension is included as extra runtime evidence for QuickShield and bridge handoff, not as a general dApp signing wallet.
 
@@ -18,7 +18,7 @@ ZK Fighter gives users a seed-backed wallet, encrypted local vault, deterministi
 
 The bridge flow uses the safe two-step path:
 
-1. Public CCTP bridge from Sepolia USDC to Stellar testnet USDC.
+1. Public CCTP bridge from a supported source-chain USDC balance to Stellar USDC.
 2. Separate Stellar USDC shield/deposit into the privacy pool.
 
 The browser extension is a ZK companion. It can unlock the ZK Fighter wallet, show receive/deposit plumbing, run QuickShield for XLM and USDC with real Chrome runtime evidence, and hand off to the web bridge route. It intentionally does not expose arbitrary public dApp signing.
@@ -67,13 +67,14 @@ Full evidence, explorer links, balance notes, and failure fixes are in `.thought
 3. Show the public boundary copy: shield/deposit and unshield/withdraw are public.
 4. Demonstrate or replay the USDC loop: shield, shielded transfer, unshield.
 5. Show load-bearing ZK evidence: proof generated, valid proof accepted, tampered proof rejected.
-6. Show CCTP bridge-then-shield evidence: Sepolia approval, burn, Iris attestation, Stellar mint/forward, ASP insert, separate USDC shield.
+6. Show CCTP bridge-then-shield evidence: source-chain selection, recorded Sepolia approval, burn, Iris attestation, Stellar mint/forward, ASP insert, separate USDC shield.
 7. Show disclosure/export as user-held compliance evidence.
 8. Optionally show the extension: receive plumbing, QuickShield XLM/USDC evidence, and bridge handoff.
 9. Close with honest boundaries: testnet remains the safest live demo, mainnet XLM/USDC QuickShield and private-loop smokes have recorded evidence, unaudited, no mainnet bridge claim, no atomic bridge claim, no public dApp signing claim.
 
 ## Non-Claims
 
+- No Base/Arbitrum/OP bridge-to-shield evidence is claimed until accepted hashes are recorded.
 - No mainnet bridge-to-shield is claimed yet.
 - No atomic bridge-and-shield is claimed.
 - No extension-native Ethereum provider bridge is claimed.

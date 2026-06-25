@@ -1,6 +1,6 @@
 import type { Hex } from 'viem'
 import type { WalletIdentity } from './identity'
-import type { NetworkKey } from './networks'
+import type { CctpSourceKey, NetworkKey } from './networks'
 
 export type CctpBridgeStatus = 'running' | 'completed' | 'blocked' | 'failed'
 export type CctpBridgeStage = 'readiness' | 'approve' | 'burn' | 'attestation' | 'mint'
@@ -31,7 +31,11 @@ export interface CctpBridgeReport {
   readonly status: CctpBridgeStatus
   readonly network: NetworkKey
   readonly destinationAddress: string
+  readonly sourceChainKey: CctpSourceKey
   readonly sourceChain?: string
+  readonly sourceDomain: number
+  readonly sourceChainId: number
+  readonly sourceGasToken: string
   readonly amountAtomic: string
   readonly amountDisplay: string
   readonly maxFeeAtomic: string
@@ -55,6 +59,7 @@ export interface CctpBridgeReport {
 export interface RunCctpBridgeOptions {
   readonly identity: WalletIdentity
   readonly network: NetworkKey
+  readonly sourceChainKey?: CctpSourceKey
   readonly evmClient?: EvmCctpSourceClient
   readonly amountAtomic?: bigint
   readonly maxFeeAtomic?: bigint
@@ -76,6 +81,7 @@ export interface RunCctpBridgeOptions {
 export interface ResumeCctpBridgeOptions {
   readonly identity: WalletIdentity
   readonly network: NetworkKey
+  readonly sourceChainKey?: CctpSourceKey
   readonly evmBurnTxHash: string
   readonly evmApproveTxHash?: string
   readonly amountAtomic?: bigint

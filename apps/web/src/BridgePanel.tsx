@@ -1,26 +1,37 @@
 import { useEffect, useMemo, useState } from 'react'
-import { AlertTriangle, ArrowLeftRight, CheckCircle2, ExternalLink, RotateCcw, Shield, Wallet } from 'lucide-react'
+import { AlertTriangle, ArrowLeftRight, ExternalLink, RotateCcw, Shield, Wallet } from 'lucide-react'
 import {
+  getCctpSource,
   getCctpBridgeBlockers,
+  getDefaultCctpSource,
+  getEnabledCctpSources,
   getNetworkConfig,
   resumeCctpBridgeToStellar,
   runCctpBridgeToStellar,
   submitXlmShieldDeposit,
   type CctpBridgeReport,
+  type CctpSourceKey,
   type NetworkKey,
   type WalletIdentity,
   type XlmShieldSubmitReport,
 } from '@zk-fighter/core'
 import { truncateMiddle } from './app-helpers'
-import { bridgeHandoffNotice, bridgeResumeBurnHashFromUrl } from './bridge-handoff'
-import { loadBridgeResumeBurnHash, loadCompletedBridgeResumeReport, saveBridgeResumeReport } from './bridge-storage'
+import { bridgeHandoffNotice, bridgeResumeBurnHashFromUrl, bridgeSourceChainFromUrl } from './bridge-handoff'
+import {
+  loadBridgeResumeBurnHash,
+  loadBridgeResumeSourceChain,
+  loadCompletedBridgeResumeReport,
+  saveBridgeResumeReport,
+} from './bridge-storage'
+import { BridgeSourceSelector } from './BridgeSourceSelector'
+import { BridgeResultDetails, ExplorerLink } from './BridgeResultDetails'
 import { createInjectedEthereumClient, providerAvailable } from './ethereum-provider'
 import './BridgePanel.css'
 
 const bridgedUsdcShieldAmount = 10_000_000n
-const latestBridgeEventCount = 8
 const ethereumDetectionDelayMs = 500
 const ethereumDetectionIntervalMs = 1_000
+const fallbackCctpSource: CctpSourceKey = 'base'
 
 interface BridgePanelProps {
   readonly identity: WalletIdentity
@@ -50,30 +61,46 @@ function shieldLabel(report: XlmShieldSubmitReport | null): string {
   return `${report.status} · ${report.durationMs.toLocaleString()} ms`
 }
 
+function initialBridgeSource(network: NetworkKey, publicKey: string): CctpSourceKey {
+  return (
+    bridgeSourceChainFromUrl(network, publicKey) ??
+    loadBridgeResumeSourceChain(network, publicKey) ??
+    getDefaultCctpSource(network)?.key ??
+    fallbackCctpSource
+  )
+}
+
 export function BridgePanel({ identity, network }: BridgePanelProps) {
+  const initialSourceKey = initialBridgeSource(network, identity.stellarPublicKey)
+  const [sourceChainKey, setSourceChainKey] = useState<CctpSourceKey>(initialSourceKey)
   const [bridgeReport, setBridgeReport] = useState<CctpBridgeReport | null>(() =>
-    loadCompletedBridgeResumeReport(network, identity.stellarPublicKey),
+    loadCompletedBridgeResumeReport(network, identity.stellarPublicKey, initialSourceKey),
   )
   const [shieldReport, setShieldReport] = useState<XlmShieldSubmitReport | null>(null)
   const [resumeBurnHash, setResumeBurnHash] = useState(() =>
     bridgeResumeBurnHashFromUrl(network, identity.stellarPublicKey) ??
-    loadBridgeResumeBurnHash(network, identity.stellarPublicKey),
+    loadBridgeResumeBurnHash(network, identity.stellarPublicKey, initialSourceKey),
   )
   const [busy, setBusy] = useState<'bridge' | 'shield' | null>(null)
   const [ethereumDetected, setEthereumDetected] = useState(false)
   const [walletApprovalPending, setWalletApprovalPending] = useState(false)
   const [error, setError] = useState('')
   const config = getNetworkConfig(network)
-  const bridgeBlockers = useMemo(() => getCctpBridgeBlockers(network), [network])
-  const evmSource = config.cctp?.evmSource
+  const bridgeSources = useMemo(() => getEnabledCctpSources(network), [network])
+  const evmSource = getCctpSource(network, sourceChainKey)
+  const bridgeBlockers = useMemo(() => getCctpBridgeBlockers(network, sourceChainKey), [network, sourceChainKey])
   const browserProviderMissing = !ethereumDetected
-  const disabledReason = bridgeBlockers[0] ?? (browserProviderMissing ? 'No injected Ethereum wallet detected.' : '')
+  const disabledReason = bridgeBlockers[0] ?? (browserProviderMissing ? 'No injected EVM wallet detected.' : '')
   const canBridge = !disabledReason && busy === null && Boolean(evmSource)
   const hasLoadedCompletedBurn =
-    bridgeReport?.status === 'completed' && bridgeReport.evmBurnTxHash === resumeBurnHash.trim()
-  const canResume = bridgeBlockers.length === 0 && busy === null && resumeBurnHash.trim().length > 0 && !hasLoadedCompletedBurn
+    bridgeReport?.status === 'completed' &&
+    bridgeReport.sourceChainKey === sourceChainKey &&
+    bridgeReport.evmBurnTxHash === resumeBurnHash.trim()
+  const canResume =
+    bridgeBlockers.length === 0 && busy === null && resumeBurnHash.trim().length > 0 && !hasLoadedCompletedBurn
   const canShield = bridgeReport?.status === 'completed' && busy === null
-  const bridgeStatus = walletApprovalPending ? 'Waiting for Ethereum wallet approval...' : reportLabel(bridgeReport)
+  const sourceLabel = evmSource?.label ?? 'source chain'
+  const bridgeStatus = walletApprovalPending ? `Waiting for ${sourceLabel} wallet approval...` : reportLabel(bridgeReport)
   const handoffNotice = bridgeHandoffNotice(network, identity.stellarPublicKey)
 
   useEffect(() => {
@@ -99,6 +126,14 @@ export function BridgePanel({ identity, network }: BridgePanelProps) {
     }
   }
 
+  function selectSource(nextSourceKey: CctpSourceKey) {
+    setSourceChainKey(nextSourceKey)
+    setBridgeReport(loadCompletedBridgeResumeReport(network, identity.stellarPublicKey, nextSourceKey))
+    setResumeBurnHash(loadBridgeResumeBurnHash(network, identity.stellarPublicKey, nextSourceKey))
+    setShieldReport(null)
+    setError('')
+  }
+
   async function runBridge() {
     if (!evmSource) {
       return
@@ -109,9 +144,17 @@ export function BridgePanel({ identity, network }: BridgePanelProps) {
     setShieldReport(null)
     setBridgeReport(null)
     try {
-      const evmClient = await createInjectedEthereumClient(evmSource.chainIdHex)
+      const evmClient = await createInjectedEthereumClient(evmSource.chainIdHex, evmSource.label)
       setWalletApprovalPending(false)
-      updateBridgeReport(await runCctpBridgeToStellar({ identity, network, evmClient, onProgress: updateBridgeReport }))
+      updateBridgeReport(
+        await runCctpBridgeToStellar({
+          identity,
+          network,
+          sourceChainKey: evmSource.key,
+          evmClient,
+          onProgress: updateBridgeReport,
+        }),
+      )
     } catch (nextError) {
       setWalletApprovalPending(false)
       setError(nextError instanceof Error ? nextError.message : 'Bridge failed before submission.')
@@ -129,6 +172,7 @@ export function BridgePanel({ identity, network }: BridgePanelProps) {
         await resumeCctpBridgeToStellar({
           identity,
           network,
+          sourceChainKey,
           evmBurnTxHash: resumeBurnHash,
           evmApproveTxHash: bridgeReport?.evmApproveTxHash,
           onProgress: updateBridgeReport,
@@ -164,14 +208,14 @@ export function BridgePanel({ identity, network }: BridgePanelProps) {
         <ArrowLeftRight size={24} aria-hidden="true" />
         <div>
           <h1>USDC bridge then shield</h1>
-          <p>Burn on Ethereum, mint public USDC on Stellar, then shield as a separate step.</p>
+          <p>Burn public USDC on a CCTP source chain, mint public USDC on Stellar, then shield separately.</p>
         </div>
       </div>
 
       <div className="boundary-note">
         <AlertTriangle size={18} aria-hidden="true" />
         <span>
-          The bridge leg is public. Ethereum burn, Circle attestation, and Stellar mint are visible before shielding.
+          The bridge leg is public. Source-chain burn, Circle attestation, and Stellar mint are visible before shielding.
         </span>
       </div>
 
@@ -181,6 +225,13 @@ export function BridgePanel({ identity, network }: BridgePanelProps) {
           <span>{handoffNotice}</span>
         </div>
       ) : null}
+
+      <BridgeSourceSelector
+        sources={bridgeSources}
+        selectedKey={sourceChainKey}
+        disabled={busy !== null || Boolean(bridgeReport?.evmBurnTxHash && bridgeReport.status === 'running')}
+        onSelect={selectSource}
+      />
 
       <div className="bridge-actions">
         <button className="button primary" disabled={!canBridge} onClick={runBridge}>
@@ -193,7 +244,11 @@ export function BridgePanel({ identity, network }: BridgePanelProps) {
       <dl className="meta-list bridge-meta">
         <div>
           <dt>Source</dt>
-          <dd>{evmSource?.label ?? 'Unavailable'}</dd>
+          <dd>{evmSource ? `${evmSource.label} · ${evmSource.gasToken}` : 'Unavailable'}</dd>
+        </div>
+        <div>
+          <dt>Source domain</dt>
+          <dd>{evmSource ? `${evmSource.domain} · chain ${evmSource.chainId}` : 'Unavailable'}</dd>
         </div>
         <div>
           <dt>Destination</dt>
@@ -220,44 +275,7 @@ export function BridgePanel({ identity, network }: BridgePanelProps) {
         </button>
       </div>
 
-      {bridgeReport ? (
-        <div className="bridge-results">
-          <div className="bridge-timeline">
-            <span className={bridgeReport.evmApproveTxHash ? 'complete' : ''}>Ethereum approval</span>
-            <span className={bridgeReport.evmBurnTxHash ? 'complete' : ''}>Ethereum burn</span>
-            <span className={bridgeReport.attestationStatus === 'complete' ? 'complete' : ''}>Circle attestation</span>
-            <span className={bridgeReport.stellarMintTxHash ? 'complete' : ''}>Stellar mint</span>
-          </div>
-
-          <div className="bridge-links">
-            {bridgeReport.evmApproveExplorerUrl ? (
-              <ExplorerLink href={bridgeReport.evmApproveExplorerUrl} label="View approval" />
-            ) : null}
-            {bridgeReport.evmBurnExplorerUrl ? <ExplorerLink href={bridgeReport.evmBurnExplorerUrl} label="View burn" /> : null}
-            {bridgeReport.stellarMintExplorerUrl ? (
-              <ExplorerLink href={bridgeReport.stellarMintExplorerUrl} label="View Stellar mint" />
-            ) : null}
-          </div>
-
-          {bridgeReport.blockers.length > 0 ? (
-            <ul className="blocker-list">
-              {bridgeReport.blockers.map((blocker) => (
-                <li key={blocker}>{blocker}</li>
-              ))}
-            </ul>
-          ) : null}
-
-          <ul className="artifact-list">
-            {bridgeReport.statusEvents.slice(-latestBridgeEventCount).map((event, index) => (
-              <li key={`${event.stage}-${event.elapsedMs}-${index}`}>
-                <strong>{event.stage}</strong>
-                <span>{event.message}</span>
-                <code>{event.elapsedMs.toLocaleString()} ms</code>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
+      {bridgeReport ? <BridgeResultDetails report={bridgeReport} /> : null}
 
       <div className="bridge-actions">
         <button className="button secondary" disabled={!canShield} onClick={runShield}>
@@ -277,15 +295,5 @@ export function BridgePanel({ identity, network }: BridgePanelProps) {
       ) : null}
       {error ? <p className="bridge-error">{error}</p> : null}
     </article>
-  )
-}
-
-function ExplorerLink({ href, label }: { readonly href: string; readonly label: string }) {
-  return (
-    <a className="explorer-link" href={href} target="_blank" rel="noreferrer">
-      <ExternalLink size={16} aria-hidden="true" />
-      {label}
-      <CheckCircle2 size={16} aria-hidden="true" />
-    </a>
   )
 }

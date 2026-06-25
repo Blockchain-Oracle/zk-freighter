@@ -1922,3 +1922,18 @@ These are upload/install estimates only. They do not include contract-instance d
 - **Dry proof status:** `proof-generated`.
 - **Proof duration:** `8,780 ms`.
 - **Submit reached:** yes, in dry-proof callback only; no shield/deposit transaction is claimed from this gate.
+
+## 2026-06-25 16:04 UTC - Extension runtime deep-proof gate after multichain bridge source selector
+
+- **Phase:** Verification gate after adding EVM CCTP source-chain selection.
+- **Kind:** Chrome-for-Testing extension deep runtime proof rerun.
+- **Network:** Stellar testnet.
+- **Command:** `pnpm extension:runtime:deep`.
+- **Friendbot hash:** `342a01848e1ff8c7103628ec9563e5154f355799ae822d8463c9aadac5750159`.
+- **Runtime user address:** `GA3WYMTIQPVPHSCJJZME26MQTF2RCQHH3RMVV6RN64G4PVU6EU2T4DED`.
+- **ASP insert:** `fc6efd1da358ac079c66b6bfc29bb521c263f96197e2a085061210d88aba58b5`.
+- **Pool:** `CBQ46IL6HQA2VTPERULO7DBAKHMJ7ZCNVOSDIIX3HLC5T7MSPB6Z5SMY`.
+- **Dry proof status:** `proof-generated`.
+- **Proof duration:** `9,255 ms`.
+- **Submit reached:** yes, in dry-proof callback only; no shield/deposit transaction is claimed from this gate.
+- **Bridge note:** this verifies the extension runtime after the multichain bridge source-selector implementation. It does not claim a Base, Arbitrum, or OP bridge transaction.

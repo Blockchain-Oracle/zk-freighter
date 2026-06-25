@@ -141,9 +141,20 @@ Gas token notes:
 
 ## Not Included
 
-- No code changes.
+- Original research pass did not include code changes; see implementation follow-up below.
 - No new chain transactions.
 - No Base/Arbitrum/OP/Avalanche/Polygon bridge evidence.
 - No mainnet bridge-to-shield evidence.
 - No atomic bridge-and-shield claim.
 - No non-EVM wallet integration plan beyond identifying it as separate work.
+
+## Implementation Follow-Up
+
+2026-06-25:
+
+- ZK Fighter now has an EVM source-chain registry in `packages/core/src/networks.ts`.
+- Configured active source chains are Ethereum, Base, Arbitrum, and OP for both testnet and mainnet.
+- The bridge runner accepts a `sourceChainKey` and uses the selected source domain, chain ID, USDC contract, TokenMessenger, and explorer URL.
+- Web bridge resume storage now records the selected source chain with the burn hash.
+- Extension bridge handoff can pass the selected source chain to the web route.
+- No new Base/Arbitrum/OP chain evidence has been recorded yet.

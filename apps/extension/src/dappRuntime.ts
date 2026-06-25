@@ -7,6 +7,7 @@ import {
   unlockEncryptedVault,
   type AspMembershipInsertReport,
   type AssetCode,
+  type CctpSourceKey,
   type FreighterBridgeRequest,
   type NetworkKey,
   type StellarUsdcTrustlineReport,
@@ -30,9 +31,9 @@ import {
   withError,
 } from './dappRuntimeHelpers'
 import { identityForMnemonic, readStoredDappWallet, writeStoredDappWallet } from './dappRuntimeState'
+import { bridgeUrl } from './bridge-url'
 
 const unsupportedSigningFields = { signedTransaction: '', signerAddress: '' } as const
-const webBridgeUrl = 'http://localhost:5173/'
 
 export interface ExtensionShieldRequest {
   readonly mnemonic: string
@@ -88,7 +89,7 @@ export class ExtensionDappRuntime {
       case dappMessageTypes.quickShield:
         return this.quickShield(message.asset, message.amountStroops, message.timeoutMs)
       case dappMessageTypes.openBridgeHandoff:
-        return this.openBridgeHandoff(message.resumeBurnHash)
+        return this.openBridgeHandoff(message.resumeBurnHash, message.sourceChainKey)
       case dappMessageTypes.freighterRequest:
         void openExtensionSidePanel(sender?.tab?.windowId)
         return this.handleFreighterRequest(message.request)
@@ -260,14 +261,17 @@ export class ExtensionDappRuntime {
     return { ok: true, mnemonic: seedWords, network: state.network }
   }
 
-  private async openBridgeHandoff(resumeBurnHash?: string): Promise<BridgeHandoffResponse> {
+  private async openBridgeHandoff(
+    resumeBurnHash?: string,
+    sourceChainKey?: CctpSourceKey,
+  ): Promise<BridgeHandoffResponse> {
     const state = await readStoredDappWallet()
     const identity = identityForMnemonic(this.unlockedMnemonic, state)
     if (!identity) {
       return { ok: false, error: 'Unlock ZK Fighter before opening the bridge.' }
     }
 
-    const url = bridgeUrl(state.network, identity.stellarPublicKey, resumeBurnHash)
+    const url = bridgeUrl(state.network, identity.stellarPublicKey, resumeBurnHash, sourceChainKey)
     if (!this.openBridgeHandoffUrl) {
       return { ok: false, url, error: 'Bridge handoff opener is unavailable.' }
     }
@@ -284,16 +288,4 @@ function receiveCodeForIdentity(identity: NonNullable<ReturnType<typeof identity
     notePublicKey: identity.privateReceive.notePublicKey,
     encryptionPublicKey: identity.privateReceive.encryptionPublicKey,
   })
-}
-
-function bridgeUrl(network: NetworkKey, destination: string, resumeBurnHash?: string): string {
-  const url = new URL(webBridgeUrl)
-  url.searchParams.set('zkfAction', 'bridge')
-  url.searchParams.set('network', network)
-  url.searchParams.set('destination', destination)
-  const burnHash = resumeBurnHash?.trim()
-  if (burnHash) {
-    url.searchParams.set('resumeBurnHash', burnHash)
-  }
-  return url.toString()
 }

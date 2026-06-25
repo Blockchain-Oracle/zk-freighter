@@ -9,7 +9,7 @@ import {
 import { pollCctpAttestation } from './cctp-iris'
 import { getCctpBridgeBlockers, resumeCctpBridgeToStellar, runCctpBridgeToStellar } from './cctp-bridge'
 import { deriveWalletIdentity } from './identity'
-import { NETWORKS } from './networks'
+import { getCctpSource, NETWORKS } from './networks'
 
 const mnemonic = 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about'
 const identity = deriveWalletIdentity(mnemonic, 'testnet')
@@ -43,7 +43,7 @@ describe('CCTP bridge helpers', () => {
       amountAtomic: 1_000_000n,
       destinationDomain: 27,
       cctpForwarderBytes32: forwarder,
-      burnToken: NETWORKS.testnet.cctp?.evmSource?.usdcContract ?? '',
+      burnToken: getCctpSource('testnet', 'ethereum')?.usdcContract ?? '',
       maxFeeAtomic: 500n,
       finalityThreshold: 2_000,
       hookData: buildCctpForwarderHookData(identity.stellarPublicKey),
@@ -61,10 +61,10 @@ describe('CCTP bridge helpers', () => {
 
 describe('CCTP bridge flow', () => {
   it('blocks before bridge execution when no Ethereum signer is available', async () => {
-    const report = await runCctpBridgeToStellar({ identity, network: 'testnet' })
+    const report = await runCctpBridgeToStellar({ identity, network: 'testnet', sourceChainKey: 'base' })
 
     expect(report.status).toBe('blocked')
-    expect(report.blockers.join(' ')).toContain('Ethereum Sepolia wallet')
+    expect(report.blockers.join(' ')).toContain('Base Sepolia wallet')
     expect(report.publicUsdcArrived).toBe(false)
     expect(report.evmBurnTxHash).toBeUndefined()
   })
@@ -99,6 +99,7 @@ describe('CCTP bridge flow', () => {
     const report = await runCctpBridgeToStellar({
       identity,
       network: 'testnet',
+      sourceChainKey: 'base',
       sleep: async () => undefined,
       fetch: async () => Response.json(completeAttestation),
       submitMintAndForward: async ({ onStatus }) => {
@@ -116,22 +117,26 @@ describe('CCTP bridge flow', () => {
     })
 
     expect(report.status).toBe('completed')
+    expect(report.sourceChainKey).toBe('base')
+    expect(report.sourceDomain).toBe(6)
     expect(report.evmApproveTxHash).toBe('0xapprove')
     expect(report.evmBurnTxHash).toBe('0xburn')
     expect(report.stellarMintTxHash).toBe('stellar-mint-hash')
     expect(report.shieldPrompt).toBe(true)
     expect(sent.map((transaction) => transaction.to)).toEqual([
-      NETWORKS.testnet.cctp?.evmSource?.usdcContract,
-      NETWORKS.testnet.cctp?.evmSource?.tokenMessenger,
+      getCctpSource('testnet', 'base')?.usdcContract,
+      getCctpSource('testnet', 'base')?.tokenMessenger,
     ])
-    expect(progress).toContain('Ethereum USDC approval submitted')
-    expect(progress).toContain('Ethereum CCTP burn submitted')
+    expect(sent.every((transaction) => transaction.chainIdHex === '0x14a34')).toBe(true)
+    expect(progress).toContain('Base Sepolia USDC approval submitted')
+    expect(progress).toContain('Base Sepolia CCTP burn submitted')
   })
 
   it('keeps submitted public hashes when a later bridge step fails', async () => {
     const report = await runCctpBridgeToStellar({
       identity,
       network: 'testnet',
+      sourceChainKey: 'ethereum',
       sleep: async () => undefined,
       fetch: async () => Response.json(completeAttestation),
       submitMintAndForward: async () => {
@@ -154,6 +159,7 @@ describe('CCTP bridge flow', () => {
     const report = await resumeCctpBridgeToStellar({
       identity,
       network: 'testnet',
+      sourceChainKey: 'arbitrum',
       evmApproveTxHash: '0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
       evmBurnTxHash: '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
       sleep: async () => undefined,
@@ -166,10 +172,12 @@ describe('CCTP bridge flow', () => {
     })
 
     expect(report.status).toBe('completed')
+    expect(report.sourceChainKey).toBe('arbitrum')
+    expect(report.sourceDomain).toBe(3)
     expect(report.evmApproveTxHash).toBe('0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
     expect(report.evmBurnTxHash).toBe('0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb')
     expect(report.stellarMintTxHash).toBe('stellar-resumed-mint-hash')
-    expect(progress).toContain('Resuming from Ethereum CCTP burn')
+    expect(progress).toContain('Resuming from Arbitrum Sepolia CCTP burn')
     expect(progress).toContain('Circle Iris attestation complete')
   })
 
@@ -177,11 +185,12 @@ describe('CCTP bridge flow', () => {
     const report = await resumeCctpBridgeToStellar({
       identity,
       network: 'testnet',
+      sourceChainKey: 'base',
       evmBurnTxHash: 'not-a-hash',
     })
 
     expect(report.status).toBe('blocked')
-    expect(report.blockers).toContain('Enter a valid Ethereum CCTP burn transaction hash.')
+    expect(report.blockers).toContain('Enter a valid Base Sepolia CCTP burn transaction hash.')
     expect(report.stellarMintTxHash).toBeUndefined()
   })
 })

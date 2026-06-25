@@ -17,6 +17,17 @@
   - `.thoughts/research/spikes-log.md`
   - `.thoughts/research/2026-06-25-mainnet-readiness.md`
 
+## Implementation Status
+
+- 2026-06-25: Phase 1 and the code part of Phases 2, 3, and 5 are implemented for EVM source chains.
+- Active configured source chains:
+  - Testnet: Ethereum Sepolia, Base Sepolia, Arbitrum Sepolia, OP Sepolia.
+  - Mainnet: Ethereum, Base, Arbitrum One, OP Mainnet.
+- Base is the default source on testnet and mainnet.
+- Resume state now stores `sourceChainKey`, so a burn hash is not resumed against the wrong Circle source domain.
+- Extension handoff now passes source-chain context to the web bridge route.
+- Still pending: real Base Sepolia and Arbitrum Sepolia bridge-to-shield evidence, then optional OP evidence, then a separately approved mainnet route.
+
 ## Assumptions
 
 - ZK Fighter's bridge remains an inbound bridge: source-chain USDC -> public Stellar USDC -> separate shield/deposit.

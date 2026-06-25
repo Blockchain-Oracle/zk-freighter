@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { NETWORKS, getNetworkConfig, isShieldedAssetEnabled } from './networks'
+import { NETWORKS, getCctpSource, getEnabledCctpSources, getNetworkConfig, isShieldedAssetEnabled } from './networks'
 
 describe('NETWORKS', () => {
   it('records verified testnet and mainnet SAC IDs', () => {
@@ -40,7 +40,7 @@ describe('NETWORKS', () => {
     )
   })
 
-  it('records current CCTP V2 testnet bridge config', () => {
+  it('records current Stellar CCTP V2 config', () => {
     expect(NETWORKS.testnet.cctp?.domain).toBe(27)
     expect(NETWORKS.testnet.cctp?.tokenMessengerMinter).toBe(
       'CDNG7HXAPBWICI2E3AUBP3YZWZELJLYSB6F5CC7WLDTLTHVM74SLRTHP',
@@ -51,13 +51,26 @@ describe('NETWORKS', () => {
     expect(NETWORKS.testnet.cctp?.cctpForwarder).toBe(
       'CA66Q2WFBND6V4UEB7RD4SAXSVIWMD6RA4X3U32ELVFGXV5PJK4T4VSZ',
     )
-    expect(NETWORKS.testnet.cctp?.evmSource?.domain).toBe(0)
-    expect(NETWORKS.testnet.cctp?.evmSource?.chainIdHex).toBe('0xaa36a7')
-    expect(NETWORKS.testnet.cctp?.evmSource?.usdcContract).toBe('0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238')
-    expect(NETWORKS.mainnet.cctp?.evmSource?.domain).toBe(0)
-    expect(NETWORKS.mainnet.cctp?.evmSource?.chainIdHex).toBe('0x1')
-    expect(NETWORKS.mainnet.cctp?.evmSource?.usdcContract).toBe('0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48')
-    expect(NETWORKS.mainnet.cctp?.evmSource?.tokenMessenger).toBe('0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d')
-    expect(NETWORKS.mainnet.cctp?.evmSource?.messageTransmitter).toBe('0x81D40F21F12A8F0E3252Bccb954D722d4c464B64')
+    expect(NETWORKS.testnet.cctp?.defaultSource).toBe('base')
+    expect(NETWORKS.mainnet.cctp?.defaultSource).toBe('base')
+  })
+
+  it('records verified EVM CCTP source chains', () => {
+    expect(getEnabledCctpSources('testnet').map((source) => source.key)).toEqual([
+      'ethereum',
+      'base',
+      'arbitrum',
+      'optimism',
+    ])
+    expect(getCctpSource('testnet', 'ethereum')?.domain).toBe(0)
+    expect(getCctpSource('testnet', 'ethereum')?.chainIdHex).toBe('0xaa36a7')
+    expect(getCctpSource('testnet', 'base')?.domain).toBe(6)
+    expect(getCctpSource('testnet', 'base')?.chainIdHex).toBe('0x14a34')
+    expect(getCctpSource('testnet', 'arbitrum')?.usdcContract).toBe('0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d')
+    expect(getCctpSource('testnet', 'optimism')?.chainIdHex).toBe('0xaa37dc')
+    expect(getCctpSource('mainnet', 'ethereum')?.usdcContract).toBe('0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48')
+    expect(getCctpSource('mainnet', 'base')?.usdcContract).toBe('0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913')
+    expect(getCctpSource('mainnet', 'arbitrum')?.chainIdHex).toBe('0xa4b1')
+    expect(getCctpSource('mainnet', 'optimism')?.domain).toBe(2)
   })
 })

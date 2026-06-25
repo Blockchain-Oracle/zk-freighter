@@ -1,7 +1,14 @@
-import { getNetworkConfig, type CctpBridgeReport, type NetworkKey } from '@zk-fighter/core'
+import {
+  getCctpSource,
+  getNetworkConfig,
+  isCctpSourceKey,
+  type CctpBridgeReport,
+  type CctpSourceKey,
+  type NetworkKey,
+} from '@zk-fighter/core'
 
-const bridgeResumeStorageVersion = 1
-const bridgeResumeStoragePrefix = 'zk-fighter:cctp-bridge-resume:v1'
+const bridgeResumeStorageVersion = 2
+const bridgeResumeStoragePrefix = 'zk-fighter:cctp-bridge-resume:v2'
 const txHashHexChars = 64
 const txHashPattern = new RegExp(`^0x[0-9a-fA-F]{${txHashHexChars}}$`)
 const stellarTxPattern = new RegExp(`^[0-9a-fA-F]{${txHashHexChars}}$`)
@@ -14,6 +21,7 @@ interface StoredBridgeResume {
   readonly version: typeof bridgeResumeStorageVersion
   readonly network: NetworkKey
   readonly destinationAddress: string
+  readonly sourceChainKey: CctpSourceKey
   readonly evmApproveTxHash?: string
   readonly evmBurnTxHash: string
   readonly stellarMintTxHash?: string
@@ -23,36 +31,61 @@ export function bridgeResumeStorageKey(network: NetworkKey, destinationAddress: 
   return `${bridgeResumeStoragePrefix}:${network}:${destinationAddress}`
 }
 
-export function loadBridgeResumeBurnHash(network: NetworkKey, destinationAddress: string): string {
+export function loadBridgeResumeSourceChain(network: NetworkKey, destinationAddress: string): CctpSourceKey | undefined {
   const parsed = loadStoredBridgeResume(network, destinationAddress)
+  return isCctpSourceKey(parsed?.sourceChainKey) ? parsed.sourceChainKey : undefined
+}
+
+export function loadBridgeResumeBurnHash(
+  network: NetworkKey,
+  destinationAddress: string,
+  sourceChainKey?: CctpSourceKey,
+): string {
+  const parsed = loadStoredBridgeResume(network, destinationAddress)
+  if (!resumeSourceMatches(parsed, sourceChainKey)) {
+    return ''
+  }
   return isTxHash(parsed?.evmBurnTxHash) ? parsed.evmBurnTxHash : ''
 }
 
 export function loadCompletedBridgeResumeReport(
   network: NetworkKey,
   destinationAddress: string,
+  sourceChainKey?: CctpSourceKey,
 ): CctpBridgeReport | null {
   const parsed = loadStoredBridgeResume(network, destinationAddress)
-  if (!parsed || !isTxHash(parsed.evmBurnTxHash) || !isStellarTxHash(parsed.stellarMintTxHash)) {
+  if (
+    !parsed ||
+    !resumeSourceMatches(parsed, sourceChainKey) ||
+    !isTxHash(parsed.evmBurnTxHash) ||
+    !isStellarTxHash(parsed.stellarMintTxHash)
+  ) {
     return null
   }
 
+  const evmSource = getCctpSource(network, parsed.sourceChainKey)
+  if (!evmSource) {
+    return null
+  }
   const config = getNetworkConfig(network)
-  const evmSource = config.cctp?.evmSource
   return {
     status: 'completed',
     network,
     destinationAddress,
-    sourceChain: evmSource?.label,
+    sourceChainKey: evmSource.key,
+    sourceChain: evmSource.label,
+    sourceDomain: evmSource.domain,
+    sourceChainId: evmSource.chainId,
+    sourceGasToken: evmSource.gasToken,
     amountAtomic: defaultBridgeAmountAtomic,
     amountDisplay: defaultBridgeAmountDisplay,
     maxFeeAtomic: defaultBridgeMaxFeeAtomic,
     finalityThreshold: defaultBridgeFinalityThreshold,
     evmApproveTxHash: isTxHash(parsed.evmApproveTxHash) ? parsed.evmApproveTxHash : undefined,
     evmApproveExplorerUrl:
-      isTxHash(parsed.evmApproveTxHash) && evmSource ? `${evmSource.explorerTxUrl}/${parsed.evmApproveTxHash}` : undefined,
+      isTxHash(parsed.evmApproveTxHash) ? `${evmSource.explorerTxUrl}/${parsed.evmApproveTxHash}` : undefined,
     evmBurnTxHash: parsed.evmBurnTxHash,
-    evmBurnExplorerUrl: evmSource ? `${evmSource.explorerTxUrl}/${parsed.evmBurnTxHash}` : undefined,
+    evmBurnExplorerUrl: `${evmSource.explorerTxUrl}/${parsed.evmBurnTxHash}`,
     irisUrl: config.cctp?.irisUrl,
     attestationStatus: 'complete',
     stellarMintTxHash: parsed.stellarMintTxHash,
@@ -80,6 +113,7 @@ export function saveBridgeResumeReport(report: CctpBridgeReport): void {
     version: bridgeResumeStorageVersion,
     network: report.network,
     destinationAddress: report.destinationAddress,
+    sourceChainKey: report.sourceChainKey,
     evmApproveTxHash: isTxHash(report.evmApproveTxHash) ? report.evmApproveTxHash : undefined,
     evmBurnTxHash: report.evmBurnTxHash,
     stellarMintTxHash: isStellarTxHash(report.stellarMintTxHash) ? report.stellarMintTxHash : undefined,
@@ -100,6 +134,16 @@ function loadStoredBridgeResume(network: NetworkKey, destinationAddress: string)
   } catch {
     return null
   }
+}
+
+function resumeSourceMatches(
+  parsed: Partial<StoredBridgeResume> | null,
+  sourceChainKey: CctpSourceKey | undefined,
+): parsed is Partial<StoredBridgeResume> & { readonly sourceChainKey: CctpSourceKey } {
+  if (!parsed || !isCctpSourceKey(parsed.sourceChainKey)) {
+    return false
+  }
+  return sourceChainKey === undefined || parsed.sourceChainKey === sourceChainKey
 }
 
 function isTxHash(value: string | undefined): value is string {

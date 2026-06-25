@@ -3,6 +3,7 @@ import type { CctpBridgeReport } from '@zk-fighter/core'
 import {
   bridgeResumeStorageKey,
   loadBridgeResumeBurnHash,
+  loadBridgeResumeSourceChain,
   loadCompletedBridgeResumeReport,
   saveBridgeResumeReport,
 } from './bridge-storage'
@@ -11,6 +12,7 @@ const destinationAddress = 'GB4PZPDDY7EB4FF6RYAJYBRG6JZ3AA2JUQKE577VVUFJRHASVHIM
 const evmApproveTxHash = `0x${'a'.repeat(64)}`
 const evmBurnTxHash = `0x${'b'.repeat(64)}`
 const stellarMintTxHash = '3af0d0be38b048db1009a59c521ddf191a8c02a5b68047620f27d38949158790'
+const baseCctpDomain = 6
 
 describe('bridge resume storage', () => {
   afterEach(() => {
@@ -24,7 +26,10 @@ describe('bridge resume storage', () => {
     const restored = loadCompletedBridgeResumeReport('testnet', destinationAddress)
 
     expect(loadBridgeResumeBurnHash('testnet', destinationAddress)).toBe(evmBurnTxHash)
+    expect(loadBridgeResumeSourceChain('testnet', destinationAddress)).toBe('base')
     expect(restored?.status).toBe('completed')
+    expect(restored?.sourceChainKey).toBe('base')
+    expect(restored?.sourceDomain).toBe(baseCctpDomain)
     expect(restored?.evmApproveTxHash).toBe(evmApproveTxHash)
     expect(restored?.evmBurnTxHash).toBe(evmBurnTxHash)
     expect(restored?.stellarMintTxHash).toBe(stellarMintTxHash)
@@ -40,12 +45,22 @@ describe('bridge resume storage', () => {
         version: 1,
         network: 'testnet',
         destinationAddress,
+        sourceChainKey: 'base',
         evmBurnTxHash,
       }),
     )
 
     expect(loadBridgeResumeBurnHash('testnet', destinationAddress)).toBe(evmBurnTxHash)
     expect(loadCompletedBridgeResumeReport('testnet', destinationAddress)).toBeNull()
+  })
+
+  it('does not resume a stored burn against the wrong source domain', () => {
+    installStorage()
+
+    saveBridgeResumeReport(completedReport())
+
+    expect(loadBridgeResumeBurnHash('testnet', destinationAddress, 'arbitrum')).toBe('')
+    expect(loadCompletedBridgeResumeReport('testnet', destinationAddress, 'arbitrum')).toBeNull()
   })
 })
 
@@ -54,7 +69,11 @@ function completedReport(): CctpBridgeReport {
     status: 'completed',
     network: 'testnet',
     destinationAddress,
-    sourceChain: 'Ethereum Sepolia',
+    sourceChainKey: 'base',
+    sourceChain: 'Base Sepolia',
+    sourceDomain: baseCctpDomain,
+    sourceChainId: 84532,
+    sourceGasToken: 'Base Sepolia ETH',
     amountAtomic: '1000000',
     amountDisplay: '1 USDC',
     maxFeeAtomic: '500',

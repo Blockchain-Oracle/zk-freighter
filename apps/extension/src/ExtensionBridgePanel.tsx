@@ -1,5 +1,6 @@
 import { ArrowLeftRight, ExternalLink } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { getDefaultCctpSource, getEnabledCctpSources, type CctpSourceKey } from '@zk-fighter/core'
 
 import { dappMessageTypes, type BridgeHandoffResponse, type DappWalletStatus } from './dappMessages'
 import { shorten } from './extension-format'
@@ -10,15 +11,27 @@ interface ExtensionBridgePanelProps {
 }
 
 export function ExtensionBridgePanel({ status, sendRuntimeMessage }: ExtensionBridgePanelProps) {
+  const network = status?.network ?? 'testnet'
+  const sources = useMemo(() => getEnabledCctpSources(network), [network])
+  const [sourceChainKey, setSourceChainKey] = useState<CctpSourceKey>(() => getDefaultCctpSource('testnet')?.key ?? 'base')
   const [resumeBurnHash, setResumeBurnHash] = useState('')
   const [result, setResult] = useState<BridgeHandoffResponse | null>(null)
   const [busy, setBusy] = useState(false)
   const disabledReason = status?.unlocked ? '' : 'Unlock the extension vault first.'
+  const selectedSource = sources.find((source) => source.key === sourceChainKey) ?? getDefaultCctpSource(network)
+
+  useEffect(() => {
+    const defaultSource = getDefaultCctpSource(network)
+    if (defaultSource && !sources.some((source) => source.key === sourceChainKey)) {
+      setSourceChainKey(defaultSource.key)
+    }
+  }, [network, sourceChainKey, sources])
 
   async function openBridge() {
     setBusy(true)
     const response = (await sendRuntimeMessage({
       type: dappMessageTypes.openBridgeHandoff,
+      sourceChainKey: selectedSource?.key,
       resumeBurnHash,
     })) as BridgeHandoffResponse
     setResult(response)
@@ -32,7 +45,7 @@ export function ExtensionBridgePanel({ status, sendRuntimeMessage }: ExtensionBr
         <span className="badge badge-in-progress">handoff</span>
       </div>
       <p className="copy">
-        Opens the web bridge flow so the Ethereum wallet can sign on a normal web page. The bridge leg stays public,
+        Opens the web bridge flow so the source-chain wallet can sign on a normal web page. The bridge leg stays public,
         then ZK Fighter shields USDC separately after arrival.
       </p>
       <dl className="meta-list">
@@ -42,9 +55,19 @@ export function ExtensionBridgePanel({ status, sendRuntimeMessage }: ExtensionBr
         </div>
         <div>
           <dt>Source</dt>
-          <dd>Ethereum Sepolia USDC via Circle CCTP</dd>
+          <dd>{selectedSource ? `${selectedSource.label} USDC via Circle CCTP` : 'Unavailable'}</dd>
         </div>
       </dl>
+      <label className="field">
+        <span>Source chain</span>
+        <select value={selectedSource?.key ?? sourceChainKey} onChange={(event) => setSourceChainKey(event.target.value as CctpSourceKey)}>
+          {sources.map((source) => (
+            <option value={source.key} key={source.key}>
+              {source.label}
+            </option>
+          ))}
+        </select>
+      </label>
       <label className="field">
         <span>Resume burn hash</span>
         <input value={resumeBurnHash} onChange={(event) => setResumeBurnHash(event.target.value)} />

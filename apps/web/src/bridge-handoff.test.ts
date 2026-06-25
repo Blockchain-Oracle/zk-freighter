@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { bridgeHandoffNotice, bridgeResumeBurnHashFromUrl } from './bridge-handoff'
+import { bridgeHandoffNotice, bridgeResumeBurnHashFromUrl, bridgeSourceChainFromUrl } from './bridge-handoff'
 
 const destination = 'GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF'
 const resumeBurnHash = `0x${'b'.repeat(64)}`
@@ -11,9 +11,10 @@ describe('bridge handoff URL parsing', () => {
   })
 
   it('accepts matching extension handoff context', () => {
-    installLocation(`?zkfAction=bridge&network=testnet&destination=${destination}&resumeBurnHash=${resumeBurnHash}`)
+    installLocation(`?zkfAction=bridge&network=testnet&destination=${destination}&sourceChain=base&resumeBurnHash=${resumeBurnHash}`)
 
     expect(bridgeResumeBurnHashFromUrl('testnet', destination)).toBe(resumeBurnHash)
+    expect(bridgeSourceChainFromUrl('testnet', destination)).toBe('base')
     expect(bridgeHandoffNotice('testnet', destination)).toContain('Opened from the extension')
   })
 

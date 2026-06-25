@@ -15,7 +15,14 @@ import type {
   ResumeCctpBridgeOptions,
   RunCctpBridgeOptions,
 } from './cctp-types'
-import { getNetworkConfig, isShieldedAssetEnabled, type NetworkKey } from './networks'
+import {
+  getCctpSource,
+  getDefaultCctpSource,
+  getNetworkConfig,
+  isShieldedAssetEnabled,
+  type CctpSourceKey,
+  type NetworkKey,
+} from './networks'
 
 const defaultBridgeAmountAtomic = 1_000_000n
 const defaultMaxFeeAtomic = 500n
@@ -23,7 +30,7 @@ const standardFinalityThreshold = 2_000
 const evmTxHashHexChars = 64
 const evmTxHashPattern = new RegExp(`^0x[0-9a-fA-F]{${evmTxHashHexChars}}$`)
 
-export function getCctpBridgeBlockers(network: NetworkKey): readonly string[] {
+export function getCctpBridgeBlockers(network: NetworkKey, sourceChainKey?: CctpSourceKey): readonly string[] {
   const config = getNetworkConfig(network)
   const blockers: string[] = []
 
@@ -33,8 +40,8 @@ export function getCctpBridgeBlockers(network: NetworkKey): readonly string[] {
   if (!config.cctp?.cctpForwarder || !config.cctp.messageTransmitter || !config.cctp.tokenMessengerMinter) {
     blockers.push('Stellar CCTP contracts are not fully configured for this network.')
   }
-  if (!config.cctp?.evmSource) {
-    blockers.push('Ethereum source CCTP config is not available for this network.')
+  if (!getCctpSource(network, sourceChainKey)) {
+    blockers.push('Selected source-chain CCTP config is not available for this network.')
   }
 
   return blockers
@@ -45,10 +52,11 @@ export async function runCctpBridgeToStellar(options: RunCctpBridgeOptions): Pro
   const started = now()
   const events: CctpBridgeProgressEvent[] = []
   const network = getNetworkConfig(options.network)
+  const evmSource = getCctpSource(options.network, options.sourceChainKey)
   const amount = options.amountAtomic ?? defaultBridgeAmountAtomic
   const maxFee = options.maxFeeAtomic ?? defaultMaxFeeAtomic
   const finalityThreshold = options.finalityThreshold ?? standardFinalityThreshold
-  const blockers = [...getCctpBridgeBlockers(options.network)]
+  const blockers = [...getCctpBridgeBlockers(options.network, options.sourceChainKey)]
   let approveTx: string | undefined
   let burnTx: string | undefined
   let attestation: CctpAttestationMessage | undefined
@@ -63,35 +71,34 @@ export async function runCctpBridgeToStellar(options: RunCctpBridgeOptions): Pro
   }
   const evmClient = options.evmClient
   if (!evmClient) {
-    blockers.push(`Connect a ${network.cctp?.evmSource?.label ?? 'source-chain'} wallet before starting the public bridge leg.`)
+    blockers.push(`Connect a ${evmSource?.label ?? 'source-chain'} wallet before starting the public bridge leg.`)
   }
   if (blockers.length > 0) {
     return report('blocked', blockers)
   }
   if (!evmClient) {
-    return report('blocked', [`Connect a ${network.cctp?.evmSource?.label ?? 'source-chain'} wallet before starting the public bridge leg.`])
+    return report('blocked', [`Connect a ${evmSource?.label ?? 'source-chain'} wallet before starting the public bridge leg.`])
   }
 
   try {
     const cctp = network.cctp
-    const evmSource = cctp?.evmSource
     if (!cctp?.cctpForwarder || !evmSource) {
       throw new Error('CCTP config disappeared during bridge preparation.')
     }
 
     const forwarderBytes32 = stellarContractStrkeyToBytes32(cctp.cctpForwarder)
     const hookData = buildCctpForwarderHookData(options.identity.stellarPublicKey)
-    emit({ stage: 'approve', message: 'Submitting Ethereum USDC approval' })
+    emit({ stage: 'approve', message: `Submitting ${evmSource.label} USDC approval` })
     approveTx = await evmClient.sendTransaction({
       to: evmSource.usdcContract,
       data: encodeApproveUsdcData(evmSource.tokenMessenger, amount),
       chainIdHex: evmSource.chainIdHex,
     })
-    emit({ stage: 'approve', message: 'Ethereum USDC approval submitted', txHash: approveTx })
+    emit({ stage: 'approve', message: `${evmSource.label} USDC approval submitted`, txHash: approveTx })
     await evmClient.waitForTransaction(approveTx)
-    emit({ stage: 'approve', message: 'Ethereum USDC approval confirmed', txHash: approveTx })
+    emit({ stage: 'approve', message: `${evmSource.label} USDC approval confirmed`, txHash: approveTx })
 
-    emit({ stage: 'burn', message: 'Submitting Ethereum CCTP burn with Stellar forwarder hook', txHash: approveTx })
+    emit({ stage: 'burn', message: `Submitting ${evmSource.label} CCTP burn with Stellar forwarder hook`, txHash: approveTx })
     burnTx = await evmClient.sendTransaction({
       to: evmSource.tokenMessenger,
       data: encodeDepositForBurnWithHookData({
@@ -105,9 +112,9 @@ export async function runCctpBridgeToStellar(options: RunCctpBridgeOptions): Pro
       }),
       chainIdHex: evmSource.chainIdHex,
     })
-    emit({ stage: 'burn', message: 'Ethereum CCTP burn submitted', txHash: burnTx })
+    emit({ stage: 'burn', message: `${evmSource.label} CCTP burn submitted`, txHash: burnTx })
     await evmClient.waitForTransaction(burnTx)
-    emit({ stage: 'burn', message: 'Ethereum CCTP burn confirmed', txHash: burnTx })
+    emit({ stage: 'burn', message: `${evmSource.label} CCTP burn confirmed`, txHash: burnTx })
 
     attestation = await pollCctpAttestation({
       irisUrl: cctp.irisUrl,
@@ -140,20 +147,27 @@ export async function runCctpBridgeToStellar(options: RunCctpBridgeOptions): Pro
     nextBlockers: readonly string[],
     error?: string,
   ): CctpBridgeReport {
-    const evmSource = network.cctp?.evmSource
+    const source = evmSource ?? getDefaultCctpSource(options.network)
+    if (!source) {
+      throw new Error('CCTP source disappeared during report preparation.')
+    }
     return {
       status,
       network: options.network,
       destinationAddress: options.identity.stellarPublicKey,
-      sourceChain: evmSource?.label,
+      sourceChainKey: source.key,
+      sourceChain: source.label,
+      sourceDomain: source.domain,
+      sourceChainId: source.chainId,
+      sourceGasToken: source.gasToken,
       amountAtomic: amount.toString(),
       amountDisplay: bridgeAmountDisplay(amount),
       maxFeeAtomic: maxFee.toString(),
       finalityThreshold,
       evmApproveTxHash: approveTx,
-      evmApproveExplorerUrl: approveTx && evmSource ? `${evmSource.explorerTxUrl}/${approveTx}` : undefined,
+      evmApproveExplorerUrl: approveTx ? `${source.explorerTxUrl}/${approveTx}` : undefined,
       evmBurnTxHash: burnTx,
-      evmBurnExplorerUrl: burnTx && evmSource ? `${evmSource.explorerTxUrl}/${burnTx}` : undefined,
+      evmBurnExplorerUrl: burnTx ? `${source.explorerTxUrl}/${burnTx}` : undefined,
       irisUrl: network.cctp?.irisUrl,
       attestationStatus: attestation?.status,
       attestationEventNonce: attestation?.eventNonce,
@@ -173,10 +187,11 @@ export async function resumeCctpBridgeToStellar(options: ResumeCctpBridgeOptions
   const started = now()
   const events: CctpBridgeProgressEvent[] = []
   const network = getNetworkConfig(options.network)
+  const evmSource = getCctpSource(options.network, options.sourceChainKey)
   const amount = options.amountAtomic ?? defaultBridgeAmountAtomic
   const maxFee = options.maxFeeAtomic ?? defaultMaxFeeAtomic
   const finalityThreshold = options.finalityThreshold ?? standardFinalityThreshold
-  const blockers = [...getCctpBridgeBlockers(options.network)]
+  const blockers = [...getCctpBridgeBlockers(options.network, options.sourceChainKey)]
   const approveTx = normalizeOptionalTxHash(options.evmApproveTxHash)
   const burnTx = normalizeOptionalTxHash(options.evmBurnTxHash)
   let attestation: CctpAttestationMessage | undefined
@@ -187,7 +202,7 @@ export async function resumeCctpBridgeToStellar(options: ResumeCctpBridgeOptions
   }
 
   if (!burnTx) {
-    blockers.push('Enter a valid Ethereum CCTP burn transaction hash.')
+    blockers.push(`Enter a valid ${evmSource?.label ?? 'source-chain'} CCTP burn transaction hash.`)
   }
   if (blockers.length > 0) {
     return report('blocked', blockers)
@@ -198,12 +213,11 @@ export async function resumeCctpBridgeToStellar(options: ResumeCctpBridgeOptions
 
   try {
     const cctp = network.cctp
-    const evmSource = cctp?.evmSource
     if (!cctp || !evmSource) {
       throw new Error('CCTP config disappeared during bridge resume.')
     }
 
-    emit({ stage: 'attestation', message: 'Resuming from Ethereum CCTP burn', txHash: burnTx })
+    emit({ stage: 'attestation', message: `Resuming from ${evmSource.label} CCTP burn`, txHash: burnTx })
     attestation = await pollCctpAttestation({
       irisUrl: cctp.irisUrl,
       sourceDomain: evmSource.domain,
@@ -235,20 +249,27 @@ export async function resumeCctpBridgeToStellar(options: ResumeCctpBridgeOptions
     nextBlockers: readonly string[],
     error?: string,
   ): CctpBridgeReport {
-    const evmSource = network.cctp?.evmSource
+    const source = evmSource ?? getDefaultCctpSource(options.network)
+    if (!source) {
+      throw new Error('CCTP source disappeared during report preparation.')
+    }
     return {
       status,
       network: options.network,
       destinationAddress: options.identity.stellarPublicKey,
-      sourceChain: evmSource?.label,
+      sourceChainKey: source.key,
+      sourceChain: source.label,
+      sourceDomain: source.domain,
+      sourceChainId: source.chainId,
+      sourceGasToken: source.gasToken,
       amountAtomic: amount.toString(),
       amountDisplay: bridgeAmountDisplay(amount),
       maxFeeAtomic: maxFee.toString(),
       finalityThreshold,
       evmApproveTxHash: approveTx,
-      evmApproveExplorerUrl: approveTx && evmSource ? `${evmSource.explorerTxUrl}/${approveTx}` : undefined,
+      evmApproveExplorerUrl: approveTx ? `${source.explorerTxUrl}/${approveTx}` : undefined,
       evmBurnTxHash: burnTx,
-      evmBurnExplorerUrl: burnTx && evmSource ? `${evmSource.explorerTxUrl}/${burnTx}` : undefined,
+      evmBurnExplorerUrl: burnTx ? `${source.explorerTxUrl}/${burnTx}` : undefined,
       irisUrl: network.cctp?.irisUrl,
       attestationStatus: attestation?.status,
       attestationEventNonce: attestation?.eventNonce,
