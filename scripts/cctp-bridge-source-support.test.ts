@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { postBridgeShieldAmountAtomic } from './cctp-bridge-source-flow.ts'
+import { cctpUsdcAtomicToStellarStroops, postBridgeShieldAmountAtomic } from './cctp-bridge-source-flow.ts'
 import { parseSourceKey } from './cctp-bridge-source-support.ts'
 import { inspectStellarDestinationReadiness } from './stellar-destination-readiness.ts'
 
@@ -81,7 +81,8 @@ describe('inspectStellarDestinationReadiness', () => {
 })
 
 describe('postBridgeShieldAmountAtomic', () => {
-  it('shields the actual bridged USDC amount', () => {
-    expect(postBridgeShieldAmountAtomic(1_000_000n)).toBe(1_000_000n)
+  it('converts bridged USDC atomics into Stellar stroops', () => {
+    expect(postBridgeShieldAmountAtomic(1_000_000n)).toBe(10_000_000n)
+    expect(cctpUsdcAtomicToStellarStroops(900_000n)).toBe(9_000_000n)
   })
 })

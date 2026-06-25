@@ -16,6 +16,7 @@
     "testnet-usdc-funder:setup": "node scripts/setup-testnet-usdc-funder.mjs",
     "cctp:bridge:testnet": "ZKF_NETWORK=testnet tsx scripts/check-cctp-bridge-source.ts",
     "cctp:bridge:mainnet": "ZKF_NETWORK=mainnet tsx scripts/check-cctp-bridge-source.ts",
+    "cctp:shield:extension": "node scripts/check-extension-cctp-shield.mjs",
     "extension:runtime": "node scripts/check-extension-runtime.mjs",
     "extension:dapp": "node scripts/check-extension-dapp-bridge.mjs",
     "extension:quickshield": "node scripts/check-extension-quickshield.mjs",

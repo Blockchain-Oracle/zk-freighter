@@ -70,8 +70,13 @@ export async function insertAspMembershipLeaf(
   try {
     const preflight = await runAspMembershipPreflight(options)
     const contractId = preflight.contractState?.contractId
+    if (preflight.status === 'failed') {
+      return report('failed', preflight.blockers, contractId, preflight.error)
+    }
     if (!contractId) {
-      return report('blocked', ['ASP membership contract state could not be read.'])
+      return report('blocked', preflight.blockers.length > 0
+        ? preflight.blockers
+        : ['ASP membership contract state could not be read.'])
     }
     if (!preflight.canInsertWithoutAdmin) {
       return report('blocked', ['ASP membership insertion requires admin auth for this deployed contract.'], contractId)

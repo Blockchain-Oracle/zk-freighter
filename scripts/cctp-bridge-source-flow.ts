@@ -198,7 +198,12 @@ export function summarizeBridge(report: CctpBridgeReport) {
 }
 
 export function postBridgeShieldAmountAtomic(bridgedAmountAtomic: bigint): bigint {
-  return bridgedAmountAtomic
+  return cctpUsdcAtomicToStellarStroops(bridgedAmountAtomic)
+}
+
+export function cctpUsdcAtomicToStellarStroops(cctpAmountAtomic: bigint): bigint {
+  const stellarStroopsPerCctpAtomicUsdc = 10n
+  return cctpAmountAtomic * stellarStroopsPerCctpAtomicUsdc
 }
 
 async function runShieldWithRetries(identity: RunnerIdentity, network: NetworkKey, amountStroops: bigint) {
