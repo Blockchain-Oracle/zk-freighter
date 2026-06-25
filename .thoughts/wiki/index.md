@@ -5,6 +5,7 @@ Persistent project/domain wiki. Research notes are temporary; this wiki is the c
 ## Pages
 
 - [Designer Start Here](../design/brief.md) - single-file handoff for a designer or design agent.
+- [Designer Agent Prompt](../design/designer-agent-prompt.md) - copy-ready prompt for a designer/design agent using the GitHub repo.
 - [Wallet Design References](wallet-design-references.md) - wallet UX/code references for the ZK Fighter redesign across web, extension, and possible mobile.
 
 ## Source Logs

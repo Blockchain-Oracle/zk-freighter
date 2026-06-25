@@ -7,3 +7,4 @@
 - Research synthesis: `.thoughts/research/2026-06-25-wallet-ux-reference-research.md`.
 - Designer handoff: `.thoughts/design/2026-06-25-designer-brief-v2.md`.
 - Designer start-here file: `.thoughts/design/brief.md`.
+- GitHub-based designer agent prompt: `.thoughts/design/designer-agent-prompt.md`.

@@ -7,13 +7,16 @@ This is the handoff file to give a designer or design agent first. It links to t
 1. `.thoughts/design/2026-06-25-designer-brief-v2.md`
    - The main product and UX brief.
    - Covers web, extension, possible mobile app, wallet flows, address formats, public/private boundaries, bridge states, proof states, activity/history, extension scope, mobile scanner/confirmation opportunities, non-goals, and open questions.
-2. `.thoughts/wiki/wallet-design-references.md`
+2. `.thoughts/design/designer-agent-prompt.md`
+   - Copy-ready prompt for a designer or design agent that must work from the GitHub repo.
+   - Tells the agent to inspect `https://github.com/Blockchain-Oracle/zk-fighter`, clone if possible, and avoid taking visual inspiration from the current UI.
+3. `.thoughts/wiki/wallet-design-references.md`
    - The design reference wiki.
    - Maps each ZK Fighter screen or flow to source-inspectable wallets, visual references, and screenshot resources.
-3. `.thoughts/research/2026-06-25-wallet-ux-reference-research.md`
+4. `.thoughts/research/2026-06-25-wallet-ux-reference-research.md`
    - The research synthesis.
    - Separates verified project facts, verified external wallet facts, inferences, unknowns, and things not included.
-4. `.thoughts/raw/2026-06-25-wallet-design-research-sources.md`
+5. `.thoughts/raw/2026-06-25-wallet-design-research-sources.md`
    - The raw URL and local file index.
    - Use this when looking for screenshots, repo code, extension listings, mobile app pages, bridge-status references, or wallet help docs.
 
