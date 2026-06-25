@@ -1765,7 +1765,7 @@ These are upload/install estimates only. They do not include contract-instance d
 - Mainnet XLM/USDC privacy-pool contracts are deployed and configured.
 - Mainnet XLM QuickShield has real extension-runtime proof and accepted transaction evidence.
 - Mainnet USDC pool is deployed/configured, but a mainnet USDC QuickShield transaction is not yet recorded at this timestamp.
-- Mainnet shielded transfer, unshield/withdraw, CCTP bridge-to-shield, and atomic bridge-and-shield are still not claimed.
+- At this timestamp, mainnet shielded transfer, unshield/withdraw, CCTP bridge-to-shield, and atomic bridge-and-shield were still not claimed.
 
 ## 2026-06-25 13:16 UTC - Mainnet extension USDC QuickShield
 
@@ -1803,7 +1803,47 @@ These are upload/install estimates only. They do not include contract-instance d
 ### Current mainnet claims allowed
 
 - Mainnet XLM and USDC QuickShield both have real extension-runtime proof and accepted mainnet transaction evidence.
-- Mainnet shielded transfer, unshield/withdraw, CCTP bridge-to-shield, and atomic bridge-and-shield are still not claimed.
+- At this timestamp, mainnet shielded transfer, unshield/withdraw, CCTP bridge-to-shield, and atomic bridge-and-shield were still not claimed.
+
+## 2026-06-25 13:35 UTC - Mainnet extension XLM shielded transfer and unshield
+
+- **Phase:** Mainnet private-loop runtime proof.
+- **Kind:** Real mainnet shielded XLM transfer and public XLM unshield/withdraw through the Chrome-for-Testing extension offscreen prover.
+- **Network:** Stellar mainnet.
+- **Smoke wallet:** `GAWDQREHIKPLF6KR7XXNYNANXG7PW2IG5N4HWFB2H3M3J3OFC7SHWH32`.
+- **Secret posture:** smoke wallet recovery phrase remained outside the repo at `/Users/abu/.config/zk-fighter/mainnet-quickshield-smoke.json`.
+- **Harness:** `pnpm extension:private-loop:mainnet`.
+- **Pool:** `CCE3VBWTMGS7TZBOMBXVMPZFD4RUWAJDQHV7L2FT5BHMZKHLQUJKHECE`.
+
+### Transactions
+
+| Step | Amount | Transaction | Ledger | Result |
+|---|---:|---|---:|---|
+| Shielded XLM transfer to the smoke wallet's own private receive code | `0.0100000 XLM` | `5a1523cfe48c3cab8adca44ca1d6518585b8d5bfa20afa8e2372f59fdb2548cd` | `63192150` | successful |
+| Public XLM unshield/withdraw back to the smoke wallet address | `0.0050000 XLM` | `df5440dd80e45daf7068c66fa225a20f8167c686244ee084268df8db3f4e1a70` | `63192156` | successful |
+
+- **Transfer proof generated:** yes.
+- **Transfer submit reached:** yes.
+- **Transfer duration:** `15,335 ms`.
+- **Withdraw proof generated:** yes.
+- **Withdraw submit reached:** yes.
+- **Withdraw duration:** `14,900 ms`.
+- **Final observed smoke-wallet public balances:**
+  - XLM: `4.8218337`.
+  - USDC: `0.0000000`.
+
+### Failure fixed during this run
+
+- The first private-transfer attempt failed before submit with `no spendable notes`.
+- Root cause: the private transfer/withdraw path did not call `syncPoolEvents()` before asking Nethermind for spendable local notes in a fresh Chrome profile.
+- Fix: `packages/core/src/xlm-private.ts` now syncs pool events before `executeTransfer` and `executeWithdraw`.
+- A later transfer attempt reached submit and got an RPC `ERROR` without an accepted hash. It is not counted as evidence. The submit helper now preserves richer RPC failure details when available.
+
+### Current mainnet claims allowed
+
+- Mainnet XLM has full extension-runtime evidence for QuickShield, shielded transfer, and public unshield/withdraw.
+- Mainnet USDC has QuickShield evidence only; mainnet USDC shielded transfer and unshield/withdraw are still not claimed.
+- Mainnet CCTP bridge-to-shield and atomic bridge-and-shield are still not claimed.
 
 ## 2026-06-25 13:21 UTC - Final extension runtime deep-proof gate rerun
 
@@ -1816,4 +1856,17 @@ These are upload/install estimates only. They do not include contract-instance d
 - **ASP insert:** `be396a79c46b2252ff919050dbd52fc4deb219559f6e0d8f576be8a2eb341fd7`.
 - **Dry proof status:** `proof-generated`.
 - **Proof duration:** `9,912 ms`.
+- **Submit reached:** yes, in dry-proof callback only; no shield/deposit transaction is claimed from this gate.
+
+## 2026-06-25 13:43 UTC - Final extension runtime deep-proof gate rerun
+
+- **Phase:** Verification gate after mainnet private-loop changes.
+- **Kind:** Chrome-for-Testing extension deep runtime proof rerun.
+- **Network:** Stellar testnet.
+- **Command:** `pnpm extension:runtime:deep`.
+- **Friendbot hash:** `1ed406f0995ce6768826e3013f950625d73685a41c6159b58d117f86f83f1074`.
+- **Runtime user address:** `GBQMJREPOYT2S5DPETVQIWGMOPRLDRXGLSMIZAHLY3ERZMMHCLGHGJHG`.
+- **ASP insert:** `b6e76d20fa231f79613034c57d6241154b35d6484d4e4a682ac83b462a4b3a57`.
+- **Dry proof status:** `proof-generated`.
+- **Proof duration:** `11,355 ms`.
 - **Submit reached:** yes, in dry-proof callback only; no shield/deposit transaction is claimed from this gate.

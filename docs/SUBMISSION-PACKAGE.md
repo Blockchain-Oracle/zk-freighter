@@ -8,7 +8,7 @@
 
 **Built for:** Stellar Hacks: Real-World ZK
 
-**Primary demo network:** Stellar testnet and Ethereum Sepolia. Mainnet XLM/USDC QuickShield exists as recorded evidence, not the default live demo path.
+**Primary demo network:** Stellar testnet and Ethereum Sepolia. Mainnet XLM QuickShield/private-loop and USDC QuickShield exist as recorded evidence, not the default live demo path.
 
 **Repository focus:** The web app is the safest judged surface. The extension is included as extra runtime evidence for QuickShield and bridge handoff, not as a general dApp signing wallet.
 
@@ -51,6 +51,8 @@ ZK is not decorative here. The wallet uses the Nethermind privacy-pool circuit a
 | Mainnet Extension QuickShield USDC fund transfer | Stellar mainnet | `8581307efcb3ad4f1ed9b9789f595cf6c1a44018dc62432d6372b4463adcd658` |
 | Mainnet Extension QuickShield USDC setup | Stellar mainnet | `84c33d8ff7798a5be616b0c402265be9cbd9518674dd75f00443cfdc1e56d65c` |
 | Mainnet Extension QuickShield USDC shield | Stellar mainnet | `a3fb0596b7cf5d79f093dcca9ff4faa6c5975499a1d36afdcf1a893f554aedcb` |
+| Mainnet XLM shielded transfer | Stellar mainnet | `5a1523cfe48c3cab8adca44ca1d6518585b8d5bfa20afa8e2372f59fdb2548cd` |
+| Mainnet XLM unshield | Stellar mainnet | `df5440dd80e45daf7068c66fa225a20f8167c686244ee084268df8db3f4e1a70` |
 | Extension bridge handoff | Local Chrome runtime | `pnpm extension:bridge` opened the web bridge route with network, destination, and resume hash. |
 | Extension offscreen dry proof | Local Chrome runtime + Stellar testnet ASP | `pnpm extension:runtime:deep` generated a dry XLM proof after ASP insert `f18a1e7666ef827da5636d810ba26afc4d3808bf8d56a6b2249cbe7b2aaaec17`. |
 
@@ -66,11 +68,11 @@ Full evidence, explorer links, balance notes, and failure fixes are in `.thought
 6. Show CCTP bridge-then-shield evidence: Sepolia approval, burn, Iris attestation, Stellar mint/forward, ASP insert, separate USDC shield.
 7. Show disclosure/export as user-held compliance evidence.
 8. Optionally show the extension: receive plumbing, QuickShield XLM/USDC evidence, and bridge handoff.
-9. Close with honest boundaries: testnet remains the safest live demo, mainnet XLM/USDC QuickShield has recorded evidence, unaudited, no atomic bridge claim, no public dApp signing claim.
+9. Close with honest boundaries: testnet remains the safest live demo, mainnet XLM QuickShield/private-loop and USDC QuickShield have recorded evidence, unaudited, no atomic bridge claim, no public dApp signing claim.
 
 ## Non-Claims
 
-- No mainnet shielded transfer, unshield/withdraw, or bridge-to-shield is claimed yet.
+- No mainnet USDC shielded transfer, USDC unshield/withdraw, or bridge-to-shield is claimed yet.
 - No atomic bridge-and-shield is claimed.
 - No extension-native Ethereum provider bridge is claimed.
 - No Freighter-compatible dApp signing wallet is claimed.
