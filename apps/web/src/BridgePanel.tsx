@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { AlertTriangle, ArrowLeftRight, ExternalLink, RotateCcw, Shield, Wallet } from 'lucide-react'
 import {
+  ensureStellarUsdcTrustline,
   getCctpSource,
   getCctpBridgeBlockers,
-  getDefaultCctpSource,
   getEnabledCctpSources,
   getNetworkConfig,
   resumeCctpBridgeToStellar,
@@ -12,62 +12,32 @@ import {
   type CctpBridgeReport,
   type CctpSourceKey,
   type NetworkKey,
+  type StellarUsdcTrustlineReport,
   type WalletIdentity,
   type XlmShieldSubmitReport,
 } from '@zk-fighter/core'
 import { truncateMiddle } from './app-helpers'
-import { bridgeHandoffNotice, bridgeResumeBurnHashFromUrl, bridgeSourceChainFromUrl } from './bridge-handoff'
+import { bridgeHandoffNotice } from './bridge-handoff'
 import {
   loadBridgeResumeBurnHash,
-  loadBridgeResumeSourceChain,
   loadCompletedBridgeResumeReport,
   saveBridgeResumeReport,
 } from './bridge-storage'
+import { BridgeReceiveSetupStatus } from './BridgeReceiveSetupStatus'
 import { BridgeSourceSelector } from './BridgeSourceSelector'
 import { BridgeResultDetails, ExplorerLink } from './BridgeResultDetails'
-import { createInjectedEthereumClient, providerAvailable } from './ethereum-provider'
+import { runBridgeAfterDestinationSetup } from './bridgePanelActions'
+import { initialBridgeBurnHash, initialBridgeSource, reportLabel, shieldLabel } from './bridgePanelHelpers'
+import { createInjectedEthereumClient } from './ethereum-provider'
+import { usdcReceiveErrorText } from './usdcReceiveSetupCopy'
+import { useEthereumDetected } from './useEthereumDetected'
 import './BridgePanel.css'
 
 const bridgedUsdcShieldAmount = 10_000_000n
-const ethereumDetectionDelayMs = 500
-const ethereumDetectionIntervalMs = 1_000
-const fallbackCctpSource: CctpSourceKey = 'base'
 
 interface BridgePanelProps {
   readonly identity: WalletIdentity
   readonly network: NetworkKey
-}
-
-function reportLabel(report: CctpBridgeReport | null): string {
-  if (!report) {
-    return 'No bridge transaction submitted.'
-  }
-  if (report.status === 'completed') {
-    return `Arrived publicly on Stellar · ${truncateMiddle(report.stellarMintTxHash ?? '', 12, 10)}`
-  }
-  if (report.status === 'running') {
-    return `Running · ${report.statusEvents.at(-1)?.message ?? 'bridge in progress'}`
-  }
-  return `${report.status} · ${report.blockers[0] ?? 'see details'}`
-}
-
-function shieldLabel(report: XlmShieldSubmitReport | null): string {
-  if (!report) {
-    return 'Shield step not run.'
-  }
-  if (report.status === 'submitted') {
-    return `Shield submitted · ${truncateMiddle(report.txHash ?? '', 12, 10)}`
-  }
-  return `${report.status} · ${report.durationMs.toLocaleString()} ms`
-}
-
-function initialBridgeSource(network: NetworkKey, publicKey: string): CctpSourceKey {
-  return (
-    bridgeSourceChainFromUrl(network, publicKey) ??
-    loadBridgeResumeSourceChain(network, publicKey) ??
-    getDefaultCctpSource(network)?.key ??
-    fallbackCctpSource
-  )
 }
 
 export function BridgePanel({ identity, network }: BridgePanelProps) {
@@ -77,14 +47,16 @@ export function BridgePanel({ identity, network }: BridgePanelProps) {
     loadCompletedBridgeResumeReport(network, identity.stellarPublicKey, initialSourceKey),
   )
   const [shieldReport, setShieldReport] = useState<XlmShieldSubmitReport | null>(null)
+  const [usdcReceiveReport, setUsdcReceiveReport] = useState<StellarUsdcTrustlineReport | null>(null)
   const [resumeBurnHash, setResumeBurnHash] = useState(() =>
-    bridgeResumeBurnHashFromUrl(network, identity.stellarPublicKey) ??
-    loadBridgeResumeBurnHash(network, identity.stellarPublicKey, initialSourceKey),
+    initialBridgeBurnHash(network, identity.stellarPublicKey, initialSourceKey),
   )
+  const ethereumDetected = useEthereumDetected()
   const [busy, setBusy] = useState<'bridge' | 'shield' | null>(null)
-  const [ethereumDetected, setEthereumDetected] = useState(false)
   const [walletApprovalPending, setWalletApprovalPending] = useState(false)
+  const [bridgePrepStatus, setBridgePrepStatus] = useState('')
   const [error, setError] = useState('')
+  const bridgeRunRef = useRef(0)
   const config = getNetworkConfig(network)
   const bridgeSources = useMemo(() => getEnabledCctpSources(network), [network])
   const evmSource = getCctpSource(network, sourceChainKey)
@@ -100,25 +72,17 @@ export function BridgePanel({ identity, network }: BridgePanelProps) {
     bridgeBlockers.length === 0 && busy === null && resumeBurnHash.trim().length > 0 && !hasLoadedCompletedBurn
   const canShield = bridgeReport?.status === 'completed' && busy === null
   const sourceLabel = evmSource?.label ?? 'source chain'
-  const bridgeStatus = walletApprovalPending ? `Waiting for ${sourceLabel} wallet approval...` : reportLabel(bridgeReport)
+  const bridgeStatus = walletApprovalPending
+    ? `Waiting for ${sourceLabel} wallet approval...`
+    : bridgePrepStatus || reportLabel(bridgeReport)
   const handoffNotice = bridgeHandoffNotice(network, identity.stellarPublicKey)
 
-  useEffect(() => {
-    const update = () => setEthereumDetected(providerAvailable())
-    update()
-    const timer = window.setTimeout(update, ethereumDetectionDelayMs)
-    const interval = window.setInterval(update, ethereumDetectionIntervalMs)
-    window.addEventListener('ethereum#initialized', update, { once: true })
-    window.addEventListener('eip6963:announceProvider', update)
-    return () => {
-      window.clearTimeout(timer)
-      window.clearInterval(interval)
-      window.removeEventListener('ethereum#initialized', update)
-      window.removeEventListener('eip6963:announceProvider', update)
-    }
+  useEffect(() => () => {
+    bridgeRunRef.current += 1
   }, [])
 
   function updateBridgeReport(report: CctpBridgeReport) {
+    setBridgePrepStatus('')
     setBridgeReport(report)
     saveBridgeResumeReport(report)
     if (report.evmBurnTxHash) {
@@ -131,6 +95,8 @@ export function BridgePanel({ identity, network }: BridgePanelProps) {
     setBridgeReport(loadCompletedBridgeResumeReport(network, identity.stellarPublicKey, nextSourceKey))
     setResumeBurnHash(loadBridgeResumeBurnHash(network, identity.stellarPublicKey, nextSourceKey))
     setShieldReport(null)
+    setUsdcReceiveReport(null)
+    setBridgePrepStatus('')
     setError('')
   }
 
@@ -139,27 +105,58 @@ export function BridgePanel({ identity, network }: BridgePanelProps) {
       return
     }
     setBusy('bridge')
-    setWalletApprovalPending(true)
+    setWalletApprovalPending(false)
     setError('')
     setShieldReport(null)
     setBridgeReport(null)
+    setUsdcReceiveReport(null)
+    setBridgePrepStatus('Preparing Stellar USDC receiving...')
+    let destinationReady = false
+    const runId = bridgeRunRef.current + 1
+    bridgeRunRef.current = runId
+    const isCurrentRun = () => bridgeRunRef.current === runId
     try {
-      const evmClient = await createInjectedEthereumClient(evmSource.chainIdHex, evmSource.label)
-      setWalletApprovalPending(false)
       updateBridgeReport(
-        await runCctpBridgeToStellar({
+        await runBridgeAfterDestinationSetup({
           identity,
           network,
-          sourceChainKey: evmSource.key,
-          evmClient,
-          onProgress: updateBridgeReport,
+          evmSource,
+          ensureDestinationReady: ensureStellarUsdcTrustline,
+          createEvmClient: createInjectedEthereumClient,
+          runBridge: runCctpBridgeToStellar,
+          shouldContinue: isCurrentRun,
+          onDestinationReady: (receiveReport) => {
+            destinationReady = true
+            setUsdcReceiveReport(receiveReport)
+            setBridgePrepStatus('Stellar USDC receiving ready.')
+          },
+          onWalletApprovalPending: (pending) => {
+            if (isCurrentRun()) {
+              setWalletApprovalPending(pending)
+            }
+          },
+          onProgress: (report) => {
+            if (isCurrentRun()) {
+              updateBridgeReport(report)
+            }
+          },
         }),
       )
     } catch (nextError) {
+      if (!isCurrentRun()) {
+        return
+      }
       setWalletApprovalPending(false)
-      setError(nextError instanceof Error ? nextError.message : 'Bridge failed before submission.')
+      setBridgePrepStatus('')
+      setError(
+        destinationReady
+          ? nextError instanceof Error ? nextError.message : 'Bridge failed before submission.'
+          : usdcReceiveErrorText(nextError),
+      )
     } finally {
-      setBusy(null)
+      if (isCurrentRun()) {
+        setBusy(null)
+      }
     }
   }
 
@@ -232,6 +229,7 @@ export function BridgePanel({ identity, network }: BridgePanelProps) {
         disabled={busy !== null || Boolean(bridgeReport?.evmBurnTxHash && bridgeReport.status === 'running')}
         onSelect={selectSource}
       />
+      <BridgeReceiveSetupStatus report={usdcReceiveReport} />
 
       <div className="bridge-actions">
         <button className="button primary" disabled={!canBridge} onClick={runBridge}>

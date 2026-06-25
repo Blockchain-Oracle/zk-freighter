@@ -16,6 +16,25 @@
   margin-bottom: 18px;
 }
 
+.bridge-receive-setup {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 18px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--muted-surface);
+}
+
+.bridge-receive-setup strong {
+  color: var(--text-strong);
+}
+
+.bridge-receive-setup span {
+  color: var(--muted);
+  font-size: 14px;
+}
+
 .bridge-source-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
