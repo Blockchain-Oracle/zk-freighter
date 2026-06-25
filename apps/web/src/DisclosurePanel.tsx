@@ -3,6 +3,7 @@ import { Copy, FileCheck2, KeyRound, RefreshCw, ShieldCheck, Upload } from 'luci
 import {
   CANONICAL_SELECTIVE_DISCLOSURE_1_VK_HASH,
   generateDisclosureArtifact,
+  isShieldedAssetEnabled,
   loadXlmShieldedNotes,
   randomDisclosureNonceHex,
   verifyDisclosureArtifact,
@@ -69,7 +70,7 @@ export function DisclosurePanel({ identity, network }: DisclosurePanelProps) {
   const [busy, setBusy] = useState<'notes' | 'generate' | 'verify' | null>(null)
   const [copied, setCopied] = useState(false)
   const [formError, setFormError] = useState('')
-  const testnetOnly = network !== 'testnet'
+  const poolEnabled = isShieldedAssetEnabled(network, asset)
   const notes = useMemo(() => unspentNotes(notesReport), [notesReport])
   const selectedNote = notes.find((note) => note.id === selectedNoteId)
 
@@ -165,7 +166,7 @@ export function DisclosurePanel({ identity, network }: DisclosurePanelProps) {
               ))}
             </select>
           </label>
-          <button className="button secondary" disabled={busy !== null || testnetOnly} onClick={() => refreshNotes()}>
+          <button className="button secondary" disabled={busy !== null || !poolEnabled} onClick={() => refreshNotes()}>
             <RefreshCw size={18} aria-hidden="true" />
             {busy === 'notes' ? 'Loading notes...' : 'Load unspent notes'}
           </button>
@@ -202,11 +203,13 @@ export function DisclosurePanel({ identity, network }: DisclosurePanelProps) {
               </button>
             </div>
           </label>
-          <button className="button primary" disabled={busy !== null || testnetOnly} onClick={generate}>
+          <button className="button primary" disabled={busy !== null || !poolEnabled} onClick={generate}>
             <FileCheck2 size={18} aria-hidden="true" />
             {busy === 'generate' ? 'Generating...' : 'Generate disclosure'}
           </button>
-          <span className="disclosure-status">{testnetOnly ? 'Disclosure is testnet-only in this phase.' : resultText(generateReport)}</span>
+          <span className="disclosure-status">
+            {poolEnabled ? resultText(generateReport) : `${asset} pool is not configured for this network.`}
+          </span>
 
           {generateReport?.artifactJson ? (
             <div className="artifact-output">

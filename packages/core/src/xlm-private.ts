@@ -17,9 +17,9 @@ import {
   poolIdForAsset,
   prepareClient,
   proofWasGenerated,
-  requireTestnet,
   timeoutAfter,
 } from './xlm-private-support'
+import { isShieldedAssetEnabled } from './networks'
 import type {
   LoadXlmShieldedNotesOptions,
   SubmitXlmPrivateTransferOptions,
@@ -38,10 +38,9 @@ export async function loadXlmShieldedNotes(
   const asset = options.asset ?? 'XLM'
   const started = now()
   const poolContractId = poolIdForAsset(options.network, asset)
-  const gate = requireTestnet(options.network, `${asset} shielded note loading`)
 
-  if (gate || !poolContractId) {
-    return notesBlocked(gate ?? 'XLM pool is not configured for this network.')
+  if (!poolContractId || !isShieldedAssetEnabled(options.network, asset)) {
+    return notesBlocked(`${asset} pool is not configured for this network.`)
   }
 
   try {
@@ -113,10 +112,9 @@ async function submitXlmPrivateAction(
   let submitReached = false
   let transactionSubmitted = false
   let signedAuthEntryCount = 0
-  const gate = requireTestnet(options.network, `${asset} ${action}`)
 
-  if (gate || !poolContractId) {
-      return blockedReport(gate ?? `${asset} pool is not configured for this network.`)
+  if (!poolContractId || !isShieldedAssetEnabled(options.network, asset)) {
+      return blockedReport(`${asset} pool is not configured for this network.`)
   }
 
   try {

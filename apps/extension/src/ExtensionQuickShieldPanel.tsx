@@ -4,6 +4,7 @@ import type {
   StellarUsdcTrustlineReport,
   XlmShieldSubmitReport,
 } from '@zk-fighter/core'
+import { isShieldedAssetEnabled } from '@zk-fighter/core'
 import { Activity, AlertTriangle, ExternalLink, Shield } from 'lucide-react'
 import { useState } from 'react'
 
@@ -32,10 +33,11 @@ export function ExtensionQuickShieldPanel({ status, sendRuntimeMessage }: Extens
   const [accessReport, setAccessReport] = useState<AspMembershipInsertReport | null>(null)
   const [usdcReport, setUsdcReport] = useState<StellarUsdcTrustlineReport | null>(null)
   const [error, setError] = useState('')
+  const poolEnabled = status ? isShieldedAssetEnabled(status.network, asset) : false
   const disabledReason = !status?.unlocked
     ? 'Unlock the extension vault first.'
-    : status.network !== 'testnet'
-      ? 'QuickShield is testnet-only until mainnet pools are deployed and approved.'
+    : !poolEnabled
+      ? `${asset} pool is not configured for this network.`
       : ''
 
   async function prepareShieldAccess() {
@@ -98,7 +100,7 @@ export function ExtensionQuickShieldPanel({ status, sendRuntimeMessage }: Extens
     <section className="panel" aria-labelledby="quickshield-heading">
       <div className="section-header">
         <h2 id="quickshield-heading">QuickShield</h2>
-        <span className="badge badge-in-progress">testnet</span>
+        <span className="badge badge-in-progress">{status?.network ?? 'locked'}</span>
       </div>
       <div className="boundary-note">
         <AlertTriangle size={16} aria-hidden="true" />

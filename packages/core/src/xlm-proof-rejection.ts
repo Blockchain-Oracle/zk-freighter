@@ -8,7 +8,6 @@ import {
   defaultNow,
   explorerUrl,
   prepareClient,
-  requireTestnet,
   xlmPoolId,
 } from './xlm-private-support'
 import type { XlmPrivateProgressEvent } from './xlm-private-types'
@@ -111,6 +110,10 @@ function extractHash(message: string): string | undefined {
   return message.match(transactionHashPattern)?.[0]
 }
 
+function requireSafeRejectionNetwork(network: NetworkKey): string | undefined {
+  return network === 'testnet' ? undefined : 'Tampered proof rejection intentionally runs only on testnet.'
+}
+
 export async function runXlmTamperedProofRejection(
   options: RunXlmTamperedProofRejectionOptions,
 ): Promise<XlmTamperedProofRejectionReport> {
@@ -120,7 +123,7 @@ export async function runXlmTamperedProofRejection(
   const amount = options.amountStroops ?? defaultTamperAmountStroops
   const statusEvents: XlmPrivateProgressEvent[] = []
   let submitReached = false
-  const gate = requireTestnet(options.network, 'XLM tampered proof check')
+  const gate = requireSafeRejectionNetwork(options.network)
 
   if (gate || !poolContractId) {
     return report('blocked', gate ?? 'XLM pool is not configured for this network.')

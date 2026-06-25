@@ -30,8 +30,14 @@ describe('NETWORKS', () => {
     expect(NETWORKS.testnet.assets.USDC.poolId).toBe(
       'CCY6R2BJQ2LAYINOZZLDLHJCWRRPVQNRTWEWCWO7FIDD3BRDQJCAOHKY',
     )
-    expect(isShieldedAssetEnabled('mainnet', 'XLM')).toBe(false)
-    expect(isShieldedAssetEnabled('mainnet', 'USDC')).toBe(false)
+    expect(isShieldedAssetEnabled('mainnet', 'XLM')).toBe(true)
+    expect(isShieldedAssetEnabled('mainnet', 'USDC')).toBe(true)
+    expect(NETWORKS.mainnet.assets.XLM.poolId).toBe(
+      'CCE3VBWTMGS7TZBOMBXVMPZFD4RUWAJDQHV7L2FT5BHMZKHLQUJKHECE',
+    )
+    expect(NETWORKS.mainnet.assets.USDC.poolId).toBe(
+      'CDV45TTXDDUKBMK2IWPJRUYQSRVEWHTRPKCN2VZ7GEV2HVMRPBOD2KR7',
+    )
   })
 
   it('records current CCTP V2 testnet bridge config', () => {
@@ -48,5 +54,10 @@ describe('NETWORKS', () => {
     expect(NETWORKS.testnet.cctp?.evmSource?.domain).toBe(0)
     expect(NETWORKS.testnet.cctp?.evmSource?.chainIdHex).toBe('0xaa36a7')
     expect(NETWORKS.testnet.cctp?.evmSource?.usdcContract).toBe('0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238')
+    expect(NETWORKS.mainnet.cctp?.evmSource?.domain).toBe(0)
+    expect(NETWORKS.mainnet.cctp?.evmSource?.chainIdHex).toBe('0x1')
+    expect(NETWORKS.mainnet.cctp?.evmSource?.usdcContract).toBe('0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48')
+    expect(NETWORKS.mainnet.cctp?.evmSource?.tokenMessenger).toBe('0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d')
+    expect(NETWORKS.mainnet.cctp?.evmSource?.messageTransmitter).toBe('0x81D40F21F12A8F0E3252Bccb954D722d4c464B64')
   })
 })

@@ -15,6 +15,7 @@ import type { XlmShieldedNote } from './xlm-private-types'
 
 const mnemonic = 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about'
 const xlmPoolId = 'CBQ46IL6HQA2VTPERULO7DBAKHMJ7ZCNVOSDIIX3HLC5T7MSPB6Z5SMY'
+const mainnetXlmPoolId = 'CCE3VBWTMGS7TZBOMBXVMPZFD4RUWAJDQHV7L2FT5BHMZKHLQUJKHECE'
 const note: XlmShieldedNote = {
   id: '0x' + '11'.repeat(32),
   amountStroops: '10000000',
@@ -159,8 +160,18 @@ describe('disclosure artifacts', () => {
     expect(report.blockers[0]).toContain('secret')
   })
 
-  it('blocks generation outside configured testnet pools', async () => {
+  it('generates against the configured mainnet pool when selected', async () => {
     const identity = deriveWalletIdentity(mnemonic, 'mainnet')
+    const calls: string[] = []
+    const client = {
+      deriveAndSaveUserKeys: async () => undefined,
+      getASPSecret: async () => undefined,
+      getUserKeys: async () => undefined,
+      generateSelectiveDisclosure: async (poolId: string) => {
+        calls.push(poolId)
+        return receipt()
+      },
+    }
     const report = await generateDisclosureArtifact({
       identity,
       network: 'mainnet',
@@ -169,8 +180,11 @@ describe('disclosure artifacts', () => {
       authorityLabel: 'Reviewer',
       authorityIdentityPayloadHex: '0x7265766965776572',
       purpose: 'audit-review',
+      contextNonceHex: '0x' + '01'.repeat(32),
+      importWebModule: async () => moduleForClient(client),
     })
 
-    expect(report.status).toBe('blocked')
+    expect(report.status).toBe('generated')
+    expect(calls).toEqual([mainnetXlmPoolId])
   })
 })

@@ -7,7 +7,7 @@ import {
   stellarContractStrkeyToBytes32,
 } from './cctp-encoding'
 import { pollCctpAttestation } from './cctp-iris'
-import { resumeCctpBridgeToStellar, runCctpBridgeToStellar } from './cctp-bridge'
+import { getCctpBridgeBlockers, resumeCctpBridgeToStellar, runCctpBridgeToStellar } from './cctp-bridge'
 import { deriveWalletIdentity } from './identity'
 import { NETWORKS } from './networks'
 
@@ -67,6 +67,10 @@ describe('CCTP bridge flow', () => {
     expect(report.blockers.join(' ')).toContain('Ethereum Sepolia wallet')
     expect(report.publicUsdcArrived).toBe(false)
     expect(report.evmBurnTxHash).toBeUndefined()
+  })
+
+  it('does not block mainnet bridge by configuration once pools and CCTP addresses are present', () => {
+    expect(getCctpBridgeBlockers('mainnet')).toEqual([])
   })
 
   it('polls Circle Iris until an attestation is complete', async () => {

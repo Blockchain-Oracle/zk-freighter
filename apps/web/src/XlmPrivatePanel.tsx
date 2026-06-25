@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { AlertTriangle, ExternalLink, RefreshCw, Send, Undo2 } from 'lucide-react'
 import {
   loadXlmShieldedNotes,
+  isShieldedAssetEnabled,
   submitXlmPrivateTransfer,
   submitXlmUnshieldWithdrawal,
   type AssetCode,
@@ -134,7 +135,7 @@ export function XlmPrivatePanel({ asset = 'XLM', identity, network, receiveCode 
   const [withdrawRecipient, setWithdrawRecipient] = useState(identity.stellarPublicKey)
   const [busy, setBusy] = useState<'notes' | 'transfer' | 'withdraw' | null>(null)
   const [formError, setFormError] = useState('')
-  const testnetOnly = network !== 'testnet'
+  const poolEnabled = isShieldedAssetEnabled(network, asset)
   const total = useMemo(() => unspentTotal(notesReport), [notesReport])
   const transferCode = transferCodeDraft.source === receiveCode ? transferCodeDraft.value : receiveCode
 
@@ -205,11 +206,11 @@ export function XlmPrivatePanel({ asset = 'XLM', identity, network, receiveCode 
       </div>
 
       <div className="private-summary">
-        <button className="button secondary" disabled={busy !== null || testnetOnly} onClick={refreshNotes}>
+        <button className="button secondary" disabled={busy !== null || !poolEnabled} onClick={refreshNotes}>
           <RefreshCw size={18} aria-hidden="true" />
           {busy === 'notes' ? 'Refreshing...' : 'Refresh notes'}
         </button>
-        <span>{testnetOnly ? `Switch to testnet to use ${asset} pool.` : `Unspent seen: ${formatStroops(total, asset)}`}</span>
+        <span>{poolEnabled ? `Unspent seen: ${formatStroops(total, asset)}` : `${asset} pool is not configured for this network.`}</span>
       </div>
 
       {notesReport?.blockers.length ? (
@@ -245,7 +246,7 @@ export function XlmPrivatePanel({ asset = 'XLM', identity, network, receiveCode 
               onChange={(event) => setTransferCodeDraft({ source: receiveCode, value: event.target.value })}
             />
           </label>
-          <button className="button primary" disabled={busy !== null || testnetOnly} onClick={runTransfer}>
+          <button className="button primary" disabled={busy !== null || !poolEnabled} onClick={runTransfer}>
             <Send size={18} aria-hidden="true" />
             {busy === 'transfer' ? 'Sending...' : `Send shielded ${asset}`}
           </button>
@@ -263,7 +264,7 @@ export function XlmPrivatePanel({ asset = 'XLM', identity, network, receiveCode 
             <span>Public Stellar destination</span>
             <input value={withdrawRecipient} onChange={(event) => setWithdrawRecipient(event.target.value)} />
           </label>
-          <button className="button primary" disabled={busy !== null || testnetOnly} onClick={runWithdraw}>
+          <button className="button primary" disabled={busy !== null || !poolEnabled} onClick={runWithdraw}>
             <Undo2 size={18} aria-hidden="true" />
             {busy === 'withdraw' ? 'Unshielding...' : `Unshield ${asset}`}
           </button>

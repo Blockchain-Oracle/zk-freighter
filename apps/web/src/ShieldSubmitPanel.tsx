@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { AlertTriangle, ExternalLink, Shield } from 'lucide-react'
 import {
   submitXlmShieldDeposit,
+  isShieldedAssetEnabled,
   type AssetCode,
   type NetworkKey,
   type WalletIdentity,
@@ -40,7 +41,7 @@ function reportLabel(report: XlmShieldSubmitReport | null): string {
 export function ShieldSubmitPanel({ asset = 'XLM', identity, network }: ShieldSubmitPanelProps) {
   const [report, setReport] = useState<XlmShieldSubmitReport | null>(null)
   const [busy, setBusy] = useState(false)
-  const testnetOnly = network !== 'testnet'
+  const poolEnabled = isShieldedAssetEnabled(network, asset)
 
   async function runShield() {
     setBusy(true)
@@ -60,7 +61,7 @@ export function ShieldSubmitPanel({ asset = 'XLM', identity, network }: ShieldSu
         <Shield size={24} aria-hidden="true" />
         <div>
           <h1>Real {asset} shield</h1>
-          <p>Submits a public testnet deposit into the deployed {asset} pool.</p>
+          <p>Submits a public {network === 'mainnet' ? 'mainnet' : 'testnet'} deposit into the deployed {asset} pool.</p>
         </div>
       </div>
 
@@ -73,11 +74,11 @@ export function ShieldSubmitPanel({ asset = 'XLM', identity, network }: ShieldSu
       </div>
 
       <div className="shield-actions">
-        <button className="button primary" disabled={busy || testnetOnly} onClick={runShield}>
+        <button className="button primary" disabled={busy || !poolEnabled} onClick={runShield}>
           <Shield size={18} aria-hidden="true" />
           {busy ? 'Shielding...' : `Submit ${amountLabel(defaultShieldAmounts[asset].toString(), asset)} shield`}
         </button>
-        <span>{testnetOnly ? 'Switch to testnet to submit.' : reportLabel(report)}</span>
+        <span>{poolEnabled ? reportLabel(report) : `${asset} pool is not configured for this network.`}</span>
       </div>
 
       {report ? (
@@ -104,7 +105,7 @@ export function ShieldSubmitPanel({ asset = 'XLM', identity, network }: ShieldSu
           {report.explorerUrl ? (
             <a className="explorer-link" href={report.explorerUrl} target="_blank" rel="noreferrer">
               <ExternalLink size={16} aria-hidden="true" />
-              View public testnet deposit
+              View public {network === 'mainnet' ? 'mainnet' : 'testnet'} deposit
             </a>
           ) : null}
 

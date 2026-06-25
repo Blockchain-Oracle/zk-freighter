@@ -50,14 +50,20 @@ describe('ASP membership preflight', () => {
     expect(first.membershipLeafHex).toMatch(/^0x[0-9a-f]{64}$/)
   })
 
-  it('blocks cleanly when the active network has no XLM pool', async () => {
+  it('reads ASP state through the configured mainnet XLM pool', async () => {
     const identity = deriveWalletIdentity(mnemonic, 'mainnet')
-    const report = await runAspMembershipPreflight({ identity, network: 'mainnet' })
+    const leaf = deriveAspMembershipLeaf(identity)
+    const report = await runAspMembershipPreflight({
+      identity,
+      network: 'mainnet',
+      importWebModule: async () => moduleForClient(clientFor(leaf.membershipLeafHex, false)),
+    })
 
-    expect(report.status).toBe('blocked')
-    expect(report.poolContractId).toBeUndefined()
+    expect(report.status).toBe('needs-registration')
+    expect(report.poolContractId).toBe('CCE3VBWTMGS7TZBOMBXVMPZFD4RUWAJDQHV7L2FT5BHMZKHLQUJKHECE')
     expect(report.transactionSubmitted).toBe(false)
     expect(report.proofGenerated).toBe(false)
+    expect(report.canInsertWithoutAdmin).toBe(true)
   })
 
   it('derives keys, reads ASP state, and reports admin insertion requirements', async () => {

@@ -93,13 +93,15 @@ export const NETWORKS = {
       XLM: {
         code: 'XLM',
         sacId: 'CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA',
-        shieldedPool: 'pending-deployment',
+        poolId: 'CCE3VBWTMGS7TZBOMBXVMPZFD4RUWAJDQHV7L2FT5BHMZKHLQUJKHECE',
+        shieldedPool: 'enabled',
       },
       USDC: {
         code: 'USDC',
         issuer: 'GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN',
         sacId: 'CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI75',
-        shieldedPool: 'pending-deployment',
+        poolId: 'CDV45TTXDDUKBMK2IWPJRUYQSRVEWHTRPKCN2VZ7GEV2HVMRPBOD2KR7',
+        shieldedPool: 'enabled',
       },
     },
     cctp: {
@@ -108,6 +110,16 @@ export const NETWORKS = {
       tokenMessengerMinter: 'CAE2G5Z77UP7GYPYGFOWFGW7C7J6I4YP2AFGSADRKQY62SYUFLPNFTXL',
       messageTransmitter: 'CACMENFFJPJMSDAJQLX4R7K3SFZIW2LJSE3R2UMLGSWHFHS353FVXAZV',
       cctpForwarder: 'CBZL2IH7F6BIDAA3WBNXYKIXSATJGMSW7K5P5MJ6STX5RXN47TZJDF5T',
+      evmSource: {
+        label: 'Ethereum',
+        domain: 0,
+        chainId: 1,
+        chainIdHex: '0x1',
+        usdcContract: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+        tokenMessenger: '0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d',
+        messageTransmitter: '0x81D40F21F12A8F0E3252Bccb954D722d4c464B64',
+        explorerTxUrl: 'https://etherscan.io/tx',
+      },
     },
   },
 } as const satisfies Record<NetworkKey, NetworkConfig>

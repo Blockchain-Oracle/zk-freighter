@@ -1,6 +1,6 @@
 import type { WalletIdentity } from './identity'
 import type { AssetCode } from './assets'
-import { getNetworkConfig, type NetworkKey } from './networks'
+import { getNetworkConfig, isShieldedAssetEnabled, type NetworkKey } from './networks'
 import {
   loadNethermindWebClient,
   type NethermindModuleImporter,
@@ -136,8 +136,8 @@ export async function submitXlmShieldDeposit(
   let signedAuthEntryCount = 0
   let txHash: string | undefined
 
-  if (options.network !== 'testnet') {
-    return blockedReport(`${asset} shield submit is enabled only on testnet in this phase.`)
+  if (!isShieldedAssetEnabled(options.network, asset)) {
+    return blockedReport(`${asset} shield submit is enabled only for deployed shielded pools.`)
   }
 
   if (!poolContractId) {

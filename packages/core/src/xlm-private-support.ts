@@ -53,10 +53,6 @@ export function explorerUrl(network: NetworkKey, txHash: string): string {
   return `${getNetworkConfig(network).explorerTxUrl}/${txHash}`
 }
 
-export function requireTestnet(network: NetworkKey, action: string): string | undefined {
-  return network === 'testnet' ? undefined : `${action} is enabled only on testnet in this phase.`
-}
-
 export function poolIdForAsset(network: NetworkKey, asset: AssetCode): string | undefined {
   return getNetworkConfig(network).assets[asset].poolId
 }

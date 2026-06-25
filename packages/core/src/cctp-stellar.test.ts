@@ -147,4 +147,26 @@ describe('CCTP Stellar destination readiness', () => {
     expect(fetched[0]).toContain('https://friendbot.example?addr=')
     expect(loads).toBe(3)
   })
+
+  it('does not use Friendbot when the mainnet account is missing', async () => {
+    let fetchCalls = 0
+    await expect(
+      ensureStellarUsdcTrustline({
+        identity: deriveWalletIdentity(mnemonic, 'mainnet'),
+        network: 'mainnet',
+        fetch: async () => {
+          fetchCalls += 1
+          return Response.json({ hash: 'unexpected' })
+        },
+        horizonFactory: () => ({
+          loadAccount: async () => {
+            throw new Error('not found')
+          },
+          fetchBaseFee: async () => 100,
+          submitTransaction: async () => ({ hash: 'unexpected' }),
+        }),
+      }),
+    ).rejects.toThrow('not funded on mainnet')
+    expect(fetchCalls).toBe(0)
+  })
 })

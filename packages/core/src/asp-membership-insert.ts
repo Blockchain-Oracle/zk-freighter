@@ -7,7 +7,7 @@ import {
 } from '@stellar/stellar-sdk'
 import { deriveAspMembershipLeaf, runAspMembershipPreflight, type AspMembershipLeaf, type AspMembershipPreflightOptions } from './asp-membership'
 import { deriveWalletKeypair } from './identity'
-import { getNetworkConfig, type NetworkKey } from './networks'
+import { getNetworkConfig, isShieldedAssetEnabled, type NetworkKey } from './networks'
 
 const aspInsertFee = '10000000'
 const aspInsertTimeoutSeconds = 120
@@ -63,8 +63,8 @@ export async function insertAspMembershipLeaf(
     statusEvents.push({ elapsedMs: Math.round(now() - started), stage, message })
   }
 
-  if (options.network !== 'testnet') {
-    return report('blocked', ['ASP membership insertion is enabled only on testnet in this phase.'])
+  if (!isShieldedAssetEnabled(options.network, 'XLM')) {
+    return report('blocked', ['ASP membership insertion is enabled only for deployed XLM shielded pools.'])
   }
 
   try {

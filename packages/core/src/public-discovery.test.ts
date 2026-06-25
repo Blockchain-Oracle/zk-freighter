@@ -10,9 +10,12 @@ const preparedLatestLedger = 1
 const signedAuthEntryCount = 1
 const publishedLedger = 3_242_000
 const enabledTestnetPoolCount = 2
+const enabledMainnetPoolCount = 2
 const preparedTx: PreparedSorobanTx = { txXdr: 'prepared', authEntries: [], latestLedger: preparedLatestLedger }
 const xlmPoolId = 'CBQ46IL6HQA2VTPERULO7DBAKHMJ7ZCNVOSDIIX3HLC5T7MSPB6Z5SMY'
 const usdcPoolId = 'CCY6R2BJQ2LAYINOZZLDLHJCWRRPVQNRTWEWCWO7FIDD3BRDQJCAOHKY'
+const mainnetXlmPoolId = 'CCE3VBWTMGS7TZBOMBXVMPZFD4RUWAJDQHV7L2FT5BHMZKHLQUJKHECE'
+const mainnetUsdcPoolId = 'CDV45TTXDDUKBMK2IWPJRUYQSRVEWHTRPKCN2VZ7GEV2HVMRPBOD2KR7'
 
 function moduleForClient(client: unknown): NethermindWebModule {
   return {
@@ -92,11 +95,28 @@ describe('public discovery', () => {
     expect(decoded.ok).toBe(true)
   })
 
-  it('blocks publishing when no shielded pool is enabled on the selected network', async () => {
+  it('publishes private receive keys to every enabled mainnet pool', async () => {
     const identity = deriveWalletIdentity(mnemonic, 'mainnet')
-    const report = await publishPrivateReceiveDiscovery({ identity, network: 'mainnet' })
+    const preparedCalls: string[] = []
+    const client = {
+      deriveAndSaveUserKeys: async () => undefined,
+      getASPSecret: async () => undefined,
+      getUserKeys: async () => undefined,
+      prepareRegisterPublicKeys: async (poolId: string) => {
+        preparedCalls.push(poolId)
+        return preparedTx
+      },
+    }
 
-    expect(report.status).toBe('blocked')
-    expect(report.blockers[0]).toContain('No shielded pools')
+    const report = await publishPrivateReceiveDiscovery({
+      identity,
+      network: 'mainnet',
+      importWebModule: async () => moduleForClient(client),
+      submitPreparedTx: async () => ({ hash: 'mainnet123', signedAuthEntryCount }),
+    })
+
+    expect(report.status).toBe('submitted')
+    expect(preparedCalls).toEqual([mainnetXlmPoolId, mainnetUsdcPoolId])
+    expect(report.pools).toHaveLength(enabledMainnetPoolCount)
   })
 })

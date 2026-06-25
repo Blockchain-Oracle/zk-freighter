@@ -141,6 +141,28 @@ describe('XLM private actions', () => {
     expect(report.txHashes).toEqual(['hash-a', 'hash-b'])
   })
 
+  it('uses the configured mainnet pool for private transfers', async () => {
+    let poolId = ''
+    const report = await submitXlmPrivateTransfer({
+      identity,
+      network: 'mainnet',
+      receiveCode: receiveCode('mainnet'),
+      amountStroops: 500_000n,
+      now: () => 10,
+      importWebModule: importer({
+        deriveAndSaveUserKeys: async () => undefined,
+        executeTransfer: async (nextPool: string) => {
+          poolId = nextPool
+          return ['mainnet-hash']
+        },
+      }),
+    })
+
+    expect(poolId).toBe('CCE3VBWTMGS7TZBOMBXVMPZFD4RUWAJDQHV7L2FT5BHMZKHLQUJKHECE')
+    expect(report.status).toBe('submitted')
+    expect(report.txHashes).toEqual(['mainnet-hash'])
+  })
+
   it('reports null engine results as blocked, not submitted', async () => {
     const report = await submitXlmPrivateTransfer({
       identity,

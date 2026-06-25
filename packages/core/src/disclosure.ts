@@ -1,5 +1,5 @@
 import { loadNethermindWebClient, type NethermindModuleImporter } from './nethermind-runtime'
-import type { NetworkKey } from './networks'
+import { isShieldedAssetEnabled, type NetworkKey } from './networks'
 import { appendNethermindEvent, defaultNow, keyHex, poolIdForAsset, prepareClient } from './xlm-private-support'
 import type { XlmPrivateProgressEvent } from './xlm-private-types'
 import {
@@ -46,8 +46,8 @@ export async function generateDisclosureArtifact(
   const poolContractId = poolIdForAsset(options.network, options.asset)
   const statusEvents: XlmPrivateProgressEvent[] = []
 
-  if (options.network !== 'testnet' || !poolContractId) {
-    return blockedReport('Disclosure receipts are enabled only for configured testnet pools in this phase.')
+  if (!poolContractId || !isShieldedAssetEnabled(options.network, options.asset)) {
+    return blockedReport('Disclosure receipts are enabled only for configured shielded pools.')
   }
   if (options.note.spent) {
     return blockedReport('Select an unspent shielded note before generating a disclosure receipt.')

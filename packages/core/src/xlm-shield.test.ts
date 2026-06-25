@@ -54,12 +54,37 @@ describe('XLM shield submit', () => {
     expect(report.blockers[0]).toContain('1')
   })
 
-  it('blocks mainnet shield submission in the current phase', async () => {
+  it('uses the configured mainnet pool once deployed', async () => {
     const identity = deriveWalletIdentity(mnemonic, 'mainnet')
-    const report = await submitXlmShieldDeposit({ identity, network: 'mainnet' })
+    let poolId = ''
+    const client = {
+      deriveAndSaveUserKeys: async () => undefined,
+      executeDeposit: async (
+        nextPool: string,
+        _address: string,
+        _amount: bigint,
+        _outputs: readonly bigint[],
+        _submit: () => Promise<string>,
+        onStatus: (event: unknown) => void,
+      ) => {
+        poolId = nextPool
+        onStatus({ flow: 'deposit', message: 'Fetching on-chain state...' })
+        return null
+      },
+      getASPSecret: async () => undefined,
+      getUserKeys: async () => undefined,
+    }
+
+    const report = await submitXlmShieldDeposit({
+      identity,
+      network: 'mainnet',
+      importWebModule: async () => moduleForClient(client),
+      now: () => 1,
+    })
 
     expect(report.status).toBe('blocked')
+    expect(poolId).toBe('CCE3VBWTMGS7TZBOMBXVMPZFD4RUWAJDQHV7L2FT5BHMZKHLQUJKHECE')
     expect(report.transactionSubmitted).toBe(false)
-    expect(report.blockers[0]).toContain('testnet')
+    expect(report.blockers[0]).toContain('Nethermind returned no executable')
   })
 })

@@ -27,9 +27,6 @@ export function getCctpBridgeBlockers(network: NetworkKey): readonly string[] {
   const config = getNetworkConfig(network)
   const blockers: string[] = []
 
-  if (network !== 'testnet') {
-    blockers.push('CCTP bridge-to-shield is enabled only on testnet until a mainnet USDC pool is deployed.')
-  }
   if (!isShieldedAssetEnabled(network, 'USDC') || !config.assets.USDC.poolId) {
     blockers.push('USDC shielding is not enabled for this network, so bridged funds cannot complete the Phase 8 flow.')
   }
@@ -66,13 +63,13 @@ export async function runCctpBridgeToStellar(options: RunCctpBridgeOptions): Pro
   }
   const evmClient = options.evmClient
   if (!evmClient) {
-    blockers.push('Connect an Ethereum Sepolia wallet before starting the public bridge leg.')
+    blockers.push(`Connect a ${network.cctp?.evmSource?.label ?? 'source-chain'} wallet before starting the public bridge leg.`)
   }
   if (blockers.length > 0) {
     return report('blocked', blockers)
   }
   if (!evmClient) {
-    return report('blocked', ['Connect an Ethereum Sepolia wallet before starting the public bridge leg.'])
+    return report('blocked', [`Connect a ${network.cctp?.evmSource?.label ?? 'source-chain'} wallet before starting the public bridge leg.`])
   }
 
   try {

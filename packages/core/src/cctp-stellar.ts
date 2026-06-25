@@ -84,8 +84,8 @@ export async function submitCctpMintAndForward(
 ): Promise<{ readonly hash: string }> {
   const network = getNetworkConfig(options.network)
   const forwarder = network.cctp?.cctpForwarder
-  if (options.network !== 'testnet' || !forwarder) {
-    throw new Error('CCTP mint-and-forward is enabled only for configured testnet CCTP in this phase.')
+  if (!forwarder) {
+    throw new Error('CCTP mint-and-forward is enabled only for configured CCTP networks.')
   }
 
   const now = options.now ?? defaultNow
@@ -162,7 +162,7 @@ export async function ensureStellarUsdcTrustline(
   const network = options.networkConfig ?? getNetworkConfig(options.network)
   const usdc = network.assets.USDC
   const base = { network: options.network, userAddress: options.identity.stellarPublicKey } as const
-  if (options.network !== 'testnet' || !usdc.issuer) {
+  if (!usdc.issuer) {
     return { ...base, status: 'ready' }
   }
 
@@ -172,6 +172,7 @@ export async function ensureStellarUsdcTrustline(
   const loaded = await loadOrFundHorizonAccount({
     horizon,
     publicKey: options.identity.stellarPublicKey,
+    network: options.network,
     fetch: options.fetch,
     friendbotUrl: options.friendbotUrl,
     emit: options.emit,
@@ -212,6 +213,7 @@ export async function ensureStellarUsdcTrustline(
 async function loadOrFundHorizonAccount(options: {
   readonly horizon: CctpHorizonServer
   readonly publicKey: string
+  readonly network: NetworkKey
   readonly fetch?: typeof fetch
   readonly friendbotUrl?: string
   readonly emit?: (message: string) => void
@@ -219,6 +221,9 @@ async function loadOrFundHorizonAccount(options: {
   try {
     return { account: await options.horizon.loadAccount(options.publicKey) }
   } catch {
+    if (options.network !== 'testnet') {
+      throw new Error(`Stellar account ${options.publicKey} is not funded on ${options.network}.`)
+    }
     const fetcher = options.fetch ?? globalThis.fetch
     if (!fetcher) {
       throw new Error(`Stellar account ${options.publicKey} is not funded, and Friendbot fetch is unavailable.`)
