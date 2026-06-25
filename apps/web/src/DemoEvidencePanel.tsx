@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { ClipboardCheck, ExternalLink, FileCheck2 } from 'lucide-react'
 import {
-  mainnetXlmPrivateLoopEvidence,
+  mainnetPrivateLoopEvidence,
   phase8CctpBridgeEvidence,
   phase4UsdcDemoEvidence,
   submissionEvidenceDigest,
@@ -37,7 +37,7 @@ export function DemoEvidencePanel() {
         <FileCheck2 size={24} aria-hidden="true" />
         <div>
           <h1>Demo proof digest</h1>
-          <p>Recorded testnet evidence plus the mainnet XLM private-loop smoke.</p>
+          <p>Recorded testnet evidence plus mainnet XLM and USDC private-loop smokes.</p>
         </div>
       </div>
 
@@ -118,23 +118,44 @@ export function DemoEvidencePanel() {
         </ul>
       </div>
 
+      {mainnetPrivateLoopEvidence.map((evidence) => (
+        <EvidenceSection
+          key={evidence.asset}
+          heading={`Mainnet ${evidence.asset} extension smoke`}
+          evidence={evidence}
+        />
+      ))}
+    </article>
+  )
+}
+
+function EvidenceSection({
+  heading,
+  evidence,
+}: {
+  readonly heading: string
+  readonly evidence: {
+    readonly boundaryCopy: readonly string[]
+    readonly transactions: readonly DemoEvidenceTransaction[]
+    readonly artifacts: readonly { readonly label: string; readonly value: string }[]
+  }
+}) {
+  return (
+    <>
       <div className="evidence-notes">
-        <h2>Mainnet XLM extension smoke</h2>
+        <h2>{heading}</h2>
         <ul>
-          {mainnetXlmPrivateLoopEvidence.boundaryCopy.map((item) => (
+          {evidence.boundaryCopy.map((item) => (
             <li key={item}>{item}</li>
           ))}
         </ul>
       </div>
 
-      <EvidenceTable
-        label="Recorded mainnet XLM private-loop evidence"
-        transactions={mainnetXlmPrivateLoopEvidence.transactions}
-      />
+      <EvidenceTable label={`Recorded ${heading} evidence`} transactions={evidence.transactions} />
 
       <div className="proof-results">
         <ul className="artifact-list">
-          {mainnetXlmPrivateLoopEvidence.artifacts.map((artifact) => (
+          {evidence.artifacts.map((artifact) => (
             <li key={artifact.label}>
               <strong>{artifact.label}</strong>
               <span>mainnet evidence</span>
@@ -143,7 +164,7 @@ export function DemoEvidencePanel() {
           ))}
         </ul>
       </div>
-    </article>
+    </>
   )
 }
 
