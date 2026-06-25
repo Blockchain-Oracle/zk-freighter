@@ -11,3 +11,7 @@ Persistent project/domain wiki. Research notes are temporary; this wiki is the c
 ## Source Logs
 
 - [Wiki log](log.md)
+
+## Handoffs
+
+- [Claude Code Design Takeover](../handoffs/2026-06-25-claude-code-design-takeover.md) - audit and continuation handoff for the wallet redesign packet.

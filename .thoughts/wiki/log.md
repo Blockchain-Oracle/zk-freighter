@@ -8,3 +8,4 @@
 - Designer handoff: `.thoughts/design/2026-06-25-designer-brief-v2.md`.
 - Designer start-here file: `.thoughts/design/brief.md`.
 - GitHub-based designer agent prompt: `.thoughts/design/designer-agent-prompt.md`.
+- Claude Code takeover context: `CLAUDE.md` and `.thoughts/handoffs/2026-06-25-claude-code-design-takeover.md`.
