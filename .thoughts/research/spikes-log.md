@@ -1842,7 +1842,46 @@ These are upload/install estimates only. They do not include contract-instance d
 ### Current mainnet claims allowed
 
 - Mainnet XLM has full extension-runtime evidence for QuickShield, shielded transfer, and public unshield/withdraw.
-- Mainnet USDC has QuickShield evidence only; mainnet USDC shielded transfer and unshield/withdraw are still not claimed.
+- At this timestamp, mainnet USDC had QuickShield evidence only; mainnet USDC shielded transfer and unshield/withdraw were still not claimed.
+- Mainnet CCTP bridge-to-shield and atomic bridge-and-shield are still not claimed.
+
+## 2026-06-25 15:08 UTC - Mainnet extension USDC shielded transfer and unshield
+
+- **Phase:** Mainnet private-loop runtime proof.
+- **Kind:** Real mainnet shielded USDC transfer and public USDC unshield/withdraw through the Chrome-for-Testing extension offscreen prover.
+- **Network:** Stellar mainnet.
+- **Smoke wallet:** `GAWDQREHIKPLF6KR7XXNYNANXG7PW2IG5N4HWFB2H3M3J3OFC7SHWH32`.
+- **Secret posture:** smoke wallet recovery phrase remained outside the repo at `/Users/abu/.config/zk-fighter/mainnet-quickshield-smoke.json`.
+- **Harness:** `ZKF_PRIVATE_LOOP_ASSET=USDC ZKF_PRIVATE_LOOP_TIMEOUT_MS=90000 ZKF_PRIVATE_LOOP_RUNTIME_TIMEOUT_MS=120000 pnpm extension:private-loop:mainnet`.
+- **Pool:** `CDV45TTXDDUKBMK2IWPJRUYQSRVEWHTRPKCN2VZ7GEV2HVMRPBOD2KR7`.
+
+### Transactions
+
+| Step | Amount | Transaction | Ledger | Result |
+|---|---:|---|---:|---|
+| Shielded USDC transfer to the smoke wallet's own private receive code | `0.0050000 USDC` | `5317b8266ef93b84a6ab9f40eb5b157c5838b6b9a0826d60a6d6daf36a221aa1` | `63193096` | successful |
+| Public USDC unshield/withdraw back to the smoke wallet address | `0.0010000 USDC` | `2dd8955cd57aa35b46a0ac944380afb12ac1b82da44f8cf8ab6a9d283064531b` | `63193101` | successful |
+
+- **Transfer proof generated:** yes.
+- **Transfer submit reached:** yes.
+- **Transfer duration:** `12,464 ms`.
+- **Withdraw proof generated:** yes.
+- **Withdraw submit reached:** yes.
+- **Withdraw duration:** `11,748 ms`.
+- **Final observed smoke-wallet public balances:**
+  - XLM: `4.7289441`.
+  - USDC: `0.0010000`.
+
+### Failure fixed during this run
+
+- The first USDC private-loop harness attempt hung without returning a JSON result and did not submit a new transaction. Horizon account history showed no new smoke-wallet transactions after the prior XLM loop.
+- Root cause: the CDP `chrome.runtime.sendMessage(...)` evaluation had no outer timeout, so a stalled extension response could keep Node and Chrome alive indefinitely.
+- Fix: `scripts/check-mainnet-private-loop.mjs` now wraps runtime-message evaluation with `ZKF_PRIVATE_LOOP_RUNTIME_TIMEOUT_MS`, defaulting to the private-action timeout plus `60,000 ms`.
+- The bounded rerun succeeded and produced the two accepted hashes above.
+
+### Current mainnet claims allowed
+
+- Mainnet XLM and USDC both have full extension-runtime evidence for QuickShield, shielded transfer, and public unshield/withdraw.
 - Mainnet CCTP bridge-to-shield and atomic bridge-and-shield are still not claimed.
 
 ## 2026-06-25 13:21 UTC - Final extension runtime deep-proof gate rerun
@@ -1869,4 +1908,17 @@ These are upload/install estimates only. They do not include contract-instance d
 - **ASP insert:** `b6e76d20fa231f79613034c57d6241154b35d6484d4e4a682ac83b462a4b3a57`.
 - **Dry proof status:** `proof-generated`.
 - **Proof duration:** `11,355 ms`.
+- **Submit reached:** yes, in dry-proof callback only; no shield/deposit transaction is claimed from this gate.
+
+## 2026-06-25 15:13 UTC - Final extension runtime deep-proof gate rerun
+
+- **Phase:** Verification gate after mainnet USDC private-loop changes.
+- **Kind:** Chrome-for-Testing extension deep runtime proof rerun.
+- **Network:** Stellar testnet.
+- **Command:** `pnpm extension:runtime:deep`.
+- **Friendbot hash:** `c109f485a395426bf76193d07557ae18d65232120e8a94dd20dfccd8bcdc8c45`.
+- **Runtime user address:** `GA3RGU5UNJJKNYYZEFIGU444VGUNLKVNJPGG3VTACOWFAAJMYBMHDJ7V`.
+- **ASP insert:** `ed79924a11706bbe5af8694df36bd03400bbe759691325dfd2e9b4ee1b578931`.
+- **Dry proof status:** `proof-generated`.
+- **Proof duration:** `8,780 ms`.
 - **Submit reached:** yes, in dry-proof callback only; no shield/deposit transaction is claimed from this gate.

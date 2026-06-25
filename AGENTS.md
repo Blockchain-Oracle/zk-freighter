@@ -8,7 +8,7 @@
 - Phase 9 decision is recorded in `.thoughts/research/2026-06-24-phase9-atomic-bridge-shield-decision.md`: atomic bridge-and-shield is deferred until a custom adapter passes real tests.
 - Phase 10 verification audit is recorded in `.thoughts/verification/2026-06-24-phase10-submission-hardening-audit.md`: code/docs pass gates, with external video/public-repo/final demo posture still remaining.
 - Phase 11 extension audit is recorded in `.thoughts/verification/2026-06-24-phase11-wxt-extension-audit.md`: WXT MV3 scaffold/build, Chrome-for-Testing runtime smoke, offscreen Nethermind module initialization, extension dry proof generation, real extension QuickShield XLM and USDC shield/deposit evidence, reusable local USDC funder automation, bridge handoff runtime evidence, and a Freighter-style detection/network profile pass. External public-key access and signing are intentionally disabled because ZK Fighter is not a general public dApp signing wallet. The current extension build plan is `.thoughts/plans/2026-06-24-extension-quickshield-bridge-plan.md`.
-- Mainnet readiness research is recorded in `.thoughts/research/2026-06-25-mainnet-readiness.md`: mainnet XLM/USDC SACs, Circle CCTP IDs, XLM/USDC privacy-pool deployments, real extension XLM/USDC QuickShield shield/deposits, and real mainnet XLM shielded transfer/unshield are recorded. Mainnet USDC shielded transfer/unshield and bridge-to-shield still require separate accepted hashes before claims.
+- Mainnet readiness research is recorded in `.thoughts/research/2026-06-25-mainnet-readiness.md`: mainnet XLM/USDC SACs, Circle CCTP IDs, XLM/USDC privacy-pool deployments, real extension XLM/USDC QuickShield shield/deposits, and real mainnet XLM/USDC shielded transfer/unshield smokes are recorded. Mainnet bridge-to-shield still requires separate accepted hashes before claims.
 - Confidential Token research is recorded in `.thoughts/research/2026-06-23-confidential-tokens-preview.md`, and the future wallet-mode plan is recorded in `.thoughts/plans/2026-06-24-confidential-token-wallet-mode-plan.md`. It is not part of the current judged path and must not be claimed until ZK Fighter records its own testnet evidence.
 - Current implementation scaffold:
   - `apps/web`
@@ -20,7 +20,7 @@
 - Still not present:
   - no `contracts/`
   - no root `Cargo.toml`
-- Local git is initialized on `main`, but no public remote or baseline commit is assumed.
+- Local git is initialized on `main` with private GitHub remote `Blockchain-Oracle/zk-fighter`.
 - `reference/` contains cloned projects for research only. It is gitignored and must not be treated as ZK Fighter source.
 - `reference/openzeppelin-stellar-contracts-confidential` is the OpenZeppelin/SDF Confidential Tokens preview branch. Treat it as reference-only; do not import production code from it.
 
@@ -47,7 +47,7 @@ Before implementation, read:
 - No recovery secrets.
 - Support both XLM and USDC as separate pools.
 - Web app first.
-- Extension later, reusing shared core logic. Current status: WXT MV3 scaffold/build, Chrome-for-Testing runtime smoke, offscreen dry proof generation, receive-code QR/copy, real testnet QuickShield XLM/USDC shield/deposit, real mainnet QuickShield XLM/USDC shield/deposit, bridge handoff runtime evidence, and Freighter-style detection/network responses that fail closed for external public-key access and signing.
+- Extension later, reusing shared core logic. Current status: WXT MV3 scaffold/build, Chrome-for-Testing runtime smoke, offscreen dry proof generation, receive-code QR/copy, real testnet QuickShield XLM/USDC shield/deposit, real mainnet QuickShield and private-loop XLM/USDC evidence, bridge handoff runtime evidence, and Freighter-style detection/network responses that fail closed for external public-key access and signing.
 - Network is config: testnet first, mainnet-capable, no source-code rewrite to switch.
 - Bridge path is safe two-step CCTP then shield.
 - Atomic bridge-and-shield is experimental only until a custom adapter passes real tests.
@@ -107,7 +107,7 @@ The older prompt set is superseded:
 
 - `.thoughts/handoffs/2026-06-21-codex-build-prompts.md`
 
-Run phases linearly. Atomic bridge-and-shield is deferred; do not expose it as a normal MVP mode unless a concrete adapter path later passes real tests and transaction evidence is recorded. Extension proof/passkey claims require real Chrome runtime evidence. The current extension dApp profile is detection/network evidence only; external public-key access and signing must stay disabled unless Abu explicitly reverses that product decision after a new plan. Mainnet pool deployment, XLM/USDC QuickShield smokes, and XLM private-loop smokes are already approved and recorded; any new mainnet spend/deploy/publish still requires explicit Abu approval.
+Run phases linearly. Atomic bridge-and-shield is deferred; do not expose it as a normal MVP mode unless a concrete adapter path later passes real tests and transaction evidence is recorded. Extension proof/passkey claims require real Chrome runtime evidence. The current extension dApp profile is detection/network evidence only; external public-key access and signing must stay disabled unless Abu explicitly reverses that product decision after a new plan. Mainnet pool deployment, XLM/USDC QuickShield smokes, and XLM/USDC private-loop smokes are already approved and recorded; any new mainnet spend/deploy/publish still requires explicit Abu approval.
 
 Confidential Tokens are a separate future track. If Abu asks to build them, first follow `.thoughts/plans/2026-06-24-confidential-token-wallet-mode-plan.md`: prove toolchain/browser proving, local opening recovery, and testnet transactions before changing product claims.
 

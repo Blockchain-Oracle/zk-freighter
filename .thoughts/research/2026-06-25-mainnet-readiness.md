@@ -81,7 +81,7 @@ Check whether ZK Fighter can safely move from testnet evidence to mainnet testin
 - Mainnet USDC pool: `CDV45TTXDDUKBMK2IWPJRUYQSRVEWHTRPKCN2VZ7GEV2HVMRPBOD2KR7`.
 - Both mainnet XLM and USDC are configured as `shieldedPool: 'enabled'`.
 - `packages/core/src/cctp-bridge.ts`, `packages/core/src/cctp-stellar.ts`, `packages/core/src/xlm-shield.ts`, `packages/core/src/xlm-private.ts`, and `packages/core/src/disclosure.ts` now gate by configured/enabled pools instead of hard-coded testnet-only checks.
-- Mainnet XLM has accepted extension-runtime evidence for QuickShield, shielded transfer, and unshield/withdraw. Mainnet USDC has accepted extension-runtime QuickShield evidence. Mainnet USDC shielded transfer/unshield and mainnet bridge-to-shield still need their own evidence before being claimed.
+- Mainnet XLM and USDC have accepted extension-runtime evidence for QuickShield, shielded transfer, and unshield/withdraw. Mainnet bridge-to-shield still needs its own evidence before being claimed.
 
 ### Dedicated mainnet QA address
 
@@ -181,17 +181,29 @@ Check whether ZK Fighter can safely move from testnet evidence to mainnet testin
   - Unshield/withdraw: `0.0050000 XLM`.
 - `packages/core/src/xlm-private.ts` was fixed to call `syncPoolEvents()` before private transfer/withdraw so fresh browser profiles can discover spendable notes.
 
+### Mainnet extension USDC private-loop follow-up
+
+- The Chrome-for-Testing extension harness used the same persistent smoke wallet and ran:
+  - Shielded transfer to its own private receive code: `5317b8266ef93b84a6ab9f40eb5b157c5838b6b9a0826d60a6d6daf36a221aa1`
+  - Public unshield/withdraw to the smoke wallet public address: `2dd8955cd57aa35b46a0ac944380afb12ac1b82da44f8cf8ab6a9d283064531b`
+- The shielded transfer landed in ledger `63193096`.
+- The unshield/withdraw landed in ledger `63193101`.
+- Amounts:
+  - Transfer: `0.0050000 USDC`.
+  - Unshield/withdraw: `0.0010000 USDC`.
+- The first unbounded USDC harness attempt hung without submitting a new transaction. `scripts/check-mainnet-private-loop.mjs` now wraps Chrome runtime messages with a hard timeout.
+
 ## Inferences
 
 - Public mainnet XLM funding, USDC trustline creation, and a tiny Stellar DEX XLM-to-USDC path payment are verified.
 - Mainnet XLM/USDC privacy-pool contracts are deployed and configured.
-- Mainnet XLM QuickShield, XLM shielded transfer, XLM unshield/withdraw, and USDC QuickShield are proven by real extension-runtime proof generation plus accepted mainnet transactions.
+- Mainnet XLM/USDC QuickShield, shielded transfer, and unshield/withdraw smokes are proven by real extension-runtime proof generation plus accepted mainnet transactions.
 - A real mainnet CCTP public bridge from Ethereum mainnet to Stellar mainnet should be feasible with the configured Ethereum mainnet CCTP values, but it is not yet evidenced.
-- Mainnet USDC shielded transfer/unshield and bridge-to-shield should remain separate evidence targets, not assumed from the XLM private-loop and QuickShield runs.
+- Mainnet bridge-to-shield should remain a separate evidence target, not assumed from the private-loop and QuickShield runs.
 
 ## Unknowns And Questions
 
-- Whether to spend additional mainnet USDC/XLM for mainnet bridge-to-shield or USDC shielded transfer/unshield evidence.
+- Whether to spend additional mainnet USDC/ETH/XLM for mainnet bridge-to-shield evidence.
 - Whether the reference Nethermind browser runtime patch for mainnet deployments should be upstreamed/documented beyond the staged browser WASM artifacts.
 - Whether `https://mainnet.sorobanrpc.com` is reliable enough for transaction submission under demo pressure, or whether we should configure a dedicated RPC provider.
 - Whether Circle mainnet attestation timing is acceptable for a live demo or should be shown as recorded evidence.
@@ -200,5 +212,4 @@ Check whether ZK Fighter can safely move from testnet evidence to mainnet testin
 
 - No mainnet CCTP bridge transaction.
 - No mainnet CCTP burn/mint.
-- No mainnet USDC shielded transfer claim.
-- No mainnet USDC unshield/withdraw claim.
+- No mainnet bridge-to-shield claim.
