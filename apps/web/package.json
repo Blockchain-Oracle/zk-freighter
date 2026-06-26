@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@zk-fighter/core": "workspace:*",
+    "@zk-fighter/ui": "workspace:*",
     "lucide-react": "1.21.0",
     "qrcode.react": "4.2.0",
     "react": "^19.2.6",

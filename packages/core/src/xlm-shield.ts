@@ -52,6 +52,8 @@ export interface SubmitXlmShieldDepositOptions {
   readonly amountStroops?: bigint
   readonly timeoutMs?: number
   readonly now?: () => number
+  /** Streams proving + submit progress events as they happen (live ring). */
+  readonly onStatus?: (event: XlmShieldProgressEvent) => void
   readonly importWebModule?: NethermindModuleImporter
   readonly submitOptions?: Pick<
     SubmitPreparedSorobanTxOptions,
@@ -131,6 +133,17 @@ export async function submitXlmShieldDeposit(
   const amount = options.amountStroops ?? defaultShieldAmountStroops
   const poolContractId = network.assets[asset].poolId
   const statusEvents: XlmShieldProgressEvent[] = []
+  // Accumulate for the final report AND stream live so the UI ring can advance
+  // with the real prover/submit heartbeat instead of a simulated timer.
+  function record(event: XlmShieldProgressEvent): void {
+    statusEvents.push(event)
+    try {
+      options.onStatus?.(event)
+    } catch (cause) {
+      // A buggy status listener must never abort or fail an in-flight deposit.
+      console.error('[xlm-shield] onStatus listener threw', cause)
+    }
+  }
   let submitReached = false
   let transactionSubmitted = false
   let signedAuthEntryCount = 0
@@ -167,7 +180,7 @@ export async function submitXlmShieldDeposit(
           identity: options.identity,
           network: options.network,
           onStatus: (event: SorobanSubmitStatus) => {
-            statusEvents.push({
+            record({
               elapsedMs: Math.round(now() - started),
               source: 'soroban',
               message: event.message,
@@ -182,7 +195,7 @@ export async function submitXlmShieldDeposit(
         return result.hash
       },
       (event) => {
-        statusEvents.push({
+        record({
           elapsedMs: Math.round(now() - started),
           source: 'nethermind',
           flow: stringField(event, 'flow'),

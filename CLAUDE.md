@@ -16,6 +16,14 @@ Primary remote:
 
 Always read `AGENTS.md` first. It is the authoritative project instruction file.
 
+## Quality Bar — Deadline Is Not A Factor
+
+The June 29 hackathon deadline must NEVER drive a quality or architecture decision. Do not use the deadline — or any time pressure — as a reason to mock, stub, cut corners, ship the wrong architecture, or do mediocre work. We are AI-coded and therefore fast; speed comes from execution throughput, never from lowering the bar. Build it correctly the first time and choose correctness + good architecture over shipping faster. This reinforces the no-fakes / no-mocks rules below. Do not frame plans or recommendations as "what's feasible in N days" — frame them as the best correct solution.
+
+## Resources Abu Provides — Always Study Them
+
+When Abu shares a link, GitHub repo, demo, or any resource, treat it as required reading. Clone repos into `reference/` (gitignored, research-only), keep them updated to the branch he names, record a short note in `.thoughts/research/`, and actually read/explore them before planning or claiming anything. Never skip a provided resource and never hallucinate about its contents — go look at the real files. If a resource cannot be fetched, say so explicitly instead of guessing. This has cost real time before; do not repeat it.
+
 ## Working Rules
 
 - Use `pnpm` only.
@@ -74,4 +82,14 @@ The current UI is functional scaffolding. Do not use it as visual inspiration. U
 After feature-sized changes, dispatch a focused review subagent before moving on. For security-sensitive areas such as keys, proofs, bridge flows, mainnet paths, extension runtime, or secret handling, request a security/reliability review.
 
 For the current design handoff, Claude Code should audit the docs, verify links and repo paths, check that product claims match evidence, and only then plan or delegate UI redesign work across web, extension, and possible mobile.
+
+## Active Redesign Build (Tracks A/B/C)
+
+The approved plan is the goal: `~/.claude/plans/you-re-in-plan-mode-velvet-beaver.md` — one sequenced plan, three tracks: (A) harden + ship the redesigned wallet, (B) Confidential Tokens (second privacy mode), (C) mobile. Build with Context Engineering (research → spec → stories → plan → build). The shared design system is `packages/ui`; the designer prototype lives at `/Users/abu/Downloads/GitHub repository link/` (evidence, not source of truth — keep it open, re-check per screen).
+
+Execution rules:
+- **Delete dead code as you migrate.** When a flow is rebuilt in the new design, remove the old implementation — never keep two versions, no orphaned files/CSS/helpers. The `WalletFlowPanels` "Developer · Demo evidence" quarantine is transitional only; delete each old panel once its redesigned screen lands.
+- **Review cadence:** after every ~2–3 features, run a focused review with the **pr-review-toolkit** sub-agents (e.g. `pr-review-toolkit:code-reviewer`, `pr-review-toolkit:silent-failure-hunter`, `pr-review-toolkit:pr-test-analyzer`) over the diff — sub-agents, not workflows. Fix Critical/Important findings before continuing.
+- Verify each feature with `pnpm lint && pnpm typecheck && pnpm test && pnpm build`, and check each screen against its prototype counterpart.
+- Surface to Abu any blocker needing his action (funding, private keys, mainnet spend, Apple developer account, repo-public flip, demo video).
 

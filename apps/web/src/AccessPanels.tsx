@@ -1,8 +1,64 @@
-import { Fingerprint, KeyRound, Lock } from 'lucide-react'
-import { generateSeedPhrase, validateSeedPhrase } from '@zk-fighter/core'
+import type { CSSProperties } from 'react'
+import { generateSeedPhrase, validateSeedPhrase, type NetworkKey } from '@zk-fighter/core'
+import { Button, Card, NetworkPill } from '@zk-fighter/ui'
 import { passwordMinLength } from './app-helpers'
 
 export type WalletSetupMode = 'create' | 'import'
+
+const fieldStyle: CSSProperties = {
+  width: '100%',
+  boxSizing: 'border-box',
+  padding: '11px 13px',
+  borderRadius: 11,
+  border: '1px solid var(--bd)',
+  background: 'var(--card2)',
+  color: 'var(--tx)',
+  fontSize: 13,
+  fontFamily: 'inherit',
+  outline: 'none',
+}
+
+const labelStyle: CSSProperties = { fontSize: 11, color: 'var(--tx2)', fontWeight: 600 }
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <span style={labelStyle}>{label}</span>
+      {children}
+    </label>
+  )
+}
+
+/** Branded header + network switch shown above the onboarding card. */
+export function OnboardingHeader({
+  network,
+  networks,
+  onChangeNetwork,
+}: {
+  network: NetworkKey
+  networks: readonly NetworkKey[]
+  onChangeNetwork: (network: NetworkKey) => void
+}) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+      <div style={{ width: 38, height: 38, borderRadius: 12, background: 'linear-gradient(145deg,var(--ac2),var(--ac))' }} />
+      <div style={{ lineHeight: 1.15 }}>
+        <div style={{ fontWeight: 800, fontSize: 17, letterSpacing: '-.02em' }}>ZK Fighter</div>
+        <div style={{ fontSize: 9.5, color: 'var(--tx3)', fontFamily: 'var(--fm)', letterSpacing: '.14em' }}>SHIELDED · STELLAR</div>
+      </div>
+      <select
+        value={network}
+        onChange={(event) => onChangeNetwork(event.target.value as NetworkKey)}
+        aria-label="Network"
+        style={{ marginLeft: 'auto', padding: '7px 10px', borderRadius: 9, border: '1px solid var(--bd)', background: 'var(--card)', color: 'var(--tx2)', fontSize: 11.5, fontFamily: 'inherit', cursor: 'pointer' }}
+      >
+        {networks.map((key) => (
+          <option key={key} value={key}>{key === 'mainnet' ? 'Mainnet' : 'Testnet'}</option>
+        ))}
+      </select>
+    </div>
+  )
+}
 
 interface CreateWalletPanelProps {
   readonly acknowledged: boolean
@@ -19,13 +75,20 @@ interface CreateWalletPanelProps {
   readonly onSave: (seedPhrase: string) => void
 }
 
-interface UnlockWalletPanelProps {
-  readonly busy: boolean
-  readonly passkeyEnabled: boolean
-  readonly unlockPassword: string
-  readonly onPassword: (password: string) => void
-  readonly onPasswordUnlock: () => void
-  readonly onPasskeyUnlock: () => void
+function tabStyle(active: boolean): CSSProperties {
+  return {
+    flex: 1,
+    padding: 9,
+    borderRadius: 9,
+    textAlign: 'center',
+    fontSize: 12.5,
+    fontWeight: 700,
+    cursor: 'pointer',
+    border: 'none',
+    background: active ? 'var(--ac)' : 'transparent',
+    color: active ? '#fff' : 'var(--tx2)',
+    fontFamily: 'inherit',
+  }
 }
 
 export function CreateWalletPanel({
@@ -44,62 +107,71 @@ export function CreateWalletPanel({
 }: CreateWalletPanelProps) {
   const passwordsMatch = password.length >= passwordMinLength && password === confirmPassword
   const canSaveWallet = passwordsMatch && acknowledged && validateSeedPhrase(mnemonic)
+  const words = mnemonic.trim() ? mnemonic.trim().split(/\s+/) : []
 
   return (
-    <section className="panel narrow" aria-labelledby="onboarding-title">
-      <div className="panel-heading">
-        <KeyRound size={24} aria-hidden="true" />
-        <div>
-          <h1 id="onboarding-title">Create your wallet</h1>
-          <p>Seed phrase first. Passkey unlock is optional after the vault exists.</p>
+    <Card style={{ padding: '22px 24px 26px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div>
+        <div style={{ fontWeight: 800, fontSize: 20, letterSpacing: '-.02em' }}>Create your wallet</div>
+        <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 2 }}>Seed phrase first · passkey unlock is optional after the vault exists.</div>
+      </div>
+
+      <div style={{ display: 'flex', gap: 4, padding: 4, background: 'var(--card2)', border: '1px solid var(--bd)', borderRadius: 12 }}>
+        <button type="button" style={tabStyle(mode === 'create')} onClick={() => onMode('create')}>Create</button>
+        <button type="button" style={tabStyle(mode === 'import')} onClick={() => onMode('import')}>Import</button>
+      </div>
+
+      {mode === 'create' ? (
+        <Button variant="secondary" fullWidth onClick={() => onMnemonic(generateSeedPhrase())}>
+          {words.length ? 'Regenerate 12-word phrase' : 'Generate 12-word phrase'}
+        </Button>
+      ) : (
+        <Field label="Recovery phrase">
+          <textarea value={mnemonic} onChange={(event) => onMnemonic(event.target.value)} rows={3} placeholder="word1 word2 …" style={{ ...fieldStyle, resize: 'vertical', fontFamily: 'var(--fm)' }} />
+        </Field>
+      )}
+
+      {mode === 'create' && words.length ? (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, padding: 12, border: '1px dashed var(--bd2)', borderRadius: 12 }}>
+          {words.map((word, index) => (
+            <div key={`${index}-${word}`} style={{ display: 'flex', gap: 6, alignItems: 'baseline', fontFamily: 'var(--fm)', fontSize: 12 }}>
+              <span style={{ color: 'var(--tx3)', fontSize: 9.5, width: 14, textAlign: 'right' }}>{index + 1}</span>
+              <span>{word}</span>
+            </div>
+          ))}
         </div>
-      </div>
+      ) : null}
 
-      <div className="segmented" role="tablist" aria-label="Wallet setup mode">
-        <button className={mode === 'create' ? 'active' : ''} onClick={() => onMode('create')}>
-          Create
-        </button>
-        <button className={mode === 'import' ? 'active' : ''} onClick={() => onMode('import')}>
-          Import
-        </button>
-      </div>
+      <Field label="Vault password">
+        <input type="password" value={password} onChange={(event) => onPassword(event.target.value)} style={fieldStyle} />
+      </Field>
+      <Field label="Confirm password">
+        <input type="password" value={confirmPassword} onChange={(event) => onConfirmPassword(event.target.value)} style={fieldStyle} />
+      </Field>
 
-      <div className="form-grid">
-        {mode === 'create' ? (
-          <button className="button secondary" onClick={() => onMnemonic(generateSeedPhrase())}>
-            Generate 12-word phrase
-          </button>
-        ) : (
-          <label className="field">
-            <span>Recovery phrase</span>
-            <textarea value={mnemonic} onChange={(event) => onMnemonic(event.target.value)} rows={4} />
-          </label>
-        )}
+      <label style={{ display: 'flex', alignItems: 'flex-start', gap: 9, fontSize: 12, color: 'var(--tx2)', lineHeight: 1.5, cursor: 'pointer' }}>
+        <input type="checkbox" checked={acknowledged} onChange={(event) => onAcknowledge(event.target.checked)} style={{ marginTop: 2 }} />
+        <span>If this phrase is lost, this wallet cannot be recovered.</span>
+      </label>
 
-        {mnemonic ? <code className="phrase">{mnemonic}</code> : null}
-
-        <label className="field">
-          <span>Vault password</span>
-          <input type="password" value={password} onChange={(event) => onPassword(event.target.value)} />
-        </label>
-        <label className="field">
-          <span>Confirm password</span>
-          <input type="password" value={confirmPassword} onChange={(event) => onConfirmPassword(event.target.value)} />
-        </label>
-        <label className="check-row">
-          <input type="checkbox" checked={acknowledged} onChange={(event) => onAcknowledge(event.target.checked)} />
-          <span>If this phrase is lost, this wallet cannot be recovered.</span>
-        </label>
-        <button className="button primary" disabled={!canSaveWallet || busy} onClick={() => onSave(mnemonic)}>
-          Encrypt vault
-        </button>
-      </div>
-    </section>
+      <Button fullWidth loading={busy} disabled={!canSaveWallet} onClick={() => onSave(mnemonic)}>Encrypt vault</Button>
+    </Card>
   )
+}
+
+interface UnlockWalletPanelProps {
+  readonly busy: boolean
+  readonly network: NetworkKey
+  readonly passkeyEnabled: boolean
+  readonly unlockPassword: string
+  readonly onPassword: (password: string) => void
+  readonly onPasswordUnlock: () => void
+  readonly onPasskeyUnlock: () => void
 }
 
 export function UnlockWalletPanel({
   busy,
+  network,
   passkeyEnabled,
   unlockPassword,
   onPassword,
@@ -107,24 +179,22 @@ export function UnlockWalletPanel({
   onPasskeyUnlock,
 }: UnlockWalletPanelProps) {
   return (
-    <section className="panel narrow" aria-labelledby="unlock-title">
-      <div className="panel-heading">
-        <Lock size={24} aria-hidden="true" />
+    <Card style={{ padding: '22px 24px 26px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <div>
-          <h1 id="unlock-title">Unlock wallet</h1>
-          <p>Your recovery phrase is encrypted in this browser vault.</p>
+          <div style={{ fontWeight: 800, fontSize: 20, letterSpacing: '-.02em' }}>Unlock wallet</div>
+          <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 2 }}>Your recovery phrase is encrypted in this browser vault.</div>
         </div>
+        <div style={{ marginLeft: 'auto' }}><NetworkPill network={network} /></div>
       </div>
 
       {passkeyEnabled ? (
-        <button className="button secondary passkey-unlock" disabled={busy} onClick={onPasskeyUnlock}>
-          <Fingerprint size={18} aria-hidden="true" />
-          {busy ? 'Waiting for passkey...' : 'Unlock with passkey'}
-        </button>
+        <Button variant="secondary" fullWidth loading={busy} onClick={onPasskeyUnlock}>
+          {busy ? 'Waiting for passkey…' : '🔑 Unlock with passkey'}
+        </Button>
       ) : null}
 
-      <label className="field">
-        <span>Vault password</span>
+      <Field label="Vault password">
         <input
           type="password"
           value={unlockPassword}
@@ -132,11 +202,10 @@ export function UnlockWalletPanel({
           onKeyDown={(event) => {
             if (event.key === 'Enter') onPasswordUnlock()
           }}
+          style={fieldStyle}
         />
-      </label>
-      <button className="button primary" disabled={!unlockPassword || busy} onClick={onPasswordUnlock}>
-        Unlock
-      </button>
-    </section>
+      </Field>
+      <Button fullWidth loading={busy} disabled={!unlockPassword} onClick={onPasswordUnlock}>Unlock</Button>
+    </Card>
   )
 }

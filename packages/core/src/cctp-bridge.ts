@@ -72,12 +72,10 @@ export async function runCctpBridgeToStellar(options: RunCctpBridgeOptions): Pro
   const evmClient = options.evmClient
   if (!evmClient) {
     blockers.push(`Connect a ${evmSource?.label ?? 'source-chain'} wallet before starting the public bridge leg.`)
+    return report('blocked', blockers)
   }
   if (blockers.length > 0) {
     return report('blocked', blockers)
-  }
-  if (!evmClient) {
-    return report('blocked', [`Connect a ${evmSource?.label ?? 'source-chain'} wallet before starting the public bridge leg.`])
   }
 
   try {
@@ -203,12 +201,10 @@ export async function resumeCctpBridgeToStellar(options: ResumeCctpBridgeOptions
 
   if (!burnTx) {
     blockers.push(`Enter a valid ${evmSource?.label ?? 'source-chain'} CCTP burn transaction hash.`)
+    return report('blocked', blockers)
   }
   if (blockers.length > 0) {
     return report('blocked', blockers)
-  }
-  if (!burnTx) {
-    throw new Error('CCTP burn hash validation failed.')
   }
 
   try {

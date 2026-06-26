@@ -20,6 +20,9 @@ export const SUPPORTED_ASSETS = {
     code: 'USDC',
     kind: 'stellar-classic',
     displayName: 'USD Coin',
+    // 7 decimals is correct for USDC as a Stellar classic asset (every Stellar asset
+    // uses 7 dp / stroops). This intentionally differs from USDC's 6 decimals on EVM
+    // chains — do not "fix" it to 6.
     decimals: 7,
   },
 } as const satisfies Record<AssetCode, AssetConfig>

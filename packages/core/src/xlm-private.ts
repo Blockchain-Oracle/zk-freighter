@@ -6,8 +6,8 @@ import {
   type SorobanSubmitStatus,
 } from './soroban-submit'
 import {
-  appendNethermindEvent,
   blockersForNullResult,
+  buildNethermindEvent,
   defaultNoteLimit,
   defaultNow,
   defaultPrivateActionTimeoutMs,
@@ -113,6 +113,17 @@ async function submitXlmPrivateAction(
   let transactionSubmitted = false
   let signedAuthEntryCount = 0
 
+  // Accumulate for the final report AND stream live so the UI ring advances with the
+  // real prover/submit heartbeat. A buggy listener must never abort an in-flight action.
+  function record(event: XlmPrivateProgressEvent): void {
+    statusEvents.push(event)
+    try {
+      options.onStatus?.(event)
+    } catch (cause) {
+      console.error('[xlm-private] onStatus listener threw', cause)
+    }
+  }
+
   if (!poolContractId || !isShieldedAssetEnabled(options.network, asset)) {
       return blockedReport(`${asset} pool is not configured for this network.`)
   }
@@ -124,7 +135,7 @@ async function submitXlmPrivateAction(
         identity: options.identity,
         network: options.network,
         onStatus: (event: SorobanSubmitStatus) => {
-          statusEvents.push({
+          record({
             elapsedMs: Math.round(now() - started),
             source: 'soroban',
             message: event.message,
@@ -141,7 +152,7 @@ async function submitXlmPrivateAction(
       return result.hash
     }
     const hashes = await Promise.race([
-      run(submit, (event) => appendNethermindEvent(statusEvents, event, Math.round(now() - started))),
+      run(submit, (event) => record(buildNethermindEvent(event, Math.round(now() - started)))),
       timeoutAfter(options.timeoutMs ?? defaultPrivateActionTimeoutMs),
     ])
     const finalHashes = txHashes.length > 0 ? txHashes : [...(hashes ?? [])]

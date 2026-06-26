@@ -10,8 +10,6 @@ import {
 export const vaultStorageKey = 'zk-fighter:vault:v1'
 export const passkeyEnvelopeStorageKey = 'zk-fighter:passkey-envelope:v1'
 export const passwordMinLength = 8
-export const receiveCodeHeadChars = 22
-export const receiveCodeTailChars = 16
 
 export function truncateMiddle(value: string, head = 14, tail = 10): string {
   if (value.length <= head + tail) {

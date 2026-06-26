@@ -3,6 +3,7 @@ import type { WalletIdentity } from './identity'
 import type { NethermindWebModule } from './nethermind-runtime'
 import { encodeReceiveCode } from './receive-code'
 import { loadXlmShieldedNotes, submitXlmPrivateTransfer } from './xlm-private'
+import type { XlmPrivateProgressEvent } from './xlm-private-types'
 
 const identity: WalletIdentity = {
   mnemonic: 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about',
@@ -161,6 +162,70 @@ describe('XLM private actions', () => {
     expect(poolId).toBe('CCE3VBWTMGS7TZBOMBXVMPZFD4RUWAJDQHV7L2FT5BHMZKHLQUJKHECE')
     expect(report.status).toBe('submitted')
     expect(report.txHashes).toEqual(['mainnet-hash'])
+  })
+
+  it('streams private-action status events to onStatus as they happen', async () => {
+    const seen: XlmPrivateProgressEvent[] = []
+    const report = await submitXlmPrivateTransfer({
+      identity,
+      network: 'testnet',
+      receiveCode: receiveCode(),
+      amountStroops: 500_000n,
+      now: () => 10,
+      onStatus: (event) => seen.push(event),
+      importWebModule: importer({
+        deriveAndSaveUserKeys: async () => undefined,
+        executeTransfer: async (
+          _pool: string,
+          _user: string,
+          _amount: bigint,
+          _note: string,
+          _enc: string,
+          _submit: unknown,
+          onStatus: (event: unknown) => void,
+        ) => {
+          onStatus({ flow: 'transfer', stage: 'sync_wait', message: 'Waiting to sync 1 ledger(s) from the chain...' })
+          onStatus({ flow: 'transfer', stage: 'prove', message: 'Generating proof' })
+          return null
+        },
+      }),
+    })
+
+    expect(seen.map((event) => event.step)).toEqual(['sync_wait', 'prove'])
+    expect(seen.every((event) => event.source === 'nethermind')).toBe(true)
+    expect(seen).toEqual([...report.statusEvents])
+  })
+
+  it('does not abort a private action when an onStatus listener throws', async () => {
+    const report = await submitXlmPrivateTransfer({
+      identity,
+      network: 'testnet',
+      receiveCode: receiveCode(),
+      amountStroops: 500_000n,
+      now: () => 10,
+      onStatus: () => {
+        throw new Error('listener blew up')
+      },
+      importWebModule: importer({
+        deriveAndSaveUserKeys: async () => undefined,
+        executeTransfer: async (
+          _pool: string,
+          _user: string,
+          _amount: bigint,
+          _note: string,
+          _enc: string,
+          _submit: unknown,
+          onStatus: (event: unknown) => void,
+        ) => {
+          onStatus({ flow: 'transfer', stage: 'sync_wait', message: 'Waiting to sync 2 ledger(s) from the chain...' })
+          return null
+        },
+      }),
+    })
+
+    expect(report.status).toBe('blocked')
+    expect(report.statusEvents).toHaveLength(1)
+    expect(report.error).toBeUndefined()
   })
 
   it('reports null engine results as blocked, not submitted', async () => {

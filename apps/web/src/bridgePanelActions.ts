@@ -19,8 +19,8 @@ interface RunBridgeAfterDestinationSetupOptions {
   readonly createEvmClient: (chainIdHex: string, sourceLabel: string) => Promise<EvmCctpSourceClient>
   readonly runBridge: (options: RunCctpBridgeOptions) => Promise<CctpBridgeReport>
   readonly shouldContinue?: () => boolean
-  readonly onDestinationReady: (report: StellarUsdcTrustlineReport) => void
-  readonly onWalletApprovalPending: (pending: boolean) => void
+  readonly onDestinationReady?: (report: StellarUsdcTrustlineReport) => void
+  readonly onWalletApprovalPending?: (pending: boolean) => void
   readonly onProgress: (report: CctpBridgeReport) => void
 }
 
@@ -34,8 +34,8 @@ export async function runBridgeAfterDestinationSetup(
   if (options.shouldContinue && !options.shouldContinue()) {
     throw new Error('Bridge request changed before source-chain approval.')
   }
-  options.onDestinationReady(receiveReport)
-  options.onWalletApprovalPending(true)
+  options.onDestinationReady?.(receiveReport)
+  options.onWalletApprovalPending?.(true)
 
   try {
     const evmClient = await options.createEvmClient(options.evmSource.chainIdHex, options.evmSource.label)
@@ -54,6 +54,6 @@ export async function runBridgeAfterDestinationSetup(
     }
     return bridgeReport
   } finally {
-    options.onWalletApprovalPending(false)
+    options.onWalletApprovalPending?.(false)
   }
 }

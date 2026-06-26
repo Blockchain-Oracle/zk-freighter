@@ -64,6 +64,8 @@ export interface XlmPrivateBaseOptions {
   readonly amountStroops: bigint
   readonly timeoutMs?: number
   readonly now?: () => number
+  /** Streams proving + submit progress events as they happen (live ring). */
+  readonly onStatus?: (event: XlmPrivateProgressEvent) => void
   readonly importWebModule?: NethermindModuleImporter
   readonly submitOptions?: Pick<
     SubmitPreparedSorobanTxOptions,

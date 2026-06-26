@@ -69,12 +69,9 @@ function eventStep(event: unknown): string | undefined {
   return stringField(event, 'stage') ?? stringField(event, 'step')
 }
 
-export function appendNethermindEvent(
-  events: XlmPrivateProgressEvent[],
-  event: unknown,
-  elapsedMs: number,
-): void {
-  events.push({
+/** Normalizes a raw Nethermind status payload into a typed progress event. */
+export function buildNethermindEvent(event: unknown, elapsedMs: number): XlmPrivateProgressEvent {
+  return {
     elapsedMs,
     source: 'nethermind',
     flow: stringField(event, 'flow'),
@@ -82,7 +79,15 @@ export function appendNethermindEvent(
     step: eventStep(event),
     current: numberField(event, 'current'),
     total: numberField(event, 'total'),
-  })
+  }
+}
+
+export function appendNethermindEvent(
+  events: XlmPrivateProgressEvent[],
+  event: unknown,
+  elapsedMs: number,
+): void {
+  events.push(buildNethermindEvent(event, elapsedMs))
 }
 
 export function proofWasGenerated(
