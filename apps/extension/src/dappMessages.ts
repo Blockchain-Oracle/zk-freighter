@@ -1,6 +1,7 @@
 import type {
   AspMembershipInsertReport,
   AssetCode,
+  CctpBridgeReport,
   CctpSourceKey,
   FreighterBridgeRequest,
   FreighterBridgeResponse,
@@ -18,7 +19,7 @@ export const dappMessageTypes = {
   prepareShieldAccess: 'zkf.extension.quickShield.prepareAccess',
   prepareUsdcReceive: 'zkf.extension.quickShield.prepareUsdcReceive',
   quickShield: 'zkf.extension.quickShield',
-  openBridgeHandoff: 'zkf.extension.bridge.open',
+  quickBridge: 'zkf.extension.bridge.run',
 } as const
 
 export type DappMessageType = (typeof dappMessageTypes)[keyof typeof dappMessageTypes]
@@ -30,6 +31,8 @@ export interface DappWalletStatus {
   readonly network: NetworkKey
   readonly publicKey: string
   readonly privateReceiveCode: string
+  /** Seed-derived EVM address used to fund + sign the CCTP bridge (no MetaMask). */
+  readonly evmAddress: string
   readonly error?: string
 }
 
@@ -51,9 +54,9 @@ export interface PrepareUsdcReceiveResponse {
   readonly error?: string
 }
 
-export interface BridgeHandoffResponse {
+export interface QuickBridgeResponse {
   readonly ok: boolean
-  readonly url?: string
+  readonly report?: CctpBridgeReport
   readonly error?: string
 }
 
@@ -92,8 +95,8 @@ export type DappRuntimeMessage =
       readonly timeoutMs?: number
     }
   | {
-      readonly type: typeof dappMessageTypes.openBridgeHandoff
-      readonly sourceChainKey?: CctpSourceKey
+      readonly type: typeof dappMessageTypes.quickBridge
+      readonly sourceChainKey: CctpSourceKey
       readonly resumeBurnHash?: string
     }
 
@@ -103,7 +106,7 @@ export type DappRuntimeResponse =
   | PrepareShieldAccessResponse
   | PrepareUsdcReceiveResponse
   | QuickShieldResponse
-  | BridgeHandoffResponse
+  | QuickBridgeResponse
   | {
       readonly ok: boolean
       readonly publicKey?: string

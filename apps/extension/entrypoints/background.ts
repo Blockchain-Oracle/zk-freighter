@@ -1,13 +1,25 @@
 import {
+  createSeedEvmClient,
+  deriveWalletIdentity,
+  ensureStellarUsdcTrustline,
   extensionReadinessDigest,
+  getCctpSource,
   phase11ExtensionReadiness,
+  resumeCctpBridgeToStellar,
+  runCctpBridgeToStellar,
   type AspMembershipInsertReport,
+  type CctpBridgeReport,
   type StellarUsdcTrustlineReport,
   type XlmShieldSubmitReport,
 } from '@zk-fighter/core'
 import { browser } from 'wxt/browser'
 
-import type { ExtensionAspInsertRequest, ExtensionShieldRequest, ExtensionUsdcTrustlineRequest } from '../src/dappRuntime'
+import type {
+  ExtensionAspInsertRequest,
+  ExtensionBridgeRequest,
+  ExtensionShieldRequest,
+  ExtensionUsdcTrustlineRequest,
+} from '../src/dappRuntime'
 import { type DappRuntimeMessage } from '../src/dappMessages'
 import { ExtensionDappRuntime } from '../src/dappRuntime'
 
@@ -33,7 +45,7 @@ type MessagePayload = {
 export default defineBackground(() => {
   const dappRuntime = new ExtensionDappRuntime(
     runShieldInOffscreen,
-    openBridgeHandoffUrl,
+    runBridgeNatively,
     runAspInsertInOffscreen,
     runUsdcTrustlineInOffscreen,
   )
@@ -159,13 +171,32 @@ async function runUsdcTrustlineInOffscreen(
   })) as StellarUsdcTrustlineReport
 }
 
-async function openBridgeHandoffUrl(url: string): Promise<boolean> {
-  try {
-    await browser.tabs.create({ url })
-    return true
-  } catch {
-    return false
+// Native CCTP bridge — runs entirely in the background (no prover, no offscreen, no
+// web-app handoff). The seed-derived EVM key signs the approve+burn itself.
+async function runBridgeNatively(request: ExtensionBridgeRequest): Promise<CctpBridgeReport> {
+  const identity = deriveWalletIdentity(request.mnemonic, request.network)
+  const resumeHash = request.resumeBurnHash?.trim()
+  if (resumeHash) {
+    return resumeCctpBridgeToStellar({
+      identity,
+      network: request.network,
+      sourceChainKey: request.sourceChainKey,
+      evmBurnTxHash: resumeHash,
+    })
   }
+
+  await ensureStellarUsdcTrustline({ identity, network: request.network })
+  const source = getCctpSource(request.network, request.sourceChainKey)
+  if (!source) {
+    throw new Error(`No CCTP source configured for ${request.sourceChainKey}.`)
+  }
+  const evmClient = await createSeedEvmClient({ ['mnemonic']: request.mnemonic, chainIdHex: source.chainIdHex })
+  return runCctpBridgeToStellar({
+    identity,
+    network: request.network,
+    sourceChainKey: request.sourceChainKey,
+    evmClient,
+  })
 }
 
 async function sendOffscreenMessage(message: { readonly type: string; readonly [key: string]: unknown }): Promise<unknown> {

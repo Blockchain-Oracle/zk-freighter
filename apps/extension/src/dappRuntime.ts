@@ -1,12 +1,11 @@
 import {
   createEncryptedVault,
+  deriveEvmAddress,
   encodeReceiveCode,
-  freighterNetworkDetails,
-  freighterRequestSource,
-  freighterServiceTypes,
   unlockEncryptedVault,
   type AspMembershipInsertReport,
   type AssetCode,
+  type CctpBridgeReport,
   type CctpSourceKey,
   type FreighterBridgeRequest,
   type NetworkKey,
@@ -16,24 +15,16 @@ import {
 
 import {
   dappMessageTypes,
-  type BridgeHandoffResponse,
   type DappRuntimeMessage,
   type DappRuntimeResponse,
   type DappWalletStatus,
   type PrepareShieldAccessResponse,
   type PrepareUsdcReceiveResponse,
+  type QuickBridgeResponse,
   type QuickShieldResponse,
 } from './dappMessages'
-import {
-  externalDappUnsupportedMessage,
-  openExtensionSidePanel,
-  responseBase,
-  withError,
-} from './dappRuntimeHelpers'
+import { freighterResponse, openExtensionSidePanel } from './dappRuntimeHelpers'
 import { identityForMnemonic, readStoredDappWallet, writeStoredDappWallet } from './dappRuntimeState'
-import { bridgeUrl } from './bridge-url'
-
-const unsupportedSigningFields = { signedTransaction: '', signerAddress: '' } as const
 
 export interface ExtensionShieldRequest {
   readonly mnemonic: string
@@ -50,10 +41,17 @@ export interface ExtensionAspInsertRequest {
 
 export interface ExtensionUsdcTrustlineRequest { readonly mnemonic: string; readonly network: NetworkKey }
 
+export interface ExtensionBridgeRequest {
+  readonly mnemonic: string
+  readonly network: NetworkKey
+  readonly sourceChainKey: CctpSourceKey
+  readonly resumeBurnHash?: string
+}
+
 type ExtensionShieldRunner = (request: ExtensionShieldRequest) => Promise<XlmShieldSubmitReport>
 type ExtensionAspInsertRunner = (request: ExtensionAspInsertRequest) => Promise<AspMembershipInsertReport>
 type ExtensionUsdcTrustlineRunner = (request: ExtensionUsdcTrustlineRequest) => Promise<StellarUsdcTrustlineReport>
-type BridgeHandoffOpener = (url: string) => Promise<boolean>
+type ExtensionBridgeRunner = (request: ExtensionBridgeRequest) => Promise<CctpBridgeReport>
 
 interface MessageSender { readonly tab?: { readonly windowId?: number } }
 
@@ -62,7 +60,7 @@ export class ExtensionDappRuntime {
 
   constructor(
     private readonly runShield?: ExtensionShieldRunner,
-    private readonly openBridgeHandoffUrl?: BridgeHandoffOpener,
+    private readonly runBridge?: ExtensionBridgeRunner,
     private readonly runAspInsert?: ExtensionAspInsertRunner,
     private readonly runUsdcTrustline?: ExtensionUsdcTrustlineRunner,
   ) {}
@@ -88,8 +86,8 @@ export class ExtensionDappRuntime {
         return this.prepareUsdcReceive()
       case dappMessageTypes.quickShield:
         return this.quickShield(message.asset, message.amountStroops, message.timeoutMs)
-      case dappMessageTypes.openBridgeHandoff:
-        return this.openBridgeHandoff(message.resumeBurnHash, message.sourceChainKey)
+      case dappMessageTypes.quickBridge:
+        return this.quickBridge(message.sourceChainKey, message.resumeBurnHash)
       case dappMessageTypes.freighterRequest:
         void openExtensionSidePanel(sender?.tab?.windowId)
         return this.handleFreighterRequest(message.request)
@@ -135,40 +133,14 @@ export class ExtensionDappRuntime {
       network: state.network,
       publicKey: identity?.stellarPublicKey ?? '',
       privateReceiveCode: identity ? receiveCodeForIdentity(identity, state.network) : '',
+      evmAddress: this.unlockedMnemonic ? deriveEvmAddress(this.unlockedMnemonic) : '',
       ...(error === undefined ? {} : { error }),
     }
   }
 
   private async handleFreighterRequest(request: FreighterBridgeRequest) {
-    if (request.source !== freighterRequestSource) {
-      return null
-    }
-
     const state = await readStoredDappWallet()
-    const base = responseBase(request)
-    const details = freighterNetworkDetails(state.network)
-
-    switch (request.type) {
-      case freighterServiceTypes.requestConnectionStatus:
-        return { ...base, isConnected: true }
-      case freighterServiceTypes.requestNetwork:
-        return { ...base, network: details.network }
-      case freighterServiceTypes.requestNetworkDetails:
-        return { ...base, networkDetails: details }
-      case freighterServiceTypes.requestPublicKey:
-        return { ...base, publicKey: '' }
-      case freighterServiceTypes.requestAllowedStatus:
-        return { ...base, isAllowed: false }
-      case freighterServiceTypes.requestAccess:
-      case freighterServiceTypes.setAllowedStatus:
-        return withError(base, externalDappUnsupportedMessage)
-      case freighterServiceTypes.submitTransaction:
-      case freighterServiceTypes.submitAuthEntry:
-      case freighterServiceTypes.submitBlob:
-        return withError(base, externalDappUnsupportedMessage, unsupportedSigningFields)
-      default:
-        return null
-    }
+    return freighterResponse(request, state.network)
   }
 
   private async prepareShieldAccess(): Promise<PrepareShieldAccessResponse> {
@@ -261,23 +233,29 @@ export class ExtensionDappRuntime {
     return { ok: true, mnemonic: seedWords, network: state.network }
   }
 
-  private async openBridgeHandoff(
-    resumeBurnHash?: string,
-    sourceChainKey?: CctpSourceKey,
-  ): Promise<BridgeHandoffResponse> {
-    const state = await readStoredDappWallet()
-    const identity = identityForMnemonic(this.unlockedMnemonic, state)
-    if (!identity) {
-      return { ok: false, error: 'Unlock ZK Fighter before opening the bridge.' }
+  private async quickBridge(sourceChainKey: CctpSourceKey, resumeBurnHash?: string): Promise<QuickBridgeResponse> {
+    const ready = await this.requireUnlockedWallet()
+    if (!ready.ok) {
+      return ready
     }
 
-    const url = bridgeUrl(state.network, identity.stellarPublicKey, resumeBurnHash, sourceChainKey)
-    if (!this.openBridgeHandoffUrl) {
-      return { ok: false, url, error: 'Bridge handoff opener is unavailable.' }
+    if (!this.runBridge) {
+      return { ok: false, error: 'Extension native bridge runner is unavailable.' }
     }
 
-    const opened = await this.openBridgeHandoffUrl(url)
-    return opened ? { ok: true, url } : { ok: false, url, error: 'Could not open the web bridge tab.' }
+    try {
+      return {
+        ok: true,
+        report: await this.runBridge({
+          mnemonic: ready.mnemonic,
+          network: ready.network,
+          sourceChainKey,
+          resumeBurnHash,
+        }),
+      }
+    } catch (error) {
+      return { ok: false, error: error instanceof Error ? error.message : String(error) }
+    }
   }
 }
 
