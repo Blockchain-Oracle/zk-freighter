@@ -1,6 +1,7 @@
 export * from './amount'
 export * from './assets'
 export * from './asp-membership'
+export * from './confidential'
 export * from './asp-membership-insert'
 export * from './bytes'
 export * from './cctp-bridge'
