@@ -1,0 +1,14 @@
+{
+  "primitive": "dvk_from_vk_op",
+  "design_doc_refs": ["Section 4.4"],
+  "description": "Delegation viewing key: dvk_i = Poseidon2(DVK, vk, op_i).",
+  "vectors": [
+    {
+      "inputs": {
+        "vk": "0x208fbdb70d2faacf04f987b54f12aeeaeb432acc29d650c86ce0f6275b958eb8",
+        "op_i": "0xabcd"
+      },
+      "output": "0x1a088264ebf7269160bbf34d5a3f94d7dec37efc609ef76c5dbfa8690af3eae9"
+    }
+  ]
+}

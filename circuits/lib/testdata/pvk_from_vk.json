@@ -1,0 +1,14 @@
+{
+  "primitive": "pvk_from_vk",
+  "design_doc_refs": ["Section 4.3"],
+  "description": "Public viewing key PVK = vk*H. Inputs use the vk produced by vk_from_sk(0xdead, 0xbeef).",
+  "vectors": [
+    {
+      "inputs": { "vk": "0x208fbdb70d2faacf04f987b54f12aeeaeb432acc29d650c86ce0f6275b958eb8" },
+      "output": {
+        "x": "0x2e7421c0e86a4c8eed823edf851c364ecee448bf70eae2a95befe3dd9364cc45",
+        "y": "0x0b060655740aabef84e7305bb886b75da8d258f346381f03925d69645292fe7a"
+      }
+    }
+  ]
+}
