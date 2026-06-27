@@ -35,6 +35,14 @@ stellar contract invoke --id <VERIFIER> --network testnet -- \
 # -> true
 ```
 
+## Full register flow on-chain (our token contract) ✅
+- Confidential **token** deployed: `CDNN7XDLNAHE6BPS3CV3VJQLMUDBFULCEJFOKDGEGQ5N3O7QZ4YMLEF7` (admin=deployer, verifier=`CD5DMFWT…`, auditor=`CAMO6HGC…`, underlying=testnet USDC SAC `CBIELTK6…`).
+- `set_contract_field(addr_f)` bound — tx `f940364d4d39fa92501b76dbf91a933e075834e10ddc78bd574d12628730a56e`.
+- `register(account, auditor_id=0, public_inputs, proof)` with our real keccak proof → the contract enforced the `addr_f` binding, called the verifier registry, the verifier **accepted the proof**, and the account was stored. `is_registered(account)` → **true**.
+- This is the complete pipeline end-to-end: our key derivation → our proof → on-chain UltraHonk verification → contract state change. NOT a fixture; reproducible.
+
+> Note: for this run the bound `addr_f` was the value used in the proof's public input (a demo placeholder via the real `set_contract_field` binding mechanism). The hardened form binds `addr_f = Poseidon2(ADDRESS, lo, hi)` of the deployed token address — the exact Soroban address-compression split is the remaining detail (the binding *mechanism* is already real + enforced).
+
 ## Still to do (implementation)
 - Wire Keccak-oracle proving into `prover.ts` (the wallet's actual proof path).
 - Finish the token contract ops (register/deposit/merge/withdraw/transfer) + deploy the token; register the remaining 5 VKs.
