@@ -11,9 +11,10 @@
 //! Testnet-only (the UltraHonk verifier backend is an unaudited dev preview).
 
 use soroban_sdk::{
-    contract, contractclient, contracterror, contractimpl, contracttype, symbol_short, Address,
-    Bytes, BytesN, Env,
+    contract, contractclient, contracterror, contractimpl, contracttype, symbol_short, token,
+    Address, Bytes, BytesN, Env,
 };
+use stellar_contract_utils::crypto::grumpkin::{Grumpkin, Point};
 
 /// Fixed on-chain circuit identifiers — MUST match the verifier registry + circuits.
 #[contracttype]
@@ -37,6 +38,8 @@ pub enum Error {
     AddrFMismatch = 4,
     BadPublicInputs = 5,
     AlreadyRegistered = 6,
+    NegativeAmount = 7,
+    AccountNotRegistered = 8,
 }
 
 #[contracttype]
@@ -68,6 +71,11 @@ pub struct AccountState {
     /// Public viewing key PVK = vk*H (Grumpkin affine, x||y, 64 bytes).
     pub viewing_public_key: BytesN<64>,
     pub auditor_id: u32,
+    /// Spendable balance commitment C_spend = v*G + r*H (Pedersen point).
+    pub spendable_balance: Point,
+    /// Receiving balance commitment — incoming deposits/transfers accumulate here
+    /// until the owner merges them (griefing isolation).
+    pub receiving_balance: Point,
 }
 
 /// Cross-contract view of the verifier registry.
@@ -151,9 +159,57 @@ impl ConfidentialToken {
             .try_into()
             .map_err(|_| Error::BadPublicInputs)?;
 
-        let state = AccountState { spending_key, viewing_public_key, auditor_id };
+        let state = AccountState {
+            spending_key,
+            viewing_public_key,
+            auditor_id,
+            spendable_balance: Grumpkin::identity(&env),
+            receiving_balance: Grumpkin::identity(&env),
+        };
         env.storage().persistent().set(&DataKey::Account(account.clone()), &state);
         env.events().publish((symbol_short!("register"), account), auditor_id);
+        Ok(())
+    }
+
+    /// Public → confidential. The amount is public (this is the deposit boundary):
+    /// pull the underlying SAC in, then homomorphically add `amount·G` to the
+    /// recipient's receiving balance. No ZK proof — confidentiality starts at merge.
+    pub fn deposit(env: Env, from: Address, to: Address, amount: i128) -> Result<(), Error> {
+        from.require_auth();
+        if amount < 0 {
+            return Err(Error::NegativeAmount);
+        }
+        let config = Self::config_or_err(&env)?;
+        let mut data: AccountState = env
+            .storage()
+            .persistent()
+            .get(&DataKey::Account(to.clone()))
+            .ok_or(Error::AccountNotRegistered)?;
+
+        // Public boundary: move real tokens in. A failed transfer reverts the whole op.
+        token::TokenClient::new(&env, &config.underlying)
+            .transfer(&from, &env.current_contract_address(), &amount);
+
+        let c_dep = Grumpkin::mul(&env, &Grumpkin::generator(&env), amount as u128);
+        data.receiving_balance = Grumpkin::add(&env, &data.receiving_balance, &c_dep);
+        env.storage().persistent().set(&DataKey::Account(to.clone()), &data);
+        env.events().publish((symbol_short!("deposit"), from, to), amount);
+        Ok(())
+    }
+
+    /// Fold the receiving balance into the spendable balance (proof-less, owner-authed,
+    /// non-frontrunnable). Makes received funds spendable.
+    pub fn merge(env: Env, account: Address) -> Result<(), Error> {
+        account.require_auth();
+        let mut data: AccountState = env
+            .storage()
+            .persistent()
+            .get(&DataKey::Account(account.clone()))
+            .ok_or(Error::AccountNotRegistered)?;
+        data.spendable_balance = Grumpkin::add(&env, &data.spendable_balance, &data.receiving_balance);
+        data.receiving_balance = Grumpkin::identity(&env);
+        env.storage().persistent().set(&DataKey::Account(account.clone()), &data);
+        env.events().publish((symbol_short!("merge"), account), ());
         Ok(())
     }
 

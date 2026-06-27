@@ -1,6 +1,11 @@
 #![cfg(test)]
 
-use soroban_sdk::{contract, contractimpl, testutils::Address as _, Address, Bytes, BytesN, Env};
+use soroban_sdk::{
+    contract, contractimpl,
+    testutils::Address as _,
+    token::{StellarAssetClient, TokenClient},
+    Address, Bytes, BytesN, Env,
+};
 
 use crate::{CircuitType, ConfidentialToken, ConfidentialTokenClient, Error};
 
@@ -91,4 +96,51 @@ fn register_requires_contract_field_set() {
 
     let result = f.client.try_register(&account, &5u32, &pi, &proof);
     assert_eq!(result, Err(Ok(Error::ContractFieldNotSet)));
+}
+
+/// Full token wired to a real SAC underlying, with one registered account.
+fn setup_with_sac<'a>() -> (Env, ConfidentialTokenClient<'a>, Address, Address) {
+    let env = Env::default();
+    env.mock_all_auths();
+    let admin = Address::generate(&env);
+    let verifier = env.register(MockVerifier, ());
+    let auditor_registry = Address::generate(&env);
+    let sac_id = env.register_stellar_asset_contract_v2(admin).address();
+    let token_id = env.register(ConfidentialToken, (Address::generate(&env), verifier, auditor_registry, sac_id.clone()));
+    let client = ConfidentialTokenClient::new(&env, &token_id);
+    client.set_contract_field(&BytesN::<32>::from_array(&env, &[7u8; 32]));
+    let user = Address::generate(&env);
+    client.register(&user, &0u32, &register_public_inputs(&env, 7), &Bytes::from_array(&env, &[0u8; 32]));
+    (env, client, sac_id, user)
+}
+
+#[test]
+fn deposit_pulls_underlying_and_merge_runs() {
+    let (env, client, sac_id, user) = setup_with_sac();
+    StellarAssetClient::new(&env, &sac_id).mint(&user, &1000);
+
+    client.deposit(&user, &user, &250);
+
+    // Public boundary: the contract actually received the underlying tokens.
+    let sac = TokenClient::new(&env, &sac_id);
+    assert_eq!(sac.balance(&client.address), 250);
+    assert_eq!(sac.balance(&user), 750);
+
+    // Merge folds receiving into spendable (Grumpkin point add) without error.
+    client.merge(&user);
+    assert!(client.is_registered(&user));
+}
+
+#[test]
+fn deposit_rejects_negative_amount() {
+    let (_env, client, _sac, user) = setup_with_sac();
+    assert_eq!(client.try_deposit(&user, &user, &-1), Err(Ok(Error::NegativeAmount)));
+}
+
+#[test]
+fn deposit_requires_recipient_registered() {
+    let (env, client, sac_id, user) = setup_with_sac();
+    StellarAssetClient::new(&env, &sac_id).mint(&user, &1000);
+    let stranger = Address::generate(&env);
+    assert_eq!(client.try_deposit(&user, &stranger, &10), Err(Ok(Error::AccountNotRegistered)));
 }

@@ -9,6 +9,10 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 soroban-sdk = { workspace = true }
+# On-chain Grumpkin point math (homomorphic balance commitments). The Grumpkin
+# ops live only on OpenZeppelin's confidential preview branch (not the published
+# 0.7.1), so pin the upstream crate by rev — a normal Cargo git dep, not a copy.
+stellar-contract-utils = { git = "https://github.com/OpenZeppelin/stellar-contracts.git", rev = "539968f158e0d779f584de2821090f715a3b25e1" }
 
 [dev-dependencies]
 soroban-sdk = { workspace = true, features = ["testutils"] }
