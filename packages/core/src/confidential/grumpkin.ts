@@ -60,3 +60,17 @@ export function grumpkinScalarMul(scalar: bigint, point: GrumpkinAffine): Grumpk
 export function grumpkinEcdhSharedX(scalar: bigint, point: GrumpkinAffine): bigint {
   return grumpkinScalarMul(scalar, point).x
 }
+
+// noble's multiply rejects scalar 0; map a zero scalar to the identity so a
+// commitment to value 0 (or randomness 0) is well-defined.
+function mulOrIdentity(scalar: bigint, point: GrumpkinAffine) {
+  const reduced = ((scalar % GRUMPKIN_ORDER) + GRUMPKIN_ORDER) % GRUMPKIN_ORDER
+  return reduced === 0n ? GrumpkinPoint.ZERO : toPoint(point).multiply(reduced)
+}
+
+/** Pedersen commitment C = value*G + randomness*H on Grumpkin (design doc 2.3). */
+export function grumpkinCommit(value: bigint, randomness: bigint): GrumpkinAffine {
+  const sum = mulOrIdentity(value, GRUMPKIN_GENERATORS.G).add(mulOrIdentity(randomness, GRUMPKIN_GENERATORS.H))
+  const affine = sum.toAffine()
+  return { x: affine.x, y: affine.y }
+}
