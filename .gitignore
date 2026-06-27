@@ -20,3 +20,6 @@ dist/
 # Confidential circuits build output (reproducible via nargo compile)
 circuits/target/
 circuits/**/target/
+
+# Soroban contracts build output
+contracts/target/
