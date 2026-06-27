@@ -7,8 +7,9 @@ import { BN254_SCALAR_MODULUS } from '../bytes'
 // Independent reimplementation; pinned to the reference circuit by KAT.
 
 const GRUMPKIN_BASE_FIELD = BN254_SCALAR_MODULUS
-// BN254 base-field modulus = Grumpkin curve order.
-const GRUMPKIN_ORDER = 21888242871839275222246405745257275088696311157297823662689037894645226208583n
+// BN254 base-field modulus = Grumpkin curve order. Spending/viewing scalars must be
+// reduced into [1, GRUMPKIN_ORDER).
+export const GRUMPKIN_ORDER = 21888242871839275222246405745257275088696311157297823662689037894645226208583n
 const GRUMPKIN_B = GRUMPKIN_BASE_FIELD - 17n
 
 export interface GrumpkinAffine {
