@@ -15,10 +15,16 @@ interface ConfidentialRuntime {
 }
 
 interface ConfidentialBackend {
-  generateProof(witness: Uint8Array): Promise<ConfidentialProof>
-  verifyProof(proof: ConfidentialProof): Promise<boolean>
+  generateProof(witness: Uint8Array, options?: { keccak?: boolean }): Promise<ConfidentialProof>
+  verifyProof(proof: ConfidentialProof, options?: { keccak?: boolean }): Promise<boolean>
   destroy(): Promise<void>
 }
+
+// The on-chain rs-soroban-ultrahonk verifier uses a Keccak-256 Fiat–Shamir
+// transcript (verified on testnet 2026-06-27). bb's default proof uses Poseidon2,
+// which verifies in bb.js but is REJECTED on-chain — so every confidential proof,
+// which targets on-chain verify_proof, MUST be generated + checked with keccak.
+const ONCHAIN_PROOF_OPTIONS = { keccak: true } as const
 
 export interface CompiledCircuit {
   readonly bytecode: string
@@ -82,7 +88,7 @@ export async function generateConfidentialProof(circuit: CompiledCircuit, witnes
   const { UltraHonkBackend } = await getRuntime()
   const backend = new UltraHonkBackend(circuit.bytecode)
   try {
-    return await backend.generateProof(witness)
+    return await backend.generateProof(witness, ONCHAIN_PROOF_OPTIONS)
   } finally {
     await backend.destroy()
   }
@@ -93,7 +99,7 @@ export async function verifyConfidentialProof(circuit: CompiledCircuit, proof: C
   const { UltraHonkBackend } = await getRuntime()
   const backend = new UltraHonkBackend(circuit.bytecode)
   try {
-    return await backend.verifyProof(proof)
+    return await backend.verifyProof(proof, ONCHAIN_PROOF_OPTIONS)
   } finally {
     await backend.destroy()
   }
