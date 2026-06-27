@@ -107,7 +107,7 @@ The older prompt set is superseded:
 
 - `.thoughts/handoffs/2026-06-21-codex-build-prompts.md`
 
-Run phases linearly. Atomic bridge-and-shield is deferred; do not expose it as a normal MVP mode unless a concrete adapter path later passes real tests and transaction evidence is recorded. Extension proof/passkey claims require real Chrome runtime evidence. The current extension dApp profile is detection/network evidence only; external public-key access and signing must stay disabled unless Abu explicitly reverses that product decision after a new plan. Mainnet pool deployment, XLM/USDC QuickShield smokes, and XLM/USDC private-loop smokes are already approved and recorded; any new mainnet spend/deploy/publish still requires explicit Abu approval.
+Run phases linearly. Atomic bridge-and-shield is deferred; do not expose it as a normal MVP mode unless a concrete adapter path later passes real tests and transaction evidence is recorded. Extension proof/passkey claims require real Chrome runtime evidence. The current extension dApp profile is detection/network evidence only; external public-key access and signing must stay disabled unless Abu explicitly reverses that product decision after a new plan. Mainnet pool deployment, XLM/USDC QuickShield smokes, and XLM/USDC private-loop smokes are already approved and recorded. Mainnet is funded and mainnet spend/deploy is AUTHORIZED for producing real evidence (Abu, 2026-06-27) — do not gate on it; the only remaining mainnet pause is the final demo network posture.
 
 Confidential Tokens are a separate future track. If Abu asks to build them, first follow `.thoughts/plans/2026-06-24-confidential-token-wallet-mode-plan.md`: prove toolchain/browser proving, local opening recovery, and testnet transactions before changing product claims.
 
@@ -130,9 +130,10 @@ Confidential Tokens are a separate future track. If Abu asks to build them, firs
 - Tiny edits such as typo fixes, comments, copy-only tweaks that do not change claims, and narrow test-only cleanups can be batched into the nearest checkpoint review.
 - Report the review outcome to Abu with the test/build evidence. Do not claim a feature checkpoint complete without this review result.
 
+**Funding is DONE (Abu, 2026-06-27): both testnet AND mainnet accounts are funded.** Never pause for funding, never ask Abu to fund, never treat faucets as a blocker. Deploy + spend autonomously (testnet and mainnet) and record real evidence.
+
 Pause only for:
 
-- funding or private keys.
-- irreversible mainnet deploy/spend/publish.
-- final demo network posture.
+- a repo-public flip.
+- final demo network posture / recording the demo video.
 - conflict between real evidence and planned scope.

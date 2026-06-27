@@ -36,7 +36,7 @@ When Abu shares a link, GitHub repo, demo, or any resource, treat it as required
 - Do not claim "anonymous", "fully private", or "untraceable".
 - Do not use "registry" in primary UX copy; use plain language such as "Make my private code discoverable".
 
-Pause for Abu before funding, private keys, irreversible mainnet deploy/spend/publish, final demo network posture, or conflicts between real evidence and planned scope.
+**Funding is DONE — do not pause for it.** Both testnet AND mainnet accounts are funded (Abu, 2026-06-27). Never ask Abu to fund anything, never gate work on funding, and never treat free testnet faucets (friendbot / EVM faucets) as a blocker. Proceed with deploys + spend (testnet and mainnet) and record real evidence. Pause for Abu ONLY before: a repo-public flip, the final demo network posture, recording the demo video, or a genuine conflict between real evidence and planned scope. (Confidential Tokens stay testnet-only by sponsor/verifier-maturity constraint — that is a product rule, NOT a funding issue; testnet is the recommended demo surface.)
 
 ## Commands
 
@@ -91,5 +91,5 @@ Execution rules:
 - **Delete dead code as you migrate.** When a flow is rebuilt in the new design, remove the old implementation — never keep two versions, no orphaned files/CSS/helpers. The `WalletFlowPanels` "Developer · Demo evidence" quarantine is transitional only; delete each old panel once its redesigned screen lands.
 - **Review cadence:** after every ~2–3 features, run a focused review with the **pr-review-toolkit** sub-agents (e.g. `pr-review-toolkit:code-reviewer`, `pr-review-toolkit:silent-failure-hunter`, `pr-review-toolkit:pr-test-analyzer`) over the diff — sub-agents, not workflows. Fix Critical/Important findings before continuing.
 - Verify each feature with `pnpm lint && pnpm typecheck && pnpm test && pnpm build`, and check each screen against its prototype counterpart.
-- Surface to Abu any blocker needing his action (funding, private keys, mainnet spend, Apple developer account, repo-public flip, demo video).
+- Surface to Abu ONLY blockers that genuinely need him: an Apple Developer account (iOS), a repo-public flip, or the demo video. **Funding (testnet + mainnet) is already provided — do not block on it, and deploy/spend autonomously to produce real evidence.**
 
