@@ -263,6 +263,30 @@ fn transfer_verifies_overwrites_sender_and_credits_recipient() {
 }
 
 #[test]
+fn transfer_to_self_debits_and_credits_without_inflation() {
+    // Regression: from == to aliases one storage key. The spend debit (C_spend')
+    // must survive AND the receiving credit (C_tx) must apply — not clobber.
+    let (env, client, _sac, user) = setup_with_sac();
+    let payload = transfer_payload(&env);
+    let proof = Bytes::from_array(&env, &[0u8; 32]);
+
+    client.transfer(&user, &user, &payload, &proof);
+
+    let state = client.account(&user).unwrap();
+    assert_eq!(state.spendable_balance, payload.c_spend_new); // debit committed
+    // receiving started at identity (0); after a self-transfer it is exactly C_tx.
+    assert_eq!(state.receiving_balance, payload.c_tx);
+}
+
+#[test]
+fn set_contract_field_is_single_shot() {
+    let f = setup();
+    f.client.set_contract_field(&BytesN::<32>::from_array(&f.env, &[7u8; 32]));
+    let result = f.client.try_set_contract_field(&BytesN::<32>::from_array(&f.env, &[8u8; 32]));
+    assert_eq!(result, Err(Ok(Error::ContractFieldAlreadySet)));
+}
+
+#[test]
 fn transfer_requires_recipient_registered() {
     let (env, client, _sac, sender) = setup_with_sac();
     let stranger = Address::generate(&env);

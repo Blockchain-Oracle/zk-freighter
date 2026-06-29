@@ -41,6 +41,7 @@ pub enum Error {
     NegativeAmount = 7,
     AccountNotRegistered = 8,
     NonCanonicalEncoding = 9,
+    ContractFieldAlreadySet = 10,
 }
 
 #[contracttype]
@@ -147,6 +148,12 @@ impl ConfidentialToken {
     /// Poseidon2(ADDRESS, lo, hi) of the deployed address). Required before register.
     pub fn set_contract_field(env: Env, addr_f: BytesN<32>) -> Result<(), Error> {
         Self::config_or_err(&env)?.admin.require_auth();
+        // Single-shot: addr_f is the cross-instance proof-replay binding and is
+        // baked into every registered account's vk derivation. Overwriting it
+        // would silently invalidate every existing account, so refuse a second set.
+        if env.storage().instance().has(&DataKey::ContractField) {
+            return Err(Error::ContractFieldAlreadySet);
+        }
         env.storage().instance().set(&DataKey::ContractField, &addr_f);
         Ok(())
     }
@@ -357,7 +364,11 @@ impl ConfidentialToken {
             .persistent()
             .get(&DataKey::Account(from.clone()))
             .ok_or(Error::AccountNotRegistered)?;
-        let mut recipient: AccountState = env
+        // Read-only snapshot for public-input assembly (PVK_B, auditor_id). The
+        // receiving-balance credit is applied to a FRESH re-read below, so a
+        // self-transfer (from == to) composes on top of the sender write instead
+        // of clobbering it with this stale copy.
+        let recipient: AccountState = env
             .storage()
             .persistent()
             .get(&DataKey::Account(to.clone()))
@@ -417,9 +428,16 @@ impl ConfidentialToken {
 
         sender.spendable_balance = payload.c_spend_new;
         env.storage().persistent().set(&DataKey::Account(from.clone()), &sender);
-        recipient.receiving_balance =
-            Grumpkin::add(&env, &recipient.receiving_balance, &payload.c_tx);
-        env.storage().persistent().set(&DataKey::Account(to.clone()), &recipient);
+        // Re-read the recipient AFTER the sender write so a self-transfer sees the
+        // committed debit; for distinct accounts this is the same value as above.
+        let mut credited: AccountState = env
+            .storage()
+            .persistent()
+            .get(&DataKey::Account(to.clone()))
+            .ok_or(Error::AccountNotRegistered)?;
+        credited.receiving_balance =
+            Grumpkin::add(&env, &credited.receiving_balance, &payload.c_tx);
+        env.storage().persistent().set(&DataKey::Account(to.clone()), &credited);
 
         env.events().publish((symbol_short!("transfer"), from, to), ());
         Ok(())
