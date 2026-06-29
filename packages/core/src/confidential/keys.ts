@@ -42,6 +42,37 @@ export function deriveConfidentialSpendingKey(secret: Uint8Array): bigint {
   return reduced === 0n ? 1n : reduced
 }
 
+// A Stellar strkey (G… account / C… contract) is 56 ASCII chars; the address is
+// compressed to a single field as Poseidon2(ADDRESS, lo, hi) over two 28-byte
+// little-endian limbs of that strkey. This MUST match the contract's on-chain
+// `address_to_field` so a proof's addr_f equals the bound ContractField.
+const STRKEY_LEN = 56
+const STRKEY_LIMB_LEN = 28
+
+function leBytesToBigInt(bytes: Uint8Array): bigint {
+  let value = 0n
+  for (let i = bytes.length - 1; i >= 0; i -= 1) {
+    value = (value << 8n) | BigInt(bytes[i])
+  }
+  return value
+}
+
+/**
+ * Compress a Stellar address (strkey) into the BN254 field element used as a
+ * confidential token's `addr_f` — the per-instance binding every proof commits
+ * to. `Poseidon2(ADDRESS, lo, hi)` over the strkey's two little-endian 28-byte
+ * limbs, mirroring the contract's on-chain derivation.
+ */
+export async function addressToField(address: string): Promise<bigint> {
+  const buf = new TextEncoder().encode(address)
+  if (buf.length !== STRKEY_LEN) {
+    throw new Error(`expected a ${STRKEY_LEN}-char strkey, got ${buf.length}`)
+  }
+  const lo = leBytesToBigInt(buf.subarray(0, STRKEY_LIMB_LEN))
+  const hi = leBytesToBigInt(buf.subarray(STRKEY_LIMB_LEN, STRKEY_LEN))
+  return confidentialPoseidon2([CONFIDENTIAL_DOMAIN.ADDRESS, lo, hi])
+}
+
 /** R1: spending public key Y = sk * H. */
 export function spendingPublicKey(sk: bigint): GrumpkinAffine {
   return grumpkinScalarMul(sk, GRUMPKIN_GENERATORS.H)
