@@ -26,7 +26,7 @@ const invokeTimeoutSeconds = 120
 const defaultConfirmationPolls = 60
 const defaultPollIntervalMs = 2_000
 
-export type ConfidentialOp = 'deposit' | 'merge' | 'register'
+export type ConfidentialOp = 'deposit' | 'merge' | 'register' | 'withdraw' | 'transfer'
 export type ConfidentialSubmitStatus = 'submitted' | 'blocked' | 'failed'
 export type ConfidentialStage = 'readiness' | 'simulate' | 'submit' | 'confirm'
 
@@ -89,6 +89,37 @@ export async function readConfidentialRegistration(
     return scValToNative(simulated.result.retval) === true ? 'registered' : 'unregistered'
   } catch {
     return 'unavailable'
+  }
+}
+
+/**
+ * Read an auditor's Grumpkin public key (`K_aud`, 64 bytes) from the auditor
+ * registry by `auditorId`. Simulate-only. Returns null when gated off or on a
+ * read error. The withdraw/transfer witnesses need this exact key (the contract
+ * fetches the same one to rebuild the proof's public inputs).
+ */
+export async function readAuditorKey(
+  options: ConfidentialSubmitOptions & { readonly auditorId: number },
+): Promise<Uint8Array | null> {
+  const confidential = getConfidentialConfig(options.network)
+  if (!confidential) return null
+  const networkConfig = getNetworkConfig(options.network)
+  try {
+    const server = (options.serverFactory ?? defaultServerFactory)(networkConfig.rpcUrl)
+    const source = new Account(options.identity.stellarPublicKey, '0')
+    const tx = new TransactionBuilder(source, { fee: invokeFee, networkPassphrase: networkConfig.passphrase })
+      .addOperation(new Contract(confidential.auditorId).call('get_key', nativeToScVal(options.auditorId, { type: 'u32' })))
+      .setTimeout(invokeTimeoutSeconds)
+      .build()
+    const simulated = (await server.simulateTransaction(tx)) as {
+      error?: unknown
+      result?: { retval?: Parameters<typeof scValToNative>[0] }
+    }
+    if (simulated.error || !simulated.result?.retval) return null
+    const key = scValToNative(simulated.result.retval) as Uint8Array
+    return key instanceof Uint8Array && key.length === 64 ? key : null
+  } catch {
+    return null
   }
 }
 

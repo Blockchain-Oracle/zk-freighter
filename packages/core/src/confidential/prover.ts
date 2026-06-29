@@ -8,7 +8,10 @@
 // to drift. Pinned by KAT against the reference circuit testdata.
 
 interface ConfidentialRuntime {
-  readonly bb: { poseidon2Hash(inputs: readonly unknown[]): Promise<{ toBuffer(): Uint8Array }> }
+  readonly bb: {
+    poseidon2Hash(inputs: readonly unknown[]): Promise<{ toBuffer(): Uint8Array }>
+    poseidon2Permutation(inputs: readonly unknown[]): Promise<{ toBuffer(): Uint8Array }[]>
+  }
   readonly Fr: new (value: bigint) => unknown
   readonly UltraHonkBackend: new (bytecode: string) => ConfidentialBackend
   readonly Noir: new (circuit: CompiledCircuit) => { execute(inputs: Record<string, unknown>): Promise<{ witness: Uint8Array }> }
@@ -70,6 +73,18 @@ export async function confidentialPoseidon2(inputs: readonly bigint[]): Promise<
   const { bb, Fr } = await getRuntime()
   const result = await bb.poseidon2Hash(inputs.map((input) => new Fr(input)))
   return bytesToBigIntBE(result.toBuffer())
+}
+
+/**
+ * Raw bb Poseidon2 permutation over a width-4 state, returning every output
+ * field. The single-output `confidentialPoseidon2` hash can't serve the
+ * two-squeeze auditor sponge (which reads state[0] AND state[1] from one
+ * permutation), so that path goes through here.
+ */
+export async function confidentialPoseidon2Permutation(state: readonly bigint[]): Promise<bigint[]> {
+  const { bb, Fr } = await getRuntime()
+  const result = await bb.poseidon2Permutation(state.map((input) => new Fr(input)))
+  return result.map((field) => bytesToBigIntBE(field.toBuffer()))
 }
 
 /** Solve the circuit witness from named inputs (the @noir_js half of the path). */

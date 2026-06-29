@@ -7,8 +7,9 @@
 // with addr_f bound to the deployed token instance (design §7.2). The contract
 // then re-checks addr_f == its bound ContractField and gates on the proof.
 
-import { Address, Contract, nativeToScVal, xdr } from '@stellar/stellar-sdk'
+import { Address, Contract, nativeToScVal } from '@stellar/stellar-sdk'
 import { getConfidentialConfig } from './../networks'
+import { asScvBytes, fieldTo32BE } from './encoding'
 import { deriveConfidentialAccount, type ConfidentialAccountKeys } from './keys'
 import {
   executeConfidentialCircuit,
@@ -26,6 +27,9 @@ const FIELD_BYTES = 32
 //   y_x | y_y | pvk_x | pvk_y | addr_f
 const REGISTER_PUBLIC_INPUTS = 5
 
+// Re-exported for the register proof test + any caller needing the field encoder.
+export { fieldTo32BE }
+
 export interface RegisterProofResult {
   /// 160-byte public-input blob in the contract's canonical order.
   readonly publicInputs: Uint8Array
@@ -35,26 +39,8 @@ export interface RegisterProofResult {
   readonly keys: ConfidentialAccountKeys
 }
 
-/** Big-endian 32-byte encoding of a BN254 field element. */
-export function fieldTo32BE(value: bigint): Uint8Array {
-  let v = value
-  const out = new Uint8Array(FIELD_BYTES)
-  for (let i = FIELD_BYTES - 1; i >= 0; i -= 1) {
-    out[i] = Number(v & 0xffn)
-    v >>= 8n
-  }
-  return out
-}
-
 function toHex(value: bigint): string {
   return `0x${value.toString(16)}`
-}
-
-// js-xdr's scvBytes accepts a Uint8Array directly; the cast keeps us off the
-// Node `Buffer` global (which Vite externalizes for the browser). Mirrors the
-// `asScvBytesInput` pattern in cctp-stellar.ts.
-function asScvBytes(bytes: Uint8Array): xdr.ScVal {
-  return xdr.ScVal.scvBytes(bytes as Parameters<typeof xdr.ScVal.scvBytes>[0])
 }
 
 function concatFields(fields: readonly bigint[]): Uint8Array {
