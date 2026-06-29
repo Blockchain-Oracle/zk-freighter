@@ -128,6 +128,13 @@ const WITHDRAW_PUBLIC_INPUTS_LEN: u32 = 15 * FIELD;
 //   R_e | v_tilde | b_tilde | sigma | v_aud_r | r_aud_r | v_aud_s | b_aud_s
 const TRANSFER_PUBLIC_INPUTS_LEN: u32 = 24 * FIELD;
 
+// Persistent-storage TTL for account entries. Every read/write bumps the entry
+// ~30 days forward so an in-use confidential balance (and its underlying reserve)
+// can never be archived out from under its owner.
+const DAY_IN_LEDGERS: u32 = 17280;
+const ACCOUNT_EXTEND_AMOUNT: u32 = 30 * DAY_IN_LEDGERS;
+const ACCOUNT_TTL_THRESHOLD: u32 = ACCOUNT_EXTEND_AMOUNT - DAY_IN_LEDGERS;
+
 #[contract]
 pub struct ConfidentialToken;
 
@@ -212,7 +219,7 @@ impl ConfidentialToken {
             spendable_balance: Grumpkin::identity(&env),
             receiving_balance: Grumpkin::identity(&env),
         };
-        env.storage().persistent().set(&DataKey::Account(account.clone()), &state);
+        Self::save_account(&env, &account, &state);
         env.events().publish((symbol_short!("register"), account), auditor_id);
         Ok(())
     }
@@ -226,11 +233,7 @@ impl ConfidentialToken {
             return Err(Error::NegativeAmount);
         }
         let config = Self::config_or_err(&env)?;
-        let mut data: AccountState = env
-            .storage()
-            .persistent()
-            .get(&DataKey::Account(to.clone()))
-            .ok_or(Error::AccountNotRegistered)?;
+        let mut data = Self::load_account(&env, &to)?;
 
         // Public boundary: move real tokens in. A failed transfer reverts the whole op.
         token::TokenClient::new(&env, &config.underlying)
@@ -238,7 +241,7 @@ impl ConfidentialToken {
 
         let c_dep = Grumpkin::mul(&env, &Grumpkin::generator(&env), amount as u128);
         data.receiving_balance = Grumpkin::add(&env, &data.receiving_balance, &c_dep);
-        env.storage().persistent().set(&DataKey::Account(to.clone()), &data);
+        Self::save_account(&env, &to, &data);
         env.events().publish((symbol_short!("deposit"), from, to), amount);
         Ok(())
     }
@@ -247,14 +250,10 @@ impl ConfidentialToken {
     /// non-frontrunnable). Makes received funds spendable.
     pub fn merge(env: Env, account: Address) -> Result<(), Error> {
         account.require_auth();
-        let mut data: AccountState = env
-            .storage()
-            .persistent()
-            .get(&DataKey::Account(account.clone()))
-            .ok_or(Error::AccountNotRegistered)?;
+        let mut data = Self::load_account(&env, &account)?;
         data.spendable_balance = Grumpkin::add(&env, &data.spendable_balance, &data.receiving_balance);
         data.receiving_balance = Grumpkin::identity(&env);
-        env.storage().persistent().set(&DataKey::Account(account.clone()), &data);
+        Self::save_account(&env, &account, &data);
         env.events().publish((symbol_short!("merge"), account), ());
         Ok(())
     }
@@ -284,11 +283,7 @@ impl ConfidentialToken {
             return Err(Error::NegativeAmount);
         }
         let config = Self::config_or_err(&env)?;
-        let account: AccountState = env
-            .storage()
-            .persistent()
-            .get(&DataKey::Account(from.clone()))
-            .ok_or(Error::AccountNotRegistered)?;
+        let account = Self::load_account(&env, &from)?;
         let addr_f: BytesN<32> = env
             .storage()
             .instance()
@@ -333,7 +328,7 @@ impl ConfidentialToken {
         // boundary. A failed token transfer reverts the whole op.
         let mut data = account;
         data.spendable_balance = c_spend_new;
-        env.storage().persistent().set(&DataKey::Account(from.clone()), &data);
+        Self::save_account(&env, &from, &data);
 
         token::TokenClient::new(&env, &config.underlying)
             .transfer(&env.current_contract_address(), &to, &amount);
@@ -359,20 +354,12 @@ impl ConfidentialToken {
     ) -> Result<(), Error> {
         from.require_auth();
         let config = Self::config_or_err(&env)?;
-        let mut sender: AccountState = env
-            .storage()
-            .persistent()
-            .get(&DataKey::Account(from.clone()))
-            .ok_or(Error::AccountNotRegistered)?;
+        let mut sender = Self::load_account(&env, &from)?;
         // Read-only snapshot for public-input assembly (PVK_B, auditor_id). The
         // receiving-balance credit is applied to a FRESH re-read below, so a
         // self-transfer (from == to) composes on top of the sender write instead
         // of clobbering it with this stale copy.
-        let recipient: AccountState = env
-            .storage()
-            .persistent()
-            .get(&DataKey::Account(to.clone()))
-            .ok_or(Error::AccountNotRegistered)?;
+        let recipient = Self::load_account(&env, &to)?;
         let addr_f: BytesN<32> = env
             .storage()
             .instance()
@@ -427,17 +414,13 @@ impl ConfidentialToken {
         }
 
         sender.spendable_balance = payload.c_spend_new;
-        env.storage().persistent().set(&DataKey::Account(from.clone()), &sender);
+        Self::save_account(&env, &from, &sender);
         // Re-read the recipient AFTER the sender write so a self-transfer sees the
         // committed debit; for distinct accounts this is the same value as above.
-        let mut credited: AccountState = env
-            .storage()
-            .persistent()
-            .get(&DataKey::Account(to.clone()))
-            .ok_or(Error::AccountNotRegistered)?;
+        let mut credited = Self::load_account(&env, &to)?;
         credited.receiving_balance =
             Grumpkin::add(&env, &credited.receiving_balance, &payload.c_tx);
-        env.storage().persistent().set(&DataKey::Account(to.clone()), &credited);
+        Self::save_account(&env, &to, &credited);
 
         env.events().publish((symbol_short!("transfer"), from, to), ());
         Ok(())
@@ -457,6 +440,25 @@ impl ConfidentialToken {
 
     fn config_or_err(env: &Env) -> Result<Config, Error> {
         env.storage().instance().get(&DataKey::Config).ok_or(Error::NotConfigured)
+    }
+
+    /// Load a registered account, extending its persistent TTL on the way out.
+    fn load_account(env: &Env, account: &Address) -> Result<AccountState, Error> {
+        let key = DataKey::Account(account.clone());
+        let state = env
+            .storage()
+            .persistent()
+            .get(&key)
+            .ok_or(Error::AccountNotRegistered)?;
+        env.storage().persistent().extend_ttl(&key, ACCOUNT_TTL_THRESHOLD, ACCOUNT_EXTEND_AMOUNT);
+        Ok(state)
+    }
+
+    /// Persist an account and extend its TTL (writes don't auto-extend).
+    fn save_account(env: &Env, account: &Address, state: &AccountState) {
+        let key = DataKey::Account(account.clone());
+        env.storage().persistent().set(&key, state);
+        env.storage().persistent().extend_ttl(&key, ACCOUNT_TTL_THRESHOLD, ACCOUNT_EXTEND_AMOUNT);
     }
 }
 
