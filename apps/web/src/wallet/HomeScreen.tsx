@@ -51,6 +51,7 @@ export function HomeScreen({ identity, balance, onNav }: HomeScreenProps) {
     { label: 'Receive', glyph: '↓', screen: 'receive' },
     { label: 'Shield', glyph: '↧', screen: 'shield' },
     { label: 'Unshield', glyph: '↥', screen: 'unshield' },
+    { label: 'Confidential', glyph: '◈', screen: 'confidential' },
   ]
 
   return (

@@ -12,6 +12,7 @@ import { UnshieldScreen } from './UnshieldScreen'
 import { DiscoverScreen } from './DiscoverScreen'
 import { BridgeScreen } from './BridgeScreen'
 import { DisclosureScreen } from './DisclosureScreen'
+import { ConfidentialScreen } from './ConfidentialScreen'
 import { useShieldedBalance } from './useShieldedBalance'
 import type { WalletScreen } from './screens'
 
@@ -19,6 +20,7 @@ const NAV: { id: WalletScreen; label: string; glyph: string }[] = [
   { id: 'home', label: 'Home', glyph: '⌂' },
   { id: 'activity', label: 'Activity', glyph: '≋' },
   { id: 'receive', label: 'Receive', glyph: '↓' },
+  { id: 'confidential', label: 'Confidential', glyph: '◈' },
   { id: 'disclosure', label: 'Disclosure', glyph: '✓' },
   { id: 'settings', label: 'Settings', glyph: '⚙' },
 ]
@@ -144,6 +146,7 @@ export function WalletShell({
         {screen === 'discover' ? <DiscoverScreen identity={identity} network={network} onNav={setScreen} /> : null}
         {screen === 'bridge' ? <BridgeScreen identity={identity} network={network} balance={balance} onNav={setScreen} /> : null}
         {screen === 'disclosure' ? <DisclosureScreen identity={identity} network={network} balance={balance} onNav={setScreen} /> : null}
+        {screen === 'confidential' ? <ConfidentialScreen identity={identity} network={network} onNav={setScreen} /> : null}
         {screen === 'activity' ? <ActivityScreen balance={balance} /> : null}
         {screen === 'receive' ? <ReceiveScreen identity={identity} network={network} receiveCode={receiveCode} onNav={setScreen} /> : null}
         {screen === 'settings' ? (

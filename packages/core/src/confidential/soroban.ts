@@ -9,12 +9,14 @@
 // with a status-event stream the UI renders as a progress timeline.
 
 import {
+  Account,
   Address,
   Contract,
   Transaction,
   TransactionBuilder,
   nativeToScVal,
   rpc,
+  scValToNative,
 } from '@stellar/stellar-sdk'
 import { deriveWalletKeypair, type WalletIdentity } from './../identity'
 import { getConfidentialConfig, getNetworkConfig, type NetworkKey } from './../networks'
@@ -51,6 +53,43 @@ interface ConfidentialSorobanServer {
   simulateTransaction(transaction: Transaction): Promise<unknown>
   sendTransaction(transaction: Transaction): Promise<{ status?: string; hash?: string }>
   getTransaction(hash: string): Promise<{ status?: string }>
+}
+
+export type ConfidentialRegistration = 'registered' | 'unregistered' | 'unavailable' | 'gated'
+
+/// Read whether `account` (defaults to the caller) is registered for confidential
+/// mode on-chain. Simulate-only — no transaction is submitted. Returns 'gated'
+/// when the network has no confidential deployment, 'unavailable' on read error.
+export async function readConfidentialRegistration(
+  options: ConfidentialSubmitOptions & { readonly account?: string },
+): Promise<ConfidentialRegistration> {
+  const confidential = getConfidentialConfig(options.network)
+  if (!confidential) return 'gated'
+  const networkConfig = getNetworkConfig(options.network)
+  const account = options.account ?? options.identity.stellarPublicKey
+  try {
+    const server = (options.serverFactory ?? defaultServerFactory)(networkConfig.rpcUrl)
+    // A read is a simulate of a view call; the source account only needs to exist
+    // for the builder, so a throwaway sequence is fine — nothing is signed/sent.
+    const source = new Account(account, '0')
+    const tx = new TransactionBuilder(source, {
+      fee: invokeFee,
+      networkPassphrase: networkConfig.passphrase,
+    })
+      .addOperation(
+        new Contract(confidential.tokenId).call('is_registered', Address.fromString(account).toScVal()),
+      )
+      .setTimeout(invokeTimeoutSeconds)
+      .build()
+    const simulated = (await server.simulateTransaction(tx)) as {
+      error?: unknown
+      result?: { retval?: Parameters<typeof scValToNative>[0] }
+    }
+    if (simulated.error || !simulated.result?.retval) return 'unavailable'
+    return scValToNative(simulated.result.retval) === true ? 'registered' : 'unregistered'
+  } catch {
+    return 'unavailable'
+  }
 }
 
 export interface ConfidentialSubmitOptions {
