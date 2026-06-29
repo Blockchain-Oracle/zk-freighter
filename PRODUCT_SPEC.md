@@ -47,12 +47,16 @@ Think of a **shared frosted-glass pot** that many people pay into and out of.
 
 A *different* flavor of privacy. Here the **addresses stay public, but the amounts and balances are hidden**. Your balance lives on-chain as an encrypted commitment; only you (and an auditor you're bound to) can read it. Operations: **register** your confidential account once, **deposit** public USDC in, **merge** received funds into your spendable balance, **transfer** confidentially to another account, **withdraw** back to public USDC. A confidential **transfer reveals no amount on-chain** — only a commitment moves.
 
+A subtlety worth designing around: a deposit (or an incoming transfer) lands in a separate **receiving** balance, *not* directly spendable — the user must **merge** it before they can spend. That's why the screen shows *"+… received · merge to spend."* (Deposit and merge need no proof; withdraw and transfer each require an on-chain-verified ZK proof.)
+
+> **Designed but NOT built — delegated spending:** the confidential design also includes a **spender / encrypted-allowance** model (an owner grants a spender a hidden allowance, the spender transfers within it, the owner revokes). The Noir circuits are written and their verification keys are committed (`set_spender`, `spender_transfer`, `revoke_spender`; reserved on-chain `CircuitType` ordinals 3–5), but **there is no contract method and no wallet UI for it yet**. Do not design spender flows as if they exist — flag them only as a future capability if asked.
+
 > **Two modes, opposite emphasis:** Shielded Pools hide **who-paid-whom**; Confidential Tokens hide **how-much**. Same wallet, same seed, different tool for different needs.
 
 ### Proving — where it runs and how long
 
 - **All proving happens on the user's own device, in the browser** (lazy-loaded WebAssembly, off the main thread for the pool path). **Nothing is uploaded** — no server sees your secrets.
-- Mode A uses the **Nethermind privacy-pool prover** (Noir/Barretenberg, BN254 curve). Mode B uses **UltraHonk via `bb.js`** (Noir, Grumpkin keys) — these circuits are **vendored from the OpenZeppelin / Stellar Development Foundation Confidential Tokens preview**, not authored here.
+- Mode A uses the **Nethermind privacy-pool prover** (Noir/Barretenberg, BN254 curve). Mode B uses **UltraHonk via `bb.js`** (Noir, Grumpkin keys). For Mode B, the **Noir circuits are vendored** from the OpenZeppelin / Stellar Development Foundation Confidential Tokens preview, but the **Soroban contract itself (`contracts/confidential-token/`) is original ZK Fighter work** — a SEP-41-shaped wrapper that gates every state change through the on-chain UltraHonk verifier. Each account's storage **auto-extends ~30 days on every read/write**, so an in-use confidential balance can't be archived out from under its owner.
 - **Timing:** a few seconds to tens of seconds, **hardware-dependent**. The recorded evidence for a dry XLM deposit proof is **~5.5 seconds** (`~5,477 ms`, plus ~0.8s browser warm-up). Treat proving as a **first-class, blocking UI moment** — the user must keep the tab open while it runs.
 - **What a proof actually proves:** for a spend, *"I own a note worth at least this amount, it's really in the pool, and I haven't spent it"* — without revealing the note, its value, or the key. For a disclosure, *"I own this specific note"* — read-only, no spend power, no amount leaked.
 
@@ -267,10 +271,11 @@ Track C. Navigation and flows are intended to mirror the web app on a phone canv
 - `packages/core/src/networks.ts` — networks, pool IDs, CCTP + confidential wiring
 - `packages/core/src/receive-code.ts` — the `zkf1…` code format
 - `packages/core/src/xlm-shield.ts`, `xlm-private.ts`, `disclosure.ts` — Mode A (pools)
-- `packages/core/src/confidential/*` — Mode B (confidential tokens)
+- `packages/core/src/confidential/*` — Mode B (confidential tokens): `keys.ts`, `register.ts`, `withdraw.ts`, `transfer.ts`, `receive.ts`, `balance-state.ts`, `prover.ts`, `grumpkin.ts`, `poseidon2.ts` (note its reserved `DELEGATION_VIEWING_KEY` / `ENCRYPTED_ALLOWANCE` domains — the unbuilt spender feature)
 - `packages/core/src/cctp-bridge.ts` — the bridge
-- `circuits/` (+ `circuits/ATTRIBUTION.md`) — the Noir circuits (vendored from OpenZeppelin/SDF)
-- `contracts/confidential-token/` — the confidential-token Soroban contract
+- `circuits/` — the Noir circuits: `register`, `withdraw`, `transfer` (built + used) and `set_spender`, `spender_transfer`, `revoke_spender` (built, **not yet wired**); compiled VKs in `circuits/vks/`; provenance in `circuits/ATTRIBUTION.md` (vendored from OpenZeppelin/SDF, `nargo 1.0.0-beta.11` / `bb 0.87.0`)
+- `contracts/confidential-token/src/lib.rs` — the Soroban contract (ZK Fighter–authored). Read it to see exactly which ops exist: `register`, `deposit`, `merge`, `withdraw`, `transfer` (+ admin `set_contract_field`, views `config`/`is_registered`/`account`). The `CircuitType` enum reserves `SpenderTransfer`/`SetSpender`/`RevokeSpender` but **no methods implement them**.
+- `scripts/` — the real evidence/CI harness (not product UI): `check-extension-quickshield.mjs`, `check-mainnet-private-loop.mjs`, `cctp-bridge-source-flow.ts`, `secret-scan.mjs`, `check-file-size.mjs`, etc. — proof that the flows actually run on-chain.
 
 **Real on-chain evidence (proof these flows actually run):**
 - `.thoughts/research/spikes-log.md` — hashes, balances, timings, explorer links
@@ -298,6 +303,7 @@ The existing surfaces share one token set (`packages/ui/src/tokens.ts`). You're 
 | Private receive codes (`zkf1…`) + discover | ✅ Shipped |
 | Passkey unlock (optional) | ✅ Shipped |
 | Confidential tokens (register/deposit/merge/withdraw/transfer) | ✅ Shipped — **testnet only** (unaudited verifier) |
+| Confidential **delegated spending** (set/transfer/revoke spender) | 🚧 Circuits + VKs committed, ordinals reserved — **no contract method or UI yet** |
 | CCTP bridge-then-shield (4 EVM sources) | ✅ Shipped on **testnet**; mainnet wired but **not yet claimed** |
 | Extension: QuickShield + native bridge + receive | ✅ Shipped (companion scope) |
 | Extension: private send / unshield UI | 🚧 Backend exists, **no UI yet** |
