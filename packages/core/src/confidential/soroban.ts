@@ -123,6 +123,46 @@ export async function readAuditorKey(
   }
 }
 
+export interface ConfidentialAccountView {
+  /// Public viewing key PVK (Grumpkin affine, 64 bytes) — the transfer ECDH target.
+  readonly viewingPublicKey: Uint8Array
+  readonly auditorId: number
+}
+
+/**
+ * Read a registered account's public viewing key + auditor id from the token
+ * contract (`account(addr)` view). Simulate-only. Returns null when the account
+ * isn't registered, gated off, or on a read error.
+ */
+export async function readConfidentialAccount(
+  options: ConfidentialSubmitOptions & { readonly account: string },
+): Promise<ConfidentialAccountView | null> {
+  const confidential = getConfidentialConfig(options.network)
+  if (!confidential) return null
+  const networkConfig = getNetworkConfig(options.network)
+  try {
+    const server = (options.serverFactory ?? defaultServerFactory)(networkConfig.rpcUrl)
+    const source = new Account(options.identity.stellarPublicKey, '0')
+    const tx = new TransactionBuilder(source, { fee: invokeFee, networkPassphrase: networkConfig.passphrase })
+      .addOperation(new Contract(confidential.tokenId).call('account', Address.fromString(options.account).toScVal()))
+      .setTimeout(invokeTimeoutSeconds)
+      .build()
+    const simulated = (await server.simulateTransaction(tx)) as {
+      error?: unknown
+      result?: { retval?: Parameters<typeof scValToNative>[0] }
+    }
+    if (simulated.error || !simulated.result?.retval) return null
+    const account = scValToNative(simulated.result.retval) as
+      | { viewing_public_key?: Uint8Array; auditor_id?: number }
+      | null
+    const viewingPublicKey = account?.viewing_public_key
+    if (!(viewingPublicKey instanceof Uint8Array) || viewingPublicKey.length !== 64) return null
+    return { viewingPublicKey, auditorId: Number(account?.auditor_id ?? 0) }
+  } catch {
+    return null
+  }
+}
+
 export interface ConfidentialSubmitOptions {
   readonly identity: WalletIdentity
   readonly network: NetworkKey
