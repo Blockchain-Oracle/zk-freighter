@@ -50,6 +50,13 @@ function toHex(value: bigint): string {
   return `0x${value.toString(16)}`
 }
 
+// js-xdr's scvBytes accepts a Uint8Array directly; the cast keeps us off the
+// Node `Buffer` global (which Vite externalizes for the browser). Mirrors the
+// `asScvBytesInput` pattern in cctp-stellar.ts.
+function asScvBytes(bytes: Uint8Array): xdr.ScVal {
+  return xdr.ScVal.scvBytes(bytes as Parameters<typeof xdr.ScVal.scvBytes>[0])
+}
+
 function concatFields(fields: readonly bigint[]): Uint8Array {
   const out = new Uint8Array(fields.length * FIELD_BYTES)
   fields.forEach((field, index) => {
@@ -120,8 +127,8 @@ export async function submitConfidentialRegister(
       'register',
       Address.fromString(account).toScVal(),
       nativeToScVal(auditorId, { type: 'u32' }),
-      xdr.ScVal.scvBytes(Buffer.from(publicInputs)),
-      xdr.ScVal.scvBytes(Buffer.from(proof)),
+      asScvBytes(publicInputs),
+      asScvBytes(proof),
     ),
   )
 }
