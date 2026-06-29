@@ -35,7 +35,9 @@ const offscreenInsertAspMessageType = 'zkf.offscreen.insertAspMembership'
 const offscreenPrepareUsdcReceiveMessageType = 'zkf.offscreen.prepareUsdcReceive'
 const privateTransferMessageType = 'zkf.extension.privateTransfer'
 const unshieldWithdrawalMessageType = 'zkf.extension.unshieldWithdrawal'
+const confidentialRegisterMessageType = 'zkf.extension.confidentialRegister'
 const offscreenPrivateTransferMessageType = 'zkf.offscreen.privateTransfer'
+const offscreenConfidentialRegisterMessageType = 'zkf.offscreen.confidentialRegister'
 const offscreenUnshieldWithdrawalMessageType = 'zkf.offscreen.unshieldWithdrawal'
 
 type MessagePayload = {
@@ -112,6 +114,14 @@ export default defineBackground(() => {
 
     if (payload.type === aspInsertAndDryProofMessageType) {
       void sendOffscreenMessage({ type: 'zkf.offscreen.aspInsertAndDryProof' }).then(sendResponse, (error: unknown) => {
+        sendResponse({ ok: false, error: error instanceof Error ? error.message : String(error) })
+      })
+      return true
+    }
+
+    if (payload.type === confidentialRegisterMessageType) {
+      // De-risk: prove bb.js UltraHonk proving works in the MV3 offscreen document.
+      void sendOffscreenMessage({ ...payload, type: offscreenConfidentialRegisterMessageType }).then(sendResponse, (error: unknown) => {
         sendResponse({ ok: false, error: error instanceof Error ? error.message : String(error) })
       })
       return true
