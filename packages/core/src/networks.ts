@@ -92,15 +92,16 @@ export const NETWORKS = {
       },
     },
     confidential: {
-      // Hardened token (withdraw/transfer/TTL/single-shot addr_f); supersedes the
-      // earlier CDNN7XDL… instance which bound a demo-placeholder addr_f.
-      tokenId: 'CDKQ7UR75QR7PEKBBPX7DYZAERK5N2OHRTASH7KETNKO43BKQDJ6QONL',
+      // Hardened token; transfer now emits the recipient-channel ciphertext
+      // (r_e, v_tilde, sigma) so recipients can scan + decrypt incoming funds.
+      // Supersedes CDKQ7UR7… (no event) and the placeholder-addr_f CDNN7XDL….
+      tokenId: 'CBNL4THDSDDZ5OWPVLJPDBQGQ4FDH6LHBBFUBPRDNLUCIV2LKCHEVJ4F',
       verifierId: 'CD5DMFWTPW6SLA5TAUNU2TLAZ2ZFXCKGR2PBS4KHQ4P56EOIASRSTUGG',
       auditorId: 'CAMO6HGCK3EGQX7IEOAO555MPXNQ6UVFI46Y34CYQRWS4HLXOAQ5SDGO',
       underlyingSacId: 'CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA',
       underlyingCode: 'USDC',
       underlyingDecimals: 7,
-      addrFHex: '1d5fbd32cfcbc206121fda68f64527a8b8626d83ddbbcd623903a8c0b0743234',
+      addrFHex: '187a102833dc97bc4c211264d209758bab38eeb1945fa79dc9133ceda7a0204e',
     },
     cctp: {
       domain: 27,

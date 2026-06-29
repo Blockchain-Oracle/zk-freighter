@@ -4,41 +4,55 @@
 // derived from vk + a per-op random sigma the wallet chooses), so the wallet
 // tracks (v, r) itself across its own ops.
 //
-// Invariant tie to the contract:
-//   - deposit adds amount·G to the RECEIVING balance (no blinding) → receivingV += amount
-//   - merge folds receiving into spendable homomorphically, leaving r unchanged → v += receivingV
-//   - withdraw/transfer replace spendable with commit(v−x, r') where r' = derive_spend_r(vk, sigma)
+// Invariant tie to the contract (Pedersen commitments add homomorphically, so
+//   commit(v_s,r_s) + commit(v_tx,r_tx) = commit(v_s+v_tx, r_s+r_tx) mod the
+//   Grumpkin group order):
+//   - deposit adds amount·G to RECEIVING (no blinding) → receiving.v += amount
+//   - an incoming transfer adds commit(v_tx, r_tx) → receiving.{v,r} += {v_tx, r_tx}
+//   - merge folds receiving into spendable → spendable.{v,r} += receiving.{v,r}
+//   - withdraw/transfer replace spendable with commit(v−x, r') where r' = derive_spend_r
 //
-// This mirrors only the wallet's OWN operations. Incoming transfers (scanning +
-// decrypting C_tx into receivingV) and cross-device sync are not handled here.
+// This mirrors only the wallet's OWN operations + transfers it has decrypted via
+// the receive path; cross-device sync is not handled here.
 
-const STORAGE_PREFIX = 'zkf:confidential:balance:v1'
+import { GRUMPKIN_ORDER } from './grumpkin'
 
-export interface SpendableState {
-  /** Plaintext spendable value in underlying base units. */
+const STORAGE_PREFIX = 'zkf:confidential:balance:v2'
+
+const modOrder = (value: bigint): bigint => ((value % GRUMPKIN_ORDER) + GRUMPKIN_ORDER) % GRUMPKIN_ORDER
+
+export interface CommitmentState {
+  /** Plaintext value in underlying base units. */
   readonly v: bigint
-  /** Pedersen blinding of the on-chain spendable commitment (0 until first spend). */
+  /** Pedersen blinding of the on-chain commitment (0 until a transfer/spend adds one). */
   readonly r: bigint
 }
+/** @deprecated alias kept for callers — spendable + receiving share this shape. */
+export type SpendableState = CommitmentState
 
 export interface ConfidentialBalance {
-  readonly spendable: SpendableState
-  /** Plaintext value sitting in the receiving balance, awaiting a merge. */
-  readonly receivingV: bigint
+  readonly spendable: CommitmentState
+  /** Funds (deposits + decrypted incoming transfers) awaiting a merge. */
+  readonly receiving: CommitmentState
 }
 
-export const ZERO_BALANCE: ConfidentialBalance = { spendable: { v: 0n, r: 0n }, receivingV: 0n }
+export const ZERO_BALANCE: ConfidentialBalance = { spendable: { v: 0n, r: 0n }, receiving: { v: 0n, r: 0n } }
 
 /** A deposit of `amount` lands in the receiving balance (no blinding). */
 export function afterDeposit(balance: ConfidentialBalance, amount: bigint): ConfidentialBalance {
-  return { ...balance, receivingV: balance.receivingV + amount }
+  return { ...balance, receiving: { v: balance.receiving.v + amount, r: balance.receiving.r } }
 }
 
-/** Merge folds the receiving value into spendable; the blinding `r` is preserved. */
+/** A decrypted incoming transfer adds commit(v_tx, r_tx) to the receiving balance. */
+export function afterReceive(balance: ConfidentialBalance, vTx: bigint, rTx: bigint): ConfidentialBalance {
+  return { ...balance, receiving: { v: balance.receiving.v + vTx, r: modOrder(balance.receiving.r + rTx) } }
+}
+
+/** Merge folds receiving into spendable, summing both value and blinding. */
 export function afterMerge(balance: ConfidentialBalance): ConfidentialBalance {
   return {
-    spendable: { v: balance.spendable.v + balance.receivingV, r: balance.spendable.r },
-    receivingV: 0n,
+    spendable: { v: balance.spendable.v + balance.receiving.v, r: modOrder(balance.spendable.r + balance.receiving.r) },
+    receiving: { v: 0n, r: 0n },
   }
 }
 
@@ -48,18 +62,20 @@ export function afterSpend(balance: ConfidentialBalance, amount: bigint, newR: b
 }
 
 export function serializeBalance(balance: ConfidentialBalance): string {
-  return JSON.stringify({
-    spendable: { v: balance.spendable.v.toString(), r: balance.spendable.r.toString() },
-    receivingV: balance.receivingV.toString(),
-  })
+  const c = (s: CommitmentState) => ({ v: s.v.toString(), r: s.r.toString() })
+  return JSON.stringify({ spendable: c(balance.spendable), receiving: c(balance.receiving) })
 }
 
 export function deserializeBalance(raw: string): ConfidentialBalance {
-  const parsed = JSON.parse(raw) as { spendable: { v: string; r: string }; receivingV: string }
-  return {
-    spendable: { v: BigInt(parsed.spendable.v), r: BigInt(parsed.spendable.r) },
-    receivingV: BigInt(parsed.receivingV),
+  const parsed = JSON.parse(raw) as {
+    spendable: { v: string; r: string }
+    receiving?: { v: string; r: string }
+    receivingV?: string // v1 format
   }
+  const receiving = parsed.receiving
+    ? { v: BigInt(parsed.receiving.v), r: BigInt(parsed.receiving.r) }
+    : { v: BigInt(parsed.receivingV ?? '0'), r: 0n }
+  return { spendable: { v: BigInt(parsed.spendable.v), r: BigInt(parsed.spendable.r) }, receiving }
 }
 
 function storageKey(network: string, tokenId: string, account: string): string {

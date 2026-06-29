@@ -19,6 +19,10 @@
     "./confidential/transfer": {
       "types": "./src/confidential/transfer.ts",
       "import": "./src/confidential/transfer.ts"
+    },
+    "./confidential/receive": {
+      "types": "./src/confidential/receive.ts",
+      "import": "./src/confidential/receive.ts"
     }
   },
   "scripts": {

@@ -63,6 +63,7 @@ export function ConfidentialScreen({ identity, network, onNav }: ConfidentialScr
   const [events, setEvents] = useState<readonly ConfidentialSubmitEvent[]>([])
   const [report, setReport] = useState<ConfidentialSubmitReport | null>(null)
   const [tick, setTick] = useState(0) // bump to re-read tracked balance after an op
+  const [scan, setScan] = useState<{ status: 'idle' | 'scanning' | 'done'; credited: bigint; count: number }>({ status: 'idle', credited: 0n, count: 0 })
   const runIdRef = useRef(0)
   const key = `${account}:${network}`
 
@@ -83,7 +84,7 @@ export function ConfidentialScreen({ identity, network, onNav }: ConfidentialScr
   const balance = confidential ? loadConfidentialBalance(network, confidential.tokenId, account) : null
   void tick
   const spendableLabel = balance ? `${formatUnits(balance.spendable.v, decimals)} ${confidential?.underlyingCode}` : '—'
-  const receivingLabel = balance ? formatUnits(balance.receivingV, decimals) : '0'
+  const receivingLabel = balance ? formatUnits(balance.receiving.v, decimals) : '0'
 
   const parsed = confidential ? toBaseUnits(amount, decimals) : { ok: false as const, error: '' }
   const amountLabel = `${amount.trim() || '0'} ${confidential?.underlyingCode ?? ''}`
@@ -144,6 +145,21 @@ export function ConfidentialScreen({ identity, network, onNav }: ConfidentialScr
       loadCircuit('circuit_transfer'),
     ])
     return submitConfidentialTransfer({ identity, network, amount: parsed.value, to: recipient.trim(), circuit: circuit as never })
+  }
+
+  // Scan the chain for incoming confidential transfers, decrypt them with the
+  // viewing key, and credit them into the local receiving balance.
+  async function checkIncoming() {
+    setScan({ status: 'scanning', credited: 0n, count: 0 })
+    try {
+      const { scanConfidentialIncoming } = await import('@zk-fighter/core/confidential/receive')
+      const result = await scanConfidentialIncoming({ identity, network })
+      setScan({ status: 'done', credited: result.creditedTotal, count: result.receipts.length })
+      if (result.receipts.length > 0) setTick((value) => value + 1)
+    } catch (cause) {
+      console.error('[ConfidentialScreen] incoming scan failed', cause)
+      setScan({ status: 'done', credited: 0n, count: 0 })
+    }
   }
 
   const section: CSSProperties = { width: '100%', maxWidth: CONTENT_MAX, margin: '0 auto', padding: '32px 28px 56px', display: 'flex', flexDirection: 'column', gap: 16 }
@@ -212,7 +228,7 @@ export function ConfidentialScreen({ identity, network, onNav }: ConfidentialScr
             <Card style={{ padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
               <span style={{ fontSize: 12, color: 'var(--tx3)' }}>Spendable</span>
               <span style={{ fontVariantNumeric: 'tabular-nums', fontWeight: 700 }}>{spendableLabel}</span>
-              {balance && balance.receivingV > 0n ? <span style={{ fontSize: 11.5, color: 'var(--warn)' }}>+{receivingLabel} received · merge to spend</span> : null}
+              {balance && balance.receiving.v > 0n ? <span style={{ fontSize: 11.5, color: 'var(--warn)' }}>+{receivingLabel} received · merge to spend</span> : null}
             </Card>
           )}
 
@@ -229,7 +245,17 @@ export function ConfidentialScreen({ identity, network, onNav }: ConfidentialScr
             ) : null}
             {amountError ? <Callout tone="warn">{amountError}</Callout> : recipient && !recipientValid ? <Callout tone="warn">Enter a valid Stellar address (G…).</Callout> : null}
             <Button fullWidth disabled={!canReview} onClick={() => setStep('review')}>{`Review ${op}`}</Button>
-            <Button fullWidth variant="ghost" disabled={balance == null || balance.receivingV === 0n} onClick={() => run('merge')}>Merge received → spendable</Button>
+            <Button fullWidth variant="ghost" disabled={balance == null || balance.receiving.v === 0n} onClick={() => run('merge')}>Merge received → spendable</Button>
+            <Button fullWidth variant="ghost" disabled={scan.status === 'scanning'} onClick={checkIncoming}>
+              {scan.status === 'scanning' ? 'Scanning chain…' : 'Check for incoming transfers'}
+            </Button>
+            {scan.status === 'done' ? (
+              <Callout tone={scan.count > 0 ? 'info' : 'public'}>
+                {scan.count > 0
+                  ? `Found ${scan.count} incoming transfer${scan.count > 1 ? 's' : ''} — +${formatUnits(scan.credited, decimals)} ${confidential.underlyingCode} credited to your receiving balance. Merge to make it spendable.`
+                  : 'No new incoming transfers found.'}
+              </Callout>
+            ) : null}
           </>
         ) : null}
       </>

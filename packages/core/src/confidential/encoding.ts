@@ -33,10 +33,15 @@ export function pointFrom64BE(bytes: Uint8Array): GrumpkinAffine {
   }
 }
 
-function bytesToBigIntBE(bytes: Uint8Array): bigint {
+export function bytesToBigIntBE(bytes: Uint8Array): bigint {
   let value = 0n
   for (const byte of bytes) value = (value << 8n) | BigInt(byte)
   return value
+}
+
+/** Decode a 32-byte big-endian field element. */
+export function fieldFrom32BE(bytes: Uint8Array): bigint {
+  return bytesToBigIntBE(bytes)
 }
 
 // js-xdr's scvBytes takes a Uint8Array directly; the cast keeps us off the Node

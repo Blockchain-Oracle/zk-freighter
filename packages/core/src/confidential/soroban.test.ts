@@ -38,6 +38,6 @@ describe('confidential soroban client guards', () => {
 
   it('exposes the deployed testnet contract id on a blocked report', async () => {
     const report = await submitConfidentialDeposit({ ...baseOptions(), amount: -1n })
-    expect(report.contractId).toBe('CDKQ7UR75QR7PEKBBPX7DYZAERK5N2OHRTASH7KETNKO43BKQDJ6QONL')
+    expect(report.contractId).toBe('CBNL4THDSDDZ5OWPVLJPDBQGQ4FDH6LHBBFUBPRDNLUCIV2LKCHEVJ4F')
   })
 })

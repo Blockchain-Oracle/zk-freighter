@@ -21,7 +21,7 @@ describe('confidential transfer proof path', () => {
       const addrF = 0x1234n
       // Recipient PVK_B from a distinct seed (the on-chain registered viewing key).
       const recipient = await deriveConfidentialAccount(new Uint8Array(32).fill(5), addrF)
-      const balance = { spendable: { v: 1000n, r: 0n }, receivingV: 0n }
+      const balance = { spendable: { v: 1000n, r: 0n }, receiving: { v: 0n, r: 0n } }
       const kAud = GRUMPKIN_GENERATORS.H // valid on-curve non-identity auditor key
 
       const out = await buildTransferProof({

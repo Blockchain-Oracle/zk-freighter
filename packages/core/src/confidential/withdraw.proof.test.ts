@@ -18,7 +18,7 @@ describe('confidential withdraw proof path', () => {
     async () => {
       const circuit = loadCircuit('circuit_withdraw')
       // After a 1000-unit deposit+merge the spendable commitment is commit(1000, 0).
-      const balance = { spendable: { v: 1000n, r: 0n }, receivingV: 0n }
+      const balance = { spendable: { v: 1000n, r: 0n }, receiving: { v: 0n, r: 0n } }
       // Any valid on-curve non-identity point works as the auditor key locally.
       const kAudS = GRUMPKIN_GENERATORS.H
 

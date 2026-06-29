@@ -422,7 +422,12 @@ impl ConfidentialToken {
             Grumpkin::add(&env, &credited.receiving_balance, &payload.c_tx);
         Self::save_account(&env, &to, &credited);
 
-        env.events().publish((symbol_short!("transfer"), from, to), ());
+        // Emit the recipient-channel ciphertext so the recipient can scan, recompute
+        // the shared secret s = ecdh(vk_B, R_e), and recover (v_tx, r_tx) to open C_tx.
+        env.events().publish(
+            (symbol_short!("transfer"), from, to),
+            (payload.r_e, payload.v_tilde, payload.sigma),
+        );
         Ok(())
     }
 
