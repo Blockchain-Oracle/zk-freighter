@@ -20,7 +20,11 @@ export const dappMessageTypes = {
   prepareUsdcReceive: 'zkf.extension.quickShield.prepareUsdcReceive',
   quickShield: 'zkf.extension.quickShield',
   quickBridge: 'zkf.extension.bridge.run',
+  confidential: 'zkf.extension.confidential',
 } as const
+
+/** Confidential-token ops (Track B). Proving runs in the offscreen (bb.js). */
+export type ConfidentialOpKind = 'register' | 'deposit' | 'merge' | 'withdraw' | 'transfer' | 'scan'
 
 export type DappMessageType = (typeof dappMessageTypes)[keyof typeof dappMessageTypes]
 
@@ -99,6 +103,21 @@ export type DappRuntimeMessage =
       readonly sourceChainKey: CctpSourceKey
       readonly resumeBurnHash?: string
     }
+  | {
+      readonly type: typeof dappMessageTypes.confidential
+      readonly op: ConfidentialOpKind
+      /** Underlying base units (i128), for deposit/withdraw/transfer. */
+      readonly amount?: string
+      /** Recipient Stellar address, for withdraw/transfer. */
+      readonly to?: string
+    }
+
+export interface ConfidentialResponse {
+  readonly ok: boolean
+  /** The op's structured report (ConfidentialSubmitReport) or scan summary. */
+  readonly report?: unknown
+  readonly error?: string
+}
 
 export type DappRuntimeResponse =
   | DappWalletStatus
@@ -107,6 +126,7 @@ export type DappRuntimeResponse =
   | PrepareUsdcReceiveResponse
   | QuickShieldResponse
   | QuickBridgeResponse
+  | ConfidentialResponse
   | {
       readonly ok: boolean
       readonly publicKey?: string

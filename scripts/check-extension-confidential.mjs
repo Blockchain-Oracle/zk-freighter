@@ -81,7 +81,9 @@ async function main() {
     if (!unlocked?.unlocked) throw new Error(`Unlock failed: ${JSON.stringify(unlocked)}`)
 
     console.error('[confidential-smoke] running register in the offscreen (bb.js proof + submit)…')
-    const report = await runtimeMessage(cdp, pageUrl, { type: 'zkf.extension.confidentialRegister', mnemonic: recoveryPhrase, network })
+    // Secure path: the runtime injects the unlocked mnemonic — the panel never supplies it.
+    const response = await runtimeMessage(cdp, pageUrl, { type: 'zkf.extension.confidential', op: 'register' })
+    const report = response?.report
 
     cdp.close()
     const stages = (report?.statusEvents ?? []).map((event) => event.stage)

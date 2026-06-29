@@ -17,6 +17,7 @@ import { browser } from 'wxt/browser'
 import type {
   ExtensionAspInsertRequest,
   ExtensionBridgeRequest,
+  ExtensionConfidentialRequest,
   ExtensionShieldRequest,
   ExtensionUsdcTrustlineRequest,
 } from '../src/dappRuntime'
@@ -35,9 +36,8 @@ const offscreenInsertAspMessageType = 'zkf.offscreen.insertAspMembership'
 const offscreenPrepareUsdcReceiveMessageType = 'zkf.offscreen.prepareUsdcReceive'
 const privateTransferMessageType = 'zkf.extension.privateTransfer'
 const unshieldWithdrawalMessageType = 'zkf.extension.unshieldWithdrawal'
-const confidentialRegisterMessageType = 'zkf.extension.confidentialRegister'
 const offscreenPrivateTransferMessageType = 'zkf.offscreen.privateTransfer'
-const offscreenConfidentialRegisterMessageType = 'zkf.offscreen.confidentialRegister'
+const offscreenConfidentialMessageType = 'zkf.offscreen.confidential'
 const offscreenUnshieldWithdrawalMessageType = 'zkf.offscreen.unshieldWithdrawal'
 
 type MessagePayload = {
@@ -50,6 +50,7 @@ export default defineBackground(() => {
     runBridgeNatively,
     runAspInsertInOffscreen,
     runUsdcTrustlineInOffscreen,
+    runConfidentialInOffscreen,
   )
 
   browser.runtime.onInstalled.addListener(() => {
@@ -119,14 +120,6 @@ export default defineBackground(() => {
       return true
     }
 
-    if (payload.type === confidentialRegisterMessageType) {
-      // De-risk: prove bb.js UltraHonk proving works in the MV3 offscreen document.
-      void sendOffscreenMessage({ ...payload, type: offscreenConfidentialRegisterMessageType }).then(sendResponse, (error: unknown) => {
-        sendResponse({ ok: false, error: error instanceof Error ? error.message : String(error) })
-      })
-      return true
-    }
-
     if (payload.type === privateTransferMessageType) {
       void sendOffscreenMessage({ ...payload, type: offscreenPrivateTransferMessageType }).then(sendResponse, (error: unknown) => {
         sendResponse({ ok: false, error: error instanceof Error ? error.message : String(error) })
@@ -166,6 +159,10 @@ async function openSidePanel(windowId: number | undefined): Promise<boolean> {
 
 async function runShieldInOffscreen(request: ExtensionShieldRequest): Promise<XlmShieldSubmitReport> {
   return (await sendOffscreenMessage({ type: offscreenSubmitShieldMessageType, ...request })) as XlmShieldSubmitReport
+}
+
+async function runConfidentialInOffscreen(request: ExtensionConfidentialRequest): Promise<unknown> {
+  return sendOffscreenMessage({ type: offscreenConfidentialMessageType, ...request })
 }
 
 async function runAspInsertInOffscreen(request: ExtensionAspInsertRequest): Promise<AspMembershipInsertReport> {

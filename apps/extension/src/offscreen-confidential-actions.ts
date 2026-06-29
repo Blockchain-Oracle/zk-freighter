@@ -83,3 +83,23 @@ export async function runConfidentialTransfer(payload: { readonly [key: string]:
   const { submitConfidentialTransfer } = await import('@zk-fighter/core/confidential/transfer')
   return submitConfidentialTransfer({ identity: deriveWalletIdentity(mnemonic, network), network, amount: amountOf(payload), to: recipientOf(payload), circuit: await loadCircuit('circuit_transfer') })
 }
+
+/** Single offscreen entry point: dispatch a confidential op by its `op` discriminator. */
+export async function runConfidentialOp(payload: { readonly [key: string]: unknown }) {
+  switch (payload.op) {
+    case 'register':
+      return runConfidentialRegister(payload)
+    case 'deposit':
+      return runConfidentialDeposit(payload)
+    case 'merge':
+      return runConfidentialMerge(payload)
+    case 'withdraw':
+      return runConfidentialWithdraw(payload)
+    case 'transfer':
+      return runConfidentialTransfer(payload)
+    case 'scan':
+      return runConfidentialScan(payload)
+    default:
+      throw new Error(`Unknown confidential op: ${String(payload.op)}`)
+  }
+}

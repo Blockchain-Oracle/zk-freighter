@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { browser } from 'wxt/browser'
 
 import { ExtensionBridgePanel } from './ExtensionBridgePanel'
+import { ExtensionConfidentialPanel } from './ExtensionConfidentialPanel'
 import { ExtensionQuickShieldPanel } from './ExtensionQuickShieldPanel'
 import { ExtensionReadinessPanel } from './ExtensionReadinessPanel'
 import { ExtensionWalletPanel } from './ExtensionWalletPanel'
@@ -100,6 +101,7 @@ export function ExtensionApp({ surface }: ExtensionAppProps) {
       />
 
       <ExtensionQuickShieldPanel status={status} sendRuntimeMessage={sendRuntimeMessage} />
+      <ExtensionConfidentialPanel status={status} sendRuntimeMessage={sendRuntimeMessage} />
       <ExtensionBridgePanel status={status} sendRuntimeMessage={sendRuntimeMessage} />
       <ExtensionReadinessPanel />
 

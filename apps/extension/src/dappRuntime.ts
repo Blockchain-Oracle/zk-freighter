@@ -15,6 +15,8 @@ import {
 
 import {
   dappMessageTypes,
+  type ConfidentialOpKind,
+  type ConfidentialResponse,
   type DappRuntimeMessage,
   type DappRuntimeResponse,
   type DappWalletStatus,
@@ -48,10 +50,19 @@ export interface ExtensionBridgeRequest {
   readonly resumeBurnHash?: string
 }
 
+export interface ExtensionConfidentialRequest {
+  readonly mnemonic: string
+  readonly network: NetworkKey
+  readonly op: ConfidentialOpKind
+  readonly amount?: string
+  readonly to?: string
+}
+
 type ExtensionShieldRunner = (request: ExtensionShieldRequest) => Promise<XlmShieldSubmitReport>
 type ExtensionAspInsertRunner = (request: ExtensionAspInsertRequest) => Promise<AspMembershipInsertReport>
 type ExtensionUsdcTrustlineRunner = (request: ExtensionUsdcTrustlineRequest) => Promise<StellarUsdcTrustlineReport>
 type ExtensionBridgeRunner = (request: ExtensionBridgeRequest) => Promise<CctpBridgeReport>
+type ExtensionConfidentialRunner = (request: ExtensionConfidentialRequest) => Promise<unknown>
 
 interface MessageSender { readonly tab?: { readonly windowId?: number } }
 
@@ -63,6 +74,7 @@ export class ExtensionDappRuntime {
     private readonly runBridge?: ExtensionBridgeRunner,
     private readonly runAspInsert?: ExtensionAspInsertRunner,
     private readonly runUsdcTrustline?: ExtensionUsdcTrustlineRunner,
+    private readonly runConfidential?: ExtensionConfidentialRunner,
   ) {}
 
   canHandle(type: string | undefined): boolean {
@@ -88,6 +100,8 @@ export class ExtensionDappRuntime {
         return this.quickShield(message.asset, message.amountStroops, message.timeoutMs)
       case dappMessageTypes.quickBridge:
         return this.quickBridge(message.sourceChainKey, message.resumeBurnHash)
+      case dappMessageTypes.confidential:
+        return this.confidential(message.op, message.amount, message.to)
       case dappMessageTypes.freighterRequest:
         void openExtensionSidePanel(sender?.tab?.windowId)
         return this.handleFreighterRequest(message.request)
@@ -210,6 +224,22 @@ export class ExtensionDappRuntime {
           timeoutMs,
         }),
       }
+    } catch (error) {
+      return { ok: false, error: error instanceof Error ? error.message : String(error) }
+    }
+  }
+
+  private async confidential(op: ConfidentialOpKind, amount?: string, to?: string): Promise<ConfidentialResponse> {
+    const ready = await this.requireUnlockedWallet()
+    if (!ready.ok) {
+      return ready
+    }
+    if (!this.runConfidential) {
+      return { ok: false, error: 'Extension offscreen confidential runner is unavailable.' }
+    }
+    try {
+      // mnemonic is injected from the unlocked vault — never supplied by the panel.
+      return { ok: true, report: await this.runConfidential({ mnemonic: ready.mnemonic, network: ready.network, op, amount, to }) }
     } catch (error) {
       return { ok: false, error: error instanceof Error ? error.message : String(error) }
     }
