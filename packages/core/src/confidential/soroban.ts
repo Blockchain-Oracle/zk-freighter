@@ -9,20 +9,19 @@
 // with a status-event stream the UI renders as a progress timeline.
 
 import {
-  Account,
   Address,
   Contract,
   Transaction,
   TransactionBuilder,
   nativeToScVal,
   rpc,
-  scValToNative,
 } from '@stellar/stellar-sdk'
 import { deriveWalletKeypair, type WalletIdentity } from './../identity'
 import { getConfidentialConfig, getNetworkConfig, type NetworkKey } from './../networks'
+import { afterDeposit, afterMerge, loadConfidentialBalance, saveConfidentialBalance } from './balance-state'
 
-const invokeFee = '10000000'
-const invokeTimeoutSeconds = 120
+export const invokeFee = '10000000'
+export const invokeTimeoutSeconds = 120
 const defaultConfirmationPolls = 60
 const defaultPollIntervalMs = 2_000
 
@@ -48,119 +47,11 @@ export interface ConfidentialSubmitReport {
   readonly error?: string
 }
 
-interface ConfidentialSorobanServer {
+export interface ConfidentialSorobanServer {
   getAccount(publicKey: string): Promise<ConstructorParameters<typeof TransactionBuilder>[0]>
   simulateTransaction(transaction: Transaction): Promise<unknown>
   sendTransaction(transaction: Transaction): Promise<{ status?: string; hash?: string }>
   getTransaction(hash: string): Promise<{ status?: string }>
-}
-
-export type ConfidentialRegistration = 'registered' | 'unregistered' | 'unavailable' | 'gated'
-
-/// Read whether `account` (defaults to the caller) is registered for confidential
-/// mode on-chain. Simulate-only — no transaction is submitted. Returns 'gated'
-/// when the network has no confidential deployment, 'unavailable' on read error.
-export async function readConfidentialRegistration(
-  options: ConfidentialSubmitOptions & { readonly account?: string },
-): Promise<ConfidentialRegistration> {
-  const confidential = getConfidentialConfig(options.network)
-  if (!confidential) return 'gated'
-  const networkConfig = getNetworkConfig(options.network)
-  const account = options.account ?? options.identity.stellarPublicKey
-  try {
-    const server = (options.serverFactory ?? defaultServerFactory)(networkConfig.rpcUrl)
-    // A read is a simulate of a view call; the source account only needs to exist
-    // for the builder, so a throwaway sequence is fine — nothing is signed/sent.
-    const source = new Account(account, '0')
-    const tx = new TransactionBuilder(source, {
-      fee: invokeFee,
-      networkPassphrase: networkConfig.passphrase,
-    })
-      .addOperation(
-        new Contract(confidential.tokenId).call('is_registered', Address.fromString(account).toScVal()),
-      )
-      .setTimeout(invokeTimeoutSeconds)
-      .build()
-    const simulated = (await server.simulateTransaction(tx)) as {
-      error?: unknown
-      result?: { retval?: Parameters<typeof scValToNative>[0] }
-    }
-    if (simulated.error || !simulated.result?.retval) return 'unavailable'
-    return scValToNative(simulated.result.retval) === true ? 'registered' : 'unregistered'
-  } catch {
-    return 'unavailable'
-  }
-}
-
-/**
- * Read an auditor's Grumpkin public key (`K_aud`, 64 bytes) from the auditor
- * registry by `auditorId`. Simulate-only. Returns null when gated off or on a
- * read error. The withdraw/transfer witnesses need this exact key (the contract
- * fetches the same one to rebuild the proof's public inputs).
- */
-export async function readAuditorKey(
-  options: ConfidentialSubmitOptions & { readonly auditorId: number },
-): Promise<Uint8Array | null> {
-  const confidential = getConfidentialConfig(options.network)
-  if (!confidential) return null
-  const networkConfig = getNetworkConfig(options.network)
-  try {
-    const server = (options.serverFactory ?? defaultServerFactory)(networkConfig.rpcUrl)
-    const source = new Account(options.identity.stellarPublicKey, '0')
-    const tx = new TransactionBuilder(source, { fee: invokeFee, networkPassphrase: networkConfig.passphrase })
-      .addOperation(new Contract(confidential.auditorId).call('get_key', nativeToScVal(options.auditorId, { type: 'u32' })))
-      .setTimeout(invokeTimeoutSeconds)
-      .build()
-    const simulated = (await server.simulateTransaction(tx)) as {
-      error?: unknown
-      result?: { retval?: Parameters<typeof scValToNative>[0] }
-    }
-    if (simulated.error || !simulated.result?.retval) return null
-    const key = scValToNative(simulated.result.retval) as Uint8Array
-    return key instanceof Uint8Array && key.length === 64 ? key : null
-  } catch {
-    return null
-  }
-}
-
-export interface ConfidentialAccountView {
-  /// Public viewing key PVK (Grumpkin affine, 64 bytes) — the transfer ECDH target.
-  readonly viewingPublicKey: Uint8Array
-  readonly auditorId: number
-}
-
-/**
- * Read a registered account's public viewing key + auditor id from the token
- * contract (`account(addr)` view). Simulate-only. Returns null when the account
- * isn't registered, gated off, or on a read error.
- */
-export async function readConfidentialAccount(
-  options: ConfidentialSubmitOptions & { readonly account: string },
-): Promise<ConfidentialAccountView | null> {
-  const confidential = getConfidentialConfig(options.network)
-  if (!confidential) return null
-  const networkConfig = getNetworkConfig(options.network)
-  try {
-    const server = (options.serverFactory ?? defaultServerFactory)(networkConfig.rpcUrl)
-    const source = new Account(options.identity.stellarPublicKey, '0')
-    const tx = new TransactionBuilder(source, { fee: invokeFee, networkPassphrase: networkConfig.passphrase })
-      .addOperation(new Contract(confidential.tokenId).call('account', Address.fromString(options.account).toScVal()))
-      .setTimeout(invokeTimeoutSeconds)
-      .build()
-    const simulated = (await server.simulateTransaction(tx)) as {
-      error?: unknown
-      result?: { retval?: Parameters<typeof scValToNative>[0] }
-    }
-    if (simulated.error || !simulated.result?.retval) return null
-    const account = scValToNative(simulated.result.retval) as
-      | { viewing_public_key?: Uint8Array; auditor_id?: number }
-      | null
-    const viewingPublicKey = account?.viewing_public_key
-    if (!(viewingPublicKey instanceof Uint8Array) || viewingPublicKey.length !== 64) return null
-    return { viewingPublicKey, auditorId: Number(account?.auditor_id ?? 0) }
-  } catch {
-    return null
-  }
 }
 
 export interface ConfidentialSubmitOptions {
@@ -189,7 +80,7 @@ export async function submitConfidentialDeposit(
   if (options.amount < 0n) {
     return failFast(options, 'deposit', ['Deposit amount must be non-negative.'])
   }
-  return runConfidentialInvocation(options, 'deposit', (contractId) =>
+  const report = await runConfidentialInvocation(options, 'deposit', (contractId) =>
     new Contract(contractId).call(
       'deposit',
       Address.fromString(from).toScVal(),
@@ -197,6 +88,13 @@ export async function submitConfidentialDeposit(
       nativeToScVal(options.amount, { type: 'i128' }),
     ),
   )
+  // Track our own receiving balance only for a self-deposit (we don't hold
+  // another account's plaintext state).
+  if (report.status === 'submitted' && to === from && report.contractId) {
+    const balance = loadConfidentialBalance(options.network, report.contractId, from)
+    saveConfidentialBalance(options.network, report.contractId, from, afterDeposit(balance, options.amount))
+  }
+  return report
 }
 
 /// Fold the caller's confidential receiving balance into their spendable
@@ -205,9 +103,14 @@ export async function submitConfidentialMerge(
   options: ConfidentialSubmitOptions,
 ): Promise<ConfidentialSubmitReport> {
   const account = options.identity.stellarPublicKey
-  return runConfidentialInvocation(options, 'merge', (contractId) =>
+  const report = await runConfidentialInvocation(options, 'merge', (contractId) =>
     new Contract(contractId).call('merge', Address.fromString(account).toScVal()),
   )
+  if (report.status === 'submitted' && report.contractId) {
+    const balance = loadConfidentialBalance(options.network, report.contractId, account)
+    saveConfidentialBalance(options.network, report.contractId, account, afterMerge(balance))
+  }
+  return report
 }
 
 /**
@@ -330,7 +233,7 @@ async function confirm(
   return 'TIMEOUT'
 }
 
-function defaultServerFactory(rpcUrl: string): ConfidentialSorobanServer {
+export function defaultServerFactory(rpcUrl: string): ConfidentialSorobanServer {
   return new rpc.Server(rpcUrl) as unknown as ConfidentialSorobanServer
 }
 

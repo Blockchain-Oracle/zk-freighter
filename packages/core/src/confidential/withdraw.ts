@@ -21,8 +21,8 @@ import { GRUMPKIN_GENERATORS, grumpkinCommit, grumpkinEcdhSharedX, grumpkinScala
 import { deriveConfidentialSpendingKey, viewingKeyFromSpendingKey } from './keys'
 import { executeConfidentialCircuit, generateConfidentialProof, type CompiledCircuit } from './prover'
 import { deriveSpendR, encryptAuditorSenderBalance } from './spend-primitives'
+import { readAuditorKey } from './reads'
 import {
-  readAuditorKey,
   runConfidentialInvocation,
   type ConfidentialSubmitOptions,
   type ConfidentialSubmitReport,

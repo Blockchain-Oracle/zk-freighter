@@ -11,6 +11,14 @@
     "./confidential/register": {
       "types": "./src/confidential/register.ts",
       "import": "./src/confidential/register.ts"
+    },
+    "./confidential/withdraw": {
+      "types": "./src/confidential/withdraw.ts",
+      "import": "./src/confidential/withdraw.ts"
+    },
+    "./confidential/transfer": {
+      "types": "./src/confidential/transfer.ts",
+      "import": "./src/confidential/transfer.ts"
     }
   },
   "scripts": {
