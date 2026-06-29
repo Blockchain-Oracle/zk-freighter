@@ -79,6 +79,29 @@ pub struct AccountState {
     pub receiving_balance: Point,
 }
 
+/// Prover-supplied outputs of a confidential transfer (DESIGN §7.6). The
+/// contract treats these as opaque commitments/ciphertexts: the circuit proves
+/// they are well-formed, the contract only reconstructs the public-input blob
+/// and applies the resulting state deltas. Points are 64-byte Grumpkin affine
+/// encodings; the rest are 32-byte BN254 field representatives.
+#[contracttype]
+#[derive(Clone)]
+pub struct TransferPayload {
+    /// Sender's new spendable commitment C_spend' (replaces the old one).
+    pub c_spend_new: BytesN<64>,
+    /// Transfer commitment C_tx added to the recipient's receiving balance.
+    pub c_tx: BytesN<64>,
+    /// Ephemeral key R_e for recipient/auditor ECDH.
+    pub r_e: BytesN<64>,
+    pub v_tilde: BytesN<32>,
+    pub b_tilde: BytesN<32>,
+    pub sigma: BytesN<32>,
+    pub v_aud_r: BytesN<32>,
+    pub r_aud_r: BytesN<32>,
+    pub v_aud_s: BytesN<32>,
+    pub b_aud_s: BytesN<32>,
+}
+
 /// Cross-contract view of the verifier registry.
 #[contractclient(name = "VerifierClient")]
 pub trait VerifierInterface {
@@ -99,6 +122,10 @@ const REGISTER_PUBLIC_INPUTS_LEN: u32 = 5 * FIELD;
 // withdraw public-input layout (DESIGN §7.5, 15 fields × 32 bytes):
 //   C_spend | Y | addr_f | K_aud_s | a | C_spend' | sigma | b_tilde | R_e | b_aud_s
 const WITHDRAW_PUBLIC_INPUTS_LEN: u32 = 15 * FIELD;
+// transfer public-input layout (DESIGN §7.6, 24 fields × 32 bytes):
+//   C_spend_A | Y_A | PVK_B | addr_f | K_aud_r | K_aud_s | C_spend' | C_tx |
+//   R_e | v_tilde | b_tilde | sigma | v_aud_r | r_aud_r | v_aud_s | b_aud_s
+const TRANSFER_PUBLIC_INPUTS_LEN: u32 = 24 * FIELD;
 
 #[contract]
 pub struct ConfidentialToken;
@@ -305,6 +332,96 @@ impl ConfidentialToken {
             .transfer(&env.current_contract_address(), &to, &amount);
 
         env.events().publish((symbol_short!("withdraw"), from, to), amount);
+        Ok(())
+    }
+
+    /// Confidential → confidential transfer (no public boundary, no amount).
+    /// The sender proves they own `C_spend_A`, that the transferred value is in
+    /// range, and supplies the new spendable commitment plus the recipient's
+    /// transfer commitment `C_tx` and the recipient-/auditor-visibility
+    /// ciphertexts. We rebuild the 24-field public-input blob (DESIGN §7.6) from
+    /// both accounts' stored state + both auditor keys + the prover outputs,
+    /// verify the proof, overwrite the sender's spendable balance, and add
+    /// `C_tx` to the recipient's receiving balance (folded in later via merge).
+    pub fn transfer(
+        env: Env,
+        from: Address,
+        to: Address,
+        payload: TransferPayload,
+        proof: Bytes,
+    ) -> Result<(), Error> {
+        from.require_auth();
+        let config = Self::config_or_err(&env)?;
+        let mut sender: AccountState = env
+            .storage()
+            .persistent()
+            .get(&DataKey::Account(from.clone()))
+            .ok_or(Error::AccountNotRegistered)?;
+        let mut recipient: AccountState = env
+            .storage()
+            .persistent()
+            .get(&DataKey::Account(to.clone()))
+            .ok_or(Error::AccountNotRegistered)?;
+        let addr_f: BytesN<32> = env
+            .storage()
+            .instance()
+            .get(&DataKey::ContractField)
+            .ok_or(Error::ContractFieldNotSet)?;
+
+        // Prover-supplied values cross the trust boundary — reject non-canonical
+        // BN254 representatives before they reach the verifier.
+        if !Grumpkin::is_canonical_point(&payload.c_spend_new)
+            || !Grumpkin::is_canonical_point(&payload.c_tx)
+            || !Grumpkin::is_canonical_point(&payload.r_e)
+            || !Grumpkin::is_canonical_field(&payload.v_tilde)
+            || !Grumpkin::is_canonical_field(&payload.b_tilde)
+            || !Grumpkin::is_canonical_field(&payload.sigma)
+            || !Grumpkin::is_canonical_field(&payload.v_aud_r)
+            || !Grumpkin::is_canonical_field(&payload.r_aud_r)
+            || !Grumpkin::is_canonical_field(&payload.v_aud_s)
+            || !Grumpkin::is_canonical_field(&payload.b_aud_s)
+        {
+            return Err(Error::NonCanonicalEncoding);
+        }
+
+        let auditor = AuditorClient::new(&env, &config.auditor_registry);
+        let k_aud_r = auditor.get_key(&recipient.auditor_id);
+        let k_aud_s = auditor.get_key(&sender.auditor_id);
+
+        // PI order (DESIGN §7.6): C_spend_A | Y_A | PVK_B | addr_f | K_aud_r |
+        //   K_aud_s | C_spend' | C_tx | R_e | v_tilde | b_tilde | sigma |
+        //   v_aud_r | r_aud_r | v_aud_s | b_aud_s
+        let mut pi = Bytes::new(&env);
+        pi.append(&Bytes::from(&sender.spendable_balance));
+        pi.append(&Bytes::from(&sender.spending_key));
+        pi.append(&Bytes::from(&recipient.viewing_public_key));
+        pi.append(&Bytes::from(&addr_f));
+        pi.append(&Bytes::from(&k_aud_r));
+        pi.append(&Bytes::from(&k_aud_s));
+        pi.append(&Bytes::from(&payload.c_spend_new));
+        pi.append(&Bytes::from(&payload.c_tx));
+        pi.append(&Bytes::from(&payload.r_e));
+        pi.append(&Bytes::from(&payload.v_tilde));
+        pi.append(&Bytes::from(&payload.b_tilde));
+        pi.append(&Bytes::from(&payload.sigma));
+        pi.append(&Bytes::from(&payload.v_aud_r));
+        pi.append(&Bytes::from(&payload.r_aud_r));
+        pi.append(&Bytes::from(&payload.v_aud_s));
+        pi.append(&Bytes::from(&payload.b_aud_s));
+        debug_assert_eq!(pi.len(), TRANSFER_PUBLIC_INPUTS_LEN);
+
+        let verifier = VerifierClient::new(&env, &config.verifier);
+        if !verifier.verify_proof(&CircuitType::Transfer, &pi, &proof) {
+            return Err(Error::InvalidProof);
+        }
+
+        sender.spendable_balance = payload.c_spend_new;
+        env.storage().persistent().set(&DataKey::Account(from.clone()), &sender);
+        recipient.receiving_balance =
+            Grumpkin::add(&env, &recipient.receiving_balance, &payload.c_tx);
+        env.storage().persistent().set(&DataKey::Account(to.clone()), &recipient);
+
+        env.events().publish((symbol_short!("transfer"), from, to), ());
         Ok(())
     }
 

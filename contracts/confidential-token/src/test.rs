@@ -7,7 +7,7 @@ use soroban_sdk::{
     Address, Bytes, BytesN, Env,
 };
 
-use crate::{CircuitType, ConfidentialToken, ConfidentialTokenClient, Error};
+use crate::{CircuitType, ConfidentialToken, ConfidentialTokenClient, Error, TransferPayload};
 
 // Stand-in verifier registry: accepts any proof, so the token's own logic
 // (auth, addr_f binding, storage, events) is what's under test here. The real
@@ -226,5 +226,64 @@ fn withdraw_requires_registered_account() {
     assert_eq!(
         client.try_withdraw(&stranger, &to, &10, &c_new, &sigma, &b_tilde, &r_e, &b_aud_s, &proof),
         Err(Ok(Error::AccountNotRegistered))
+    );
+}
+
+fn transfer_payload(env: &Env) -> TransferPayload {
+    TransferPayload {
+        c_spend_new: BytesN::<64>::from_array(env, &[3u8; 64]),
+        c_tx: BytesN::<64>::from_array(env, &[4u8; 64]),
+        r_e: BytesN::<64>::from_array(env, &[5u8; 64]),
+        v_tilde: BytesN::<32>::from_array(env, &[6u8; 32]),
+        b_tilde: BytesN::<32>::from_array(env, &[7u8; 32]),
+        sigma: BytesN::<32>::from_array(env, &[8u8; 32]),
+        v_aud_r: BytesN::<32>::from_array(env, &[9u8; 32]),
+        r_aud_r: BytesN::<32>::from_array(env, &[10u8; 32]),
+        v_aud_s: BytesN::<32>::from_array(env, &[11u8; 32]),
+        b_aud_s: BytesN::<32>::from_array(env, &[12u8; 32]),
+    }
+}
+
+#[test]
+fn transfer_verifies_overwrites_sender_and_credits_recipient() {
+    let (env, client, sac_id, sender) = setup_with_sac();
+    // A second registered account to receive the confidential transfer.
+    let recipient = Address::generate(&env);
+    client.register(&recipient, &0u32, &register_public_inputs(&env, 7), &Bytes::from_array(&env, &[0u8; 32]));
+
+    let payload = transfer_payload(&env);
+    let proof = Bytes::from_array(&env, &[0u8; 32]);
+    client.transfer(&sender, &recipient, &payload, &proof);
+
+    // No public boundary: the underlying never moves on a confidential transfer.
+    assert_eq!(TokenClient::new(&env, &sac_id).balance(&client.address), 0);
+    // Sender's spendable is overwritten with C_spend'; recipient's receiving is credited.
+    assert_eq!(client.account(&sender).unwrap().spendable_balance, payload.c_spend_new);
+    assert_eq!(client.account(&recipient).unwrap().receiving_balance, payload.c_tx);
+}
+
+#[test]
+fn transfer_requires_recipient_registered() {
+    let (env, client, _sac, sender) = setup_with_sac();
+    let stranger = Address::generate(&env);
+    let payload = transfer_payload(&env);
+    let proof = Bytes::from_array(&env, &[0u8; 32]);
+    assert_eq!(
+        client.try_transfer(&sender, &stranger, &payload, &proof),
+        Err(Ok(Error::AccountNotRegistered))
+    );
+}
+
+#[test]
+fn transfer_rejects_non_canonical_payload() {
+    let (env, client, _sac, sender) = setup_with_sac();
+    let recipient = Address::generate(&env);
+    client.register(&recipient, &0u32, &register_public_inputs(&env, 7), &Bytes::from_array(&env, &[0u8; 32]));
+    let mut payload = transfer_payload(&env);
+    payload.c_tx = BytesN::<64>::from_array(&env, &[0xffu8; 64]); // ≥ modulus
+    let proof = Bytes::from_array(&env, &[0u8; 32]);
+    assert_eq!(
+        client.try_transfer(&sender, &recipient, &payload, &proof),
+        Err(Ok(Error::NonCanonicalEncoding))
     );
 }
