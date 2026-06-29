@@ -47,3 +47,38 @@ stellar contract invoke --id <VERIFIER> --network testnet -- \
 - Wire Keccak-oracle proving into `prover.ts` (the wallet's actual proof path).
 - Finish the token contract ops (register/deposit/merge/withdraw/transfer) + deploy the token; register the remaining 5 VKs.
 - The full flow (register account → deposit → confidential transfer → dual-auditor disclosure → recovery) with recorded txs.
+
+---
+
+## 2026-06-29 — Hardened redeploy + in-app register (ready start)
+
+Network: **Stellar testnet**. Deployer: `zkf-mainnet-qa` = `GB3VMAPRJDHLRG2VKNCUUNOPBKJAAZCELU5TIF4QVPCTMYO5TGECGLVM`.
+
+The earlier `CDNN7XDL…` token bound a *demo-placeholder* `addr_f`. Redeployed the
+**hardened** contract (adds withdraw/transfer/TTL-extension/single-shot addr_f)
+and bound a properly-derived `addr_f`:
+
+- Hardened **token**: `CDKQ7UR75QR7PEKBBPX7DYZAERK5N2OHRTASH7KETNKO43BKQDJ6QONL`
+  (admin=deployer, verifier=`CD5DMFWT…`, auditor=`CAMO6HGC…`, underlying=USDC SAC `CBIELTK6…`).
+  - upload tx `85d1e77148ff01a4c56b7b918dadfa688af887f5546ab8a242b29c5135ed4ab6`
+  - deploy tx `148c7ff416f4e6411d7aa1e9e93775de7d8c300719fb77ce3ae966006f23bc98`
+- `addr_f = addressToField(tokenId)` = `1d5fbd32cfcbc206121fda68f64527a8b8626d83ddbbcd623903a8c0b0743234`
+  computed by `@zk-fighter/core` (`Poseidon2(ADDRESS, lo, hi)` over the strkey's
+  two 28-byte LE limbs), bound via `set_contract_field` — tx
+  `bd3b8f5dc3f7d5965118b1bfa317ebe3b0f6a30238a586d278cdb8783d4cacf6`.
+  Self-consistent: the same JS fn computes both the bound value and the proof's
+  addr_f, so AddrFMismatch is structurally impossible.
+
+**Register proven two ways against the hardened contract:**
+1. CLI path — in-JS `buildRegisterProof` → `register(GB3VMAPR…, auditor_id=0, …)`
+   accepted by the on-chain UltraHonk verifier — tx
+   `fe5aee0487f4eed4a9756cd9b036897fa4cf570209a70e9cfceea1fe6fd4429a`;
+   `is_registered(GB3VMAPR…)` → **true**.
+2. **In-browser** path (the real user flow) — a fresh friendbot-funded wallet
+   `GAY265DT5RHUY7ZDRDI6H556ESFGZNUMWBUMHZXAH664MT7BBU7YTDWE` generated the
+   register proof on-device with bb.js, submitted via the web UI, accepted
+   on-chain — tx `8ea07300369184bb86c162da45770a62bfdf6c1112658ac40ea6f720f36ddf44`;
+   `is_registered(GAY265…)` → **true**.
+
+Deposit + merge UI also wired (proofless, gated behind registration). Withdraw +
+transfer UI still to come (need their in-browser witness construction).
