@@ -36,6 +36,22 @@ export interface CctpConfig {
   readonly evmSources: Record<CctpSourceKey, EvmCctpSourceConfig>
 }
 
+/// Deployed confidential-token (Track B) wiring. Testnet-only by product rule:
+/// the UltraHonk verifier backend is an unaudited dev preview, so `mainnet`
+/// intentionally omits this block and the feature is gated off there.
+export interface ConfidentialConfig {
+  /// Our authored confidential-token contract (register/deposit/merge/withdraw/transfer).
+  readonly tokenId: string
+  /// UltraHonk verifier registry the token contract gates every proof through.
+  readonly verifierId: string
+  /// Auditor registry resolving auditor_id → Grumpkin viewing key.
+  readonly auditorId: string
+  /// SAC of the public underlying asset deposits are pulled from / withdrawals paid in.
+  readonly underlyingSacId: string
+  readonly underlyingCode: AssetCode
+  readonly underlyingDecimals: number
+}
+
 export interface NetworkConfig {
   readonly key: NetworkKey
   readonly label: string
@@ -45,6 +61,7 @@ export interface NetworkConfig {
   readonly explorerTxUrl: string
   readonly assets: Record<AssetCode, NetworkAssetConfig>
   readonly cctp?: CctpConfig
+  readonly confidential?: ConfidentialConfig
 }
 
 export const NETWORKS = {
@@ -69,6 +86,14 @@ export const NETWORKS = {
         poolId: 'CCY6R2BJQ2LAYINOZZLDLHJCWRRPVQNRTWEWCWO7FIDD3BRDQJCAOHKY',
         shieldedPool: 'enabled',
       },
+    },
+    confidential: {
+      tokenId: 'CDNN7XDLNAHE6BPS3CV3VJQLMUDBFULCEJFOKDGEGQ5N3O7QZ4YMLEF7',
+      verifierId: 'CD5DMFWTPW6SLA5TAUNU2TLAZ2ZFXCKGR2PBS4KHQ4P56EOIASRSTUGG',
+      auditorId: 'CAMO6HGCK3EGQX7IEOAO555MPXNQ6UVFI46Y34CYQRWS4HLXOAQ5SDGO',
+      underlyingSacId: 'CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA',
+      underlyingCode: 'USDC',
+      underlyingDecimals: 7,
     },
     cctp: {
       domain: 27,
@@ -241,4 +266,15 @@ export function isCctpSourceKey(value: string | undefined): value is CctpSourceK
 
 export function isShieldedAssetEnabled(network: NetworkKey, asset: AssetCode): boolean {
   return NETWORKS[network].assets[asset].shieldedPool === 'enabled'
+}
+
+/// Confidential-token mode is available only where a `confidential` block is
+/// configured — testnet today, never mainnet (unaudited verifier preview).
+export function isConfidentialEnabled(network: NetworkKey): boolean {
+  return getNetworkConfig(network).confidential !== undefined
+}
+
+/// Returns the confidential wiring for a network, or `undefined` when gated off.
+export function getConfidentialConfig(network: NetworkKey): ConfidentialConfig | undefined {
+  return getNetworkConfig(network).confidential
 }
