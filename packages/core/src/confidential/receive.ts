@@ -11,6 +11,7 @@
 import { Address, rpc, scValToNative, xdr } from '@stellar/stellar-sdk'
 import { getConfidentialConfig, getNetworkConfig, type NetworkKey } from './../networks'
 import { afterReceive, loadConfidentialBalance, saveConfidentialBalance } from './balance-state'
+import { appendIncomingHistory } from './incoming-history'
 import { decryptAmount } from './encrypt'
 import { fieldFrom32BE, pointFrom64BE } from './encoding'
 import { grumpkinEcdhSharedX, type GrumpkinAffine } from './grumpkin'
@@ -166,6 +167,13 @@ export async function scanConfidentialIncoming(options: ScanIncomingOptions): Pr
 
   if (receipts.length > 0) {
     saveConfidentialBalance(options.network, confidential.tokenId, account, balance, store)
+    appendIncomingHistory(
+      options.network,
+      confidential.tokenId,
+      account,
+      receipts.map((receipt) => ({ amount: receipt.amount.toString(), ledger: receipt.ledger, txHash: receipt.txHash, eventId: receipt.eventId })),
+      store,
+    )
   }
   store?.setItem(
     scanKey(options.network, confidential.tokenId, account),

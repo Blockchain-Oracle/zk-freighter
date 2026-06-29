@@ -9,6 +9,9 @@ export * from './soroban'
 export * from './reads'
 // Local confidential-balance bookkeeping — pure + localStorage, no heavy deps.
 export * from './balance-state'
+// Incoming-transfer history + recipient address book — light localStorage stores.
+export * from './incoming-history'
+export * from './address-book'
 // NOTE: ./prover is intentionally NOT re-exported here. It pulls the heavy bb.js +
 // noir_js WASM runtime; keeping it out of the package barrel ensures the eager web /
 // extension bundle stays light. Import it directly (or dynamically) when entering

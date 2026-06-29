@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 
 import {
   getConfidentialConfig,
   loadConfidentialBalance,
+  loadIncomingHistory,
   readConfidentialRegistration,
   submitConfidentialDeposit,
   submitConfidentialMerge,
@@ -12,6 +13,7 @@ import {
   type WalletIdentity,
 } from '@zk-fighter/core'
 import { AmountInput, Button, Callout, Card, ReviewCard, truncateMiddle } from '@zk-fighter/ui'
+import { AddressBookPicker, IncomingHistory } from './ConfidentialExtras'
 import { BoundaryPill, FlowHeader } from './flowChrome'
 import type { WalletScreen } from './screens'
 
@@ -85,6 +87,7 @@ export function ConfidentialScreen({ identity, network, onNav }: ConfidentialScr
   void tick
   const spendableLabel = balance ? `${formatUnits(balance.spendable.v, decimals)} ${confidential?.underlyingCode}` : '—'
   const receivingLabel = balance ? formatUnits(balance.receiving.v, decimals) : '0'
+  const history = confidential ? loadIncomingHistory(network, confidential.tokenId, account) : []
 
   const parsed = confidential ? toBaseUnits(amount, decimals) : { ok: false as const, error: '' }
   const amountLabel = `${amount.trim() || '0'} ${confidential?.underlyingCode ?? ''}`
@@ -241,7 +244,10 @@ export function ConfidentialScreen({ identity, network, onNav }: ConfidentialScr
             </div>
             <AmountInput value={amount} onChange={setAmount} asset={confidential.underlyingCode} invalid={amountError != null} caption={op === 'deposit' ? 'from public balance' : 'from spendable confidential balance'} />
             {needsRecipient ? (
-              <input value={recipient} onChange={(event) => setRecipient(event.target.value)} placeholder={op === 'withdraw' ? 'Public Stellar address (G…)' : 'Recipient confidential account (G…)'} spellCheck={false} style={{ width: '100%', padding: '11px 13px', borderRadius: 9, border: `1px solid ${recipient && !recipientValid ? 'var(--warn)' : 'var(--bd)'}`, background: 'var(--bg)', color: 'var(--tx)', fontSize: 13, fontFamily: 'var(--fm)' }} />
+              <>
+                <input value={recipient} onChange={(event) => setRecipient(event.target.value)} placeholder={op === 'withdraw' ? 'Public Stellar address (G…)' : 'Recipient confidential account (G…)'} spellCheck={false} style={{ width: '100%', padding: '11px 13px', borderRadius: 9, border: `1px solid ${recipient && !recipientValid ? 'var(--warn)' : 'var(--bd)'}`, background: 'var(--bg)', color: 'var(--tx)', fontSize: 13, fontFamily: 'var(--fm)' }} />
+                <AddressBookPicker network={network} current={recipient} onPick={setRecipient} />
+              </>
             ) : null}
             {amountError ? <Callout tone="warn">{amountError}</Callout> : recipient && !recipientValid ? <Callout tone="warn">Enter a valid Stellar address (G…).</Callout> : null}
             <Button fullWidth disabled={!canReview} onClick={() => setStep('review')}>{`Review ${op}`}</Button>
@@ -256,6 +262,7 @@ export function ConfidentialScreen({ identity, network, onNav }: ConfidentialScr
                   : 'No new incoming transfers found.'}
               </Callout>
             ) : null}
+            <IncomingHistory entries={history} decimals={decimals} code={confidential.underlyingCode} network={network} />
           </>
         ) : null}
       </>
