@@ -110,3 +110,32 @@ confirmed on Horizon. 5 USDC remain as a confidential commitment; GAY265 holds t
 2 USDC transfer in its receiving balance. The wallet's local (v, r) tracking stayed
 consistent with on-chain state across all four ops (proofs' C_spend matched the
 stored commitments — no AddrFMismatch / InvalidProof).
+
+---
+
+## 2026-06-29 — Receive half (scan + decrypt incoming transfers)
+
+Transfer now emits the recipient-channel ciphertext in its event, so a recipient
+can scan the chain and recover incoming funds. Required a token redeploy:
+- New token (emits transfer ciphertext): `CBNL4THDSDDZ5OWPVLJPDBQGQ4FDH6LHBBFUBPRDNLUCIV2LKCHEVJ4F`
+  (verifier CD5DMFWT… + auditor CAMO6HGC… + USDC SAC reused; addr_f =
+  `187a102833dc97bc4c211264d209758bab38eeb1945fa79dc9133ceda7a0204e`).
+- GB3V re-registered on it (auditor_id 0).
+
+End-to-end on testnet:
+- deposit 5 USDC + merge → spendable = commit(50000000, 0).
+- self-transfer 2 USDC (GB3V→GB3V) — tx `eb8f070d…`; the transfer event carries
+  (r_e, v_tilde, sigma).
+- `scanConfidentialIncoming(GB3V)` found the event, recomputed s = ecdh(vk_B, R_e),
+  and **decrypted exactly 2.0 USDC** (20000000 base units); the recovered (amount,
+  r_tx) opens the on-chain C_tx. A second scan credited 0 — idempotent, no
+  double-count.
+
+Note on a false start: the first self-transfer simulated against a ledger where the
+preceding merge hadn't propagated, so the contract read spendable = identity while
+the proof committed to commit(50000000,0) → verify_proof false. Re-running after
+propagation succeeded — a sequencing/propagation issue, not a proof-soundness one
+(local verify of the proof against the contract-order public inputs was true).
+
+Still not built: in-app surfacing of decrypted incoming history beyond the credited
+total, and multi-recipient address-book UX.
