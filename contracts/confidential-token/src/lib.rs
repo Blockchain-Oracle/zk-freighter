@@ -40,6 +40,7 @@ pub enum Error {
     AlreadyRegistered = 6,
     NegativeAmount = 7,
     AccountNotRegistered = 8,
+    NonCanonicalEncoding = 9,
 }
 
 #[contracttype]
@@ -84,9 +85,20 @@ pub trait VerifierInterface {
     fn verify_proof(env: Env, circuit_type: CircuitType, public_inputs: Bytes, proof: Bytes) -> bool;
 }
 
+/// Cross-contract view of the auditor registry — resolves an `auditor_id` to the
+/// auditor's Grumpkin public key `K_aud` (x||y, 64 bytes), consumed as a circuit
+/// public input for sender-/recipient-auditor ECDH visibility.
+#[contractclient(name = "AuditorClient")]
+pub trait AuditorInterface {
+    fn get_key(env: Env, auditor_id: u32) -> BytesN<64>;
+}
+
 // register public-input layout: y_x | y_y | pvk_x | pvk_y | addr_f, 32 bytes each.
 const FIELD: u32 = 32;
 const REGISTER_PUBLIC_INPUTS_LEN: u32 = 5 * FIELD;
+// withdraw public-input layout (DESIGN §7.5, 15 fields × 32 bytes):
+//   C_spend | Y | addr_f | K_aud_s | a | C_spend' | sigma | b_tilde | R_e | b_aud_s
+const WITHDRAW_PUBLIC_INPUTS_LEN: u32 = 15 * FIELD;
 
 #[contract]
 pub struct ConfidentialToken;
@@ -213,6 +225,89 @@ impl ConfidentialToken {
         Ok(())
     }
 
+    /// Confidential → public (the unshield boundary). `amount` is public: the
+    /// prover proves they own `C_spend = v·G + r·H`, that `0 ≤ amount ≤ v < 2^127`,
+    /// and supplies the new spendable commitment `C_spend' = (v − amount)·G + r'·H`
+    /// plus the auditor-visibility ciphertexts. We reconstruct the circuit's
+    /// 15-field public-input blob from stored state + the auditor key + the
+    /// prover outputs, verify the proof, overwrite the spendable balance, then
+    /// move `amount` real underlying tokens out to `to`.
+    #[allow(clippy::too_many_arguments)]
+    pub fn withdraw(
+        env: Env,
+        from: Address,
+        to: Address,
+        amount: i128,
+        c_spend_new: BytesN<64>,
+        sigma: BytesN<32>,
+        b_tilde: BytesN<32>,
+        r_e: BytesN<64>,
+        b_aud_s: BytesN<32>,
+        proof: Bytes,
+    ) -> Result<(), Error> {
+        from.require_auth();
+        if amount < 0 {
+            return Err(Error::NegativeAmount);
+        }
+        let config = Self::config_or_err(&env)?;
+        let account: AccountState = env
+            .storage()
+            .persistent()
+            .get(&DataKey::Account(from.clone()))
+            .ok_or(Error::AccountNotRegistered)?;
+        let addr_f: BytesN<32> = env
+            .storage()
+            .instance()
+            .get(&DataKey::ContractField)
+            .ok_or(Error::ContractFieldNotSet)?;
+
+        // Prover-supplied values cross the trust boundary — reject any non-canonical
+        // BN254 representative before it reaches the verifier (stored state and the
+        // registered auditor key are already canonical by construction).
+        if !Grumpkin::is_canonical_point(&c_spend_new)
+            || !Grumpkin::is_canonical_point(&r_e)
+            || !Grumpkin::is_canonical_field(&sigma)
+            || !Grumpkin::is_canonical_field(&b_tilde)
+            || !Grumpkin::is_canonical_field(&b_aud_s)
+        {
+            return Err(Error::NonCanonicalEncoding);
+        }
+
+        let k_aud_s = AuditorClient::new(&env, &config.auditor_registry).get_key(&account.auditor_id);
+
+        // PI order (DESIGN §7.5): C_spend | Y | addr_f | K_aud_s | a |
+        //                         C_spend' | sigma | b_tilde | R_e | b_aud_s
+        let mut pi = Bytes::new(&env);
+        pi.append(&Bytes::from(&account.spendable_balance));
+        pi.append(&Bytes::from(&account.spending_key));
+        pi.append(&Bytes::from(&addr_f));
+        pi.append(&Bytes::from(&k_aud_s));
+        pi.append(&amount_to_field(&env, amount));
+        pi.append(&Bytes::from(&c_spend_new));
+        pi.append(&Bytes::from(&sigma));
+        pi.append(&Bytes::from(&b_tilde));
+        pi.append(&Bytes::from(&r_e));
+        pi.append(&Bytes::from(&b_aud_s));
+        debug_assert_eq!(pi.len(), WITHDRAW_PUBLIC_INPUTS_LEN);
+
+        let verifier = VerifierClient::new(&env, &config.verifier);
+        if !verifier.verify_proof(&CircuitType::Withdraw, &pi, &proof) {
+            return Err(Error::InvalidProof);
+        }
+
+        // Proof accepted: commit the new spendable balance, then cross the public
+        // boundary. A failed token transfer reverts the whole op.
+        let mut data = account;
+        data.spendable_balance = c_spend_new;
+        env.storage().persistent().set(&DataKey::Account(from.clone()), &data);
+
+        token::TokenClient::new(&env, &config.underlying)
+            .transfer(&env.current_contract_address(), &to, &amount);
+
+        env.events().publish((symbol_short!("withdraw"), from, to), amount);
+        Ok(())
+    }
+
     pub fn config(env: Env) -> Config {
         env.storage().instance().get(&DataKey::Config).unwrap()
     }
@@ -228,6 +323,14 @@ impl ConfidentialToken {
     fn config_or_err(env: &Env) -> Result<Config, Error> {
         env.storage().instance().get(&DataKey::Config).ok_or(Error::NotConfigured)
     }
+}
+
+/// Encode a non-negative `i128` as a canonical 32-byte big-endian BN254 field
+/// element (left-padded), matching the circuit's `a` public input.
+fn amount_to_field(env: &Env, amount: i128) -> Bytes {
+    let mut buf = [0u8; 32];
+    buf[16..].copy_from_slice(&amount.to_be_bytes());
+    Bytes::from_array(env, &buf)
 }
 
 mod test;

@@ -27,6 +27,17 @@ impl MockVerifier {
     }
 }
 
+// Stand-in auditor registry: returns a fixed canonical Grumpkin key for any id.
+#[contract]
+pub struct MockAuditor;
+
+#[contractimpl]
+impl MockAuditor {
+    pub fn get_key(env: Env, _auditor_id: u32) -> BytesN<64> {
+        BytesN::<64>::from_array(&env, &[2u8; 64])
+    }
+}
+
 struct Fixture<'a> {
     env: Env,
     client: ConfidentialTokenClient<'a>,
@@ -104,7 +115,7 @@ fn setup_with_sac<'a>() -> (Env, ConfidentialTokenClient<'a>, Address, Address) 
     env.mock_all_auths();
     let admin = Address::generate(&env);
     let verifier = env.register(MockVerifier, ());
-    let auditor_registry = Address::generate(&env);
+    let auditor_registry = env.register(MockAuditor, ());
     let sac_id = env.register_stellar_asset_contract_v2(admin).address();
     let token_id = env.register(ConfidentialToken, (Address::generate(&env), verifier, auditor_registry, sac_id.clone()));
     let client = ConfidentialTokenClient::new(&env, &token_id);
@@ -143,4 +154,77 @@ fn deposit_requires_recipient_registered() {
     StellarAssetClient::new(&env, &sac_id).mint(&user, &1000);
     let stranger = Address::generate(&env);
     assert_eq!(client.try_deposit(&user, &stranger, &10), Err(Ok(Error::AccountNotRegistered)));
+}
+
+/// Canonical prover-supplied withdraw payload (commitment math is the circuit's
+/// job — under MockVerifier we exercise the contract's PI assembly, storage
+/// overwrite, and the public-boundary token transfer out).
+fn withdraw_payload(env: &Env) -> (BytesN<64>, BytesN<32>, BytesN<32>, BytesN<64>, BytesN<32>) {
+    (
+        BytesN::<64>::from_array(env, &[3u8; 64]), // c_spend_new
+        BytesN::<32>::from_array(env, &[5u8; 32]), // sigma
+        BytesN::<32>::from_array(env, &[6u8; 32]), // b_tilde
+        BytesN::<64>::from_array(env, &[4u8; 64]), // r_e
+        BytesN::<32>::from_array(env, &[7u8; 32]), // b_aud_s
+    )
+}
+
+#[test]
+fn withdraw_verifies_overwrites_spendable_and_pays_out() {
+    let (env, client, sac_id, user) = setup_with_sac();
+    StellarAssetClient::new(&env, &sac_id).mint(&user, &1000);
+    client.deposit(&user, &user, &250); // contract now holds 250 underlying
+    client.merge(&user);
+
+    let recipient = Address::generate(&env);
+    let (c_new, sigma, b_tilde, r_e, b_aud_s) = withdraw_payload(&env);
+    let proof = Bytes::from_array(&env, &[0u8; 32]);
+
+    client.withdraw(&user, &recipient, &100, &c_new, &sigma, &b_tilde, &r_e, &b_aud_s, &proof);
+
+    // Public boundary: real tokens left the contract to the recipient.
+    let sac = TokenClient::new(&env, &sac_id);
+    assert_eq!(sac.balance(&recipient), 100);
+    assert_eq!(sac.balance(&client.address), 150);
+    // Spendable commitment was overwritten with the prover's C_spend'.
+    assert_eq!(client.account(&user).unwrap().spendable_balance, c_new);
+}
+
+#[test]
+fn withdraw_rejects_negative_amount() {
+    let (env, client, _sac, user) = setup_with_sac();
+    let (c_new, sigma, b_tilde, r_e, b_aud_s) = withdraw_payload(&env);
+    let proof = Bytes::from_array(&env, &[0u8; 32]);
+    let to = Address::generate(&env);
+    assert_eq!(
+        client.try_withdraw(&user, &to, &-1, &c_new, &sigma, &b_tilde, &r_e, &b_aud_s, &proof),
+        Err(Ok(Error::NegativeAmount))
+    );
+}
+
+#[test]
+fn withdraw_rejects_non_canonical_payload() {
+    let (env, client, _sac, user) = setup_with_sac();
+    let (_c, sigma, b_tilde, r_e, b_aud_s) = withdraw_payload(&env);
+    // A field at or above the BN254 modulus is non-canonical → rejected pre-verify.
+    let bad = BytesN::<64>::from_array(&env, &[0xffu8; 64]);
+    let proof = Bytes::from_array(&env, &[0u8; 32]);
+    let to = Address::generate(&env);
+    assert_eq!(
+        client.try_withdraw(&user, &to, &10, &bad, &sigma, &b_tilde, &r_e, &b_aud_s, &proof),
+        Err(Ok(Error::NonCanonicalEncoding))
+    );
+}
+
+#[test]
+fn withdraw_requires_registered_account() {
+    let (env, client, _sac, _user) = setup_with_sac();
+    let stranger = Address::generate(&env);
+    let (c_new, sigma, b_tilde, r_e, b_aud_s) = withdraw_payload(&env);
+    let proof = Bytes::from_array(&env, &[0u8; 32]);
+    let to = Address::generate(&env);
+    assert_eq!(
+        client.try_withdraw(&stranger, &to, &10, &c_new, &sigma, &b_tilde, &r_e, &b_aud_s, &proof),
+        Err(Ok(Error::AccountNotRegistered))
+    );
 }
