@@ -82,3 +82,31 @@ and bound a properly-derived `addr_f`:
 
 Deposit + merge UI also wired (proofless, gated behind registration). Withdraw +
 transfer UI still to come (need their in-browser witness construction).
+
+---
+
+## 2026-06-29 — FULL on-chain round-trip (deposit → merge → withdraw → transfer)
+
+All five confidential ops now proven on the hardened token `CDKQ7UR7…` (testnet),
+with in-JS-generated UltraHonk proofs accepted by the on-chain verifier.
+
+Prereqs landed first:
+- Auditor key registered at `auditor_id=0` on the auditor registry `CAMO6HGC…`
+  (Grumpkin generator H as the key) — tx `9c693d55…`. Required because the
+  withdraw/transfer contract ops fetch `auditor.get_key`.
+- Withdraw VK (circuit_type 1) registered in verifier `CD5DMFWT…` — tx `612925e4…`.
+- Transfer VK (circuit_type 2) registered — (event circuit_type 2). Without these,
+  `verify_proof` returns `VerificationKeyNotRegistered` (3401).
+
+Round-trip (sender = `GB3VMAPR…`, funded with 20 testnet USDC):
+- **deposit** 10 USDC (public→confidential receiving) — tx `bb9d5ed6…`.
+- **merge** receiving→spendable — tx `6fa248c6…`. Spendable = commit(10 USDC, r=0).
+- **withdraw** 3 USDC (confidential→public, in-JS proof accepted) — tx `aacfb0f9…`.
+- **transfer** 2 USDC confidential→confidential to registered `GAY265…`
+  (in-JS proof: recipient ECDH + dual-auditor channels, accepted) — tx `b100abe6…`.
+
+Public-balance check: GB3V USDC 20 → 10 (deposit) → 13 (withdraw) = **13.0000000**,
+confirmed on Horizon. 5 USDC remain as a confidential commitment; GAY265 holds the
+2 USDC transfer in its receiving balance. The wallet's local (v, r) tracking stayed
+consistent with on-chain state across all four ops (proofs' C_spend matched the
+stored commitments — no AddrFMismatch / InvalidProof).
