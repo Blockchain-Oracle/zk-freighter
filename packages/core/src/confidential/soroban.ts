@@ -26,7 +26,7 @@ const invokeTimeoutSeconds = 120
 const defaultConfirmationPolls = 60
 const defaultPollIntervalMs = 2_000
 
-export type ConfidentialOp = 'deposit' | 'merge'
+export type ConfidentialOp = 'deposit' | 'merge' | 'register'
 export type ConfidentialSubmitStatus = 'submitted' | 'blocked' | 'failed'
 export type ConfidentialStage = 'readiness' | 'simulate' | 'submit' | 'confirm'
 
@@ -118,7 +118,7 @@ export async function submitConfidentialDeposit(
   if (options.amount < 0n) {
     return failFast(options, 'deposit', ['Deposit amount must be non-negative.'])
   }
-  return invoke(options, 'deposit', (contractId) =>
+  return runConfidentialInvocation(options, 'deposit', (contractId) =>
     new Contract(contractId).call(
       'deposit',
       Address.fromString(from).toScVal(),
@@ -134,12 +134,19 @@ export async function submitConfidentialMerge(
   options: ConfidentialSubmitOptions,
 ): Promise<ConfidentialSubmitReport> {
   const account = options.identity.stellarPublicKey
-  return invoke(options, 'merge', (contractId) =>
+  return runConfidentialInvocation(options, 'merge', (contractId) =>
     new Contract(contractId).call('merge', Address.fromString(account).toScVal()),
   )
 }
 
-async function invoke(
+/**
+ * Run a confidential-token invocation through the full Soroban lifecycle
+ * (build → simulate → assemble → sign → submit → confirm) and return a
+ * structured report. Shared by the proofless ops here and the proof-gated
+ * register path in ./register; `buildCall` produces the contract call (already
+ * carrying any proof/public-input bytes).
+ */
+export async function runConfidentialInvocation(
   options: ConfidentialSubmitOptions,
   op: ConfidentialOp,
   buildCall: (contractId: string) => ReturnType<Contract['call']>,

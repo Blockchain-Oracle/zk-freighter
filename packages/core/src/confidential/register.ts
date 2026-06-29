@@ -7,12 +7,19 @@
 // with addr_f bound to the deployed token instance (design §7.2). The contract
 // then re-checks addr_f == its bound ContractField and gates on the proof.
 
+import { Address, Contract, nativeToScVal, xdr } from '@stellar/stellar-sdk'
+import { getConfidentialConfig } from './../networks'
 import { deriveConfidentialAccount, type ConfidentialAccountKeys } from './keys'
 import {
   executeConfidentialCircuit,
   generateConfidentialProof,
   type CompiledCircuit,
 } from './prover'
+import {
+  runConfidentialInvocation,
+  type ConfidentialSubmitOptions,
+  type ConfidentialSubmitReport,
+} from './soroban'
 
 const FIELD_BYTES = 32
 // Register public-input layout (contract REGISTER_PUBLIC_INPUTS_LEN = 5·32):
@@ -79,4 +86,42 @@ export async function buildRegisterProof(args: {
     throw new Error('register public-input field count drifted from the contract layout')
   }
   return { publicInputs, proof: proof.proof, keys }
+}
+
+/**
+ * Register the caller's confidential account on-chain. Derives keys from the
+ * wallet's confidential secret, generates the register proof against the
+ * instance's bound `addr_f`, and submits `register(account, auditor_id,
+ * public_inputs, proof)`. The `circuit` is the compiled register circuit the
+ * caller loads lazily (e.g. fetched from `/circuits/circuit_register.json`).
+ */
+export async function submitConfidentialRegister(
+  options: ConfidentialSubmitOptions & { readonly circuit: CompiledCircuit; readonly auditorId?: number },
+): Promise<ConfidentialSubmitReport> {
+  const confidential = getConfidentialConfig(options.network)
+  if (!confidential) {
+    // Defer to the runner's gated path for a consistent blocked report.
+    return runConfidentialInvocation(options, 'register', (contractId) =>
+      new Contract(contractId).call('register'),
+    )
+  }
+
+  const addrF = BigInt(`0x${confidential.addrFHex}`)
+  const auditorId = options.auditorId ?? 0
+  const account = options.identity.stellarPublicKey
+  const { publicInputs, proof } = await buildRegisterProof({
+    secret: options.identity.keyDerivationSignature,
+    addrF,
+    circuit: options.circuit,
+  })
+
+  return runConfidentialInvocation(options, 'register', (contractId) =>
+    new Contract(contractId).call(
+      'register',
+      Address.fromString(account).toScVal(),
+      nativeToScVal(auditorId, { type: 'u32' }),
+      xdr.ScVal.scvBytes(Buffer.from(publicInputs)),
+      xdr.ScVal.scvBytes(Buffer.from(proof)),
+    ),
+  )
 }

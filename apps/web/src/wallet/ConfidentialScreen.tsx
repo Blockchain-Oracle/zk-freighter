@@ -67,7 +67,7 @@ export function ConfidentialScreen({ identity, network, onNav }: ConfidentialScr
   const registered = registration === 'registered'
   const amountLabel = `${amount.trim() || '0'} ${confidential?.underlyingCode ?? ''}`
 
-  async function run(kind: 'deposit' | 'merge') {
+  async function run(kind: 'deposit' | 'merge' | 'register') {
     if (kind === 'deposit' && !parsed.ok) return
     const runId = ++runIdRef.current
     setEvents([])
@@ -79,7 +79,9 @@ export function ConfidentialScreen({ identity, network, onNav }: ConfidentialScr
       const result =
         kind === 'deposit' && parsed.ok
           ? await submitConfidentialDeposit({ identity, network, amount: parsed.value })
-          : await submitConfidentialMerge({ identity, network })
+          : kind === 'merge'
+            ? await submitConfidentialMerge({ identity, network })
+            : await runRegister()
       if (runIdRef.current !== runId) return
       setEvents(result.statusEvents)
       setReport(result)
@@ -100,6 +102,19 @@ export function ConfidentialScreen({ identity, network, onNav }: ConfidentialScr
         runIdRef.current += 1
       }
     }
+  }
+
+  // Register pulls the heavy bb.js/noir prover + the compiled circuit, so both
+  // are loaded lazily only when the user actually registers.
+  async function runRegister() {
+    const [{ submitConfidentialRegister }, circuit] = await Promise.all([
+      import('@zk-fighter/core/confidential/register'),
+      fetch('/circuits/circuit_register.json').then((response) => {
+        if (!response.ok) throw new Error(`failed to load register circuit (${response.status})`)
+        return response.json()
+      }),
+    ])
+    return submitConfidentialRegister({ identity, network, circuit })
   }
 
   const section: CSSProperties = { width: '100%', maxWidth: CONTENT_MAX, margin: '0 auto', padding: '32px 28px 56px', display: 'flex', flexDirection: 'column', gap: 16 }
@@ -125,12 +140,20 @@ export function ConfidentialScreen({ identity, network, onNav }: ConfidentialScr
               <span>{event.message}</span>
             </div>
           ))}
-          {step === 'running' ? <div style={{ fontSize: 13, color: 'var(--ac2)' }}>Working…</div> : null}
+          {step === 'running' ? (
+            <div style={{ fontSize: 13, color: 'var(--ac2)' }}>
+              Generating the zero-knowledge proof on your device, then submitting to Stellar — keep this tab open.
+            </div>
+          ) : null}
         </div>
         {step === 'result' && report ? (
           report.status === 'submitted' ? (
             <Callout tone="info" title={`Confidential ${report.op} submitted`}>
-              {report.op === 'deposit' ? `${amountLabel} moved into your confidential receiving balance.` : 'Your receiving balance was folded into spendable.'}
+              {report.op === 'deposit'
+                ? `${amountLabel} moved into your confidential receiving balance.`
+                : report.op === 'register'
+                  ? 'Your confidential account is set up. You can now deposit and merge.'
+                  : 'Your receiving balance was folded into spendable.'}
               {report.explorerUrl ? (
                 <>
                   {' '}
@@ -182,9 +205,12 @@ export function ConfidentialScreen({ identity, network, onNav }: ConfidentialScr
         ) : registration === 'unavailable' ? (
           <Callout tone="warn" title="Status unavailable.">Couldn’t read your confidential account from the network right now.</Callout>
         ) : !registered ? (
-          <Callout tone="warn" title="Make your account discoverable first.">
-            Your account isn’t set up for confidential tokens yet. Registration (a one-time on-chain proof) is the next step — deposits and merges unlock once you’re registered.
-          </Callout>
+          <>
+            <Callout tone="warn" title="Make your account discoverable first.">
+              Your account isn’t set up for confidential tokens yet. This is a one-time on-chain proof that derives your confidential keys and binds them to this contract — deposits and merges unlock once it lands.
+            </Callout>
+            <Button fullWidth onClick={() => run('register')}>Set up confidential account</Button>
+          </>
         ) : (
           <Callout tone="info" title="Confidential account ready.">Your account is registered. Deposit public funds in, then merge them to make them spendable.</Callout>
         )}

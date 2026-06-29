@@ -50,6 +50,10 @@ export interface ConfidentialConfig {
   readonly underlyingSacId: string
   readonly underlyingCode: AssetCode
   readonly underlyingDecimals: number
+  /// The contract's bound `addr_f` (addressToField(tokenId)) as 64-char hex — the
+  /// per-instance proof-replay binding. Stored so the register proof uses the exact
+  /// value bound on-chain via set_contract_field (no recompute drift).
+  readonly addrFHex: string
 }
 
 export interface NetworkConfig {
@@ -88,12 +92,15 @@ export const NETWORKS = {
       },
     },
     confidential: {
-      tokenId: 'CDNN7XDLNAHE6BPS3CV3VJQLMUDBFULCEJFOKDGEGQ5N3O7QZ4YMLEF7',
+      // Hardened token (withdraw/transfer/TTL/single-shot addr_f); supersedes the
+      // earlier CDNN7XDL… instance which bound a demo-placeholder addr_f.
+      tokenId: 'CDKQ7UR75QR7PEKBBPX7DYZAERK5N2OHRTASH7KETNKO43BKQDJ6QONL',
       verifierId: 'CD5DMFWTPW6SLA5TAUNU2TLAZ2ZFXCKGR2PBS4KHQ4P56EOIASRSTUGG',
       auditorId: 'CAMO6HGCK3EGQX7IEOAO555MPXNQ6UVFI46Y34CYQRWS4HLXOAQ5SDGO',
       underlyingSacId: 'CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA',
       underlyingCode: 'USDC',
       underlyingDecimals: 7,
+      addrFHex: '1d5fbd32cfcbc206121fda68f64527a8b8626d83ddbbcd623903a8c0b0743234',
     },
     cctp: {
       domain: 27,
