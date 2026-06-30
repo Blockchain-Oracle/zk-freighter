@@ -3,9 +3,8 @@ import {
   type NetworkKey,
   type WalletIdentity,
 } from '@zk-fighter/core'
-import { truncateMiddle } from '@zk-fighter/ui'
+import { BoundaryBadge, truncateMiddle } from '@zk-fighter/ui'
 import type { ShieldedBalanceState } from './useShieldedBalance'
-import { BoundaryPill } from './flowChrome'
 import { PrivateFlowScreen, type PrivateFlowConfig } from './PrivateFlowScreen'
 import type { WalletScreen } from './screens'
 
@@ -18,12 +17,7 @@ function validateStellarAddress(value: string): string | null {
 
 const UNSHIELD_CONFIG: PrivateFlowConfig = {
   title: 'Unshield · withdraw',
-  badge: <BoundaryPill label="REVEALS INFO" color="var(--warn)" />,
-  intro: {
-    tone: 'warn',
-    title: 'Public boundary.',
-    body: 'Move shielded funds back to a public Stellar address. The destination and amount become visible on-chain; your remaining shielded balance stays private.',
-  },
+  badge: <BoundaryBadge kind="reveals-info" label="SHIELDED → PUBLIC" />,
   recipient: {
     label: 'Public Stellar destination',
     placeholder: 'G…',

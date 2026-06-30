@@ -4,9 +4,8 @@ import {
   type NetworkKey,
   type WalletIdentity,
 } from '@zk-fighter/core'
-import { truncateMiddle } from '@zk-fighter/ui'
+import { BoundaryBadge, truncateMiddle } from '@zk-fighter/ui'
 import type { ShieldedBalanceState } from './useShieldedBalance'
-import { BoundaryPill } from './flowChrome'
 import { PrivateFlowScreen, type PrivateFlowConfig } from './PrivateFlowScreen'
 import type { WalletScreen } from './screens'
 
@@ -22,12 +21,8 @@ function validateReceiveCode(value: string, network: NetworkKey): string | null 
 }
 
 const SEND_CONFIG: PrivateFlowConfig = {
-  title: 'Send · private',
-  badge: <BoundaryPill label="SHIELDED" color="var(--ac2)" dashed={false} />,
-  intro: {
-    tone: 'info',
-    body: 'Send shielded funds privately to another ZK Fighter receive code. The amount and counterparty stay inside the pool — nothing about this transfer is public.',
-  },
+  title: 'Send privately',
+  badge: <BoundaryBadge kind="shielded" label="SHIELDED → SHIELDED" />,
   recipient: {
     label: 'Recipient private receive code',
     placeholder: 'zkf1…',
