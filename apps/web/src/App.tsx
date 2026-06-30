@@ -130,16 +130,22 @@ function App() {
 
   if (identity) {
     return (
-      <ThemeProvider initialTheme={initialTheme} onThemeChange={onThemeChange}>
-        <WalletShell
-          identity={identity}
-          network={network}
-          receiveCode={receiveCode}
-          passkeyEnvelope={passkeyEnvelope}
-          onChangeNetwork={changeNetwork}
-          onPasskeyEnvelopeChange={savePasskeyEnvelope}
-          onLock={() => setIdentity(null)}
-        />
+      <ThemeProvider
+        initialTheme={initialTheme}
+        onThemeChange={onThemeChange}
+        className="flex items-start justify-center p-8 max-[980px]:p-0"
+      >
+        <div className="w-[1260px] max-w-full h-[calc(100dvh-64px)] max-h-[880px] overflow-hidden rounded-[24px] border border-bd2 bg-panel shadow-panel max-[980px]:h-dvh max-[980px]:max-h-none max-[980px]:rounded-none max-[980px]:border-0">
+          <WalletShell
+            identity={identity}
+            network={network}
+            receiveCode={receiveCode}
+            passkeyEnvelope={passkeyEnvelope}
+            onChangeNetwork={changeNetwork}
+            onPasskeyEnvelopeChange={savePasskeyEnvelope}
+            onLock={() => setIdentity(null)}
+          />
+        </div>
       </ThemeProvider>
     )
   }

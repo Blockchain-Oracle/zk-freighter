@@ -19,9 +19,13 @@ import type { WalletScreen } from './screens'
 const NAV: { id: WalletScreen; label: string; glyph: string }[] = [
   { id: 'home', label: 'Home', glyph: '⌂' },
   { id: 'activity', label: 'Activity', glyph: '≋' },
+  { id: 'send', label: 'Send', glyph: '↗' },
   { id: 'receive', label: 'Receive', glyph: '↓' },
-  { id: 'confidential', label: 'Confidential', glyph: '◈' },
+  { id: 'shield', label: 'Shield', glyph: '⬡' },
+  { id: 'bridge', label: 'Bridge', glyph: '⇌' },
   { id: 'disclosure', label: 'Disclosure', glyph: '✓' },
+  { id: 'confidential', label: 'Confidential', glyph: '◈' },
+  { id: 'discover', label: 'Discover', glyph: '⌖' },
   { id: 'settings', label: 'Settings', glyph: '⚙' },
 ]
 
@@ -86,7 +90,7 @@ export function WalletShell({
       cursor: 'pointer',
       fontSize: 13.5,
       fontWeight: 600,
-      background: active ? 'var(--card)' : 'transparent',
+      background: active ? 'linear-gradient(90deg, rgba(94,124,250,.16), rgba(94,124,250,.02))' : 'transparent',
       color: active ? 'var(--tx)' : 'var(--tx2)',
       border: 'none',
       width: '100%',
@@ -95,7 +99,7 @@ export function WalletShell({
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
+    <div style={{ display: 'flex', height: '100%' }}>
       <aside style={{ width: 236, flex: 'none', background: 'var(--side)', borderRight: '1px solid var(--bd)', padding: '22px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '0 6px 4px' }}>
           <div style={{ width: 36, height: 36, borderRadius: 11, background: 'linear-gradient(145deg,var(--ac2),var(--ac))' }} />
@@ -107,7 +111,7 @@ export function WalletShell({
         <div style={{ margin: '6px 6px 10px' }}>
           <NetworkPill network={network} />
         </div>
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <nav style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: '1 1 auto', minHeight: 0, overflowY: 'auto' }}>
           {NAV.map((item) => {
             const active = screen === item.id
             return (
@@ -138,7 +142,7 @@ export function WalletShell({
         </div>
       </aside>
 
-      <main style={{ flex: 1, minWidth: 0, maxHeight: '100vh', overflowY: 'auto' }}>
+      <main style={{ flex: 1, minWidth: 0, height: '100%', overflowY: 'auto' }}>
         {screen === 'home' ? <HomeScreen identity={identity} balance={balance} onNav={setScreen} /> : null}
         {screen === 'shield' ? <ShieldScreen identity={identity} network={network} balance={balance} onNav={setScreen} /> : null}
         {screen === 'send' ? <SendScreen identity={identity} network={network} balance={balance} onNav={setScreen} /> : null}
