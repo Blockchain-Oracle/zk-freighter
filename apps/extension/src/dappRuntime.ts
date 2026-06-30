@@ -27,7 +27,7 @@ import {
   type QuickBridgeResponse,
   type QuickShieldResponse,
 } from './dappMessages'
-import { balanceCacheKey, isBalanceStale, readBalanceCache, writeBalanceCache } from './balance-cache'
+import { balanceCacheKey, clearAllBalanceCache, isBalanceStale, readBalanceCache, writeBalanceCache } from './balance-cache'
 import { freighterResponse, openExtensionSidePanel } from './dappRuntimeHelpers'
 import { identityForMnemonic, readStoredDappWallet, writeStoredDappWallet } from './dappRuntimeState'
 
@@ -100,6 +100,8 @@ export class ExtensionDappRuntime {
         return this.unlock(message.password)
       case dappMessageTypes.lock:
         this.unlockedMnemonic = null
+        // Locking must not leave shielded amounts readable at rest.
+        void clearAllBalanceCache()
         return this.status()
       case dappMessageTypes.prepareShieldAccess:
         return this.prepareShieldAccess()
@@ -126,6 +128,8 @@ export class ExtensionDappRuntime {
     }
 
     this.unlockedMnemonic = message.mnemonic
+    // A new/replaced wallet must not inherit a previous wallet's cached balances.
+    await clearAllBalanceCache()
     await writeStoredDappWallet({
       vault: created.value,
       network: message.network ?? 'testnet',
@@ -343,7 +347,10 @@ export class ExtensionDappRuntime {
     this.refreshingBalances.add(key)
     try {
       const fresh = await this.runBalances({ mnemonic, network })
-      await writeBalanceCache(key, fresh)
+      // Don't re-populate the at-rest cache if the wallet locked mid-refresh.
+      if (this.unlockedMnemonic === mnemonic) {
+        await writeBalanceCache(key, fresh)
+      }
     } catch (error) {
       console.warn('[ExtensionDappRuntime] balance refresh failed', error)
     } finally {

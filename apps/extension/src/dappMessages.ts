@@ -130,7 +130,14 @@ export interface DappBalances {
   readonly publicXlmStroops: string
   readonly publicUsdcStroops: string
   readonly noteCount: number
-  /** Non-empty when a pool scan was blocked/failed — surfaced honestly, not hidden. */
+  /**
+   * False when a shielded pool scan failed/was blocked — the shielded stroops are
+   * then NOT a real balance (the UI must show "unknown", never a fabricated 0).
+   */
+  readonly shieldedOk: boolean
+  /** False when the Horizon public lookup failed — public stroops are then unknown. */
+  readonly publicOk: boolean
+  /** Non-empty when a scan was blocked/failed — surfaced honestly, not hidden. */
   readonly blockers: readonly string[]
   /** ISO timestamp of the scan that produced these numbers. */
   readonly scannedAt: string

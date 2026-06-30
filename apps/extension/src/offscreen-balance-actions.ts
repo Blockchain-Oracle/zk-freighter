@@ -24,19 +24,36 @@ export async function runLoadBalances(payload: { readonly [key: string]: unknown
   const network = asNetworkKey(payload['network'])
   const identity = deriveWalletIdentity(mnemonic, network)
 
-  const [xlm, usdc, publicBalances] = await Promise.all([
+  // Public load is isolated so a Horizon failure can't take down a good shielded
+  // scan (and vice versa). Each section reports its own ok flag honestly.
+  const publicScan = loadPublicStellarBalances({ address: identity.stellarPublicKey, network })
+    .then((report) => ({
+      ok: report.status !== 'failed',
+      xlm: report.balances.XLM ?? 0n,
+      usdc: report.balances.USDC ?? 0n,
+      error: report.status === 'failed' ? report.error : undefined,
+    }))
+    .catch((error: unknown) => ({ ok: false, xlm: 0n, usdc: 0n, error: error instanceof Error ? error.message : String(error) }))
+
+  const [xlm, usdc, pub] = await Promise.all([
     loadXlmShieldedNotes({ identity, network, asset: 'XLM' }),
     loadXlmShieldedNotes({ identity, network, asset: 'USDC' }),
-    loadPublicStellarBalances({ address: identity.stellarPublicKey, network }),
+    publicScan,
   ])
+
+  const shieldedOk = xlm.status === 'loaded' && usdc.status === 'loaded'
+  const blockers = [...xlm.blockers, ...usdc.blockers]
+  if (!pub.ok) blockers.push(`Public balance unavailable${pub.error ? `: ${pub.error}` : '.'}`)
 
   return {
     shieldedXlmStroops: sumUnspentStroops(xlm.notes).toString(),
     shieldedUsdcStroops: sumUnspentStroops(usdc.notes).toString(),
-    publicXlmStroops: (publicBalances.balances.XLM ?? 0n).toString(),
-    publicUsdcStroops: (publicBalances.balances.USDC ?? 0n).toString(),
+    publicXlmStroops: pub.xlm.toString(),
+    publicUsdcStroops: pub.usdc.toString(),
     noteCount: xlm.notes.length + usdc.notes.length,
-    blockers: [...xlm.blockers, ...usdc.blockers],
+    shieldedOk,
+    publicOk: pub.ok,
+    blockers,
     scannedAt: new Date().toISOString(),
   }
 }

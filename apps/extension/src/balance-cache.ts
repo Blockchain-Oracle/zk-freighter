@@ -22,6 +22,18 @@ export async function writeBalanceCache(key: string, balances: DappBalances): Pr
   await browser.storage.local.set({ [key]: balances })
 }
 
+/**
+ * Wipe every cached balance. Called on lock + on vault import/replace so a locked
+ * (or swapped) wallet never leaves shielded amounts readable at rest.
+ */
+export async function clearAllBalanceCache(): Promise<void> {
+  const all = await browser.storage.local.get()
+  const staleKeys = Object.keys(all).filter((key) => key.startsWith(cachePrefix))
+  if (staleKeys.length > 0) {
+    await browser.storage.local.remove(staleKeys)
+  }
+}
+
 export function isBalanceStale(balances: DappBalances, now = Date.now()): boolean {
   const scannedAt = new Date(balances.scannedAt).getTime()
   return !Number.isFinite(scannedAt) || now - scannedAt > staleAfterMs
@@ -33,6 +45,8 @@ function isBalances(value: unknown): value is DappBalances {
     value !== null &&
     'shieldedUsdcStroops' in value &&
     'publicUsdcStroops' in value &&
+    'shieldedOk' in value &&
+    'blockers' in value &&
     'scannedAt' in value
   )
 }
