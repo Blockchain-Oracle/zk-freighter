@@ -13,6 +13,8 @@ import type {
   XlmShieldSubmitReport,
 } from '@zk-fighter/core'
 
+import type { ActivityRecord } from './activity-store'
+
 export const dappMessageTypes = {
   freighterRequest: 'zkf.extension.freighterRequest',
   status: 'zkf.extension.dapp.status',
@@ -29,6 +31,7 @@ export const dappMessageTypes = {
   unshield: 'zkf.extension.dapp.unshield',
   discover: 'zkf.extension.dapp.discover',
   disclosure: 'zkf.extension.dapp.disclosure',
+  activity: 'zkf.extension.dapp.activity',
 } as const
 
 /** Confidential-token ops (Track B). Proving runs in the offscreen (bb.js). */
@@ -144,6 +147,9 @@ export type DappRuntimeMessage =
       readonly authority: string
       readonly purpose: string
     }
+  | {
+      readonly type: typeof dappMessageTypes.activity
+    }
 
 export interface ConfidentialResponse {
   readonly ok: boolean
@@ -203,6 +209,12 @@ export interface DisclosureResponse {
   readonly ok: boolean
   readonly report?: GenerateDisclosureReport
   readonly error?: string
+}
+
+/** Activity: the persisted op history (real records, newest first). */
+export interface ActivityResponse {
+  readonly ok: boolean
+  readonly records: readonly ActivityRecord[]
 }
 
 export type DappRuntimeResponse =

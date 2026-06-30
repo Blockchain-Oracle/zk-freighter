@@ -24,6 +24,7 @@ import {
   type DappBalancesResponse,
   type DappRuntimeMessage,
   type DappRuntimeResponse,
+  type ActivityResponse,
   type DappWalletStatus,
   type DisclosureResponse,
   type DiscoverLookupResponse,
@@ -33,6 +34,7 @@ import {
   type QuickBridgeResponse,
   type QuickShieldResponse,
 } from './dappMessages'
+import { recordActivity, readActivity, type ActivityBoundary, type ActivityKind, type ActivityStatus } from './activity-store'
 import { balanceCacheKey, clearAllBalanceCache, isBalanceStale, readBalanceCache, writeBalanceCache } from './balance-cache'
 import { freighterResponse, openExtensionSidePanel } from './dappRuntimeHelpers'
 import { identityForMnemonic, readStoredDappWallet, writeStoredDappWallet } from './dappRuntimeState'
@@ -163,6 +165,8 @@ export class ExtensionDappRuntime {
         return this.discover(message.ownerAddress)
       case dappMessageTypes.disclosure:
         return this.disclosure(message.asset, message.authority, message.purpose)
+      case dappMessageTypes.activity:
+        return this.activity()
       case dappMessageTypes.freighterRequest:
         void openExtensionSidePanel(sender?.tab?.windowId)
         return this.handleFreighterRequest(message.request)
@@ -277,16 +281,9 @@ export class ExtensionDappRuntime {
     }
 
     try {
-      return {
-        ok: true,
-        report: await this.runShield({
-          mnemonic: ready.mnemonic,
-          network: ready.network,
-          asset,
-          amountStroops,
-          timeoutMs,
-        }),
-      }
+      const report = await this.runShield({ mnemonic: ready.mnemonic, network: ready.network, asset, amountStroops, timeoutMs })
+      void this.record('shield', 'public', toActivityStatus(report.status), { asset, amountStroops: report.amountStroops, txHash: report.txHash, explorerUrl: report.explorerUrl })
+      return { ok: true, report }
     } catch (error) {
       return { ok: false, error: error instanceof Error ? error.message : String(error) }
     }
@@ -412,6 +409,7 @@ export class ExtensionDappRuntime {
     if (!this.runPrivateTransfer) return { ok: false, error: 'Extension private transfer runner is unavailable.' }
     try {
       const report = await this.runPrivateTransfer({ mnemonic: ready.mnemonic, network: ready.network, asset, amountStroops, receiveCode })
+      void this.record('send', 'shielded', toActivityStatus(report.status), { asset, amountStroops, txHash: report.txHashes[0], explorerUrl: report.explorerUrls[0] })
       void clearAllBalanceCache() // a spend changes the balance — drop the stale cache
       return { ok: true, report }
     } catch (error) {
@@ -425,6 +423,7 @@ export class ExtensionDappRuntime {
     if (!this.runUnshield) return { ok: false, error: 'Extension unshield runner is unavailable.' }
     try {
       const report = await this.runUnshield({ mnemonic: ready.mnemonic, network: ready.network, asset, amountStroops, recipientAddress })
+      void this.record('unshield', 'public', toActivityStatus(report.status), { asset, amountStroops, txHash: report.txHashes[0], explorerUrl: report.explorerUrls[0] })
       void clearAllBalanceCache()
       return { ok: true, report }
     } catch (error) {
@@ -454,6 +453,23 @@ export class ExtensionDappRuntime {
       return { ok: false, error: error instanceof Error ? error.message : String(error) }
     }
   }
+
+  private async activity(): Promise<ActivityResponse> {
+    return { ok: true, records: await readActivity() }
+  }
+
+  /** Append a real op to the persisted activity history (best-effort, never fatal). */
+  private async record(kind: ActivityKind, boundary: ActivityBoundary, status: ActivityStatus, fields: { asset?: string; amountStroops?: string; txHash?: string; explorerUrl?: string }): Promise<void> {
+    try {
+      await recordActivity({ id: crypto.randomUUID(), kind, boundary, status, ts: Date.now(), ...fields })
+    } catch (error) {
+      console.warn('[ExtensionDappRuntime] activity record failed', error)
+    }
+  }
+}
+
+function toActivityStatus(status: string): ActivityStatus {
+  return status === 'submitted' ? 'submitted' : status === 'blocked' ? 'blocked' : 'failed'
 }
 
 function receiveCodeForIdentity(identity: NonNullable<ReturnType<typeof identityForMnemonic>>, network: NetworkKey): string {
