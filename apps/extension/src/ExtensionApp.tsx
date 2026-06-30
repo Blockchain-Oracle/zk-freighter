@@ -1,11 +1,12 @@
 import { extensionReadinessDigest, phase11ExtensionReadiness } from '@zk-fighter/core'
-import { Clipboard, PanelRightOpen } from 'lucide-react'
+import { Clipboard } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { browser } from 'wxt/browser'
 
 import { ThemeProvider } from '@zk-fighter/ui'
 
 import { ExtensionAccess } from './ExtensionAccess'
+import { ExtensionHome } from './ExtensionHome'
 import { ExtensionBridgePanel } from './ExtensionBridgePanel'
 import { ExtensionConfidentialPanel } from './ExtensionConfidentialPanel'
 import { ExtensionQuickShieldPanel } from './ExtensionQuickShieldPanel'
@@ -118,11 +119,32 @@ export function ExtensionApp({ surface }: ExtensionAppProps) {
     )
   }
 
+  if (!status) return null
+
+  // Popup (unlocked) = the re-skinned Home with REAL cached balances. The side
+  // panel keeps the transitional workspace stack until E3/E4 re-skin it.
+  if (surface === 'popup') {
+    return (
+      <ThemeProvider initialTheme="dark" className="flex justify-center">
+        <div style={{ width: shellWidth, maxWidth: '100%', minHeight: '100dvh', boxSizing: 'border-box', padding: 14 }}>
+          <ExtensionHome
+            status={status}
+            surface={surface}
+            sendRuntimeMessage={sendRuntimeMessage}
+            lockWallet={lockWallet}
+            openSidePanel={openSidePanel}
+            copyReceiveCode={copyReceiveCode}
+          />
+        </div>
+      </ThemeProvider>
+    )
+  }
+
   return (
     <main className="shell">
       <section className="masthead">
         <p className="eyebrow">ZK Fighter extension</p>
-        <h1>{surface === 'popup' ? 'Runtime checkpoint' : 'Extension workspace'}</h1>
+        <h1>Extension workspace</h1>
         <p className="summary">{phase11ExtensionReadiness.summary}</p>
       </section>
 
@@ -149,11 +171,6 @@ export function ExtensionApp({ surface }: ExtensionAppProps) {
           <Clipboard size={16} aria-hidden="true" /> {copyState}
         </button>
         <span className="copy">{receiveCopyState}</span>
-        {surface === 'popup' ? (
-          <button type="button" onClick={openSidePanel}>
-            <PanelRightOpen size={16} aria-hidden="true" /> Open panel
-          </button>
-        ) : null}
       </div>
     </main>
   )
