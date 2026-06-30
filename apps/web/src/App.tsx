@@ -11,7 +11,7 @@ import {
   type PasskeyEnvelope,
   type WalletIdentity,
 } from '@zk-fighter/core'
-import { Callout, ThemeProvider } from '@zk-fighter/ui'
+import { ThemeProvider } from '@zk-fighter/ui'
 import {
   getStoredPasskeyEnvelope,
   getStoredVault,
@@ -20,9 +20,9 @@ import {
   vaultErrorText,
   vaultStorageKey,
 } from './app-helpers'
-import { CreateWalletPanel, OnboardingHeader, UnlockWalletPanel, type WalletSetupMode } from './AccessPanels'
+import { UnlockScreen } from './AccessPanels'
+import { OnboardingFlow } from './OnboardingFlow'
 import { WalletShell } from './wallet/WalletShell'
-import './App.css'
 
 const networks = Object.keys(NETWORKS) as NetworkKey[]
 const themeStorageKey = 'zk-fighter:theme:v1'
@@ -32,19 +32,12 @@ function App() {
   const [vault, setVault] = useState<EncryptedVault | null>(() => getStoredVault())
   const [passkeyEnvelope, setPasskeyEnvelope] = useState<PasskeyEnvelope | null>(() => getStoredPasskeyEnvelope())
   const [identity, setIdentity] = useState<WalletIdentity | null>(null)
-  const [mode, setMode] = useState<WalletSetupMode>('create')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
   const [unlockPassword, setUnlockPassword] = useState('')
-  const [mnemonic, setMnemonic] = useState('')
-  const [acknowledged, setAcknowledged] = useState(false)
-  const [status, setStatus] = useState('')
+  const [unlockError, setUnlockError] = useState('')
   const [busy, setBusy] = useState(false)
 
   const receiveCode = useMemo(() => {
-    if (!identity) {
-      return ''
-    }
+    if (!identity) return ''
     return encodeReceiveCode({
       version: 1,
       network,
@@ -53,70 +46,50 @@ function App() {
     })
   }, [identity, network])
 
-  function resetForm() {
-    setPassword('')
-    setConfirmPassword('')
-    setUnlockPassword('')
-    setAcknowledged(false)
-    setStatus('')
+  function enterWith(seedPhrase: string) {
+    setIdentity(deriveWalletIdentity(seedPhrase, network))
   }
 
-  async function saveWallet(seedPhrase: string) {
+  async function createVault(seedPhrase: string, password: string): Promise<{ ok: boolean; error?: string }> {
     setBusy(true)
-    setStatus('')
     const encrypted = await createEncryptedVault(seedPhrase, password)
-    if (!encrypted.ok) {
-      setStatus(vaultErrorText(encrypted.error))
-      setBusy(false)
-      return
-    }
+    setBusy(false)
+    if (!encrypted.ok) return { ok: false, error: vaultErrorText(encrypted.error) }
     window.localStorage.setItem(vaultStorageKey, JSON.stringify(encrypted.value))
     setVault(encrypted.value)
-    setIdentity(deriveWalletIdentity(seedPhrase, network))
-    resetForm()
-    setBusy(false)
+    return { ok: true }
   }
 
   async function unlockWallet() {
-    if (!vault) {
-      return
-    }
+    if (!vault) return
     setBusy(true)
-    setStatus('')
+    setUnlockError('')
     const unlocked = await unlockEncryptedVault(vault, unlockPassword)
+    setBusy(false)
     if (!unlocked.ok) {
-      setStatus(vaultErrorText(unlocked.error))
-      setBusy(false)
+      setUnlockError(vaultErrorText(unlocked.error))
       return
     }
-    setIdentity(deriveWalletIdentity(unlocked.value, network))
-    resetForm()
-    setBusy(false)
+    enterWith(unlocked.value)
+    setUnlockPassword('')
   }
 
   async function unlockWalletWithPasskey() {
-    if (!passkeyEnvelope) {
-      return
-    }
+    if (!passkeyEnvelope) return
     setBusy(true)
-    setStatus('')
+    setUnlockError('')
     const unlocked = await unlockPasskeyEnvelope({ envelope: passkeyEnvelope })
+    setBusy(false)
     if (!unlocked.ok) {
-      setStatus(passkeyErrorText(unlocked.error))
-      setBusy(false)
+      setUnlockError(passkeyErrorText(unlocked.error))
       return
     }
-    setIdentity(deriveWalletIdentity(unlocked.value, network))
-    resetForm()
-    setBusy(false)
+    enterWith(unlocked.value)
   }
 
   function savePasskeyEnvelope(envelope: PasskeyEnvelope | null) {
-    if (envelope) {
-      window.localStorage.setItem(passkeyEnvelopeStorageKey, JSON.stringify(envelope))
-    } else {
-      window.localStorage.removeItem(passkeyEnvelopeStorageKey)
-    }
+    if (envelope) window.localStorage.setItem(passkeyEnvelopeStorageKey, JSON.stringify(envelope))
+    else window.localStorage.removeItem(passkeyEnvelopeStorageKey)
     setPasskeyEnvelope(envelope)
   }
 
@@ -130,11 +103,7 @@ function App() {
 
   if (identity) {
     return (
-      <ThemeProvider
-        initialTheme={initialTheme}
-        onThemeChange={onThemeChange}
-        className="flex items-start justify-center p-8 max-[980px]:p-0"
-      >
+      <ThemeProvider initialTheme={initialTheme} onThemeChange={onThemeChange} className="flex items-start justify-center p-8 max-[980px]:p-0">
         <div className="w-[1260px] max-w-full h-[calc(100dvh-64px)] max-h-[880px] overflow-hidden rounded-[24px] border border-bd2 bg-panel shadow-panel max-[980px]:h-dvh max-[980px]:max-h-none max-[980px]:rounded-none max-[980px]:border-0">
           <WalletShell
             identity={identity}
@@ -151,41 +120,28 @@ function App() {
   }
 
   return (
-    <ThemeProvider
-      initialTheme={initialTheme}
-      onThemeChange={onThemeChange}
-      style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 24 }}
-    >
-      <div style={{ width: '100%', maxWidth: 430, display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <OnboardingHeader network={network} networks={networks} onChangeNetwork={changeNetwork} />
-        {vault ? (
-          <UnlockWalletPanel
-            busy={busy}
-            network={network}
-            passkeyEnabled={passkeyEnvelope !== null}
-            unlockPassword={unlockPassword}
-            onPassword={setUnlockPassword}
-            onPasswordUnlock={() => void unlockWallet()}
-            onPasskeyUnlock={() => void unlockWalletWithPasskey()}
-          />
-        ) : (
-          <CreateWalletPanel
-            acknowledged={acknowledged}
-            busy={busy}
-            confirmPassword={confirmPassword}
-            mnemonic={mnemonic}
-            mode={mode}
-            password={password}
-            onAcknowledge={setAcknowledged}
-            onConfirmPassword={setConfirmPassword}
-            onMnemonic={setMnemonic}
-            onMode={setMode}
-            onPassword={setPassword}
-            onSave={(seedPhrase) => void saveWallet(seedPhrase)}
-          />
-        )}
-        {status ? <Callout tone="warn">{status}</Callout> : null}
-      </div>
+    <ThemeProvider initialTheme={initialTheme} onThemeChange={onThemeChange} className="flex items-center justify-center p-6">
+      {vault ? (
+        <UnlockScreen
+          network={network}
+          busy={busy}
+          passkeyEnabled={passkeyEnvelope !== null}
+          unlockPassword={unlockPassword}
+          error={unlockError}
+          onPassword={setUnlockPassword}
+          onPasswordUnlock={() => void unlockWallet()}
+          onPasskeyUnlock={() => void unlockWalletWithPasskey()}
+        />
+      ) : (
+        <OnboardingFlow
+          network={network}
+          networks={networks}
+          busy={busy}
+          onChangeNetwork={changeNetwork}
+          onCreate={createVault}
+          onEnter={enterWith}
+        />
+      )}
     </ThemeProvider>
   )
 }
