@@ -3,6 +3,9 @@ import { Clipboard, PanelRightOpen } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { browser } from 'wxt/browser'
 
+import { ThemeProvider } from '@zk-fighter/ui'
+
+import { ExtensionAccess } from './ExtensionAccess'
 import { ExtensionBridgePanel } from './ExtensionBridgePanel'
 import { ExtensionConfidentialPanel } from './ExtensionConfidentialPanel'
 import { ExtensionQuickShieldPanel } from './ExtensionQuickShieldPanel'
@@ -23,6 +26,7 @@ export function ExtensionApp({ surface }: ExtensionAppProps) {
   const [status, setStatus] = useState<DappWalletStatus | null>(null)
   const [mnemonic, setMnemonic] = useState('')
   const [password, setPassword] = useState('')
+  const [busy, setBusy] = useState(false)
   const digest = useMemo(() => extensionReadinessDigest(), [])
 
   useEffect(() => {
@@ -67,16 +71,51 @@ export function ExtensionApp({ surface }: ExtensionAppProps) {
   }
 
   async function importWallet() {
-    await sendRuntimeMessage({ type: dappMessageTypes.importVault, mnemonic, password, network: 'testnet' })
-    setMnemonic('')
+    setBusy(true)
+    try {
+      await sendRuntimeMessage({ type: dappMessageTypes.importVault, mnemonic, password, network: 'testnet' })
+      setMnemonic('')
+    } finally {
+      setBusy(false)
+    }
   }
 
   async function unlockWallet() {
-    await sendRuntimeMessage({ type: dappMessageTypes.unlock, password })
+    setBusy(true)
+    try {
+      await sendRuntimeMessage({ type: dappMessageTypes.unlock, password })
+    } finally {
+      setBusy(false)
+    }
   }
 
   async function lockWallet() {
     await sendRuntimeMessage({ type: dappMessageTypes.lock })
+  }
+
+  const locked = !status?.hasVault || !status?.unlocked
+  const shellWidth = surface === 'popup' ? 360 : 400
+
+  // Locked surfaces (Import / Unlock) are the re-skinned access cards on the
+  // themed canvas. The unlocked workspace is still the transitional panel stack
+  // (next chunk re-skins it to the v2 popup Home + side panel).
+  if (locked) {
+    return (
+      <ThemeProvider initialTheme="dark" className="flex justify-center">
+        <div style={{ width: shellWidth, maxWidth: '100%', minHeight: '100dvh', boxSizing: 'border-box', padding: 14, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <ExtensionAccess
+            status={status}
+            mnemonic={mnemonic}
+            password={password}
+            busy={busy}
+            setMnemonic={setMnemonic}
+            setPassword={setPassword}
+            importWallet={importWallet}
+            unlockWallet={unlockWallet}
+          />
+        </div>
+      </ThemeProvider>
+    )
   }
 
   return (

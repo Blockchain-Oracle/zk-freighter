@@ -14,16 +14,19 @@
   },
   "dependencies": {
     "@zk-fighter/core": "workspace:*",
+    "@zk-fighter/ui": "workspace:*",
     "lucide-react": "1.21.0",
     "qrcode.react": "4.2.0",
     "react": "19.2.6",
     "react-dom": "19.2.6"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "4.3.2",
     "@types/chrome": "0.2.0",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
     "@wxt-dev/module-react": "1.2.2",
+    "tailwindcss": "4.3.2",
     "typescript": "~6.0.2",
     "vitest": "^4.0.16",
     "wxt": "0.20.26"
