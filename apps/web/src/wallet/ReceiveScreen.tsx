@@ -1,18 +1,16 @@
 import { useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import type { NetworkKey, WalletIdentity } from '@zk-fighter/core'
-import { Callout, truncateMiddle } from '@zk-fighter/ui'
+import { BoundaryBadge, Button, Callout, QrCard, Segmented, truncateMiddle } from '@zk-fighter/ui'
 import { UsdcReceiveSetupPanel } from '../UsdcReceiveSetupPanel'
 import type { WalletScreen } from './screens'
 
 type Tab = 'private' | 'public'
 
-const qrBoxStyle = {
-  background: '#fff',
-  padding: 15,
-  borderRadius: 18,
-  width: 'fit-content',
-} as const
+const TABS = [
+  { value: 'private', label: 'Private code' },
+  { value: 'public', label: 'Public address' },
+]
 
 interface ReceiveScreenProps {
   identity: WalletIdentity
@@ -21,98 +19,83 @@ interface ReceiveScreenProps {
   onNav: (screen: WalletScreen) => void
 }
 
-function CodeRow({ value, onCopy, copied }: { value: string; onCopy: () => void; copied: boolean }) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', border: '1px solid var(--bd)', borderRadius: 12, background: 'var(--card)', marginTop: 7 }}>
-      <code style={{ flex: 1, minWidth: 0, fontFamily: 'var(--fm)', fontSize: 11.5, color: 'var(--tx2)', wordBreak: 'break-all', lineHeight: 1.45 }}>{value}</code>
-      <button onClick={onCopy} style={{ flex: 'none', padding: '9px 14px', border: 'none', borderRadius: 9, background: 'var(--ac)', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
-        {copied ? 'Copied' : 'Copy'}
-      </button>
-    </div>
-  )
-}
-
 export function ReceiveScreen({ identity, network, receiveCode, onNav }: ReceiveScreenProps) {
   const [tab, setTab] = useState<Tab>('private')
-  const [copied, setCopied] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
+  const [showFull, setShowFull] = useState(false)
 
-  function copy(value: string, which: string) {
-    // Only affirm "Copied" if the write actually succeeded — otherwise the user
-    // could ship a stale/empty receive code believing it copied.
+  function copy(value: string) {
+    // Only affirm "Copied" if the write actually succeeded — never imply a stale/empty copy.
     navigator.clipboard.writeText(value).then(
       () => {
-        setCopied(which)
-        window.setTimeout(() => setCopied((current) => (current === which ? null : current)), 1600)
+        setCopied(true)
+        window.setTimeout(() => setCopied(false), 1600)
       },
-      (cause: unknown) => {
-        console.warn('clipboard write failed', cause)
-      },
+      (cause: unknown) => console.warn('clipboard write failed', cause),
     )
   }
 
-  function tabStyle(active: boolean) {
-    return {
-      padding: 11,
-      borderRadius: 10,
-      textAlign: 'center' as const,
-      fontSize: 12.5,
-      fontWeight: 700,
-      cursor: 'pointer',
-      background: active ? 'var(--ac)' : 'transparent',
-      color: active ? '#fff' : 'var(--tx2)',
-    }
-  }
+  const isPrivate = tab === 'private'
+  const value = isPrivate ? receiveCode : identity.stellarPublicKey
+  const codeShown = isPrivate && !showFull && receiveCode.length > 64 ? `${receiveCode.slice(0, 46)}…${receiveCode.slice(-12)}` : value
 
   return (
-    <section style={{ width: '100%', maxWidth: 600, margin: '0 auto', padding: '30px 34px 44px' }}>
-      <div style={{ fontWeight: 800, fontSize: 21, letterSpacing: '-.02em' }}>Receive</div>
-      <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 1 }}>One wallet · two jobs. Choose carefully.</div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4, padding: 4, background: 'var(--card)', border: '1px solid var(--bd)', borderRadius: 13, marginTop: 18 }}>
-        <div onClick={() => setTab('private')} style={tabStyle(tab === 'private')}>Private code</div>
-        <div onClick={() => setTab('public')} style={tabStyle(tab === 'public')}>Public address</div>
+    <section style={{ width: '100%', maxWidth: 760, margin: '0 auto', padding: '30px 34px 44px' }}>
+      <div style={{ fontWeight: 800, fontSize: 26, letterSpacing: '-.025em' }}>Receive</div>
+      <div style={{ fontSize: 13.5, color: 'var(--tx2)', marginTop: 6, marginBottom: 22 }}>
+        Share your private code to be paid privately, or your public address — which is a named public boundary.
       </div>
 
-      {tab === 'private' ? (
-        <div style={{ marginTop: 18 }}>
-          <div style={{ display: 'flex', justifyContent: 'center' }}>
-            <div style={qrBoxStyle}>
-              <QRCodeSVG value={receiveCode} size={184} level="M" marginSize={0} />
+      <div style={{ marginBottom: 24 }}>
+        <Segmented options={TABS} value={tab} onChange={(next) => { setTab(next as Tab); setCopied(false) }} />
+      </div>
+
+      <div style={{ display: 'flex', gap: 30, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+        <QrCard
+          badge={isPrivate ? <BoundaryBadge kind="shielded" label="PRIVATE CODE" /> : <BoundaryBadge kind="public" label="PUBLIC · STELLAR" />}
+          caption={isPrivate ? 'Scan to pay this wallet privately' : 'A public boundary — visible on Stellar'}
+          logo={isPrivate}
+        >
+          <QRCodeSVG value={value} size={172} level={isPrivate ? 'Q' : 'M'} marginSize={0} />
+        </QrCard>
+
+        <div style={{ flex: 1, minWidth: 280, display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div>
+            <div style={{ font: '600 9px/1 var(--fm)', letterSpacing: '.1em', color: 'var(--tx3)', marginBottom: 8 }}>
+              {isPrivate ? 'YOUR PRIVATE RECEIVE CODE' : 'YOUR PUBLIC STELLAR ADDRESS'}
+            </div>
+            <div style={{ border: '1px solid var(--bd2)', borderRadius: 13, background: 'var(--card)', padding: 15, fontFamily: 'var(--fm)', fontSize: 12, color: 'var(--tx2)', lineHeight: 1.6, wordBreak: 'break-all' }}>
+              {codeShown}
+              {isPrivate ? <span style={{ color: 'var(--tx3)' }}> (Bech32m)</span> : null}
             </div>
           </div>
-          <div style={{ marginTop: 16, fontSize: 10, color: 'var(--tx3)', fontFamily: 'var(--fm)', letterSpacing: '.06em' }}>PRIVATE RECEIVE CODE · zkf1…</div>
-          <CodeRow value={receiveCode} onCopy={() => copy(receiveCode, 'code')} copied={copied === 'code'} />
-          <div style={{ marginTop: 13, fontSize: 12, color: 'var(--tx2)', lineHeight: 1.55 }}>
-            Share this to be paid privately. The sender, amount, and memo stay shielded inside the pool.
+          <div style={{ display: 'flex', gap: 11 }}>
+            <Button onClick={() => copy(value)}>{copied ? 'Copied' : isPrivate ? 'Copy code' : 'Copy address'}</Button>
+            {isPrivate ? <Button variant="ghost" onClick={() => setShowFull((v) => !v)}>{showFull ? 'Show less' : 'Show full'}</Button> : null}
           </div>
-          <div style={{ marginTop: 13 }}>
-            <Callout tone="public" title="Not your public address.">
-              Use the Public tab for deposits, bridge arrival, and withdrawals — those are visible on Stellar. Want others to find this code by name?{' '}
-              <button onClick={() => onNav('discover')} style={{ background: 'none', border: 'none', color: 'var(--ac2)', fontWeight: 600, cursor: 'pointer', padding: 0 }}>
-                Make it discoverable →
-              </button>
-            </Callout>
-          </div>
+
+          {isPrivate ? (
+            <button
+              onClick={() => onNav('discover')}
+              style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '15px 17px', border: '1px solid var(--bd)', borderRadius: 14, background: 'var(--card)', cursor: 'pointer', textAlign: 'left', width: '100%' }}
+            >
+              <span style={{ width: 34, height: 34, borderRadius: 10, flex: 'none', background: 'rgba(94,124,250,.14)', display: 'grid', placeItems: 'center', color: 'var(--ac2)', fontSize: 15 }}>⌖</span>
+              <span>
+                <span style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--tx)' }}>Make my code discoverable</span>
+                <span style={{ display: 'block', fontSize: 11, color: 'var(--tx3)', marginTop: 2 }}>Link your public address so others find this code — never exposes your seed.</span>
+              </span>
+              <span style={{ marginLeft: 'auto', color: 'var(--ac2)', fontSize: 14 }}>›</span>
+            </button>
+          ) : (
+            <>
+              <Callout tone="warn" title="This is a public boundary.">
+                Deposits here are visible on-chain until you shield them ({truncateMiddle(identity.stellarPublicKey, 6, 6)}). For private payments, share your Private code instead.
+              </Callout>
+              <UsdcReceiveSetupPanel key={`${network}:${identity.stellarPublicKey}`} identity={identity} network={network} />
+            </>
+          )}
         </div>
-      ) : (
-        <div style={{ marginTop: 18 }}>
-          <div style={{ display: 'flex', justifyContent: 'center' }}>
-            <div style={qrBoxStyle}>
-              <QRCodeSVG value={identity.stellarPublicKey} size={184} level="M" marginSize={0} />
-            </div>
-          </div>
-          <div style={{ marginTop: 16, fontSize: 10, color: 'var(--tx3)', fontFamily: 'var(--fm)', letterSpacing: '.06em' }}>PUBLIC STELLAR ADDRESS · G…</div>
-          <CodeRow value={identity.stellarPublicKey} onCopy={() => copy(identity.stellarPublicKey, 'addr')} copied={copied === 'addr'} />
-          <div style={{ marginTop: 13 }}>
-            <Callout tone="warn" title="This is a public boundary.">
-              Deposits here are visible on-chain until you shield them ({truncateMiddle(identity.stellarPublicKey, 6, 6)}). For private payments, share your Private code instead.
-            </Callout>
-          </div>
-          <div style={{ marginTop: 16 }}>
-            <UsdcReceiveSetupPanel key={`${network}:${identity.stellarPublicKey}`} identity={identity} network={network} />
-          </div>
-        </div>
-      )}
+      </div>
     </section>
   )
 }
