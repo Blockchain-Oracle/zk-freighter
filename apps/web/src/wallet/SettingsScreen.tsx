@@ -1,17 +1,26 @@
 import { NETWORKS, type NetworkKey, type PasskeyEnvelope, type WalletIdentity } from '@zk-fighter/core'
-import { truncateMiddle, useTheme } from '@zk-fighter/ui'
+import { BoundaryBadge, Segmented, truncateMiddle, useTheme } from '@zk-fighter/ui'
 import { PasskeySettings } from './PasskeySettings'
 import type { WalletScreen } from './screens'
+import type { CSSProperties, ReactNode } from 'react'
 
-const networkKeys = Object.keys(NETWORKS) as NetworkKey[]
+const NETWORK_OPTIONS = (Object.keys(NETWORKS) as NetworkKey[]).map((key) => ({ value: key, label: NETWORKS[key].label }))
+const THEME_OPTIONS = [
+  { value: 'light', label: 'Light' },
+  { value: 'dark', label: 'Dark' },
+]
 
-const sectionLabel = {
-  fontSize: 9.5,
-  color: 'var(--tx3)',
-  fontFamily: 'var(--fm)',
-  letterSpacing: '.1em',
-  marginTop: 22,
-} as const
+const groupStyle: CSSProperties = { border: '1px solid var(--bd)', borderRadius: 16, background: 'var(--panel)', overflow: 'hidden' }
+const groupHeader: CSSProperties = { padding: '13px 18px', borderBottom: '1px solid var(--bd)', font: '600 9px/1 var(--fm)', letterSpacing: '.12em', color: 'var(--tx3)' }
+
+function Rev({ label, children, top }: { label: string; children: ReactNode; top?: boolean }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '15px 18px', borderTop: top ? 'none' : '1px solid var(--bd)', fontSize: 12.5, color: 'var(--tx2)' }}>
+      {label}
+      <span style={{ marginLeft: 'auto', fontWeight: 600, color: 'var(--tx)' }}>{children}</span>
+    </div>
+  )
+}
 
 interface SettingsScreenProps {
   identity: WalletIdentity
@@ -24,85 +33,59 @@ interface SettingsScreenProps {
   onLock: () => void
 }
 
-export function SettingsScreen({
-  identity,
-  network,
-  receiveCode,
-  passkeyEnvelope,
-  onChangeNetwork,
-  onPasskeyEnvelopeChange,
-  onNav,
-  onLock,
-}: SettingsScreenProps) {
-  const { theme, toggleTheme } = useTheme()
-
-  function netStyle(active: boolean) {
-    return {
-      padding: 10,
-      borderRadius: 8,
-      textAlign: 'center' as const,
-      fontSize: 12.5,
-      fontWeight: 700,
-      cursor: 'pointer',
-      background: active ? 'var(--ac)' : 'transparent',
-      color: active ? '#fff' : 'var(--tx2)',
-    }
-  }
+export function SettingsScreen({ identity, network, receiveCode, passkeyEnvelope, onChangeNetwork, onPasskeyEnvelopeChange, onNav, onLock }: SettingsScreenProps) {
+  const { theme, setTheme } = useTheme()
 
   return (
-    <section style={{ width: '100%', maxWidth: 720, margin: '0 auto', padding: '30px 34px 44px' }}>
-      <div style={{ fontWeight: 800, fontSize: 21, letterSpacing: '-.02em' }}>Settings</div>
-      <div style={{ fontSize: 12, color: 'var(--tx3)', marginTop: 1 }}>Security, network, and developer controls.</div>
+    <section style={{ width: '100%', maxWidth: 880, margin: '0 auto', padding: '30px 34px 44px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ fontWeight: 800, fontSize: 26, letterSpacing: '-.025em' }}>Settings</div>
+      <div style={{ fontSize: 13.5, color: 'var(--tx2)', marginBottom: 18 }}>Account, security, network and appearance — plus developer evidence for judges.</div>
 
-      <div style={{ marginTop: 18, display: 'flex', alignItems: 'center', gap: 12, padding: 14, border: '1px solid var(--bd)', borderRadius: 14, background: 'var(--card)' }}>
-        <div style={{ width: 36, height: 36, borderRadius: 11, background: 'linear-gradient(145deg,var(--ac2),var(--ac))' }} />
-        <div>
-          <div style={{ fontSize: 13.5, fontWeight: 700 }}>Personal</div>
-          <div style={{ fontSize: 11, color: 'var(--tx3)', fontFamily: 'var(--fm)' }}>{truncateMiddle(receiveCode || identity.stellarPublicKey, 8, 4)}</div>
-        </div>
-      </div>
+      <div style={{ display: 'flex', gap: 26, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+        <div style={{ flex: '1 1 320px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={groupStyle}>
+            <div style={groupHeader}>ACCOUNT</div>
+            <Rev label="Public address" top><span style={{ fontFamily: 'var(--fm)' }}>{truncateMiddle(identity.stellarPublicKey, 6, 4)}</span></Rev>
+            <Rev label="Receive code"><span style={{ fontFamily: 'var(--fm)' }}>{truncateMiddle(receiveCode || '—', 7, 4)}</span></Rev>
+          </div>
 
-      <div style={sectionLabel}>SECURITY</div>
-      <PasskeySettings identity={identity} passkeyEnvelope={passkeyEnvelope} onPasskeyEnvelopeChange={onPasskeyEnvelopeChange} />
-
-      <div style={sectionLabel}>NETWORK</div>
-      <div style={{ marginTop: 8, padding: '14px 16px', border: '1px solid var(--bd)', borderRadius: 14, background: 'var(--card)' }}>
-        <div style={{ fontSize: 11, color: 'var(--tx2)', fontWeight: 600, marginBottom: 10 }}>Active network</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4, padding: 4, background: 'var(--bg)', border: '1px solid var(--bd)', borderRadius: 11 }}>
-          {networkKeys.map((key) => (
-            <div key={key} onClick={() => onChangeNetwork(key)} style={netStyle(network === key)}>
-              {NETWORKS[key].label}
+          <div style={groupStyle}>
+            <div style={groupHeader}>SECURITY</div>
+            <div style={{ padding: '16px 18px' }}>
+              <PasskeySettings identity={identity} passkeyEnvelope={passkeyEnvelope} onPasskeyEnvelopeChange={onPasskeyEnvelopeChange} />
             </div>
-          ))}
+          </div>
+
+          <div style={groupStyle}>
+            <div style={groupHeader}>PREFERENCES</div>
+            <Rev label="Network" top><Segmented options={NETWORK_OPTIONS} value={network} onChange={(value) => onChangeNetwork(value as NetworkKey)} size="sm" /></Rev>
+            <Rev label="Appearance"><Segmented options={THEME_OPTIONS} value={theme} onChange={(value) => setTheme(value as 'light' | 'dark')} size="sm" /></Rev>
+          </div>
+        </div>
+
+        <div style={{ flex: '1 1 320px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <button onClick={() => onNav('tools')} style={{ textAlign: 'left', cursor: 'pointer', border: '1px solid rgba(94,124,250,.25)', borderRadius: 16, background: 'linear-gradient(160deg, rgba(94,124,250,.08), transparent 60%), var(--panel)', padding: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+              <span style={{ width: 30, height: 30, borderRadius: 9, background: 'rgba(94,124,250,.16)', display: 'grid', placeItems: 'center', color: 'var(--ac2)', fontSize: 14 }}>◆</span>
+              <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--tx)' }}>Developer · Demo evidence</div>
+              <div style={{ marginLeft: 'auto' }}><BoundaryBadge kind="neutral" label="FOR JUDGES" size="sm" /></div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12, color: 'var(--tx2)' }}><span style={{ color: 'var(--pos)' }}>✓</span>Prover readiness check<span style={{ marginLeft: 'auto', fontFamily: 'var(--fm)', fontSize: 10.5, color: 'var(--ac2)' }}>Open ›</span></div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12, color: 'var(--tx2)' }}><span style={{ color: 'var(--pos)' }}>✓</span>Tampered-proof rejection demo<span style={{ marginLeft: 'auto', fontFamily: 'var(--fm)', fontSize: 10.5, color: 'var(--ac2)' }}>Run ›</span></div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12, color: 'var(--tx2)' }}><span style={{ color: 'var(--pos)' }}>✓</span>Recorded on-chain evidence<span style={{ marginLeft: 'auto', fontFamily: 'var(--fm)', fontSize: 10.5, color: 'var(--ac2)' }}>View hashes ›</span></div>
+            </div>
+          </button>
+
+          <div style={{ padding: '15px 17px', border: '1px dashed rgba(229,180,92,.4)', borderRadius: 14, background: 'rgba(229,180,92,.05)', fontSize: 11.5, lineHeight: 1.55, color: 'var(--warn)' }}>
+            Hackathon software on reference implementations — do not use for real funds.
+          </div>
+
+          <button onClick={onLock} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, padding: 14, border: '1px solid rgba(229,103,92,.4)', borderRadius: 13, background: 'rgba(229,103,92,.06)', color: 'var(--dng)', fontSize: 13.5, fontWeight: 700, cursor: 'pointer' }}>
+            Lock wallet
+          </button>
         </div>
       </div>
-
-      <div style={sectionLabel}>APPEARANCE</div>
-      <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', border: '1px solid var(--bd)', borderRadius: 14, background: 'var(--card)' }}>
-        <div style={{ fontSize: 13.5, fontWeight: 600 }}>Theme</div>
-        <button onClick={toggleTheme} style={{ marginLeft: 'auto', padding: '8px 14px', border: '1px solid var(--bd2)', borderRadius: 9, background: 'var(--card2)', color: 'var(--tx)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
-          {theme === 'dark' ? 'Switch to light' : 'Switch to dark'}
-        </button>
-      </div>
-
-      <div style={sectionLabel}>DEVELOPER · DEMO EVIDENCE</div>
-      <button
-        onClick={() => onNav('tools')}
-        style={{ marginTop: 8, width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', border: '1px solid var(--bd)', borderRadius: 14, background: 'var(--card)', color: 'var(--tx)', cursor: 'pointer', textAlign: 'left' }}
-      >
-        <div>
-          <div style={{ fontSize: 13.5, fontWeight: 600 }}>Developer &amp; demo evidence</div>
-          <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Prover readiness, the tampered-proof rejection demo, and recorded on-chain evidence — for judges and developers.</div>
-        </div>
-        <span style={{ marginLeft: 'auto', color: 'var(--tx3)' }}>›</span>
-      </button>
-
-      <button
-        onClick={onLock}
-        style={{ marginTop: 22, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, padding: 14, border: '1px solid rgba(229,110,110,.3)', borderRadius: 13, background: 'rgba(229,110,110,.06)', color: '#E88', fontSize: 13.5, fontWeight: 700, cursor: 'pointer' }}
-      >
-        Lock wallet
-      </button>
     </section>
   )
 }
