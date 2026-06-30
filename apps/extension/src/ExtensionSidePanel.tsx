@@ -3,6 +3,7 @@ import { Logo } from '@zk-fighter/ui'
 
 import { ExtensionBridgePanel } from './ExtensionBridgePanel'
 import { ExtensionConfidentialPanel } from './ExtensionConfidentialPanel'
+import { ExtensionDisclosurePanel } from './ExtensionDisclosurePanel'
 import { ExtensionDiscoverPanel } from './ExtensionDiscoverPanel'
 import { ExtensionQuickShieldPanel } from './ExtensionQuickShieldPanel'
 import { ExtensionReadinessPanel } from './ExtensionReadinessPanel'
@@ -15,7 +16,7 @@ import type { DappWalletStatus } from './dappMessages'
 // focused screen, not a stacked list). A nav lists the flows; selecting one shows
 // it with a back header. New screens (Send/Unshield/Discover/Disclosure/Activity)
 // are added here as they land.
-type SideScreen = 'nav' | 'wallet' | 'send' | 'unshield' | 'discover' | 'quickshield' | 'bridge' | 'confidential' | 'readiness'
+type SideScreen = 'nav' | 'wallet' | 'send' | 'unshield' | 'discover' | 'disclosure' | 'quickshield' | 'bridge' | 'confidential' | 'readiness'
 
 interface NavEntry {
   readonly key: SideScreen
@@ -30,6 +31,7 @@ const NAV: readonly NavEntry[] = [
   { key: 'quickshield', icon: '⛉', title: 'QuickShield', detail: 'Move public funds into the shielded pool' },
   { key: 'unshield', icon: '↓', title: 'Unshield', detail: 'Withdraw to a public Stellar address (reveals info)' },
   { key: 'discover', icon: '⌕', title: 'Discover', detail: 'Find a discoverable code, then pay it privately' },
+  { key: 'disclosure', icon: '✦', title: 'Disclosure', detail: 'Read-only receipt proving note ownership' },
   { key: 'bridge', icon: '⇌', title: 'Bridge', detail: 'Native CCTP USDC from another chain' },
   { key: 'confidential', icon: '◈', title: 'Confidential', detail: 'Hidden-amount token ops (testnet)' },
   { key: 'readiness', icon: '✓', title: 'Runtime readiness', detail: 'Offscreen prover + capabilities' },
@@ -79,6 +81,7 @@ export function ExtensionSidePanel(props: SidePanelProps) {
       {screen === 'send' ? <ExtensionSendPanel status={props.status} sendRuntimeMessage={props.sendRuntimeMessage} initialCode={pendingCode} /> : null}
       {screen === 'unshield' ? <ExtensionUnshieldPanel status={props.status} sendRuntimeMessage={props.sendRuntimeMessage} /> : null}
       {screen === 'discover' ? <ExtensionDiscoverPanel sendRuntimeMessage={props.sendRuntimeMessage} onPay={(code) => { setPendingCode(code); setScreen('send') }} /> : null}
+      {screen === 'disclosure' ? <ExtensionDisclosurePanel sendRuntimeMessage={props.sendRuntimeMessage} /> : null}
       {screen === 'quickshield' ? <ExtensionQuickShieldPanel status={props.status} sendRuntimeMessage={props.sendRuntimeMessage} /> : null}
       {screen === 'bridge' ? <ExtensionBridgePanel status={props.status} sendRuntimeMessage={props.sendRuntimeMessage} /> : null}
       {screen === 'confidential' ? <ExtensionConfidentialPanel status={props.status} sendRuntimeMessage={props.sendRuntimeMessage} /> : null}

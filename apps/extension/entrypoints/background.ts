@@ -9,6 +9,7 @@ import {
   runCctpBridgeToStellar,
   type AspMembershipInsertReport,
   type CctpBridgeReport,
+  type GenerateDisclosureReport,
   type PublicDiscoveryLookupReport,
   type StellarUsdcTrustlineReport,
   type XlmPrivateSubmitReport,
@@ -21,6 +22,7 @@ import type {
   ExtensionBalancesRequest,
   ExtensionBridgeRequest,
   ExtensionConfidentialRequest,
+  ExtensionDisclosureRequest,
   ExtensionDiscoverRequest,
   ExtensionPrivateTransferRequest,
   ExtensionShieldRequest,
@@ -45,6 +47,7 @@ const offscreenConfidentialMessageType = 'zkf.offscreen.confidential'
 const offscreenUnshieldWithdrawalMessageType = 'zkf.offscreen.unshieldWithdrawal'
 const offscreenLoadBalancesMessageType = 'zkf.offscreen.loadBalances'
 const offscreenDiscoverLookupMessageType = 'zkf.offscreen.discoverLookup'
+const offscreenDisclosureMessageType = 'zkf.offscreen.disclosure'
 
 type MessagePayload = {
   readonly type?: string
@@ -61,6 +64,7 @@ export default defineBackground(() => {
     runPrivateTransferInOffscreen,
     runUnshieldInOffscreen,
     runDiscoverInOffscreen,
+    runDisclosureInOffscreen,
   )
 
   browser.runtime.onInstalled.addListener(() => {
@@ -177,6 +181,10 @@ async function runUnshieldInOffscreen(request: ExtensionUnshieldRequest): Promis
 
 async function runDiscoverInOffscreen(request: ExtensionDiscoverRequest): Promise<PublicDiscoveryLookupReport> {
   return (await sendOffscreenMessage({ type: offscreenDiscoverLookupMessageType, ...request })) as PublicDiscoveryLookupReport
+}
+
+async function runDisclosureInOffscreen(request: ExtensionDisclosureRequest): Promise<GenerateDisclosureReport> {
+  return (await sendOffscreenMessage({ type: offscreenDisclosureMessageType, ...request })) as GenerateDisclosureReport
 }
 
 async function runAspInsertInOffscreen(request: ExtensionAspInsertRequest): Promise<AspMembershipInsertReport> {

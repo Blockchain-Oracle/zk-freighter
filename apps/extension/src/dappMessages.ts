@@ -5,6 +5,7 @@ import type {
   CctpSourceKey,
   FreighterBridgeRequest,
   FreighterBridgeResponse,
+  GenerateDisclosureReport,
   NetworkKey,
   PublicDiscoveryLookupReport,
   StellarUsdcTrustlineReport,
@@ -27,6 +28,7 @@ export const dappMessageTypes = {
   privateTransfer: 'zkf.extension.dapp.privateTransfer',
   unshield: 'zkf.extension.dapp.unshield',
   discover: 'zkf.extension.dapp.discover',
+  disclosure: 'zkf.extension.dapp.disclosure',
 } as const
 
 /** Confidential-token ops (Track B). Proving runs in the offscreen (bb.js). */
@@ -136,6 +138,12 @@ export type DappRuntimeMessage =
       readonly type: typeof dappMessageTypes.discover
       readonly ownerAddress: string
     }
+  | {
+      readonly type: typeof dappMessageTypes.disclosure
+      readonly asset: AssetCode
+      readonly authority: string
+      readonly purpose: string
+    }
 
 export interface ConfidentialResponse {
   readonly ok: boolean
@@ -187,6 +195,13 @@ export interface PrivateActionResponse {
 export interface DiscoverLookupResponse {
   readonly ok: boolean
   readonly report?: PublicDiscoveryLookupReport
+  readonly error?: string
+}
+
+/** Disclosure: a read-only selective-disclosure receipt for an unspent note. */
+export interface DisclosureResponse {
+  readonly ok: boolean
+  readonly report?: GenerateDisclosureReport
   readonly error?: string
 }
 
