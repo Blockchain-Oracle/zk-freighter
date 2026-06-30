@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react'
 import { generateSeedPhrase, validateSeedPhrase, type NetworkKey } from '@zk-fighter/core'
-import { Button, Card, NetworkPill } from '@zk-fighter/ui'
+import { Button, Card, NetworkPill, PasswordStrength } from '@zk-fighter/ui'
 import { passwordMinLength } from './app-helpers'
 
 export type WalletSetupMode = 'create' | 'import'
@@ -132,11 +132,11 @@ export function CreateWalletPanel({
       )}
 
       {mode === 'create' && words.length ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, padding: 12, border: '1px dashed var(--bd2)', borderRadius: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
           {words.map((word, index) => (
-            <div key={`${index}-${word}`} style={{ display: 'flex', gap: 6, alignItems: 'baseline', fontFamily: 'var(--fm)', fontSize: 12 }}>
-              <span style={{ color: 'var(--tx3)', fontSize: 9.5, width: 14, textAlign: 'right' }}>{index + 1}</span>
-              <span>{word}</span>
+            <div key={`${index}-${word}`} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 11px', border: '1px solid var(--bd)', borderRadius: 10, background: 'var(--card)' }}>
+              <span style={{ font: '600 9px/1 var(--fm)', color: 'var(--tx3)', width: 14 }}>{index + 1}</span>
+              <span style={{ font: '600 12px/1 var(--sans)', color: 'var(--tx)' }}>{word}</span>
             </div>
           ))}
         </div>
@@ -144,6 +144,7 @@ export function CreateWalletPanel({
 
       <Field label="Vault password">
         <input type="password" value={password} onChange={(event) => onPassword(event.target.value)} style={fieldStyle} />
+        {password ? <PasswordStrength password={password} /> : null}
       </Field>
       <Field label="Confirm password">
         <input type="password" value={confirmPassword} onChange={(event) => onConfirmPassword(event.target.value)} style={fieldStyle} />

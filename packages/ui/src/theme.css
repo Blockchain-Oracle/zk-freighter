@@ -1,0 +1,165 @@
+/* ZK Fighter shared design-system stylesheet — the single cross-surface entry.
+ * Imported once per shell (web/extension/mobile). Tokens map to runtime CSS vars
+ * set by <ThemeProvider>, so light/dark switches with no `dark:` variants. */
+@import 'tailwindcss';
+
+/* Generate utilities used inside packages/ui primitives in every shell that
+ * imports this file (belt-and-suspenders alongside Vite's module-graph scan). */
+@source './';
+
+/* `inline` is REQUIRED: it inlines the value, so `bg-card` compiles to
+ * `background-color: var(--card)` and resolves at the themed ancestor div.
+ * Without it, utilities resolve at :root where --card is undefined → broken. */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-panel: var(--panel);
+  --color-card: var(--card);
+  --color-card2: var(--card2);
+  --color-side: var(--side);
+  --color-tx: var(--tx);
+  --color-tx2: var(--tx2);
+  --color-tx3: var(--tx3);
+  --color-bd: var(--bd);
+  --color-bd2: var(--bd2);
+  --color-ac: var(--ac);
+  --color-ac2: var(--ac2);
+  --color-pos: var(--pos);
+  --color-warn: var(--warn);
+  --color-dng: var(--dng);
+  --color-pub: var(--pub);
+
+  --font-sans: 'Hanken Grotesk', system-ui, -apple-system, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  --radius-panel: 24px;
+  --shadow-panel: 0 50px 130px -50px #000, 0 0 0 1px rgba(0, 0, 0, 0.4);
+  --shadow-pop: 0 40px 90px -34px #000, 0 0 0 1px rgba(0, 0, 0, 0.4);
+  --shadow-glow: 0 10px 30px -10px rgba(94, 124, 250, 0.8);
+
+  --animate-zkSheen: zkSheen 5s linear infinite;
+  --animate-zkPulse: zkPulse 1.6s ease-in-out infinite;
+  --animate-zkSpin: zkSpin 0.8s linear infinite;
+  --animate-zkRise: zkRise 0.4s cubic-bezier(0.5, 1.2, 0.5, 1) both;
+  --animate-zkPop: zkPop 0.3s ease both;
+  --animate-zkSheetUp: zkSheetUp 0.4s ease both;
+  --animate-zkScanline: zkScanline 2s ease-in-out infinite;
+  --animate-zkReticle: zkReticle 1.2s ease-in-out infinite;
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+  html,
+  body {
+    margin: 0;
+    min-height: 100%;
+  }
+  body {
+    min-width: 320px;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
+  code {
+    font-family: var(--font-mono);
+  }
+  /* Keep autofilled inputs on-theme — browsers otherwise force a light background. */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--tx);
+    -webkit-box-shadow: 0 0 0 1000px var(--card2) inset;
+    caret-color: var(--tx);
+    transition: background-color 9999s ease-in-out 0s;
+  }
+}
+
+@keyframes zkSheen {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(120%);
+  }
+}
+@keyframes zkPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+@keyframes zkSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes zkRise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes zkPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  60% {
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes zkSheetUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+@keyframes zkScanline {
+  0%,
+  100% {
+    transform: translateY(-44px);
+  }
+  50% {
+    transform: translateY(44px);
+  }
+}
+@keyframes zkReticle {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
