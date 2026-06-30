@@ -52,6 +52,7 @@ export function ShieldedCard({
       <div
         style={{
           position: 'relative',
+          height: '100%',
           transition: 'opacity .35s ease',
           opacity: flipped ? 0 : 1,
           visibility: flipped ? 'hidden' : 'visible',
