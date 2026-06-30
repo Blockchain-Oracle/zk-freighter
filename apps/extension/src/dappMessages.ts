@@ -6,6 +6,7 @@ import type {
   FreighterBridgeRequest,
   FreighterBridgeResponse,
   NetworkKey,
+  PublicDiscoveryLookupReport,
   StellarUsdcTrustlineReport,
   XlmPrivateSubmitReport,
   XlmShieldSubmitReport,
@@ -25,6 +26,7 @@ export const dappMessageTypes = {
   balances: 'zkf.extension.balances',
   privateTransfer: 'zkf.extension.dapp.privateTransfer',
   unshield: 'zkf.extension.dapp.unshield',
+  discover: 'zkf.extension.dapp.discover',
 } as const
 
 /** Confidential-token ops (Track B). Proving runs in the offscreen (bb.js). */
@@ -130,6 +132,10 @@ export type DappRuntimeMessage =
       readonly amountStroops: string
       readonly recipientAddress: string
     }
+  | {
+      readonly type: typeof dappMessageTypes.discover
+      readonly ownerAddress: string
+    }
 
 export interface ConfidentialResponse {
   readonly ok: boolean
@@ -174,6 +180,13 @@ export interface DappBalancesResponse {
 export interface PrivateActionResponse {
   readonly ok: boolean
   readonly report?: XlmPrivateSubmitReport
+  readonly error?: string
+}
+
+/** Discover: look up a published receive code by public Stellar address. */
+export interface DiscoverLookupResponse {
+  readonly ok: boolean
+  readonly report?: PublicDiscoveryLookupReport
   readonly error?: string
 }
 

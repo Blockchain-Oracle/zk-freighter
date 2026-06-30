@@ -29,9 +29,9 @@ function validateCode(value: string, network: NetworkKey): string | null {
 
 type Step = 'form' | 'review' | 'proving' | 'done'
 
-export function ExtensionSendPanel({ status, sendRuntimeMessage }: { status: DappWalletStatus; sendRuntimeMessage: (message: object) => Promise<unknown> }) {
+export function ExtensionSendPanel({ status, sendRuntimeMessage, initialCode }: { status: DappWalletStatus; sendRuntimeMessage: (message: object) => Promise<unknown>; initialCode?: string }) {
   const [step, setStep] = useState<Step>('form')
-  const [code, setCode] = useState('')
+  const [code, setCode] = useState(initialCode ?? '')
   const [asset, setAsset] = useState<AssetCode>('USDC')
   const [amount, setAmount] = useState('')
   const [report, setReport] = useState<XlmPrivateSubmitReport | null>(null)

@@ -9,6 +9,7 @@ import {
   type CctpSourceKey,
   type FreighterBridgeRequest,
   type NetworkKey,
+  type PublicDiscoveryLookupReport,
   type StellarUsdcTrustlineReport,
   type XlmPrivateSubmitReport,
   type XlmShieldSubmitReport,
@@ -23,6 +24,7 @@ import {
   type DappRuntimeMessage,
   type DappRuntimeResponse,
   type DappWalletStatus,
+  type DiscoverLookupResponse,
   type PrepareShieldAccessResponse,
   type PrepareUsdcReceiveResponse,
   type PrivateActionResponse,
@@ -66,6 +68,8 @@ export interface ExtensionUnshieldRequest {
   readonly recipientAddress: string
 }
 
+export interface ExtensionDiscoverRequest { readonly network: NetworkKey; readonly ownerAddress: string }
+
 export interface ExtensionBridgeRequest {
   readonly mnemonic: string
   readonly network: NetworkKey
@@ -89,6 +93,7 @@ type ExtensionConfidentialRunner = (request: ExtensionConfidentialRequest) => Pr
 type ExtensionBalancesRunner = (request: ExtensionBalancesRequest) => Promise<DappBalances>
 type ExtensionPrivateTransferRunner = (request: ExtensionPrivateTransferRequest) => Promise<XlmPrivateSubmitReport>
 type ExtensionUnshieldRunner = (request: ExtensionUnshieldRequest) => Promise<XlmPrivateSubmitReport>
+type ExtensionDiscoverRunner = (request: ExtensionDiscoverRequest) => Promise<PublicDiscoveryLookupReport>
 
 interface MessageSender { readonly tab?: { readonly windowId?: number } }
 
@@ -106,6 +111,7 @@ export class ExtensionDappRuntime {
     private readonly runBalances?: ExtensionBalancesRunner,
     private readonly runPrivateTransfer?: ExtensionPrivateTransferRunner,
     private readonly runUnshield?: ExtensionUnshieldRunner,
+    private readonly runDiscover?: ExtensionDiscoverRunner,
   ) {}
 
   canHandle(type: string | undefined): boolean {
@@ -141,6 +147,8 @@ export class ExtensionDappRuntime {
         return this.privateTransfer(message.asset, message.amountStroops, message.receiveCode)
       case dappMessageTypes.unshield:
         return this.unshield(message.asset, message.amountStroops, message.recipientAddress)
+      case dappMessageTypes.discover:
+        return this.discover(message.ownerAddress)
       case dappMessageTypes.freighterRequest:
         void openExtensionSidePanel(sender?.tab?.windowId)
         return this.handleFreighterRequest(message.request)
@@ -405,6 +413,18 @@ export class ExtensionDappRuntime {
       const report = await this.runUnshield({ mnemonic: ready.mnemonic, network: ready.network, asset, amountStroops, recipientAddress })
       void clearAllBalanceCache()
       return { ok: true, report }
+    } catch (error) {
+      return { ok: false, error: error instanceof Error ? error.message : String(error) }
+    }
+  }
+
+  private async discover(ownerAddress: string): Promise<DiscoverLookupResponse> {
+    const ready = await this.requireUnlockedWallet()
+    if (!ready.ok) return { ok: false, error: ready.error }
+    if (!this.runDiscover) return { ok: false, error: 'Extension discovery runner is unavailable.' }
+    try {
+      // Public lookup — no mnemonic needed; the network comes from the unlocked vault.
+      return { ok: true, report: await this.runDiscover({ network: ready.network, ownerAddress }) }
     } catch (error) {
       return { ok: false, error: error instanceof Error ? error.message : String(error) }
     }

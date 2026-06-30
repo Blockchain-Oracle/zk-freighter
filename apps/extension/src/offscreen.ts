@@ -16,6 +16,7 @@ import { browser } from 'wxt/browser'
 import { runPrivateTransfer, runUnshieldWithdrawal } from './offscreen-private-actions'
 import { runConfidentialOp } from './offscreen-confidential-actions'
 import { runLoadBalances } from './offscreen-balance-actions'
+import { runDiscoverLookup } from './offscreen-discover-actions'
 
 const offscreenStatusMessageType = 'zkf.offscreen.status'
 const nethermindProbeMessageType = 'zkf.offscreen.nethermindProbe'
@@ -29,6 +30,7 @@ const privateTransferMessageType = 'zkf.offscreen.privateTransfer'
 const unshieldWithdrawalMessageType = 'zkf.offscreen.unshieldWithdrawal'
 const confidentialMessageType = 'zkf.offscreen.confidential'
 const loadBalancesMessageType = 'zkf.offscreen.loadBalances'
+const discoverLookupMessageType = 'zkf.offscreen.discoverLookup'
 const extensionProofAttemptTimeoutMs = 18_000
 const deepProofAttemptTimeoutMs = 180_000
 const statusEventLimit = 8
@@ -101,6 +103,14 @@ browser.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) 
     if (payload.type === loadBalancesMessageType) {
       // Real balance scan (fetch+decrypt notes + Horizon) — no proving.
       void runLoadBalances(payload).then(sendResponse, (error: unknown) => {
+        sendResponse({ ok: false, error: error instanceof Error ? error.message : String(error) })
+      })
+      return true
+    }
+
+    if (payload.type === discoverLookupMessageType) {
+      // Public discovery lookup (getRecentPublicKeys) — no proving, no secret.
+      void runDiscoverLookup(payload).then(sendResponse, (error: unknown) => {
         sendResponse({ ok: false, error: error instanceof Error ? error.message : String(error) })
       })
       return true
