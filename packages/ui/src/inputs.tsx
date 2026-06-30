@@ -1,12 +1,15 @@
 import { fontMono } from './tokens'
+import { Chip } from './primitives'
 
-/** Large centered amount field with an asset symbol, optional caption and Max. */
+/** Large centered amount field with an asset symbol, optional caption, Max and presets. */
 export function AmountInput({
   value,
   onChange,
   asset,
   caption,
   onMax,
+  presets,
+  onPreset,
   autoFocus,
   invalid,
 }: {
@@ -15,6 +18,8 @@ export function AmountInput({
   asset: string
   caption?: string
   onMax?: () => void
+  presets?: readonly string[]
+  onPreset?: (value: string) => void
   autoFocus?: boolean
   invalid?: boolean
 }) {
@@ -67,6 +72,69 @@ export function AmountInput({
           MAX
         </button>
       ) : null}
+      {presets && presets.length > 0 ? (
+        <div style={{ display: 'flex', gap: 8, marginTop: 4, flexWrap: 'wrap', justifyContent: 'center' }}>
+          {presets.map((preset) => (
+            <Chip key={preset} label={preset} onClick={() => onPreset?.(preset)} />
+          ))}
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+export interface SegmentedOption {
+  readonly value: string
+  readonly label: string
+}
+
+/** Generic n-segment toggle (Shielded|Public, Transfer|Deposit|Withdraw, Light|Dark). */
+export function Segmented({
+  options,
+  value,
+  onChange,
+  size = 'md',
+}: {
+  options: readonly SegmentedOption[]
+  value: string
+  onChange: (value: string) => void
+  size?: 'sm' | 'md'
+}) {
+  return (
+    <div
+      style={{
+        display: 'inline-flex',
+        padding: 3,
+        gap: 3,
+        background: 'var(--card)',
+        border: '1px solid var(--bd)',
+        borderRadius: 11,
+      }}
+    >
+      {options.map((option) => {
+        const selected = option.value === value
+        return (
+          <button
+            key={option.value}
+            type="button"
+            onClick={() => onChange(option.value)}
+            style={{
+              padding: size === 'sm' ? '6px 12px' : '8px 16px',
+              borderRadius: 8,
+              border: 'none',
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              fontSize: size === 'sm' ? 12 : 13,
+              fontWeight: 600,
+              background: selected ? 'var(--ac)' : 'transparent',
+              color: selected ? '#fff' : 'var(--tx2)',
+              transition: 'background .15s ease',
+            }}
+          >
+            {option.label}
+          </button>
+        )
+      })}
     </div>
   )
 }

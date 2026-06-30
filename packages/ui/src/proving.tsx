@@ -49,8 +49,8 @@ export function ProvingRing({
   state?: RingState
 }) {
   const size = 120
-  const stroke = 4
-  const r = (size - stroke) / 2
+  const stroke = 8
+  const r = 52
   const circumference = 2 * Math.PI * r
   const clamped = Math.max(0, Math.min(1, progress))
   const offset = circumference * (1 - clamped)
@@ -72,13 +72,16 @@ export function ProvingRing({
           strokeDasharray={circumference}
           strokeDashoffset={offset}
           transform={`rotate(-90 ${center} ${center})`}
-          style={{ transition: 'stroke-dashoffset .4s ease' }}
+          style={{
+            transition: 'stroke-dashoffset .5s ease',
+            filter: state === 'error' ? undefined : 'drop-shadow(0 0 6px rgba(94,124,250,.7))',
+          }}
         />
         {state === 'active' ? (
           <circle
             cx={center}
-            cy={stroke / 2 + 0.5}
-            r={stroke / 2 + 0.5}
+            cy={center - r}
+            r={4.5}
             fill={color}
             opacity={0.9}
           >
