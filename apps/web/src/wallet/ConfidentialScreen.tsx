@@ -254,7 +254,7 @@ export function ConfidentialScreen({ identity, network }: ConfidentialScreenProp
 
       <div style={{ display: 'flex', gap: 26, alignItems: 'flex-start', flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 18, flex: '1 1 300px' }}>
-          <div style={{ position: 'relative', borderRadius: 18, overflow: 'hidden', padding: 22, background: 'linear-gradient(150deg, rgba(94,124,250,.26), rgba(94,124,250,.04) 70%)', border: '1px solid rgba(94,124,250,.2)' }}>
+          <div style={{ position: 'relative', borderRadius: 18, overflow: 'hidden', padding: 22, backgroundImage: 'var(--sh-grad)', border: '1px solid rgba(94,124,250,.2)' }}>
             <BoundaryBadge kind="shielded" label={`CONFIDENTIAL · ${code}`} />
             <div style={{ display: 'flex', alignItems: 'flex-end', gap: 9, marginTop: 18 }}>
               <span style={{ fontFamily: 'var(--fm)', fontWeight: 600, fontSize: 36, color: 'var(--tx)' }}>{registered ? spendableLabel : '—'}</span>

@@ -4,8 +4,10 @@ import { useState, type CSSProperties, type ReactNode } from 'react'
 // Public = amber dashed (the public Stellar account). Both recur on every surface,
 // so they live here as one component each (size via the `style` wrapper).
 
-const SHIELDED_BG = 'linear-gradient(150deg, rgba(94,124,250,.30), rgba(94,124,250,.05) 70%)'
-const SHIELDED_HATCH = 'repeating-linear-gradient(118deg, transparent 0 11px, rgba(255,255,255,.05) 11px 12px)'
+// Frosted wash + hatch come from the theme (--sh-grad/--sh-hatch) so light mode
+// gets the lighter periwinkle wash + periwinkle hatch the Design System specifies.
+const SHIELDED_BG = 'var(--sh-grad)'
+const SHIELDED_HATCH = 'repeating-linear-gradient(118deg, transparent 0 11px, var(--sh-hatch) 11px 12px)'
 
 /**
  * Frosted "shielded balance" card with a light sheen sweep. If `back` is given,
@@ -84,8 +86,8 @@ export function PublicCard({ children, style }: { children: ReactNode; style?: C
       style={{
         position: 'relative',
         borderRadius: 18,
-        border: '1px dashed rgba(229,180,92,.42)',
-        backgroundImage: 'linear-gradient(150deg, rgba(229,180,92,.10), rgba(229,180,92,.02) 70%)',
+        border: '1px dashed var(--pub-bd)',
+        backgroundImage: 'var(--pub-grad)',
         ...style,
       }}
     >

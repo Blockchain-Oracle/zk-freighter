@@ -7,6 +7,7 @@ export type ThemeName = 'dark' | 'light'
 export interface ThemePalette {
   bg: string
   page: string
+  panel: string
   card: string
   card2: string
   bd: string
@@ -19,49 +20,71 @@ export interface ThemePalette {
   ac2: string
   pos: string
   warn: string
+  dng: string
   pub: string
   mask: string
+  // Boundary-surface treatments differ per theme (Design System §04): frosted
+  // shielded = periwinkle wash + hatch; public = amber wash + dashed border.
+  shGrad: string
+  shHatch: string
+  pubGrad: string
+  pubBd: string
 }
 
 // Accent is constant across themes in the prototype.
 export const ACCENT = '#5E7CFA'
 
+// Canonical values from the v2 `Design System.dc.html`. `--bg` is the canvas
+// backdrop (behind the floating app panel), `--panel` is the app surface,
+// `--card`/`--card2` are nested insets, `--tx3` is the legibility floor.
 export const darkPalette: ThemePalette = {
-  bg: '#0E0F11',
-  page: '#08090A',
-  card: '#15161A',
-  card2: '#1B1D21',
-  bd: 'rgba(255,255,255,.07)',
+  bg: '#0C0D0F',
+  page: '#0A0B0D',
+  panel: '#141519',
+  card: '#1A1C22',
+  card2: '#202329',
+  bd: 'rgba(255,255,255,.08)',
   bd2: 'rgba(255,255,255,.14)',
   tx: '#F3F4F6',
-  tx2: '#969BA3',
-  tx3: '#5B616B',
-  side: '#101113',
+  tx2: '#A6ABB4',
+  tx3: '#878D98',
+  side: '#101216',
   ac: ACCENT,
-  ac2: '#8AA0FF',
+  ac2: '#9AA6FF',
   pos: '#35C77B',
   warn: '#E5B45C',
+  dng: '#E5675C',
   pub: '#8A93A2',
-  mask: 'rgba(14,15,17,.72)',
+  mask: 'rgba(12,13,15,.72)',
+  shGrad: 'linear-gradient(150deg, rgba(94,124,250,.28), rgba(94,124,250,.04) 70%)',
+  shHatch: 'rgba(255,255,255,.05)',
+  pubGrad: 'linear-gradient(150deg, rgba(229,180,92,.10), rgba(229,180,92,.02) 70%)',
+  pubBd: 'rgba(229,180,92,.42)',
 }
 
 export const lightPalette: ThemePalette = {
-  bg: '#FFFFFF',
-  page: '#E7EAEE',
-  card: '#F5F7F9',
-  card2: '#EBEEF2',
+  bg: '#F5F6F8',
+  page: '#E9ECF0',
+  panel: '#FFFFFF',
+  card: '#EEF0F4',
+  card2: '#E4E8EE',
   bd: 'rgba(0,0,0,.08)',
-  bd2: 'rgba(0,0,0,.15)',
-  tx: '#16181C',
-  tx2: '#586069',
-  tx3: '#9198A1',
-  side: '#F0F2F5',
+  bd2: 'rgba(0,0,0,.1)',
+  tx: '#14151A',
+  tx2: '#565C68',
+  tx3: '#7A8290',
+  side: '#EDEFF3',
   ac: ACCENT,
-  ac2: '#4257CE',
-  pos: '#1B9E60',
-  warn: '#A9791F',
+  ac2: '#4A56C4',
+  pos: '#2AA265',
+  warn: '#A2741F',
+  dng: '#D6544A',
   pub: '#69717B',
-  mask: 'rgba(244,246,248,.82)',
+  mask: 'rgba(245,246,248,.82)',
+  shGrad: 'linear-gradient(150deg, rgba(94,124,250,.18), rgba(94,124,250,.04) 70%)',
+  shHatch: 'rgba(94,124,250,.07)',
+  pubGrad: 'linear-gradient(150deg, rgba(229,180,92,.14), rgba(229,180,92,.04) 70%)',
+  pubBd: 'rgba(190,140,40,.5)',
 }
 
 export const palettes: Record<ThemeName, ThemePalette> = {
@@ -83,6 +106,7 @@ export function paletteToCssVars(p: ThemePalette): CssVarMap {
   return {
     '--bg': p.bg,
     '--page': p.page,
+    '--panel': p.panel,
     '--card': p.card,
     '--card2': p.card2,
     '--bd': p.bd,
@@ -95,8 +119,13 @@ export function paletteToCssVars(p: ThemePalette): CssVarMap {
     '--ac2': p.ac2,
     '--pos': p.pos,
     '--warn': p.warn,
+    '--dng': p.dng,
     '--pub': p.pub,
     '--mask': p.mask,
+    '--sh-grad': p.shGrad,
+    '--sh-hatch': p.shHatch,
+    '--pub-grad': p.pubGrad,
+    '--pub-bd': p.pubBd,
     '--fm': fontMono,
   }
 }
