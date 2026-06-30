@@ -53,7 +53,7 @@ function BalanceFace({ usdc, xlm, loading }: { usdc: string | null; xlm: string 
         <span style={{ marginLeft: 'auto', padding: '4px 9px', border: '1px solid rgba(94,124,250,.5)', background: 'rgba(94,124,250,.16)', borderRadius: 999, fontSize: 8.5, fontFamily: 'var(--fm)', letterSpacing: '.12em', color: 'var(--ac2)' }}>PRIVATE</span>
       </div>
       <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'flex-end', gap: 13, marginTop: 'auto' }}>
-        <div style={{ fontWeight: 800, fontSize: 52, lineHeight: 0.82, color: '#fff', letterSpacing: '-.03em', fontVariantNumeric: 'tabular-nums', fontFamily: 'var(--fm)', whiteSpace: 'nowrap' }}>
+        <div style={{ fontWeight: 800, fontSize: 52, lineHeight: 0.82, color: 'var(--tx)', letterSpacing: '-.03em', fontVariantNumeric: 'tabular-nums', fontFamily: 'var(--fm)', whiteSpace: 'nowrap' }}>
           {loading ? '…' : (usdc ?? '—')}
         </div>
         <div style={{ fontSize: 15, color: 'var(--tx2)', fontWeight: 600, marginBottom: 7 }}>USDC</div>
@@ -84,7 +84,7 @@ function NotesFace({ notes }: { notes: NoteRow[] }) {
           <div key={index} style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '10px 0', borderTop: '1px solid var(--bd)' }}>
             <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--ac2)', flex: 'none' }} />
             <span style={{ fontSize: 12.5, color: 'var(--tx)', fontWeight: 600 }}>Note {String(index + 1).padStart(2, '0')}</span>
-            <span style={{ marginLeft: 'auto', fontFamily: 'var(--fm)', fontSize: 13, color: '#fff' }}>{note.amount} {note.asset}</span>
+            <span style={{ marginLeft: 'auto', fontFamily: 'var(--fm)', fontSize: 13, color: 'var(--tx)' }}>{note.amount} {note.asset}</span>
             <span style={{ fontSize: 9, fontFamily: 'var(--fm)', color: 'var(--pos)', letterSpacing: '.06em', width: 74, textAlign: 'right' }}>SPENDABLE</span>
           </div>
         ))

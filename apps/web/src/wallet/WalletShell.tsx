@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { NetworkKey, PasskeyEnvelope, WalletIdentity } from '@zk-fighter/core'
-import { NetworkPill, truncateMiddle, useTheme } from '@zk-fighter/ui'
+import { Logo, NetworkPill, useTheme } from '@zk-fighter/ui'
 import { WalletFlowPanels } from '../WalletFlowPanels'
 import { HomeScreen } from './HomeScreen'
 import { ReceiveScreen } from './ReceiveScreen'
@@ -102,7 +102,7 @@ export function WalletShell({
     <div style={{ display: 'flex', height: '100%' }}>
       <aside style={{ width: 236, flex: 'none', background: 'var(--side)', borderRight: '1px solid var(--bd)', padding: '22px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '0 6px 4px' }}>
-          <div style={{ width: 36, height: 36, borderRadius: 11, background: 'linear-gradient(145deg,var(--ac2),var(--ac))' }} />
+          <Logo size={36} glow />
           <div style={{ lineHeight: 1.1 }}>
             <div style={{ fontWeight: 800, fontSize: 15.5, letterSpacing: '-.02em' }}>ZK Fighter</div>
             <div style={{ fontSize: 9, color: 'var(--tx3)', fontFamily: 'var(--fm)', letterSpacing: '.14em' }}>SHIELDED · STELLAR</div>
@@ -123,21 +123,12 @@ export function WalletShell({
             )
           })}
         </nav>
-        <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 10, border: '1px solid var(--bd)', borderRadius: 12, background: 'var(--card)' }}>
-            <div style={{ width: 30, height: 30, borderRadius: 9, background: 'linear-gradient(145deg,var(--ac2),var(--ac))' }} />
-            <div style={{ lineHeight: 1.25, minWidth: 0 }}>
-              <div style={{ fontSize: 12.5, fontWeight: 600 }}>Personal</div>
-              <div style={{ fontSize: 10.5, color: 'var(--tx3)', fontFamily: 'var(--fm)' }}>{truncateMiddle(receiveCode || identity.stellarPublicKey, 6, 4)}</div>
-            </div>
-          </div>
-          <button onClick={toggleTheme} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '7px 12px', color: 'var(--tx3)', fontSize: 12, cursor: 'pointer', background: 'none', border: 'none', textAlign: 'left' }}>
-            <span style={{ width: 14, textAlign: 'center' }}>{theme === 'dark' ? '☾' : '☀'}</span>
-            {theme === 'dark' ? 'Dark' : 'Light'} theme
+        <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <button onClick={onLock} style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 9, padding: '9px 12px', color: 'var(--tx2)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer', background: 'var(--card)', border: '1px solid var(--bd)', borderRadius: 10, textAlign: 'left' }}>
+            <span>⊘</span> Lock wallet
           </button>
-          <button onClick={onLock} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '7px 12px', color: 'var(--tx3)', fontSize: 12, cursor: 'pointer', background: 'none', border: 'none', textAlign: 'left' }}>
-            <span style={{ width: 14, textAlign: 'center' }}>⊘</span>
-            Lock wallet
+          <button onClick={toggleTheme} title={theme === 'dark' ? 'Switch to light' : 'Switch to dark'} aria-label="Toggle theme" style={{ flex: 'none', display: 'grid', placeItems: 'center', width: 38, height: 38, color: 'var(--tx2)', cursor: 'pointer', background: 'var(--card)', border: '1px solid var(--bd)', borderRadius: 10, fontSize: 14 }}>
+            {theme === 'dark' ? '☾' : '☀'}
           </button>
         </div>
       </aside>

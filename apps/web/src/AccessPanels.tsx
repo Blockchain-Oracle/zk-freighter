@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react'
 import { generateSeedPhrase, validateSeedPhrase, type NetworkKey } from '@zk-fighter/core'
-import { Button, Card, NetworkPill, PasswordStrength } from '@zk-fighter/ui'
+import { Button, Card, Logo, NetworkPill, PasswordStrength } from '@zk-fighter/ui'
 import { passwordMinLength } from './app-helpers'
 
 export type WalletSetupMode = 'create' | 'import'
@@ -41,7 +41,7 @@ export function OnboardingHeader({
 }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-      <div style={{ width: 38, height: 38, borderRadius: 12, background: 'linear-gradient(145deg,var(--ac2),var(--ac))' }} />
+      <Logo size={38} glow />
       <div style={{ lineHeight: 1.15 }}>
         <div style={{ fontWeight: 800, fontSize: 17, letterSpacing: '-.02em' }}>ZK Fighter</div>
         <div style={{ fontSize: 9.5, color: 'var(--tx3)', fontFamily: 'var(--fm)', letterSpacing: '.14em' }}>SHIELDED · STELLAR</div>

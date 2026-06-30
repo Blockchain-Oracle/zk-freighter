@@ -1,5 +1,6 @@
 export * from './tokens'
 export * from './theme'
+export * from './logo'
 export * from './primitives'
 export * from './cards'
 export * from './qr'
