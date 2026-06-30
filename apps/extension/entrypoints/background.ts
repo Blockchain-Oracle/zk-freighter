@@ -16,12 +16,13 @@ import { browser } from 'wxt/browser'
 
 import type {
   ExtensionAspInsertRequest,
+  ExtensionBalancesRequest,
   ExtensionBridgeRequest,
   ExtensionConfidentialRequest,
   ExtensionShieldRequest,
   ExtensionUsdcTrustlineRequest,
 } from '../src/dappRuntime'
-import { type DappRuntimeMessage } from '../src/dappMessages'
+import { type DappBalances, type DappRuntimeMessage } from '../src/dappMessages'
 import { ExtensionDappRuntime } from '../src/dappRuntime'
 
 const statusMessageType = 'zkf.extension.status'
@@ -39,6 +40,7 @@ const unshieldWithdrawalMessageType = 'zkf.extension.unshieldWithdrawal'
 const offscreenPrivateTransferMessageType = 'zkf.offscreen.privateTransfer'
 const offscreenConfidentialMessageType = 'zkf.offscreen.confidential'
 const offscreenUnshieldWithdrawalMessageType = 'zkf.offscreen.unshieldWithdrawal'
+const offscreenLoadBalancesMessageType = 'zkf.offscreen.loadBalances'
 
 type MessagePayload = {
   readonly type?: string
@@ -51,6 +53,7 @@ export default defineBackground(() => {
     runAspInsertInOffscreen,
     runUsdcTrustlineInOffscreen,
     runConfidentialInOffscreen,
+    runBalancesInOffscreen,
   )
 
   browser.runtime.onInstalled.addListener(() => {
@@ -163,6 +166,10 @@ async function runShieldInOffscreen(request: ExtensionShieldRequest): Promise<Xl
 
 async function runConfidentialInOffscreen(request: ExtensionConfidentialRequest): Promise<unknown> {
   return sendOffscreenMessage({ type: offscreenConfidentialMessageType, ...request })
+}
+
+async function runBalancesInOffscreen(request: ExtensionBalancesRequest): Promise<DappBalances> {
+  return (await sendOffscreenMessage({ type: offscreenLoadBalancesMessageType, ...request })) as DappBalances
 }
 
 async function runAspInsertInOffscreen(request: ExtensionAspInsertRequest): Promise<AspMembershipInsertReport> {

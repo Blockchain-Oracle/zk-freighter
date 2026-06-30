@@ -21,6 +21,7 @@ export const dappMessageTypes = {
   quickShield: 'zkf.extension.quickShield',
   quickBridge: 'zkf.extension.bridge.run',
   confidential: 'zkf.extension.confidential',
+  balances: 'zkf.extension.balances',
 } as const
 
 /** Confidential-token ops (Track B). Proving runs in the offscreen (bb.js). */
@@ -111,11 +112,39 @@ export type DappRuntimeMessage =
       /** Recipient Stellar address, for withdraw/transfer. */
       readonly to?: string
     }
+  | {
+      readonly type: typeof dappMessageTypes.balances
+    }
 
 export interface ConfidentialResponse {
   readonly ok: boolean
   /** The op's structured report (ConfidentialSubmitReport) or scan summary. */
   readonly report?: unknown
+  readonly error?: string
+}
+
+/** Real shielded + public balances, in atomic stroops (7dp). Never fabricated. */
+export interface DappBalances {
+  readonly shieldedXlmStroops: string
+  readonly shieldedUsdcStroops: string
+  readonly publicXlmStroops: string
+  readonly publicUsdcStroops: string
+  readonly noteCount: number
+  /** Non-empty when a pool scan was blocked/failed — surfaced honestly, not hidden. */
+  readonly blockers: readonly string[]
+  /** ISO timestamp of the scan that produced these numbers. */
+  readonly scannedAt: string
+}
+
+/**
+ * Balance response. `balances` is the last-known REAL scan (from durable cache or
+ * a fresh scan); `syncing` means a background refresh is in flight, so the popup
+ * shows the cached numbers immediately and updates when the next poll lands.
+ */
+export interface DappBalancesResponse {
+  readonly ok: boolean
+  readonly balances?: DappBalances
+  readonly syncing: boolean
   readonly error?: string
 }
 
@@ -127,6 +156,7 @@ export type DappRuntimeResponse =
   | QuickShieldResponse
   | QuickBridgeResponse
   | ConfidentialResponse
+  | DappBalancesResponse
   | {
       readonly ok: boolean
       readonly publicKey?: string

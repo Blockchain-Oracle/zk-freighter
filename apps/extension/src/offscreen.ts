@@ -15,6 +15,7 @@ import {
 import { browser } from 'wxt/browser'
 import { runPrivateTransfer, runUnshieldWithdrawal } from './offscreen-private-actions'
 import { runConfidentialOp } from './offscreen-confidential-actions'
+import { runLoadBalances } from './offscreen-balance-actions'
 
 const offscreenStatusMessageType = 'zkf.offscreen.status'
 const nethermindProbeMessageType = 'zkf.offscreen.nethermindProbe'
@@ -27,6 +28,7 @@ const prepareUsdcReceiveMessageType = 'zkf.offscreen.prepareUsdcReceive'
 const privateTransferMessageType = 'zkf.offscreen.privateTransfer'
 const unshieldWithdrawalMessageType = 'zkf.offscreen.unshieldWithdrawal'
 const confidentialMessageType = 'zkf.offscreen.confidential'
+const loadBalancesMessageType = 'zkf.offscreen.loadBalances'
 const extensionProofAttemptTimeoutMs = 18_000
 const deepProofAttemptTimeoutMs = 180_000
 const statusEventLimit = 8
@@ -91,6 +93,14 @@ browser.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) 
       // All confidential ops (register/deposit/merge/withdraw/transfer/scan).
       // bb.js UltraHonk proving runs here in the MV3 offscreen (verified).
       void runConfidentialOp(payload).then(sendResponse, (error: unknown) => {
+        sendResponse({ ok: false, error: error instanceof Error ? error.message : String(error) })
+      })
+      return true
+    }
+
+    if (payload.type === loadBalancesMessageType) {
+      // Real balance scan (fetch+decrypt notes + Horizon) — no proving.
+      void runLoadBalances(payload).then(sendResponse, (error: unknown) => {
         sendResponse({ ok: false, error: error instanceof Error ? error.message : String(error) })
       })
       return true

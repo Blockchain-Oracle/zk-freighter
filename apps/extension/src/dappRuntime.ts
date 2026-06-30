@@ -17,6 +17,8 @@ import {
   dappMessageTypes,
   type ConfidentialOpKind,
   type ConfidentialResponse,
+  type DappBalances,
+  type DappBalancesResponse,
   type DappRuntimeMessage,
   type DappRuntimeResponse,
   type DappWalletStatus,
@@ -25,6 +27,7 @@ import {
   type QuickBridgeResponse,
   type QuickShieldResponse,
 } from './dappMessages'
+import { balanceCacheKey, isBalanceStale, readBalanceCache, writeBalanceCache } from './balance-cache'
 import { freighterResponse, openExtensionSidePanel } from './dappRuntimeHelpers'
 import { identityForMnemonic, readStoredDappWallet, writeStoredDappWallet } from './dappRuntimeState'
 
@@ -42,6 +45,8 @@ export interface ExtensionAspInsertRequest {
 }
 
 export interface ExtensionUsdcTrustlineRequest { readonly mnemonic: string; readonly network: NetworkKey }
+
+export interface ExtensionBalancesRequest { readonly mnemonic: string; readonly network: NetworkKey }
 
 export interface ExtensionBridgeRequest {
   readonly mnemonic: string
@@ -63,11 +68,14 @@ type ExtensionAspInsertRunner = (request: ExtensionAspInsertRequest) => Promise<
 type ExtensionUsdcTrustlineRunner = (request: ExtensionUsdcTrustlineRequest) => Promise<StellarUsdcTrustlineReport>
 type ExtensionBridgeRunner = (request: ExtensionBridgeRequest) => Promise<CctpBridgeReport>
 type ExtensionConfidentialRunner = (request: ExtensionConfidentialRequest) => Promise<unknown>
+type ExtensionBalancesRunner = (request: ExtensionBalancesRequest) => Promise<DappBalances>
 
 interface MessageSender { readonly tab?: { readonly windowId?: number } }
 
 export class ExtensionDappRuntime {
   private unlockedMnemonic: string | null = null
+  /** Cache keys with a background balance refresh in flight (dedupes scans). */
+  private readonly refreshingBalances = new Set<string>()
 
   constructor(
     private readonly runShield?: ExtensionShieldRunner,
@@ -75,6 +83,7 @@ export class ExtensionDappRuntime {
     private readonly runAspInsert?: ExtensionAspInsertRunner,
     private readonly runUsdcTrustline?: ExtensionUsdcTrustlineRunner,
     private readonly runConfidential?: ExtensionConfidentialRunner,
+    private readonly runBalances?: ExtensionBalancesRunner,
   ) {}
 
   canHandle(type: string | undefined): boolean {
@@ -102,6 +111,8 @@ export class ExtensionDappRuntime {
         return this.quickBridge(message.sourceChainKey, message.resumeBurnHash)
       case dappMessageTypes.confidential:
         return this.confidential(message.op, message.amount, message.to)
+      case dappMessageTypes.balances:
+        return this.balances()
       case dappMessageTypes.freighterRequest:
         void openExtensionSidePanel(sender?.tab?.windowId)
         return this.handleFreighterRequest(message.request)
@@ -285,6 +296,58 @@ export class ExtensionDappRuntime {
       }
     } catch (error) {
       return { ok: false, error: error instanceof Error ? error.message : String(error) }
+    }
+  }
+
+  /**
+   * Real balances with stale-while-revalidate. A cached scan is returned instantly
+   * (durable across browser restarts) while a background refresh runs if it is
+   * stale; a cold cache scans synchronously so the first open still shows real
+   * numbers — never a fabricated value.
+   */
+  private async balances(): Promise<DappBalancesResponse> {
+    const ready = await this.requireUnlockedWallet()
+    if (!ready.ok) {
+      return { ok: false, syncing: false, error: ready.error }
+    }
+    if (!this.runBalances) {
+      return { ok: false, syncing: false, error: 'Extension balance runner is unavailable.' }
+    }
+
+    const state = await readStoredDappWallet()
+    const identity = identityForMnemonic(this.unlockedMnemonic, state)
+    if (!identity) {
+      return { ok: false, syncing: false, error: 'Unlock ZK Fighter to view balances.' }
+    }
+    const key = balanceCacheKey(ready.network, identity.stellarPublicKey)
+
+    const cached = await readBalanceCache(key)
+    if (cached) {
+      if (isBalanceStale(cached)) {
+        void this.refreshBalances(key, ready.mnemonic, ready.network)
+      }
+      return { ok: true, balances: cached, syncing: this.refreshingBalances.has(key) }
+    }
+
+    try {
+      const fresh = await this.runBalances({ mnemonic: ready.mnemonic, network: ready.network })
+      await writeBalanceCache(key, fresh)
+      return { ok: true, balances: fresh, syncing: false }
+    } catch (error) {
+      return { ok: false, syncing: false, error: error instanceof Error ? error.message : String(error) }
+    }
+  }
+
+  private async refreshBalances(key: string, mnemonic: string, network: NetworkKey): Promise<void> {
+    if (this.refreshingBalances.has(key) || !this.runBalances) return
+    this.refreshingBalances.add(key)
+    try {
+      const fresh = await this.runBalances({ mnemonic, network })
+      await writeBalanceCache(key, fresh)
+    } catch (error) {
+      console.warn('[ExtensionDappRuntime] balance refresh failed', error)
+    } finally {
+      this.refreshingBalances.delete(key)
     }
   }
 }
