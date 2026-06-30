@@ -17,16 +17,23 @@ import {
   type WalletIdentity,
   type XlmShieldSubmitReport,
 } from '@zk-fighter/core'
-import { Button, Callout, Card, ProofStepList } from '@zk-fighter/ui'
+import { BoundaryBadge, Button, Callout, Chip, EventStepTracker, type ProofStep } from '@zk-fighter/ui'
 import type { ShieldedBalanceState } from './useShieldedBalance'
 import { runBridgeAfterDestinationSetup } from '../bridgePanelActions'
 import { loadCompletedBridgeResumeReport, saveBridgeResumeReport } from '../bridge-storage'
 import { initialBridgeBurnHash, initialBridgeSource } from '../bridgePanelHelpers'
 import { bridgeStageModel } from './bridgeStages'
-import { BoundaryPill, FlowHeader } from './flowChrome'
 import type { WalletScreen } from './screens'
 
 const ARRIVED_USDC_SHIELD_STROOPS = 10_000_000n // 1 USDC at 7dp
+
+// Shown muted before a bridge starts so the four CCTP stages are always legible.
+const BRIDGE_PREVIEW: readonly ProofStep[] = [
+  { label: 'Burn on source chain', state: 'pending' },
+  { label: 'Circle attestation', state: 'pending', detail: '~1 min' },
+  { label: 'Mint on Stellar', state: 'pending' },
+  { label: 'Shield arrived USDC', state: 'pending' },
+]
 
 const fieldStyle: CSSProperties = {
   width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 10,
@@ -48,7 +55,7 @@ interface BridgeScreenProps {
   onNav: (screen: WalletScreen) => void
 }
 
-export function BridgeScreen({ identity, network, balance, onNav }: BridgeScreenProps) {
+export function BridgeScreen({ identity, network, balance }: BridgeScreenProps) {
   const [sourceKey, setSourceKey] = useState<CctpSourceKey>(() => initialBridgeSource(network, identity.stellarPublicKey))
   const [report, setReport] = useState<CctpBridgeReport | null>(() => loadCompletedBridgeResumeReport(network, identity.stellarPublicKey, sourceKey))
   const [shieldReport, setShieldReport] = useState<XlmShieldSubmitReport | null>(null)
@@ -151,54 +158,61 @@ export function BridgeScreen({ identity, network, balance, onNav }: BridgeScreen
     }, (cause: unknown) => console.warn('clipboard write failed', cause))
   }
 
-  const section: CSSProperties = { width: '100%', maxWidth: 580, margin: '0 auto', padding: '32px 28px 56px', display: 'flex', flexDirection: 'column', gap: 16 }
-  const card: CSSProperties = { padding: '20px 22px 22px', display: 'flex', flexDirection: 'column', gap: 14 }
+  const panel: CSSProperties = { border: '1px solid var(--bd)', borderRadius: 18, background: 'var(--panel)', padding: 22, display: 'flex', flexDirection: 'column', gap: 16 }
+  const steps = report ? bridgeStageModel(report) : BRIDGE_PREVIEW
+  const mono9: CSSProperties = { font: '600 9px/1 var(--fm)', letterSpacing: '.12em', color: 'var(--tx3)' }
 
   return (
-    <section style={section}>
-      <FlowHeader title="Bridge · add funds" onBack={() => onNav('home')} badge={<BoundaryPill label="BOTH ENDS PUBLIC" />} />
+    <section style={{ width: '100%', maxWidth: 880, margin: '0 auto', padding: '30px 34px 44px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ fontWeight: 800, fontSize: 26, letterSpacing: '-.025em' }}>Bridge</div>
+        <BoundaryBadge kind="both-public" />
+        <div style={{ marginLeft: 'auto' }}><BoundaryBadge kind="neutral" label="NATIVE · NO METAMASK" /></div>
+      </div>
+      <div style={{ fontSize: 13.5, color: 'var(--tx2)', marginBottom: 18 }}>Bring real USDC from an EVM chain onto Stellar via Circle CCTP, then shield it. The wallet signs the burn with a seed-derived key.</div>
 
-      <Card style={card}>
-        <Callout tone="public">
-          Bring USDC from another chain into your public Stellar balance via Circle CCTP, then shield it. ZK Fighter signs the burn with its own EVM key — no MetaMask needed.
-        </Callout>
-
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {sources.map((s) => (
-            <button key={s.key} type="button" onClick={() => selectSource(s.key)} disabled={busy !== null}
-              style={{ padding: '8px 12px', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: busy ? 'default' : 'pointer', fontFamily: 'inherit',
-                border: s.key === sourceKey ? '1px solid var(--ac)' : '1px solid var(--bd)', background: s.key === sourceKey ? 'rgba(94,124,250,.08)' : 'var(--card2)', color: 'var(--tx)' }}>
-              {s.label}
-            </button>
-          ))}
+      <div style={{ display: 'flex', gap: 26, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+        <div style={{ ...panel, flex: '1.1 1 320px' }}>
+          <div>
+            <div style={{ ...mono9, marginBottom: 11 }}>SOURCE CHAIN</div>
+            <div style={{ display: 'flex', gap: 9, flexWrap: 'wrap' }}>
+              {sources.map((s) => <Chip key={s.key} label={s.label} active={s.key === sourceKey} onClick={() => { if (!busy) selectSource(s.key) }} />)}
+            </div>
+          </div>
+          <div style={{ border: '1px solid var(--bd)', borderRadius: 14, background: 'var(--card)', padding: '16px 18px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: 10 }}>
+              <span style={mono9}>YOUR {(source?.label ?? 'EVM').toUpperCase()} FUNDING ADDRESS</span>
+              <button onClick={copyAddress} style={{ marginLeft: 'auto', background: 'none', border: 'none', fontSize: 11.5, color: 'var(--ac2)', fontWeight: 600, cursor: 'pointer' }}>{copied ? 'Copied' : 'Copy'}</button>
+            </div>
+            <div style={{ fontFamily: 'var(--fm)', fontSize: 12.5, color: 'var(--tx)', wordBreak: 'break-all' }}>{evmAddress}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginTop: 13, paddingTop: 13, borderTop: '1px solid var(--bd)', fontSize: 12, color: 'var(--tx2)' }}>
+              {evmLoading ? <span style={{ color: 'var(--tx3)' }}>Loading balance…</span> : evm ? (
+                <>
+                  <span>USDC <b style={{ fontFamily: 'var(--fm)', color: 'var(--tx)' }}>{fmtUsdc(evm.usdcAtomic)}</b></span>
+                  <span>Gas <b style={{ fontFamily: 'var(--fm)', color: 'var(--tx)' }}>{fmtEth(evm.nativeWei)} {source?.gasToken ?? 'ETH'}</b></span>
+                  <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 10, fontFamily: 'var(--fm)', color: evm.usdcAtomic > 0n ? 'var(--pos)' : 'var(--tx3)' }}>
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: evm.usdcAtomic > 0n ? 'var(--pos)' : 'var(--tx3)' }} />{evm.usdcAtomic > 0n ? 'FUNDED' : 'EMPTY'}
+                  </span>
+                </>
+              ) : <span style={{ color: 'var(--tx3)' }}>Balance unavailable — you can still bridge.</span>}
+            </div>
+            <div style={{ marginTop: 10, fontSize: 10.5, color: 'var(--tx3)', lineHeight: 1.5 }}>Send USDC (and a little {source?.gasToken ?? 'gas'}) to this address, then start the bridge.</div>
+          </div>
+          {blockers.length ? <Callout tone="warn" title="Bridge unavailable.">{blockers[0]}</Callout> : null}
+          {!evmLoading && evm && evm.usdcAtomic === 0n ? <Callout tone="warn" title="No USDC yet.">Fund the address above with USDC on {source?.label} before bridging.</Callout> : null}
+          <Button fullWidth loading={busy === 'bridge'} disabled={busy !== null || blockers.length > 0 || !source} onClick={startBridge}>{busy === 'bridge' ? 'Bridging…' : 'Start bridge'}</Button>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 14px', border: '1px dashed var(--bd2)', borderRadius: 12 }}>
+            <div style={{ fontSize: 12, color: 'var(--tx2)' }}>↻ Resume a bridge — paste a burn hash to finish a stalled mint</div>
+            <input value={resumeHash} onChange={(e) => setResumeHash(e.target.value)} placeholder="0x… burn tx hash" style={fieldStyle} />
+            <Button variant="secondary" fullWidth loading={busy === 'bridge'} disabled={busy !== null || resumeHash.trim().length === 0 || blockers.length > 0} onClick={resumeBridge}>Resume mint</Button>
+          </div>
         </div>
 
-        <div style={{ border: '1px dashed var(--bd2)', borderRadius: 12, padding: '13px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <div style={{ fontSize: 11, color: 'var(--tx2)', fontWeight: 600 }}>Your ZK Fighter {source?.label ?? 'EVM'} address</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <code style={{ flex: 1, minWidth: 0, fontFamily: 'var(--fm)', fontSize: 11, color: 'var(--tx2)', wordBreak: 'break-all' }}>{evmAddress}</code>
-            <Button variant="secondary" onClick={copyAddress}>{copied ? 'Copied' : 'Copy'}</Button>
-          </div>
-          <div style={{ fontSize: 11, color: 'var(--tx3)', fontVariantNumeric: 'tabular-nums' }}>
-            {evmLoading ? 'Loading balance…' : evm ? `${fmtUsdc(evm.usdcAtomic)} USDC · ${fmtEth(evm.nativeWei)} ${source?.gasToken ?? 'ETH'} for gas` : 'Balance unavailable — you can still bridge.'}
-          </div>
-          <div style={{ fontSize: 10.5, color: 'var(--tx3)', lineHeight: 1.5 }}>Send USDC (and a little {source?.gasToken ?? 'gas token'}) to this address, then start the bridge.</div>
-        </div>
-
-        {blockers.length ? <Callout tone="warn" title="Bridge unavailable.">{blockers[0]}</Callout> : null}
-        {!evmLoading && evm && evm.usdcAtomic === 0n ? <Callout tone="warn" title="No USDC yet.">Fund the address above with USDC on {source?.label} before bridging.</Callout> : null}
-
-        <Button fullWidth loading={busy === 'bridge'} disabled={busy !== null || blockers.length > 0 || !source} onClick={startBridge}>
-          {busy === 'bridge' ? 'Bridging…' : 'Start bridge'}
-        </Button>
-      </Card>
-
-      {report ? (
-        <Card style={card}>
-          <div style={{ fontWeight: 700, fontSize: 14 }}>Bridge progress</div>
-          <ProofStepList steps={bridgeStageModel(report)} />
-          {report.stellarMintExplorerUrl ? <a href={report.stellarMintExplorerUrl} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: 'var(--ac2)', fontWeight: 600 }}>View Stellar mint ↗</a> : null}
-          {report.blockers.length && report.status !== 'completed' ? <Callout tone="warn">{report.blockers[0]}</Callout> : null}
+        <div style={{ ...panel, flex: '1 1 280px' }}>
+          <div style={mono9}>BRIDGE PROGRESS</div>
+          <EventStepTracker steps={steps} />
+          {report?.stellarMintExplorerUrl ? <a href={report.stellarMintExplorerUrl} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: 'var(--ac2)', fontWeight: 600 }}>View Stellar mint ↗</a> : null}
+          {report && report.blockers.length && report.status !== 'completed' ? <Callout tone="warn">{report.blockers[0]}</Callout> : null}
           {arrived ? (
             <>
               <Callout tone="public" title="USDC arrived.">It’s in your public Stellar balance — visible on-chain. Shield it to make it private and spendable.</Callout>
@@ -207,16 +221,9 @@ export function BridgeScreen({ identity, network, balance, onNav }: BridgeScreen
               {shieldReport && shieldReport.status !== 'submitted' ? <Callout tone="warn">{shieldReport.error ?? shieldReport.blockers[0]}</Callout> : null}
             </>
           ) : null}
-        </Card>
-      ) : null}
-
-      <Card style={card}>
-        <div style={{ fontWeight: 700, fontSize: 14 }}>Resume a bridge</div>
-        <div style={{ fontSize: 11, color: 'var(--tx3)' }}>Already burned on the source chain? Paste the burn tx hash to finish the Stellar mint.</div>
-        <input value={resumeHash} onChange={(e) => setResumeHash(e.target.value)} placeholder="0x… burn tx hash" style={fieldStyle} />
-        <Button variant="secondary" fullWidth loading={busy === 'bridge'} disabled={busy !== null || resumeHash.trim().length === 0 || blockers.length > 0} onClick={resumeBridge}>Resume mint</Button>
-      </Card>
-
+          {network === 'mainnet' ? <div style={{ marginTop: 6, padding: '13px 14px', border: '1px dashed rgba(229,180,92,.4)', borderRadius: 12, background: 'rgba(229,180,92,.05)', fontSize: 11, lineHeight: 1.55, color: 'var(--warn)' }}>Mainnet bridge-to-shield is wired but not yet verified — the UI guards it on mainnet.</div> : null}
+        </div>
+      </div>
       {error ? <Callout tone="warn" title="Bridge error.">{error}</Callout> : null}
     </section>
   )

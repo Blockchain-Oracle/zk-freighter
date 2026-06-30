@@ -1,3 +1,4 @@
+import { Fragment } from 'react'
 import type { CSSProperties } from 'react'
 import { fontMono } from './tokens'
 
@@ -155,6 +156,44 @@ export function ProofStepList({ steps }: { steps: readonly ProofStep[] }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       {steps.map((step) => (
         <ProofStepRow key={step.label} {...step} />
+      ))}
+    </div>
+  )
+}
+
+const EVENT_DOT: Record<ProofStepState, CSSProperties> = {
+  done: { background: 'rgba(53,199,123,.18)', color: 'var(--pos)', border: '1px solid rgba(53,199,123,.45)' },
+  active: { background: 'rgba(94,124,250,.18)', color: 'var(--ac2)', border: '1px solid var(--ac)' },
+  pending: { background: 'transparent', color: 'var(--tx3)', border: '1px solid var(--bd2)' },
+  error: { background: 'rgba(229,103,92,.16)', color: 'var(--dng)', border: '1px solid rgba(229,103,92,.45)' },
+}
+
+function EventStepRow({ label, state, detail }: ProofStep) {
+  const labelColor = state === 'done' ? 'var(--pos)' : state === 'active' ? 'var(--tx)' : state === 'error' ? 'var(--dng)' : 'var(--tx3)'
+  return (
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 13, opacity: state === 'pending' ? 0.6 : 1 }}>
+      <span style={{ width: 20, height: 20, borderRadius: '50%', flex: 'none', display: 'grid', placeItems: 'center', fontSize: 10, ...EVENT_DOT[state] }}>
+        {state === 'done' ? '✓' : state === 'error' ? '!' : state === 'active' ? (
+          <span style={{ width: 10, height: 10, borderRadius: '50%', border: '2px solid rgba(94,124,250,.3)', borderTopColor: 'var(--ac)', animation: 'zkSpin .8s linear infinite' }} />
+        ) : null}
+      </span>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 13.5, fontWeight: state === 'active' ? 700 : 600, color: labelColor }}>{label}</div>
+        {detail ? <div style={{ fontSize: 10.5, fontFamily: fontMono, color: state === 'active' ? 'var(--warn)' : 'var(--tx3)', marginTop: 2 }}>{detail}</div> : null}
+      </div>
+    </div>
+  )
+}
+
+/** Vertical on-chain event tracker with connectors (bridge burn → attestation → mint → arrived). */
+export function EventStepTracker({ steps }: { steps: readonly ProofStep[] }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
+      {steps.map((step, index) => (
+        <Fragment key={step.label}>
+          {index > 0 ? <div style={{ width: 1, height: 14, background: 'var(--bd2)', margin: '4px 0 4px 10px' }} /> : null}
+          <EventStepRow {...step} />
+        </Fragment>
       ))}
     </div>
   )
