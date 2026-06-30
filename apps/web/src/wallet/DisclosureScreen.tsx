@@ -12,26 +12,34 @@ import {
   type XlmNotesReport,
   type XlmShieldedNote,
 } from '@zk-fighter/core'
-import { Button, Callout, Card, Spinner, truncateMiddle } from '@zk-fighter/ui'
+import { BoundaryBadge, Button, Callout, Segmented, Spinner } from '@zk-fighter/ui'
 import type { ShieldedBalanceState } from './useShieldedBalance'
 import { formatStroops } from './format'
-import { BoundaryPill, FlowHeader } from './flowChrome'
 import type { WalletScreen } from './screens'
 
-const ASSETS: readonly AssetCode[] = ['USDC', 'XLM']
+const ASSET_OPTIONS = [
+  { value: 'USDC', label: 'USDC' },
+  { value: 'XLM', label: 'XLM' },
+]
+const MODE_OPTIONS = [
+  { value: 'generate', label: 'Create proof' },
+  { value: 'verify', label: 'Verify a proof' },
+]
 
 const fieldStyle: CSSProperties = {
-  width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: 10,
+  width: '100%', boxSizing: 'border-box', padding: '11px 13px', borderRadius: 11,
   border: '1px solid var(--bd)', background: 'var(--card2)', color: 'var(--tx)', fontSize: 12.5, fontFamily: 'inherit', outline: 'none',
 }
+const labelStyle: CSSProperties = { font: '600 9px/1 var(--fm)', letterSpacing: '.1em', color: 'var(--tx3)', marginBottom: 8 }
+const panel: CSSProperties = { border: '1px solid var(--bd)', borderRadius: 18, background: 'var(--panel)', padding: 22, display: 'flex', flexDirection: 'column', gap: 16, flex: '1 1 320px' }
 
 function unspentNote(report: XlmNotesReport | null): XlmShieldedNote | undefined {
   if (!report || report.status !== 'loaded') return undefined
   return [...report.notes].filter((n) => !n.spent).sort((a, b) => Number(BigInt(b.amountStroops) - BigInt(a.amountStroops)))[0]
 }
 
-function authorityPayloadHex(authority: string): string {
-  return `0x${bytesToHex(new TextEncoder().encode(authority.trim()))}`
+function Check({ label, color = 'var(--pos)' }: { label: string; color?: string }) {
+  return <div style={{ display: 'flex', alignItems: 'center', gap: 9, font: '600 12px/1 var(--sans)', color }}>✓ {label}</div>
 }
 
 interface DisclosureScreenProps {
@@ -41,11 +49,11 @@ interface DisclosureScreenProps {
   onNav: (screen: WalletScreen) => void
 }
 
-export function DisclosureScreen({ identity, network, balance, onNav }: DisclosureScreenProps) {
+export function DisclosureScreen({ identity, network, balance }: DisclosureScreenProps) {
   const [mode, setMode] = useState<'generate' | 'verify'>('generate')
   const [asset, setAsset] = useState<AssetCode>('USDC')
   const [authority, setAuthority] = useState('')
-  const [purpose, setPurpose] = useState('Proof of funds')
+  const [purpose, setPurpose] = useState('Q3-2026 audit')
   const [busy, setBusy] = useState<'generate' | 'verify' | null>(null)
   const [genReport, setGenReport] = useState<GenerateDisclosureReport | null>(null)
   const [verifyJson, setVerifyJson] = useState('')
@@ -64,7 +72,7 @@ export function DisclosureScreen({ identity, network, balance, onNav }: Disclosu
       const report = await generateDisclosureArtifact({
         identity, network, asset, note,
         authorityLabel: authority.trim(),
-        authorityIdentityPayloadHex: authorityPayloadHex(authority),
+        authorityIdentityPayloadHex: `0x${bytesToHex(new TextEncoder().encode(authority.trim()))}`,
         purpose: purpose.trim() || 'Proof of funds',
       })
       setGenReport(report)
@@ -91,81 +99,94 @@ export function DisclosureScreen({ identity, network, balance, onNav }: Disclosu
 
   function copyArtifact() {
     if (!genReport?.artifactJson) return
-    navigator.clipboard.writeText(genReport.artifactJson).then(() => {
-      setCopied(true)
-      window.setTimeout(() => setCopied(false), 1600)
-    }, (c: unknown) => console.warn('clipboard write failed', c))
+    navigator.clipboard.writeText(genReport.artifactJson).then(() => { setCopied(true); window.setTimeout(() => setCopied(false), 1600) }, (c: unknown) => console.warn('clipboard write failed', c))
   }
 
-  function tabStyle(active: boolean): CSSProperties {
-    return { flex: 1, padding: 9, borderRadius: 9, textAlign: 'center', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', border: 'none', background: active ? 'var(--ac)' : 'transparent', color: active ? '#fff' : 'var(--tx2)', fontFamily: 'inherit' }
+  function download() {
+    if (!genReport?.artifactJson) return
+    const url = URL.createObjectURL(new Blob([genReport.artifactJson], { type: 'application/json' }))
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'zk-fighter-disclosure.json'
+    a.click()
+    URL.revokeObjectURL(url)
   }
-
-  const section: CSSProperties = { width: '100%', maxWidth: 580, margin: '0 auto', padding: '32px 28px 56px', display: 'flex', flexDirection: 'column', gap: 16 }
-  const card: CSSProperties = { padding: '20px 22px 22px', display: 'flex', flexDirection: 'column', gap: 14 }
 
   return (
-    <section style={section}>
-      <FlowHeader title="Disclosure" onBack={() => onNav('home')} badge={<BoundaryPill label="READ-ONLY PROOF" color="var(--ac2)" dashed={false} />} />
-
-      <div style={{ display: 'flex', gap: 4, padding: 4, background: 'var(--card)', border: '1px solid var(--bd)', borderRadius: 12 }}>
-        <button type="button" style={tabStyle(mode === 'generate')} onClick={() => setMode('generate')}>Create proof</button>
-        <button type="button" style={tabStyle(mode === 'verify')} onClick={() => setMode('verify')}>Verify a proof</button>
+    <section style={{ width: '100%', maxWidth: 880, margin: '0 auto', padding: '30px 34px 44px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ fontWeight: 800, fontSize: 26, letterSpacing: '-.025em' }}>Selective disclosure</div>
+        <BoundaryBadge kind="read-only" />
+      </div>
+      <div style={{ fontSize: 13.5, color: 'var(--tx2)', marginBottom: 18 }}>Prove you own a specific note to an auditor — without revealing your other notes, the amount, or any power to spend.</div>
+      <div style={{ marginBottom: 4 }}>
+        <Segmented options={MODE_OPTIONS} value={mode} onChange={(value) => setMode(value as 'generate' | 'verify')} />
       </div>
 
       {mode === 'generate' ? (
-        <Card style={card}>
-          <Callout tone="info">
-            Prove you own shielded funds to a specific reviewer — without revealing your keys or letting them spend. They get a read-only receipt, proven on your device.
-          </Callout>
-          <div style={{ display: 'flex', gap: 8 }}>
-            {ASSETS.map((code) => (
-              <button key={code} type="button" onClick={() => setAsset(code)}
-                style={{ flex: 1, padding: '10px', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', border: code === asset ? '1px solid var(--ac)' : '1px solid var(--bd)', background: code === asset ? 'rgba(94,124,250,.08)' : 'var(--card2)', color: 'var(--tx)' }}>
-                {code}
-              </button>
-            ))}
+        <div style={{ display: 'flex', gap: 26, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+          <div style={panel}>
+            <Segmented options={ASSET_OPTIONS} value={asset} onChange={(value) => setAsset(value as AssetCode)} size="sm" />
+            <div>
+              <div style={labelStyle}>NOTE</div>
+              <div style={{ ...fieldStyle, display: 'flex', alignItems: 'center', color: note ? 'var(--tx)' : 'var(--tx3)' }}>
+                {note ? `Note · ${formatStroops(BigInt(note.amountStroops), asset === 'XLM' ? 3 : 2)} ${asset}` : `No shielded ${asset} note yet`}
+              </div>
+            </div>
+            <div>
+              <div style={labelStyle}>AUTHORITY</div>
+              <input value={authority} onChange={(e) => setAuthority(e.target.value)} placeholder="e.g. Acme Bank compliance" style={fieldStyle} />
+            </div>
+            <div>
+              <div style={labelStyle}>REFERENCE</div>
+              <input value={purpose} onChange={(e) => setPurpose(e.target.value)} style={fieldStyle} />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '12px 14px', border: '1px solid rgba(94,124,250,.28)', borderRadius: 12, background: 'rgba(94,124,250,.06)' }}>
+              <span style={{ flex: 'none', width: 7, height: 7, borderRadius: '50%', background: 'var(--ac)', boxShadow: '0 0 8px var(--ac)' }} />
+              <span style={{ fontSize: 11.5, color: 'var(--tx2)', lineHeight: 1.5 }}>Proving on your device — nothing is uploaded. The receipt is read-only and cannot move funds.</span>
+            </div>
+            {!note ? <Callout tone="warn" title="No shielded note.">{poolEnabled ? `Shield some ${asset} first to create a proof.` : `${asset} pool is not configured for this network.`}</Callout> : null}
+            <Button fullWidth loading={busy === 'generate'} disabled={!canGenerate} onClick={generate}>{busy === 'generate' ? 'Proving locally…' : 'Generate disclosure proof'}</Button>
           </div>
-          {note ? (
-            <div style={{ fontSize: 11.5, color: 'var(--tx3)' }}>Proving ownership of a {formatStroops(BigInt(note.amountStroops), asset === 'XLM' ? 3 : 2)} {asset} note · {truncateMiddle(note.id, 6, 4)}</div>
-          ) : (
-            <Callout tone="warn" title="No shielded note.">{poolEnabled ? `Shield some ${asset} first to create a proof.` : `${asset} pool is not configured for this network.`}</Callout>
-          )}
-          <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <span style={{ fontSize: 11, color: 'var(--tx2)', fontWeight: 600 }}>Who is this proof for?</span>
-            <input value={authority} onChange={(e) => setAuthority(e.target.value)} placeholder="e.g. Acme Bank compliance" style={fieldStyle} />
-          </label>
-          <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <span style={{ fontSize: 11, color: 'var(--tx2)', fontWeight: 600 }}>Reference</span>
-            <input value={purpose} onChange={(e) => setPurpose(e.target.value)} style={fieldStyle} />
-          </label>
-          <Button fullWidth loading={busy === 'generate'} disabled={!canGenerate} onClick={generate}>
-            {busy === 'generate' ? 'Proving locally…' : 'Create disclosure proof'}
-          </Button>
-          {busy === 'generate' ? <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center', fontSize: 11.5, color: 'var(--tx3)' }}><Spinner size={14} /> Proving on your device — nothing is uploaded.</div> : null}
-          {genReport?.artifactJson ? (
-            <>
-              <Callout tone="info" title="Proof ready.">Share this receipt with {authority.trim()}. It’s read-only and cannot move funds.</Callout>
-              <textarea readOnly rows={6} value={genReport.artifactJson} style={{ ...fieldStyle, fontFamily: 'var(--fm)', fontSize: 10.5, resize: 'vertical' }} />
-              <Button variant="secondary" onClick={copyArtifact}>{copied ? 'Copied' : 'Copy proof'}</Button>
-            </>
-          ) : genReport && genReport.status !== 'generated' ? (
-            <Callout tone="warn">{genReport.blockers[0] ?? 'Could not create the proof.'}</Callout>
-          ) : null}
-        </Card>
+
+          <div style={panel}>
+            <div style={labelStyle}>RECEIPT (JSON)</div>
+            <div style={{ border: '1px solid var(--bd)', borderRadius: 12, background: '#0c0d0f', padding: 14, fontFamily: 'var(--fm)', fontSize: 10.5, lineHeight: 1.6, color: 'var(--tx2)', maxHeight: 200, overflow: 'auto', wordBreak: 'break-all' }}>
+              {genReport?.artifactJson ?? (busy === 'generate' ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: 'var(--tx3)' }}><Spinner size={13} /> proving…</span> : <span style={{ color: 'var(--tx3)' }}>Your read-only receipt appears here once generated.</span>)}
+            </div>
+            {genReport?.artifactJson ? (
+              <>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: 14, border: '1px solid var(--bd)', borderRadius: 12, background: 'var(--card)' }}>
+                  <Check label="Proof generated on-device" />
+                  <Check label="Read-only receipt" />
+                  <Check label="No spend authority" color="var(--ac2)" />
+                </div>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <Button variant="ghost" onClick={copyArtifact}>{copied ? 'Copied' : 'Copy receipt'}</Button>
+                  <Button fullWidth onClick={download}>Download</Button>
+                </div>
+              </>
+            ) : genReport && genReport.status !== 'generated' ? <Callout tone="warn">{genReport.blockers[0] ?? 'Could not create the proof.'}</Callout> : null}
+          </div>
+        </div>
       ) : (
-        <Card style={card}>
-          <div style={{ fontSize: 12, color: 'var(--tx3)', lineHeight: 1.5 }}>Paste a disclosure receipt to check its proof, context, and that it carries no spend authority.</div>
-          <textarea value={verifyJson} onChange={(e) => setVerifyJson(e.target.value)} rows={7} placeholder="Paste disclosure receipt JSON…" style={{ ...fieldStyle, fontFamily: 'var(--fm)', fontSize: 10.5, resize: 'vertical' }} />
+        <div style={{ ...panel, maxWidth: 560, flex: 'none' }}>
+          <div style={{ fontSize: 12.5, color: 'var(--tx2)', lineHeight: 1.5 }}>Paste a disclosure receipt to check its proof, context, and that it carries no spend authority.</div>
+          <textarea value={verifyJson} onChange={(e) => setVerifyJson(e.target.value)} rows={8} placeholder="Paste disclosure receipt JSON…" style={{ ...fieldStyle, fontFamily: 'var(--fm)', fontSize: 10.5, resize: 'vertical' }} />
           <Button fullWidth loading={busy === 'verify'} disabled={busy !== null || verifyJson.trim().length === 0} onClick={verify}>Verify proof</Button>
           {verifyReport ? (
-            <Callout tone={verifyReport.fullyVerified ? 'info' : 'warn'} title={verifyReport.fullyVerified ? 'Verified.' : 'Not verified.'}>
-              {verifyReport.fullyVerified
-                ? `Read-only proof valid${verifyReport.artifact ? ` for note ${truncateMiddle(verifyReport.artifact.activity.commitment, 6, 6)}` : ''}. Proof ✓ · context ✓ · known root ✓ · no spend authority ✓.`
-                : (verifyReport.blockers[0] ?? `proof ${verifyReport.proofVerified ? '✓' : '✗'} · context ${verifyReport.contextVerified ? '✓' : '✗'} · root ${verifyReport.knownRootStatus ? '✓' : '✗'}`)}
-            </Callout>
+            verifyReport.fullyVerified ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: 14, border: '1px solid var(--bd)', borderRadius: 12, background: 'var(--card)' }}>
+                <Check label="Proof valid" />
+                <Check label="Context matches" />
+                <Check label="Known root" />
+                <Check label="No spend authority" color="var(--ac2)" />
+              </div>
+            ) : (
+              <Callout tone="warn" title="Not verified.">{verifyReport.blockers[0] ?? `proof ${verifyReport.proofVerified ? '✓' : '✗'} · context ${verifyReport.contextVerified ? '✓' : '✗'} · root ${verifyReport.knownRootStatus ? '✓' : '✗'}`}</Callout>
+            )
           ) : null}
-        </Card>
+        </div>
       )}
     </section>
   )
