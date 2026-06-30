@@ -35,11 +35,15 @@ async function main() {
     await cdp.open()
 
     const extensionId = await findExtensionId(cdp, profileDir, stderr)
-    const popupText = await pageText(cdp, `chrome-extension://${extensionId}/popup.html`, 'Runtime checkpoint')
-    assertIncludes(popupText, 'Shared wallet core', 'popup readiness rows render')
-    assertIncludes(popupText, 'QuickShield', 'popup QuickShield surface renders')
+    // Fresh profile has no vault, so both surfaces render the Access card (the
+    // redesigned locked state). Unlocked workspace render is exercised by the
+    // quickshield/confidential smokes; here we assert the React app mounts + the
+    // runtime messages below carry the real offscreen/prover guarantees.
+    const popupText = await pageText(cdp, `chrome-extension://${extensionId}/popup.html`, 'Set up your wallet')
+    assertIncludes(popupText, 'Import a recovery phrase', 'popup access card renders')
+    assertIncludes(popupText, 'VAULT PASSWORD', 'popup vault password field renders')
 
-    await pageText(cdp, `chrome-extension://${extensionId}/sidepanel.html`, 'Extension workspace')
+    await pageText(cdp, `chrome-extension://${extensionId}/sidepanel.html`, 'Set up your wallet')
 
     const offscreenStatus = await evaluateOnPage(
       cdp,
