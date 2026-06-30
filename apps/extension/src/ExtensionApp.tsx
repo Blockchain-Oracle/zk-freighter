@@ -1,18 +1,11 @@
-import { extensionReadinessDigest, phase11ExtensionReadiness } from '@zk-fighter/core'
-import { Clipboard } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { browser } from 'wxt/browser'
 
-import { Logo, ThemeProvider } from '@zk-fighter/ui'
+import { ThemeProvider } from '@zk-fighter/ui'
 
 import { ExtensionAccess } from './ExtensionAccess'
 import { ExtensionHome } from './ExtensionHome'
-import { ExtensionBridgePanel } from './ExtensionBridgePanel'
-import { ExtensionConfidentialPanel } from './ExtensionConfidentialPanel'
-import { ExtensionQuickShieldPanel } from './ExtensionQuickShieldPanel'
-import { ExtensionReadinessPanel } from './ExtensionReadinessPanel'
-import { ExtensionWalletPanel } from './ExtensionWalletPanel'
-import { GhostButton } from './extension-ui'
+import { ExtensionSidePanel } from './ExtensionSidePanel'
 import { dappMessageTypes, type DappWalletStatus } from './dappMessages'
 
 const statusRefreshMs = 1_000
@@ -22,13 +15,10 @@ interface ExtensionAppProps {
 }
 
 export function ExtensionApp({ surface }: ExtensionAppProps) {
-  const [copyState, setCopyState] = useState('Copy readiness')
-  const [receiveCopyState, setReceiveCopyState] = useState('Copy receive code')
   const [status, setStatus] = useState<DappWalletStatus | null>(null)
   const [mnemonic, setMnemonic] = useState('')
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
-  const digest = useMemo(() => extensionReadinessDigest(), [])
 
   useEffect(() => {
     void refreshStatus()
@@ -49,11 +39,6 @@ export function ExtensionApp({ surface }: ExtensionAppProps) {
     return next
   }
 
-  async function copyDigest() {
-    await navigator.clipboard.writeText(digest)
-    setCopyState('Copied')
-  }
-
   async function copyPublicKey() {
     if (status?.publicKey) {
       await navigator.clipboard.writeText(status.publicKey)
@@ -63,7 +48,6 @@ export function ExtensionApp({ surface }: ExtensionAppProps) {
   async function copyReceiveCode() {
     if (status?.privateReceiveCode) {
       await navigator.clipboard.writeText(status.privateReceiveCode)
-      setReceiveCopyState('Copied')
     }
   }
 
@@ -142,25 +126,14 @@ export function ExtensionApp({ surface }: ExtensionAppProps) {
 
   return (
     <ThemeProvider initialTheme="dark">
-      <div style={{ width: shellWidth, maxWidth: '100%', minHeight: '100dvh', boxSizing: 'border-box', padding: 14, display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '2px 2px 4px' }}>
-          <Logo size={26} />
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 13, fontWeight: 700 }}>Extension workspace</div>
-            <div style={{ fontSize: 10.5, color: 'var(--tx3)', marginTop: 3, lineHeight: 1.4 }}>{phase11ExtensionReadiness.summary}</div>
-          </div>
-        </div>
-
-        <ExtensionWalletPanel status={status} lockWallet={lockWallet} copyPublicKey={copyPublicKey} copyReceiveCode={copyReceiveCode} />
-        <ExtensionQuickShieldPanel status={status} sendRuntimeMessage={sendRuntimeMessage} />
-        <ExtensionConfidentialPanel status={status} sendRuntimeMessage={sendRuntimeMessage} />
-        <ExtensionBridgePanel status={status} sendRuntimeMessage={sendRuntimeMessage} />
-        <ExtensionReadinessPanel />
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <GhostButton onClick={copyDigest}><Clipboard size={14} aria-hidden="true" /> {copyState}</GhostButton>
-          <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{receiveCopyState}</span>
-        </div>
+      <div style={{ width: shellWidth, maxWidth: '100%', minHeight: '100dvh', boxSizing: 'border-box', padding: 14 }}>
+        <ExtensionSidePanel
+          status={status}
+          sendRuntimeMessage={sendRuntimeMessage}
+          lockWallet={lockWallet}
+          copyPublicKey={copyPublicKey}
+          copyReceiveCode={copyReceiveCode}
+        />
       </div>
     </ThemeProvider>
   )
