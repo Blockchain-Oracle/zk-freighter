@@ -17,18 +17,6 @@ export function FlowHeader({ title, onBack, badge }: { title: string; onBack: ()
   )
 }
 
-/**
- * Small mono pill flagging a flow's privacy boundary. DEPRECATED — migrating to the
- * shared `BoundaryBadge`; remove once Shield/Bridge/Disclosure/Discover/Confidential adopt it.
- */
-export function BoundaryPill({ label, color = 'var(--pub)', dashed = true }: { label: string; color?: string; dashed?: boolean }) {
-  return (
-    <span style={{ padding: '4px 10px', border: `1px ${dashed ? 'dashed' : 'solid'} var(--bd2)`, borderRadius: 6, fontSize: 9, color, fontFamily: 'var(--fm)', letterSpacing: '.08em', whiteSpace: 'nowrap' }}>
-      {label}
-    </span>
-  )
-}
-
 function stepDotStyle(done: boolean, active: boolean): CSSProperties {
   if (done) return { background: 'rgba(53,199,123,.18)', color: 'var(--pos)', border: '1px solid rgba(53,199,123,.45)' }
   if (active) return { background: 'var(--ac)', color: '#fff', border: '1px solid var(--ac)' }
