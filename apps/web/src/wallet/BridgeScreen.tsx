@@ -47,6 +47,15 @@ function fmtUsdc(atomic: bigint): string {
 function fmtEth(wei: bigint): string {
   return (Number(wei) / 1e18).toLocaleString(undefined, { maximumFractionDigits: 4 })
 }
+/** Parse a USDC amount string to atomic units (6dp on EVM, 7dp/stroops on Stellar). */
+function usdcToAtomic(value: string, decimals: number): bigint | null {
+  const trimmed = value.trim()
+  if (!/^\d+(\.\d+)?$/.test(trimmed)) return null
+  const [whole, frac = ''] = trimmed.split('.')
+  if (frac.length > decimals) return null
+  const result = BigInt(`${whole}${frac.padEnd(decimals, '0')}`)
+  return result > 0n ? result : null
+}
 
 interface BridgeScreenProps {
   identity: WalletIdentity
@@ -64,6 +73,8 @@ export function BridgeScreen({ identity, network, balance }: BridgeScreenProps) 
   const [busy, setBusy] = useState<'bridge' | 'shield' | null>(null)
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
+  const [bridgeAmount, setBridgeAmount] = useState('')
+  const [shieldAmount, setShieldAmount] = useState('1')
   const runIdRef = useRef(0)
 
   const evmAddress = deriveEvmAddress(identity.mnemonic)
@@ -106,12 +117,15 @@ export function BridgeScreen({ identity, network, balance }: BridgeScreenProps) 
     if (!source) return
     const runId = ++runIdRef.current
     setBusy('bridge'); setError(''); setShieldReport(null); setReport(null)
+    // Bridge the typed amount, or (when blank) the full funded balance at the address.
+    const amountAtomic = bridgeAmount.trim() ? (usdcToAtomic(bridgeAmount, 6) ?? undefined) : evm && evm.usdcAtomic > 0n ? evm.usdcAtomic : undefined
     try {
       const result = await runBridgeAfterDestinationSetup({
         identity, network, evmSource: source,
         ensureDestinationReady: ensureStellarUsdcTrustline,
         createEvmClient: (chainIdHex) => createSeedEvmClient({ ['mnemonic']: identity.mnemonic, chainIdHex }),
         runBridge: runCctpBridgeToStellar,
+        amountAtomic,
         shouldContinue: () => runIdRef.current === runId,
         onProgress: (r) => track(r, runId),
       })
@@ -141,7 +155,8 @@ export function BridgeScreen({ identity, network, balance }: BridgeScreenProps) 
   async function shieldArrived() {
     setBusy('shield'); setError('')
     try {
-      const result = await submitXlmShieldDeposit({ asset: 'USDC', identity, network, amountStroops: ARRIVED_USDC_SHIELD_STROOPS })
+      const amountStroops = usdcToAtomic(shieldAmount, 7) ?? ARRIVED_USDC_SHIELD_STROOPS
+      const result = await submitXlmShieldDeposit({ asset: 'USDC', identity, network, amountStroops })
       setShieldReport(result)
       if (result.status === 'submitted') balance.refresh()
     } catch (cause) {
@@ -158,7 +173,7 @@ export function BridgeScreen({ identity, network, balance }: BridgeScreenProps) 
     }, (cause: unknown) => console.warn('clipboard write failed', cause))
   }
 
-  const panel: CSSProperties = { border: '1px solid var(--bd)', borderRadius: 18, background: 'var(--panel)', padding: 22, display: 'flex', flexDirection: 'column', gap: 16 }
+  const panel: CSSProperties = { border: '1px solid var(--bd)', borderRadius: 18, background: 'var(--panel)', padding: 22, display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }
   const steps = report ? bridgeStageModel(report) : BRIDGE_PREVIEW
   const mono9: CSSProperties = { font: '600 9px/1 var(--fm)', letterSpacing: '.12em', color: 'var(--tx3)' }
 
@@ -198,6 +213,15 @@ export function BridgeScreen({ identity, network, balance }: BridgeScreenProps) 
             </div>
             <div style={{ marginTop: 10, fontSize: 10.5, color: 'var(--tx3)', lineHeight: 1.5 }}>Send USDC (and a little {source?.gasToken ?? 'gas'}) to this address, then start the bridge.</div>
           </div>
+          <div>
+            <div style={{ ...mono9, marginBottom: 8 }}>AMOUNT TO BRIDGE</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 9, border: '1px solid var(--bd2)', borderRadius: 14, background: 'var(--card)', padding: '14px 16px' }}>
+              <input value={bridgeAmount} onChange={(e) => setBridgeAmount(e.target.value)} placeholder={evm && evm.usdcAtomic > 0n ? fmtUsdc(evm.usdcAtomic) : '0.00'} inputMode="decimal" style={{ flex: 1, minWidth: 0, background: 'none', border: 'none', outline: 'none', color: 'var(--tx)', fontFamily: 'var(--fm)', fontWeight: 600, fontSize: 24, letterSpacing: '-.02em' }} />
+              <span style={{ fontSize: 12, color: 'var(--tx3)', fontWeight: 600 }}>USDC</span>
+              {evm && evm.usdcAtomic > 0n ? <button type="button" onClick={() => setBridgeAmount(fmtUsdc(evm.usdcAtomic))} style={{ background: 'none', border: 'none', color: 'var(--ac2)', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Max</button> : null}
+            </div>
+            <div style={{ marginTop: 6, fontSize: 10.5, color: 'var(--tx3)' }}>Leave blank to bridge the full funded balance.</div>
+          </div>
           {blockers.length ? <Callout tone="warn" title="Bridge unavailable.">{blockers[0]}</Callout> : null}
           {!evmLoading && evm && evm.usdcAtomic === 0n ? <Callout tone="warn" title="No USDC yet.">Fund the address above with USDC on {source?.label} before bridging.</Callout> : null}
           <Button fullWidth loading={busy === 'bridge'} disabled={busy !== null || blockers.length > 0 || !source} onClick={startBridge}>{busy === 'bridge' ? 'Bridging…' : 'Start bridge'}</Button>
@@ -216,7 +240,13 @@ export function BridgeScreen({ identity, network, balance }: BridgeScreenProps) 
           {arrived ? (
             <>
               <Callout tone="public" title="USDC arrived.">It’s in your public Stellar balance — visible on-chain. Shield it to make it private and spendable.</Callout>
-              <Button fullWidth loading={busy === 'shield'} disabled={busy !== null} onClick={shieldArrived}>Shield arrived USDC</Button>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, minWidth: 0, border: '1px solid var(--bd2)', borderRadius: 10, background: 'var(--card)', padding: '8px 12px' }}>
+                  <input value={shieldAmount} onChange={(e) => setShieldAmount(e.target.value)} inputMode="decimal" style={{ flex: 1, minWidth: 0, background: 'none', border: 'none', outline: 'none', color: 'var(--tx)', fontFamily: 'var(--fm)', fontSize: 13 }} />
+                  <span style={{ fontSize: 10.5, color: 'var(--tx3)' }}>USDC</span>
+                </div>
+                <Button loading={busy === 'shield'} disabled={busy !== null} onClick={shieldArrived}>Shield</Button>
+              </div>
               {shieldReport?.status === 'submitted' ? <Callout tone="info" title="Shielded.">Your bridged USDC is entering the shielded pool.</Callout> : null}
               {shieldReport && shieldReport.status !== 'submitted' ? <Callout tone="warn">{shieldReport.error ?? shieldReport.blockers[0]}</Callout> : null}
             </>

@@ -18,6 +18,7 @@ interface RunBridgeAfterDestinationSetupOptions {
   }) => Promise<StellarUsdcTrustlineReport>
   readonly createEvmClient: (chainIdHex: string, sourceLabel: string) => Promise<EvmCctpSourceClient>
   readonly runBridge: (options: RunCctpBridgeOptions) => Promise<CctpBridgeReport>
+  readonly amountAtomic?: bigint
   readonly shouldContinue?: () => boolean
   readonly onDestinationReady?: (report: StellarUsdcTrustlineReport) => void
   readonly onWalletApprovalPending?: (pending: boolean) => void
@@ -47,6 +48,7 @@ export async function runBridgeAfterDestinationSetup(
       network: options.network,
       sourceChainKey: options.evmSource.key,
       evmClient,
+      amountAtomic: options.amountAtomic,
       onProgress: options.onProgress,
     })
     if (options.shouldContinue && !options.shouldContinue()) {
