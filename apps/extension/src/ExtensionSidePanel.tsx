@@ -5,6 +5,7 @@ import { ExtensionBridgePanel } from './ExtensionBridgePanel'
 import { ExtensionConfidentialPanel } from './ExtensionConfidentialPanel'
 import { ExtensionQuickShieldPanel } from './ExtensionQuickShieldPanel'
 import { ExtensionReadinessPanel } from './ExtensionReadinessPanel'
+import { ExtensionSendPanel } from './ExtensionSendPanel'
 import { ExtensionWalletPanel } from './ExtensionWalletPanel'
 import type { DappWalletStatus } from './dappMessages'
 
@@ -12,7 +13,7 @@ import type { DappWalletStatus } from './dappMessages'
 // focused screen, not a stacked list). A nav lists the flows; selecting one shows
 // it with a back header. New screens (Send/Unshield/Discover/Disclosure/Activity)
 // are added here as they land.
-type SideScreen = 'nav' | 'wallet' | 'quickshield' | 'bridge' | 'confidential' | 'readiness'
+type SideScreen = 'nav' | 'wallet' | 'send' | 'quickshield' | 'bridge' | 'confidential' | 'readiness'
 
 interface NavEntry {
   readonly key: SideScreen
@@ -22,6 +23,7 @@ interface NavEntry {
 }
 
 const NAV: readonly NavEntry[] = [
+  { key: 'send', icon: '↗', title: 'Send', detail: 'Pay a private receive code (shielded → shielded)' },
   { key: 'wallet', icon: '◊', title: 'Wallet', detail: 'Address, receive code, lock' },
   { key: 'quickshield', icon: '⛉', title: 'QuickShield', detail: 'Move public funds into the shielded pool' },
   { key: 'bridge', icon: '⇌', title: 'Bridge', detail: 'Native CCTP USDC from another chain' },
@@ -69,6 +71,7 @@ export function ExtensionSidePanel(props: SidePanelProps) {
   return (
     <ScreenFrame onBack={() => setScreen('nav')}>
       {screen === 'wallet' ? <ExtensionWalletPanel status={props.status} lockWallet={props.lockWallet} copyPublicKey={props.copyPublicKey} copyReceiveCode={props.copyReceiveCode} /> : null}
+      {screen === 'send' ? <ExtensionSendPanel status={props.status} sendRuntimeMessage={props.sendRuntimeMessage} /> : null}
       {screen === 'quickshield' ? <ExtensionQuickShieldPanel status={props.status} sendRuntimeMessage={props.sendRuntimeMessage} /> : null}
       {screen === 'bridge' ? <ExtensionBridgePanel status={props.status} sendRuntimeMessage={props.sendRuntimeMessage} /> : null}
       {screen === 'confidential' ? <ExtensionConfidentialPanel status={props.status} sendRuntimeMessage={props.sendRuntimeMessage} /> : null}

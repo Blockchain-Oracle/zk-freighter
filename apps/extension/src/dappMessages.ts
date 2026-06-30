@@ -7,6 +7,7 @@ import type {
   FreighterBridgeResponse,
   NetworkKey,
   StellarUsdcTrustlineReport,
+  XlmPrivateSubmitReport,
   XlmShieldSubmitReport,
 } from '@zk-fighter/core'
 
@@ -22,6 +23,8 @@ export const dappMessageTypes = {
   quickBridge: 'zkf.extension.bridge.run',
   confidential: 'zkf.extension.confidential',
   balances: 'zkf.extension.balances',
+  privateTransfer: 'zkf.extension.dapp.privateTransfer',
+  unshield: 'zkf.extension.dapp.unshield',
 } as const
 
 /** Confidential-token ops (Track B). Proving runs in the offscreen (bb.js). */
@@ -115,6 +118,18 @@ export type DappRuntimeMessage =
   | {
       readonly type: typeof dappMessageTypes.balances
     }
+  | {
+      readonly type: typeof dappMessageTypes.privateTransfer
+      readonly asset: AssetCode
+      readonly amountStroops: string
+      readonly receiveCode: string
+    }
+  | {
+      readonly type: typeof dappMessageTypes.unshield
+      readonly asset: AssetCode
+      readonly amountStroops: string
+      readonly recipientAddress: string
+    }
 
 export interface ConfidentialResponse {
   readonly ok: boolean
@@ -152,6 +167,13 @@ export interface DappBalancesResponse {
   readonly ok: boolean
   readonly balances?: DappBalances
   readonly syncing: boolean
+  readonly error?: string
+}
+
+/** Send (private transfer) + Unshield (withdraw) both return a private submit report. */
+export interface PrivateActionResponse {
+  readonly ok: boolean
+  readonly report?: XlmPrivateSubmitReport
   readonly error?: string
 }
 

@@ -10,6 +10,7 @@ import {
   type FreighterBridgeRequest,
   type NetworkKey,
   type StellarUsdcTrustlineReport,
+  type XlmPrivateSubmitReport,
   type XlmShieldSubmitReport,
 } from '@zk-fighter/core'
 
@@ -24,6 +25,7 @@ import {
   type DappWalletStatus,
   type PrepareShieldAccessResponse,
   type PrepareUsdcReceiveResponse,
+  type PrivateActionResponse,
   type QuickBridgeResponse,
   type QuickShieldResponse,
 } from './dappMessages'
@@ -48,6 +50,22 @@ export interface ExtensionUsdcTrustlineRequest { readonly mnemonic: string; read
 
 export interface ExtensionBalancesRequest { readonly mnemonic: string; readonly network: NetworkKey }
 
+export interface ExtensionPrivateTransferRequest {
+  readonly mnemonic: string
+  readonly network: NetworkKey
+  readonly asset: AssetCode
+  readonly amountStroops: string
+  readonly receiveCode: string
+}
+
+export interface ExtensionUnshieldRequest {
+  readonly mnemonic: string
+  readonly network: NetworkKey
+  readonly asset: AssetCode
+  readonly amountStroops: string
+  readonly recipientAddress: string
+}
+
 export interface ExtensionBridgeRequest {
   readonly mnemonic: string
   readonly network: NetworkKey
@@ -69,6 +87,8 @@ type ExtensionUsdcTrustlineRunner = (request: ExtensionUsdcTrustlineRequest) => 
 type ExtensionBridgeRunner = (request: ExtensionBridgeRequest) => Promise<CctpBridgeReport>
 type ExtensionConfidentialRunner = (request: ExtensionConfidentialRequest) => Promise<unknown>
 type ExtensionBalancesRunner = (request: ExtensionBalancesRequest) => Promise<DappBalances>
+type ExtensionPrivateTransferRunner = (request: ExtensionPrivateTransferRequest) => Promise<XlmPrivateSubmitReport>
+type ExtensionUnshieldRunner = (request: ExtensionUnshieldRequest) => Promise<XlmPrivateSubmitReport>
 
 interface MessageSender { readonly tab?: { readonly windowId?: number } }
 
@@ -84,6 +104,8 @@ export class ExtensionDappRuntime {
     private readonly runUsdcTrustline?: ExtensionUsdcTrustlineRunner,
     private readonly runConfidential?: ExtensionConfidentialRunner,
     private readonly runBalances?: ExtensionBalancesRunner,
+    private readonly runPrivateTransfer?: ExtensionPrivateTransferRunner,
+    private readonly runUnshield?: ExtensionUnshieldRunner,
   ) {}
 
   canHandle(type: string | undefined): boolean {
@@ -115,6 +137,10 @@ export class ExtensionDappRuntime {
         return this.confidential(message.op, message.amount, message.to)
       case dappMessageTypes.balances:
         return this.balances()
+      case dappMessageTypes.privateTransfer:
+        return this.privateTransfer(message.asset, message.amountStroops, message.receiveCode)
+      case dappMessageTypes.unshield:
+        return this.unshield(message.asset, message.amountStroops, message.recipientAddress)
       case dappMessageTypes.freighterRequest:
         void openExtensionSidePanel(sender?.tab?.windowId)
         return this.handleFreighterRequest(message.request)
@@ -355,6 +381,32 @@ export class ExtensionDappRuntime {
       console.warn('[ExtensionDappRuntime] balance refresh failed', error)
     } finally {
       this.refreshingBalances.delete(key)
+    }
+  }
+
+  private async privateTransfer(asset: AssetCode, amountStroops: string, receiveCode: string): Promise<PrivateActionResponse> {
+    const ready = await this.requireUnlockedWallet()
+    if (!ready.ok) return { ok: false, error: ready.error }
+    if (!this.runPrivateTransfer) return { ok: false, error: 'Extension private transfer runner is unavailable.' }
+    try {
+      const report = await this.runPrivateTransfer({ mnemonic: ready.mnemonic, network: ready.network, asset, amountStroops, receiveCode })
+      void clearAllBalanceCache() // a spend changes the balance — drop the stale cache
+      return { ok: true, report }
+    } catch (error) {
+      return { ok: false, error: error instanceof Error ? error.message : String(error) }
+    }
+  }
+
+  private async unshield(asset: AssetCode, amountStroops: string, recipientAddress: string): Promise<PrivateActionResponse> {
+    const ready = await this.requireUnlockedWallet()
+    if (!ready.ok) return { ok: false, error: ready.error }
+    if (!this.runUnshield) return { ok: false, error: 'Extension unshield runner is unavailable.' }
+    try {
+      const report = await this.runUnshield({ mnemonic: ready.mnemonic, network: ready.network, asset, amountStroops, recipientAddress })
+      void clearAllBalanceCache()
+      return { ok: true, report }
+    } catch (error) {
+      return { ok: false, error: error instanceof Error ? error.message : String(error) }
     }
   }
 }

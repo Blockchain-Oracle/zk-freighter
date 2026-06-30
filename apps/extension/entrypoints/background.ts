@@ -10,6 +10,7 @@ import {
   type AspMembershipInsertReport,
   type CctpBridgeReport,
   type StellarUsdcTrustlineReport,
+  type XlmPrivateSubmitReport,
   type XlmShieldSubmitReport,
 } from '@zk-fighter/core'
 import { browser } from 'wxt/browser'
@@ -19,7 +20,9 @@ import type {
   ExtensionBalancesRequest,
   ExtensionBridgeRequest,
   ExtensionConfidentialRequest,
+  ExtensionPrivateTransferRequest,
   ExtensionShieldRequest,
+  ExtensionUnshieldRequest,
   ExtensionUsdcTrustlineRequest,
 } from '../src/dappRuntime'
 import { type DappBalances, type DappRuntimeMessage } from '../src/dappMessages'
@@ -35,8 +38,6 @@ const aspInsertAndDryProofMessageType = 'zkf.extension.aspInsertAndDryProof'
 const offscreenSubmitShieldMessageType = 'zkf.offscreen.submitShieldDeposit'
 const offscreenInsertAspMessageType = 'zkf.offscreen.insertAspMembership'
 const offscreenPrepareUsdcReceiveMessageType = 'zkf.offscreen.prepareUsdcReceive'
-const privateTransferMessageType = 'zkf.extension.privateTransfer'
-const unshieldWithdrawalMessageType = 'zkf.extension.unshieldWithdrawal'
 const offscreenPrivateTransferMessageType = 'zkf.offscreen.privateTransfer'
 const offscreenConfidentialMessageType = 'zkf.offscreen.confidential'
 const offscreenUnshieldWithdrawalMessageType = 'zkf.offscreen.unshieldWithdrawal'
@@ -54,6 +55,8 @@ export default defineBackground(() => {
     runUsdcTrustlineInOffscreen,
     runConfidentialInOffscreen,
     runBalancesInOffscreen,
+    runPrivateTransferInOffscreen,
+    runUnshieldInOffscreen,
   )
 
   browser.runtime.onInstalled.addListener(() => {
@@ -123,20 +126,6 @@ export default defineBackground(() => {
       return true
     }
 
-    if (payload.type === privateTransferMessageType) {
-      void sendOffscreenMessage({ ...payload, type: offscreenPrivateTransferMessageType }).then(sendResponse, (error: unknown) => {
-        sendResponse({ ok: false, error: error instanceof Error ? error.message : String(error) })
-      })
-      return true
-    }
-
-    if (payload.type === unshieldWithdrawalMessageType) {
-      void sendOffscreenMessage({ ...payload, type: offscreenUnshieldWithdrawalMessageType }).then(sendResponse, (error: unknown) => {
-        sendResponse({ ok: false, error: error instanceof Error ? error.message : String(error) })
-      })
-      return true
-    }
-
     return false
   })
 })
@@ -170,6 +159,16 @@ async function runConfidentialInOffscreen(request: ExtensionConfidentialRequest)
 
 async function runBalancesInOffscreen(request: ExtensionBalancesRequest): Promise<DappBalances> {
   return (await sendOffscreenMessage({ type: offscreenLoadBalancesMessageType, ...request })) as DappBalances
+}
+
+// Send + Unshield: the runtime injects the unlocked mnemonic (never the popup),
+// the offscreen runs the real submitXlmPrivateTransfer / submitXlmUnshieldWithdrawal.
+async function runPrivateTransferInOffscreen(request: ExtensionPrivateTransferRequest): Promise<XlmPrivateSubmitReport> {
+  return (await sendOffscreenMessage({ type: offscreenPrivateTransferMessageType, ...request })) as XlmPrivateSubmitReport
+}
+
+async function runUnshieldInOffscreen(request: ExtensionUnshieldRequest): Promise<XlmPrivateSubmitReport> {
+  return (await sendOffscreenMessage({ type: offscreenUnshieldWithdrawalMessageType, ...request })) as XlmPrivateSubmitReport
 }
 
 async function runAspInsertInOffscreen(request: ExtensionAspInsertRequest): Promise<AspMembershipInsertReport> {
