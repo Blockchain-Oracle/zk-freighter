@@ -62,28 +62,31 @@ export const darkPalette: ThemePalette = {
   pubBd: 'rgba(229,180,92,.42)',
 }
 
+// Light = the designer's warm CREAM/paper theme (Wireframes #fdfbf6/#f6f2ea +
+// warm-dark #2a2722 text), not the cool grey of the hi-fi token sheet. Accent +
+// boundary semantics stay; only the neutrals warm up.
 export const lightPalette: ThemePalette = {
-  bg: '#F5F6F8',
-  page: '#E9ECF0',
-  panel: '#FFFFFF',
-  card: '#EEF0F4',
-  card2: '#E4E8EE',
-  bd: 'rgba(0,0,0,.08)',
-  bd2: 'rgba(0,0,0,.1)',
-  tx: '#14151A',
-  tx2: '#565C68',
-  tx3: '#7A8290',
-  side: '#EDEFF3',
+  bg: '#F6F2EA',
+  page: '#EFE9DC',
+  panel: '#FDFBF6',
+  card: '#F1ECE1',
+  card2: '#E9E3D6',
+  bd: 'rgba(60,50,30,.1)',
+  bd2: 'rgba(60,50,30,.16)',
+  tx: '#2A2722',
+  tx2: '#6B6760',
+  tx3: '#8A857C',
+  side: '#F1ECE0',
   ac: ACCENT,
   ac2: '#4A56C4',
   pos: '#2AA265',
   warn: '#A2741F',
   dng: '#D6544A',
-  pub: '#69717B',
-  mask: 'rgba(245,246,248,.82)',
+  pub: '#8A857C',
+  mask: 'rgba(246,242,234,.82)',
   shGrad: 'linear-gradient(150deg, rgba(94,124,250,.18), rgba(94,124,250,.04) 70%)',
   shHatch: 'rgba(94,124,250,.07)',
-  pubGrad: 'linear-gradient(150deg, rgba(229,180,92,.14), rgba(229,180,92,.04) 70%)',
+  pubGrad: 'linear-gradient(150deg, rgba(229,180,92,.16), rgba(229,180,92,.05) 70%)',
   pubBd: 'rgba(190,140,40,.5)',
 }
 

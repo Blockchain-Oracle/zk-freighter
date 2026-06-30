@@ -54,12 +54,20 @@ export function ThemeProvider({
     }
   }, [theme, onThemeChange])
 
+  // The canvas backdrop. Dark = near-black with periwinkle radial glows; light =
+  // a clean warm cream (NO periwinkle glow — that read as lavender). Tokens (--xx)
+  // are set here so every descendant `bg-card`/`text-tx2` utility resolves through it.
   const rootStyle: Record<string, string | number> = {
     ...paletteToCssVars(palettes[theme]),
-    background: 'var(--page)',
+    backgroundColor: 'var(--bg)',
+    backgroundImage:
+      theme === 'dark'
+        ? 'radial-gradient(1200px 620px at 12% -12%, rgba(94,124,250,.10), transparent 60%), ' +
+          'radial-gradient(1000px 700px at 112% 6%, rgba(94,124,250,.08), transparent 55%)'
+        : 'none',
     color: 'var(--tx)',
     fontFamily: fontSans,
-    minHeight: '100%',
+    minHeight: '100dvh',
     ...(style as Record<string, string | number> | undefined),
   }
 
