@@ -11,30 +11,25 @@ import {
   type XlmShieldProgressEvent,
   type XlmShieldSubmitReport,
 } from '@zk-fighter/core'
-import {
-  AmountInput,
-  AssetSelector,
-  Button,
-  Callout,
-  Card,
-  ReviewCard,
-  truncateMiddle,
-} from '@zk-fighter/ui'
+import { AmountInput, BoundaryBadge, Button, Callout, ReviewCard, Segmented, truncateMiddle } from '@zk-fighter/ui'
 import type { ShieldedBalanceState } from './useShieldedBalance'
 import { formatStroops, stroopsToAmountInput } from './format'
 import { proofFlowModel } from './proofFlow'
 import { ProofRun, type ProofTerminalInfo } from './ProofRun'
-import { BoundaryPill, FlowHeader } from './flowChrome'
 import type { WalletScreen } from './screens'
 
-// XLM pays the account reserve AND the network fee, so Max leaves a buffer (base
-// reserve + a trustline entry + fee headroom) instead of draining the account.
+// XLM pays the account reserve AND the network fee, so Max leaves a buffer.
 const XLM_FEE_RESERVE_BUFFER_STROOPS = 25_000_000n
-// Every deposit's network fee is paid in XLM; warn if the public account is near-empty.
 const MIN_XLM_FOR_FEE_STROOPS = 5_000_000n
-const ASSET_OPTIONS: readonly AssetCode[] = ['USDC', 'XLM']
+const ASSET_OPTIONS = [
+  { value: 'USDC', label: 'USDC' },
+  { value: 'XLM', label: 'XLM' },
+]
 const DISPLAY_DECIMALS: Record<AssetCode, number> = { USDC: 2, XLM: 3 }
-const CONTENT_MAX = 560
+const TABS = [
+  { value: 'shield', label: '⛉ Shield · deposit' },
+  { value: 'unshield', label: '⤺ Unshield · withdraw' },
+]
 
 type ShieldStep = 'amount' | 'review' | 'running' | 'result'
 
@@ -62,10 +57,6 @@ export function ShieldScreen({ identity, network, balance, onNav }: ShieldScreen
         if (!cancelled) setPubResult({ key: pubKey, report: result })
       })
       .catch(() => {
-        // loadPublicStellarBalances returns a failed report rather than throwing, so
-        // reaching here is a genuine fault — record a failed report (tagged with the
-        // request key) so the UI never hangs on "loading" and falls back to on-chain
-        // validation instead of a fabricated balance.
         if (!cancelled) {
           setPubResult({
             key: pubKey,
@@ -78,8 +69,6 @@ export function ShieldScreen({ identity, network, balance, onNav }: ShieldScreen
     }
   }, [identity.stellarPublicKey, network, pubKey])
 
-  // Tagged with the request key so a pending reload / network switch reads as loading
-  // with no stale cross-network balance leaking through.
   const pub = pubResult?.key === pubKey ? pubResult.report : null
   const pubLoading = pub === null
   const balanceKnown = pub != null && (pub.status === 'loaded' || pub.status === 'unfunded')
@@ -93,12 +82,7 @@ export function ShieldScreen({ identity, network, balance, onNav }: ShieldScreen
     amount.trim() === '' ? null : !parsed.ok ? parsed.error : overBalance ? `Amount exceeds your public ${asset} balance.` : null
   const canReview = poolEnabled && parsed.ok && !overBalance
   const amountLabel = `${amount.trim() || '0'} ${asset}`
-
-  function assetSublabel(code: AssetCode): string | undefined {
-    if (pubLoading) return 'Public …'
-    if (pub == null || (pub.status !== 'loaded' && pub.status !== 'unfunded')) return undefined
-    return `Public ${formatStroops(pub.balances[code], DISPLAY_DECIMALS[code])}`
-  }
+  const publicLabel = balanceKnown ? `${formatStroops(pub!.balances[asset], DISPLAY_DECIMALS[asset])} ${asset}` : pubLoading ? '…' : '—'
 
   function applyMax() {
     if (available == null) return
@@ -128,135 +112,122 @@ export function ShieldScreen({ identity, network, balance, onNav }: ShieldScreen
       if (result.status === 'submitted') balance.refresh()
     } catch (cause) {
       if (runIdRef.current !== runId) return
-      // submitXlmShieldDeposit returns failed/blocked reports rather than throwing, so
-      // reaching here is a truly unexpected rejection where we do NOT know whether a
-      // transaction was broadcast. Leave the report null so ProofRun routes to its
-      // honest "Lost track — check Activity" branch, never a "no funds moved" claim.
+      // submitXlmShieldDeposit returns failed/blocked reports rather than throwing, so reaching
+      // here is a truly unexpected rejection — leave the report null so ProofRun routes to its
+      // honest "lost track — check Activity" branch, never a "no funds moved" claim.
       console.error('[ShieldScreen] unexpected shield submit rejection', cause)
     } finally {
       if (runIdRef.current === runId) {
         setStep('result')
-        // Invalidate this run so any late onStatus events (e.g. after a timeout, while
-        // the prover promise is still settling) cannot re-animate a finished run.
         runIdRef.current += 1
       }
     }
   }
 
-  const section: CSSProperties = { width: '100%', maxWidth: CONTENT_MAX, margin: '0 auto', padding: '32px 28px 56px', display: 'flex', flexDirection: 'column', gap: 16 }
-  const cardStyle: CSSProperties = { padding: '22px 24px 26px', display: 'flex', flexDirection: 'column', gap: 16 }
-
-  let onBack: () => void
-  let body: ReactNode
+  const section: CSSProperties = { width: '100%', maxWidth: 560, margin: '0 auto', padding: '30px 28px 48px', display: 'flex', flexDirection: 'column', gap: 8 }
+  const card: CSSProperties = { border: '1px solid var(--bd)', borderRadius: 18, background: 'var(--panel)', overflow: 'hidden' }
+  const cardBody: CSSProperties = { padding: 22, display: 'flex', flexDirection: 'column', gap: 16 }
 
   if (step === 'running' || step === 'result') {
     const model = proofFlowModel(events, step === 'result' && report ? report.status : undefined)
     const terminal: ProofTerminalInfo | null =
       step === 'result' && report
-        ? {
-            status: report.status,
-            submitReached: report.submitReached,
-            explorerUrls: report.explorerUrl ? [report.explorerUrl] : [],
-            error: report.error ?? report.blockers[0],
-          }
+        ? { status: report.status, submitReached: report.submitReached, explorerUrls: report.explorerUrl ? [report.explorerUrl] : [], error: report.error ?? report.blockers[0] }
         : null
-    onBack = () => onNav('home')
-    body = (
-      <ProofRun
-        model={model}
-        settled={step === 'result'}
-        terminal={terminal}
-        network={network}
-        copy={{
-          provingHint: 'Proving on your device, then submitting to Stellar — keep this tab open.',
-          successTitle: 'Deposit submitted',
-          successBody: (
-            <>
-              {amountLabel} is entering the shielded pool. It’ll show as{' '}
-              <span style={{ color: 'var(--warn)', fontWeight: 600 }}>Pending</span>, then{' '}
-              <span style={{ color: 'var(--pos)', fontWeight: 600 }}>Spendable</span> once the proof confirms on-chain.
-            </>
-          ),
-          failedTitle: 'Deposit failed',
-          unconfirmedTitle: 'Deposit status unconfirmed',
-          blockedTitle: 'Couldn’t shield yet',
-        }}
-        onDone={() => onNav('home')}
-        onActivity={() => onNav('activity')}
-        onRetry={() => setStep('review')}
-        onHome={() => onNav('home')}
-      />
+    return (
+      <section style={section}>
+        <div style={{ ...card, ...cardBody }}>
+          <ProofRun
+            model={model}
+            settled={step === 'result'}
+            terminal={terminal}
+            network={network}
+            copy={{
+              provingHint: 'Proving on your device, then submitting to Stellar — keep this tab open.',
+              successTitle: 'Deposit submitted',
+              successBody: (
+                <>{amountLabel} is entering the shielded pool. It’ll show as <span style={{ color: 'var(--warn)', fontWeight: 600 }}>Pending</span>, then <span style={{ color: 'var(--pos)', fontWeight: 600 }}>Spendable</span> once the proof confirms.</>
+              ),
+              failedTitle: 'Deposit failed',
+              unconfirmedTitle: 'Deposit status unconfirmed',
+              blockedTitle: 'Couldn’t shield yet',
+            }}
+            onDone={() => onNav('home')}
+            onActivity={() => onNav('activity')}
+            onRetry={() => setStep('amount')}
+            onHome={() => onNav('home')}
+          />
+        </div>
+      </section>
     )
-  } else if (step === 'review') {
-    onBack = () => setStep('amount')
+  }
+
+  let body: ReactNode
+  if (step === 'review') {
     body = (
-      <>
+      <div style={cardBody}>
         <ReviewCard
           rows={[
             { label: 'Amount', value: amountLabel, mono: true },
             { label: 'From (public)', value: truncateMiddle(identity.stellarPublicKey, 6, 6), mono: true },
-            { label: 'Network', value: network },
+            { label: 'Then', value: 'Pending → Spendable' },
             { label: 'Network fee', value: 'Paid in XLM at submit' },
           ]}
         />
-        <Callout tone="warn" title="Public boundary.">
-          This deposit is visible on Stellar — the source account, amount, and asset are public. After it lands, your shielded balance is private.
-        </Callout>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <Callout tone="public" title="Public boundary.">This deposit is visible on Stellar — source, amount, and asset are public. After it lands, your shielded balance is private.</Callout>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <Button variant="secondary" onClick={() => setStep('amount')}>Back</Button>
           <Button fullWidth onClick={runShield}>{`Shield ${amountLabel}`}</Button>
-          <Button variant="ghost" fullWidth onClick={() => setStep('amount')}>← Edit amount</Button>
         </div>
-      </>
+      </div>
     )
   } else {
-    onBack = () => onNav('home')
     body = (
-      <>
-        <Callout tone="public">
-          Move public funds into your shielded balance. The deposit is visible on Stellar; everything you do with the funds afterward is private.
-        </Callout>
-
-        <AssetSelector
-          options={ASSET_OPTIONS.map((code) => ({ code, sublabel: assetSublabel(code) }))}
-          value={asset}
-          onChange={(code) => setAsset(code as AssetCode)}
-        />
-
-        <div style={{ padding: '18px 0 6px' }}>
+      <div style={cardBody}>
+        <Segmented options={ASSET_OPTIONS} value={asset} onChange={(value) => setAsset(value as AssetCode)} size="sm" />
+        <div style={{ border: '1px solid var(--bd2)', borderRadius: 14, background: 'var(--card)', padding: '20px 16px' }}>
           <AmountInput
             value={amount}
             onChange={setAmount}
             asset={asset}
             autoFocus
             invalid={amountError != null}
-            caption={`${asset} · from public balance`}
             onMax={balanceKnown && (available ?? 0n) > 0n ? applyMax : undefined}
           />
         </div>
-
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, color: 'var(--tx3)' }}>
+          <span>Public balance <b style={{ color: 'var(--tx2)', fontFamily: 'var(--fm)' }}>{publicLabel}</b></span>
+          <span style={{ fontFamily: 'var(--fm)' }}>From {truncateMiddle(identity.stellarPublicKey, 4, 4)}</span>
+        </div>
         {!poolEnabled ? (
           <Callout tone="warn" title="Pool unavailable.">{`${asset} pool is not configured for this network.`}</Callout>
         ) : amountError ? (
           <Callout tone="warn">{amountError}</Callout>
         ) : pub?.status === 'failed' ? (
-          <Callout tone="warn" title="Balance unavailable.">
-            Couldn’t read your public balance right now. You can still enter an amount — it’s validated on-chain at submit.
-          </Callout>
+          <Callout tone="warn" title="Balance unavailable.">Couldn’t read your public balance right now. You can still enter an amount — it’s validated on-chain at submit.</Callout>
         ) : lowXlmForFee ? (
-          <Callout tone="warn" title="Low on XLM.">
-            You’ll need a little XLM in your public account to pay the network fee for this deposit.
-          </Callout>
+          <Callout tone="warn" title="Low on XLM.">You’ll need a little XLM in your public account to pay the network fee for this deposit.</Callout>
         ) : null}
-
         <Button fullWidth disabled={!canReview} onClick={() => setStep('review')}>Review</Button>
-      </>
+      </div>
     )
   }
 
   return (
     <section style={section}>
-      <FlowHeader title="Shield · deposit" onBack={onBack} badge={<BoundaryPill label="PUBLIC BOUNDARY" />} />
-      <Card style={cardStyle}>{body}</Card>
+      <div style={{ fontWeight: 800, fontSize: 26, letterSpacing: '-.025em' }}>Move funds across the boundary</div>
+      <div style={{ fontSize: 13, color: 'var(--tx2)', marginBottom: 16 }}>Both directions are public on Stellar — we name the boundary every time. Pick one.</div>
+      <div style={{ marginBottom: 8 }}>
+        <Segmented options={TABS} value="shield" onChange={(value) => { if (value === 'unshield') onNav('unshield') }} />
+      </div>
+      <div style={card}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '16px 20px', borderBottom: '1px solid var(--bd)' }}>
+          <span style={{ width: 34, height: 34, borderRadius: 10, background: 'rgba(94,124,250,.14)', display: 'grid', placeItems: 'center', color: 'var(--ac2)', fontSize: 16 }}>⛉</span>
+          <div style={{ fontWeight: 700, fontSize: 15 }}>Shield · deposit</div>
+          <div style={{ marginLeft: 'auto' }}><BoundaryBadge kind="public" /></div>
+        </div>
+        {body}
+      </div>
     </section>
   )
 }
