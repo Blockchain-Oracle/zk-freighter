@@ -3,7 +3,7 @@ import { Clipboard } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { browser } from 'wxt/browser'
 
-import { ThemeProvider } from '@zk-fighter/ui'
+import { Logo, ThemeProvider } from '@zk-fighter/ui'
 
 import { ExtensionAccess } from './ExtensionAccess'
 import { ExtensionHome } from './ExtensionHome'
@@ -12,8 +12,8 @@ import { ExtensionConfidentialPanel } from './ExtensionConfidentialPanel'
 import { ExtensionQuickShieldPanel } from './ExtensionQuickShieldPanel'
 import { ExtensionReadinessPanel } from './ExtensionReadinessPanel'
 import { ExtensionWalletPanel } from './ExtensionWalletPanel'
+import { GhostButton } from './extension-ui'
 import { dappMessageTypes, type DappWalletStatus } from './dappMessages'
-import './ExtensionApp.css'
 
 const statusRefreshMs = 1_000
 
@@ -141,38 +141,28 @@ export function ExtensionApp({ surface }: ExtensionAppProps) {
   }
 
   return (
-    <main className="shell">
-      <section className="masthead">
-        <p className="eyebrow">ZK Fighter extension</p>
-        <h1>Extension workspace</h1>
-        <p className="summary">{phase11ExtensionReadiness.summary}</p>
-      </section>
+    <ThemeProvider initialTheme="dark">
+      <div style={{ width: shellWidth, maxWidth: '100%', minHeight: '100dvh', boxSizing: 'border-box', padding: 14, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '2px 2px 4px' }}>
+          <Logo size={26} />
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 13, fontWeight: 700 }}>Extension workspace</div>
+            <div style={{ fontSize: 10.5, color: 'var(--tx3)', marginTop: 3, lineHeight: 1.4 }}>{phase11ExtensionReadiness.summary}</div>
+          </div>
+        </div>
 
-      <ExtensionWalletPanel
-        status={status}
-        mnemonic={mnemonic}
-        password={password}
-        setMnemonic={setMnemonic}
-        setPassword={setPassword}
-        importWallet={importWallet}
-        unlockWallet={unlockWallet}
-        lockWallet={lockWallet}
-        copyPublicKey={copyPublicKey}
-        copyReceiveCode={copyReceiveCode}
-      />
+        <ExtensionWalletPanel status={status} lockWallet={lockWallet} copyPublicKey={copyPublicKey} copyReceiveCode={copyReceiveCode} />
+        <ExtensionQuickShieldPanel status={status} sendRuntimeMessage={sendRuntimeMessage} />
+        <ExtensionConfidentialPanel status={status} sendRuntimeMessage={sendRuntimeMessage} />
+        <ExtensionBridgePanel status={status} sendRuntimeMessage={sendRuntimeMessage} />
+        <ExtensionReadinessPanel />
 
-      <ExtensionQuickShieldPanel status={status} sendRuntimeMessage={sendRuntimeMessage} />
-      <ExtensionConfidentialPanel status={status} sendRuntimeMessage={sendRuntimeMessage} />
-      <ExtensionBridgePanel status={status} sendRuntimeMessage={sendRuntimeMessage} />
-      <ExtensionReadinessPanel />
-
-      <div className="actions">
-        <button type="button" onClick={copyDigest}>
-          <Clipboard size={16} aria-hidden="true" /> {copyState}
-        </button>
-        <span className="copy">{receiveCopyState}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <GhostButton onClick={copyDigest}><Clipboard size={14} aria-hidden="true" /> {copyState}</GhostButton>
+          <span style={{ fontSize: 11, color: 'var(--tx3)' }}>{receiveCopyState}</span>
+        </div>
       </div>
-    </main>
+    </ThemeProvider>
   )
 }
 

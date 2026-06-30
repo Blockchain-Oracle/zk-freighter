@@ -1,13 +1,16 @@
 import { getConfidentialConfig, isConfidentialEnabled, type ConfidentialSubmitReport } from '@zk-fighter/core'
-import { Eye, ExternalLink, KeyRound, Layers, Lock } from 'lucide-react'
+import { Eye, KeyRound, Layers, Lock } from 'lucide-react'
 import { useState } from 'react'
+import { Button, Segmented } from '@zk-fighter/ui'
 
 import { dappMessageTypes, type ConfidentialOpKind, type ConfidentialResponse, type DappWalletStatus } from './dappMessages'
 import { shorten } from './extension-format'
+import { Badge, BlockerList, Copy, ErrorText, ExplorerLink, MetaRow, Panel, SectionHeader, fieldStyle } from './extension-ui'
 
 const latestEventCount = 5
 type SpendOp = 'deposit' | 'withdraw' | 'transfer'
 const isStellarAddress = (value: string) => /^G[A-Z2-7]{55}$/.test(value.trim())
+const cap = (value: string) => value[0].toUpperCase() + value.slice(1)
 
 function toBaseUnits(input: string, decimals: number): string | null {
   const trimmed = input.trim()
@@ -38,6 +41,7 @@ export function ExtensionConfidentialPanel({ status, sendRuntimeMessage }: Exten
   const code = confidential?.underlyingCode ?? 'USDC'
   const disabledReason = !status?.unlocked ? 'Unlock the extension vault first.' : !enabled ? 'Confidential tokens are testnet-only.' : ''
   const needsRecipient = op === 'withdraw' || op === 'transfer'
+  const blocked = Boolean(disabledReason) || busy !== null
 
   async function run(kind: ConfidentialOpKind) {
     setBusy(kind)
@@ -54,12 +58,7 @@ export function ExtensionConfidentialPanel({ status, sendRuntimeMessage }: Exten
         setError('Enter a valid recipient address (G…).')
         return
       }
-      const response = (await sendRuntimeMessage({
-        type: dappMessageTypes.confidential,
-        op: kind,
-        amount: amountBase,
-        to: needsRecipient ? recipient.trim() : undefined,
-      })) as ConfidentialResponse
+      const response = (await sendRuntimeMessage({ type: dappMessageTypes.confidential, op: kind, amount: amountBase, to: needsRecipient ? recipient.trim() : undefined })) as ConfidentialResponse
       if (!response.ok || !response.report) {
         setError(response.error ?? 'Confidential op returned no report.')
       } else if (kind === 'scan') {
@@ -73,81 +72,45 @@ export function ExtensionConfidentialPanel({ status, sendRuntimeMessage }: Exten
   }
 
   return (
-    <section className="panel" aria-labelledby="confidential-heading">
-      <div className="section-header">
-        <h2 id="confidential-heading">Confidential</h2>
-        <span className="badge badge-in-progress">{status?.network ?? 'locked'}</span>
-      </div>
-      <p className="copy">Balances are hidden commitments. Proving runs on-device in the extension offscreen.</p>
+    <Panel label="Confidential">
+      <SectionHeader title="Confidential" right={<Badge tone="progress">{status?.network ?? 'locked'}</Badge>} />
+      <Copy>Balances are hidden commitments. Proving runs on-device in the extension offscreen.</Copy>
 
-      <button type="button" disabled={Boolean(disabledReason) || busy !== null} onClick={() => run('register')}>
-        <KeyRound size={16} aria-hidden="true" />
-        {busy === 'register' ? 'Registering… (generating proof)' : 'Set up confidential account'}
-      </button>
+      <Button variant="secondary" fullWidth loading={busy === 'register'} disabled={blocked} onClick={() => void run('register')}>
+        <KeyRound size={15} aria-hidden="true" /> {busy === 'register' ? 'Registering… (proof)' : 'Set up confidential account'}
+      </Button>
 
-      <div className="segmented">
-        {(['deposit', 'withdraw', 'transfer'] as const).map((item) => (
-          <button type="button" className={op === item ? '' : 'ghost'} key={item} onClick={() => setOp(item)}>
-            {item[0].toUpperCase() + item.slice(1)}
-          </button>
-        ))}
-      </div>
-      <input value={amount} onChange={(event) => setAmount(event.target.value)} placeholder={`Amount (${code})`} inputMode="decimal" />
-      {needsRecipient ? (
-        <input value={recipient} onChange={(event) => setRecipient(event.target.value)} placeholder={op === 'withdraw' ? 'Public address (G…)' : 'Recipient account (G…)'} spellCheck={false} />
-      ) : null}
-      <button type="button" disabled={Boolean(disabledReason) || busy !== null} onClick={() => run(op)}>
-        <Lock size={16} aria-hidden="true" />
-        {busy === op ? `${op[0].toUpperCase() + op.slice(1)}ing…` : `${op[0].toUpperCase() + op.slice(1)} ${amount || '0'} ${code}`}
-      </button>
+      <Segmented options={(['deposit', 'withdraw', 'transfer'] as const).map((value) => ({ value, label: cap(value) }))} value={op} onChange={(value) => setOp(value as SpendOp)} size="sm" />
+      <input value={amount} onChange={(event) => setAmount(event.target.value)} placeholder={`Amount (${code})`} inputMode="decimal" style={fieldStyle} />
+      {needsRecipient ? <input value={recipient} onChange={(event) => setRecipient(event.target.value)} placeholder={op === 'withdraw' ? 'Public address (G…)' : 'Recipient account (G…)'} spellCheck={false} style={fieldStyle} /> : null}
+      <Button fullWidth loading={busy === op} disabled={blocked} onClick={() => void run(op)}>
+        <Lock size={15} aria-hidden="true" /> {busy === op ? `${cap(op)}ing…` : `${cap(op)} ${amount || '0'} ${code}`}
+      </Button>
 
-      <div className="segmented">
-        <button type="button" className="ghost" disabled={Boolean(disabledReason) || busy !== null} onClick={() => run('merge')}>
-          <Layers size={16} aria-hidden="true" /> {busy === 'merge' ? 'Merging…' : 'Merge'}
-        </button>
-        <button type="button" className="ghost" disabled={Boolean(disabledReason) || busy !== null} onClick={() => run('scan')}>
-          <Eye size={16} aria-hidden="true" /> {busy === 'scan' ? 'Scanning…' : 'Check incoming'}
-        </button>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <Button variant="secondary" fullWidth loading={busy === 'merge'} disabled={blocked} onClick={() => void run('merge')}><Layers size={15} aria-hidden="true" /> Merge</Button>
+        <Button variant="secondary" fullWidth loading={busy === 'scan'} disabled={blocked} onClick={() => void run('scan')}><Eye size={15} aria-hidden="true" /> Check incoming</Button>
       </div>
 
-      <p className="copy">{disabledReason}</p>
-      {error ? <p className="error">{error}</p> : null}
-      {scan ? <p className="copy">{scan.count > 0 ? `Received ${scan.count} transfer(s) — credited ${(Number(scan.creditedTotal) / 10 ** decimals).toFixed(2)} ${code}.` : 'No new incoming transfers.'}</p> : null}
+      {disabledReason ? <Copy>{disabledReason}</Copy> : null}
+      {error ? <ErrorText>{error}</ErrorText> : null}
+      {scan ? <Copy>{scan.count > 0 ? `Received ${scan.count} transfer(s) — credited ${(Number(scan.creditedTotal) / 10 ** decimals).toFixed(2)} ${code}.` : 'No new incoming transfers.'}</Copy> : null}
       {report ? <ConfidentialReport report={report} /> : null}
-    </section>
+    </Panel>
   )
 }
 
 function ConfidentialReport({ report }: { readonly report: ConfidentialSubmitReport }) {
   return (
-    <div className="proof-results">
-      <dl className="meta-list">
-        <div>
-          <dt>{report.op}</dt>
-          <dd>{report.status}</dd>
-        </div>
-        <div>
-          <dt>Transaction</dt>
-          <dd>{report.txHash ? shorten(report.txHash, 10, 8) : 'Not submitted'}</dd>
-        </div>
-      </dl>
-      {report.explorerUrl ? (
-        <a className="explorer-link" href={report.explorerUrl} target="_blank" rel="noreferrer">
-          <ExternalLink size={14} aria-hidden="true" /> View on explorer
-        </a>
-      ) : null}
-      {report.blockers.length > 0 ? (
-        <ul className="blocker-list">
-          {report.blockers.map((blocker) => (
-            <li key={blocker}>{blocker}</li>
-          ))}
-        </ul>
-      ) : null}
-      <ul className="artifact-list">
+    <div style={{ border: '1px solid var(--bd)', borderRadius: 12, padding: 12, background: 'var(--card)', display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <MetaRow label={report.op.toUpperCase()}>{report.status}</MetaRow>
+      <MetaRow label="TRANSACTION">{report.txHash ? shorten(report.txHash, 10, 8) : 'Not submitted'}</MetaRow>
+      {report.explorerUrl ? <ExplorerLink href={report.explorerUrl}>View on explorer ↗</ExplorerLink> : null}
+      <BlockerList blockers={report.blockers} />
+      <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 4 }}>
         {report.statusEvents.slice(-latestEventCount).map((event, index) => (
-          <li key={`${event.elapsedMs}-${index}`}>
-            <strong>{event.stage}</strong>
-            <span>{event.message}</span>
+          <li key={`${event.elapsedMs}-${index}`} style={{ fontSize: 10.5, color: 'var(--tx3)', fontFamily: 'var(--fm)' }}>
+            <strong style={{ color: 'var(--tx2)' }}>{event.stage}</strong> · {event.message}
           </li>
         ))}
       </ul>
