@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { decodeReceiveCode, type AssetCode, type NetworkKey, type XlmPrivateSubmitReport } from '@zk-fighter/core'
-import { Button, EventStepTracker, ProvingRing, Segmented, type ProofStep } from '@zk-fighter/ui'
+import { Button, Segmented } from '@zk-fighter/ui'
 
 import { dappMessageTypes, type DappWalletStatus, type PrivateActionResponse } from './dappMessages'
+import { PrivateTerminal, ProvingView } from './extension-private-views'
 import { shorten } from './extension-format'
-import { Caption, Copy, ErrorText, ExplorerLink, MetaRow, fieldStyle } from './extension-ui'
+import { Caption, ErrorText, MetaRow, fieldStyle } from './extension-ui'
 
 // Send (shielded → shielded). Real integration: the offscreen runs the proving +
 // submit (submitXlmPrivateTransfer); the popup shows an honest proving ring while
@@ -60,16 +61,17 @@ export function ExtensionSendPanel({ status, sendRuntimeMessage }: { status: Dap
   }
 
   if (step === 'proving') {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: '24px 8px' }}>
-        <ProvingRing progress={0.55} state="active" label="Proving…" sublabel="On your device" />
-        <Copy>Proving on your device, then submitting to Stellar — keep this panel open.</Copy>
-      </div>
-    )
+    return <ProvingView hint="Proving on your device, then submitting to Stellar — keep this panel open." />
   }
 
   if (step === 'done' && report) {
-    return <Terminal report={report} onReset={() => { setStep('form'); setCode(''); setAmount(''); setReport(null) }} />
+    return (
+      <PrivateTerminal
+        report={report}
+        copy={{ successTitle: 'Payment sent', successBody: 'The amount and counterparty stay inside the shielded pool.', failedTitle: 'Send failed', blockedTitle: 'Couldn’t send yet' }}
+        onReset={() => { setStep('form'); setCode(''); setAmount(''); setReport(null) }}
+      />
+    )
   }
 
   if (step === 'review') {
@@ -104,27 +106,6 @@ export function ExtensionSendPanel({ status, sendRuntimeMessage }: { status: Dap
         <span style={{ fontSize: 12, color: 'var(--tx3)', fontWeight: 600 }}>{asset}</span>
       </div>
       <Button fullWidth disabled={!canReview} onClick={() => setStep('review')}>Review</Button>
-    </div>
-  )
-}
-
-function Terminal({ report, onReset }: { report: XlmPrivateSubmitReport; onReset: () => void }) {
-  const ok = report.status === 'submitted'
-  const tone = ok ? 'var(--pos)' : report.status === 'failed' ? 'var(--dng)' : 'var(--warn)'
-  const title = ok ? 'Payment sent' : report.status === 'failed' ? 'Send failed' : 'Couldn’t send yet'
-  const steps: ProofStep[] = report.statusEvents.map((event, index) => ({
-    label: event.message,
-    state: !ok && index === report.statusEvents.length - 1 ? 'error' : 'done',
-  }))
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <div style={{ fontWeight: 800, fontSize: 17, color: tone }}>{title}</div>
-      {ok ? <Copy>The amount and counterparty stay inside the shielded pool.</Copy> : null}
-      {report.blockers.map((blocker, index) => <div key={index} style={{ fontSize: 11.5, color: 'var(--warn)' }}>{blocker}</div>)}
-      {report.error && !ok ? <ErrorText>{report.error}</ErrorText> : null}
-      {steps.length > 0 ? <EventStepTracker steps={steps} /> : null}
-      {report.explorerUrls[0] ? <ExplorerLink href={report.explorerUrls[0]}>View on explorer ↗</ExplorerLink> : null}
-      <Button variant="secondary" fullWidth onClick={onReset}>Done</Button>
     </div>
   )
 }
