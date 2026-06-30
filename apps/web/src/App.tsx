@@ -32,6 +32,9 @@ function App() {
   const [vault, setVault] = useState<EncryptedVault | null>(() => getStoredVault())
   const [passkeyEnvelope, setPasskeyEnvelope] = useState<PasskeyEnvelope | null>(() => getStoredPasskeyEnvelope())
   const [identity, setIdentity] = useState<WalletIdentity | null>(null)
+  // Returning users (vault already on disk) see Unlock; a fresh session runs the
+  // create/import flow even after createVault writes the vault, so the Ready step shows.
+  const [flow, setFlow] = useState<'onboard' | 'unlock'>(() => (getStoredVault() ? 'unlock' : 'onboard'))
   const [unlockPassword, setUnlockPassword] = useState('')
   const [unlockError, setUnlockError] = useState('')
   const [busy, setBusy] = useState(false)
@@ -112,7 +115,7 @@ function App() {
             passkeyEnvelope={passkeyEnvelope}
             onChangeNetwork={changeNetwork}
             onPasskeyEnvelopeChange={savePasskeyEnvelope}
-            onLock={() => setIdentity(null)}
+            onLock={() => { setIdentity(null); setFlow('unlock') }}
           />
         </div>
       </ThemeProvider>
@@ -121,7 +124,7 @@ function App() {
 
   return (
     <ThemeProvider initialTheme={initialTheme} onThemeChange={onThemeChange} className="flex items-center justify-center p-6">
-      {vault ? (
+      {flow === 'unlock' && vault ? (
         <UnlockScreen
           network={network}
           busy={busy}
