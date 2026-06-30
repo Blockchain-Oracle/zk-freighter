@@ -68,7 +68,7 @@ export function ExtensionDisclosurePanel({ sendRuntimeMessage }: { sendRuntimeMe
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       <div style={{ fontWeight: 800, fontSize: 17, letterSpacing: '-.02em' }}>Disclosure</div>
-      <Copy>Prove you own a specific note to an auditor — without revealing your other notes, the amount, or any power to spend.</Copy>
+      <Copy>Prove you own a specific note to an auditor — revealing that note’s amount to them, but not your other notes, your balance, or any power to spend.</Copy>
       <Segmented options={(['USDC', 'XLM'] as const).map((value) => ({ value, label: value }))} value={asset} onChange={(value) => setAsset(value as AssetCode)} size="sm" />
       <div>
         <Caption style={{ display: 'block', marginBottom: 6 }}>NOTE</Caption>

@@ -38,75 +38,31 @@ import { recordActivity, readActivity, type ActivityBoundary, type ActivityKind,
 import { balanceCacheKey, clearAllBalanceCache, isBalanceStale, readBalanceCache, writeBalanceCache } from './balance-cache'
 import { freighterResponse, openExtensionSidePanel } from './dappRuntimeHelpers'
 import { identityForMnemonic, readStoredDappWallet, writeStoredDappWallet } from './dappRuntimeState'
+import type {
+  ExtensionAspInsertRunner,
+  ExtensionBalancesRunner,
+  ExtensionBridgeRunner,
+  ExtensionConfidentialRunner,
+  ExtensionDisclosureRunner,
+  ExtensionDiscoverRunner,
+  ExtensionPrivateTransferRunner,
+  ExtensionShieldRunner,
+  ExtensionUnshieldRunner,
+  ExtensionUsdcTrustlineRunner,
+} from './dappRuntime-types'
 
-export interface ExtensionShieldRequest {
-  readonly mnemonic: string
-  readonly network: NetworkKey
-  readonly asset: AssetCode
-  readonly amountStroops?: string
-  readonly timeoutMs?: number
-}
-
-export interface ExtensionAspInsertRequest {
-  readonly mnemonic: string
-  readonly network: NetworkKey
-}
-
-export interface ExtensionUsdcTrustlineRequest { readonly mnemonic: string; readonly network: NetworkKey }
-
-export interface ExtensionBalancesRequest { readonly mnemonic: string; readonly network: NetworkKey }
-
-export interface ExtensionPrivateTransferRequest {
-  readonly mnemonic: string
-  readonly network: NetworkKey
-  readonly asset: AssetCode
-  readonly amountStroops: string
-  readonly receiveCode: string
-}
-
-export interface ExtensionUnshieldRequest {
-  readonly mnemonic: string
-  readonly network: NetworkKey
-  readonly asset: AssetCode
-  readonly amountStroops: string
-  readonly recipientAddress: string
-}
-
-export interface ExtensionDiscoverRequest { readonly network: NetworkKey; readonly ownerAddress: string }
-
-export interface ExtensionDisclosureRequest {
-  readonly mnemonic: string
-  readonly network: NetworkKey
-  readonly asset: AssetCode
-  readonly authority: string
-  readonly purpose: string
-}
-
-export interface ExtensionBridgeRequest {
-  readonly mnemonic: string
-  readonly network: NetworkKey
-  readonly sourceChainKey: CctpSourceKey
-  readonly resumeBurnHash?: string
-}
-
-export interface ExtensionConfidentialRequest {
-  readonly mnemonic: string
-  readonly network: NetworkKey
-  readonly op: ConfidentialOpKind
-  readonly amount?: string
-  readonly to?: string
-}
-
-type ExtensionShieldRunner = (request: ExtensionShieldRequest) => Promise<XlmShieldSubmitReport>
-type ExtensionAspInsertRunner = (request: ExtensionAspInsertRequest) => Promise<AspMembershipInsertReport>
-type ExtensionUsdcTrustlineRunner = (request: ExtensionUsdcTrustlineRequest) => Promise<StellarUsdcTrustlineReport>
-type ExtensionBridgeRunner = (request: ExtensionBridgeRequest) => Promise<CctpBridgeReport>
-type ExtensionConfidentialRunner = (request: ExtensionConfidentialRequest) => Promise<unknown>
-type ExtensionBalancesRunner = (request: ExtensionBalancesRequest) => Promise<DappBalances>
-type ExtensionPrivateTransferRunner = (request: ExtensionPrivateTransferRequest) => Promise<XlmPrivateSubmitReport>
-type ExtensionUnshieldRunner = (request: ExtensionUnshieldRequest) => Promise<XlmPrivateSubmitReport>
-type ExtensionDiscoverRunner = (request: ExtensionDiscoverRequest) => Promise<PublicDiscoveryLookupReport>
-type ExtensionDisclosureRunner = (request: ExtensionDisclosureRequest) => Promise<GenerateDisclosureReport>
+export type {
+  ExtensionAspInsertRequest,
+  ExtensionBalancesRequest,
+  ExtensionBridgeRequest,
+  ExtensionConfidentialRequest,
+  ExtensionDisclosureRequest,
+  ExtensionDiscoverRequest,
+  ExtensionPrivateTransferRequest,
+  ExtensionShieldRequest,
+  ExtensionUnshieldRequest,
+  ExtensionUsdcTrustlineRequest,
+} from './dappRuntime-types'
 
 interface MessageSender { readonly tab?: { readonly windowId?: number } }
 

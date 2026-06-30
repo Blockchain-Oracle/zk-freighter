@@ -36,9 +36,7 @@ async function main() {
 
     const extensionId = await findExtensionId(cdp, profileDir, stderr)
     // Fresh profile has no vault, so both surfaces render the Access card (the
-    // redesigned locked state). Unlocked workspace render is exercised by the
-    // quickshield/confidential smokes; here we assert the React app mounts + the
-    // runtime messages below carry the real offscreen/prover guarantees.
+    // redesigned locked state); the runtime messages below carry the real guarantees.
     const popupText = await pageText(cdp, `chrome-extension://${extensionId}/popup.html`, 'Set up your wallet')
     assertIncludes(popupText, 'Import a recovery phrase', 'popup access card renders')
     assertIncludes(popupText, 'VAULT PASSWORD', 'popup vault password field renders')
