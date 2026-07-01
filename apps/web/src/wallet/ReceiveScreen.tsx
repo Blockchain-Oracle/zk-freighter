@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
-import type { NetworkKey, WalletIdentity } from '@zk-fighter/core'
+import { lookupPublishedReceiveCode, type NetworkKey, type WalletIdentity } from '@zk-fighter/core'
 import { BoundaryBadge, Button, Callout, QrCard, Segmented, truncateMiddle } from '@zk-fighter/ui'
 import { UsdcReceiveSetupPanel } from '../UsdcReceiveSetupPanel'
 import type { WalletScreen } from './screens'
+import { readStoredPublish } from './discoveryStorage'
 
 type Tab = 'private' | 'public'
 
@@ -23,6 +24,20 @@ export function ReceiveScreen({ identity, network, receiveCode, onNav }: Receive
   const [tab, setTab] = useState<Tab>('private')
   const [copied, setCopied] = useState(false)
   const [showFull, setShowFull] = useState(false)
+  const [discoverableCode, setDiscoverableCode] = useState<string | null>(() =>
+    readStoredPublish(network, identity.stellarPublicKey) ? receiveCode : null,
+  )
+
+  useEffect(() => {
+    let cancelled = false
+    setDiscoverableCode(readStoredPublish(network, identity.stellarPublicKey) ? receiveCode : null)
+    void lookupPublishedReceiveCode({ ownerAddress: identity.stellarPublicKey, network })
+      .then((report) => {
+        if (!cancelled && report.status === 'found') setDiscoverableCode(report.receiveCode ?? receiveCode)
+      })
+      .catch(() => undefined)
+    return () => { cancelled = true }
+  }, [identity.stellarPublicKey, network, receiveCode])
 
   function copy(value: string) {
     // Only affirm "Copied" if the write actually succeeded — never imply a stale/empty copy.
@@ -81,8 +96,8 @@ export function ReceiveScreen({ identity, network, receiveCode, onNav }: Receive
             >
               <span style={{ width: 34, height: 34, borderRadius: 10, flex: 'none', background: 'rgba(94,124,250,.14)', display: 'grid', placeItems: 'center', color: 'var(--ac2)', fontSize: 15 }}>⌖</span>
               <span>
-                <span style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--tx)' }}>Make my code discoverable</span>
-                <span style={{ display: 'block', fontSize: 11, color: 'var(--tx3)', marginTop: 2 }}>Link your public address so others find this code — never exposes your seed.</span>
+                <span style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--tx)' }}>{discoverableCode ? 'Your code is discoverable' : 'Make my code discoverable'}</span>
+                <span style={{ display: 'block', fontSize: 11, color: 'var(--tx3)', marginTop: 2 }}>{discoverableCode ? truncateMiddle(discoverableCode, 10, 6) : 'Link your public address so others find this code — never exposes your seed.'}</span>
               </span>
               <span style={{ marginLeft: 'auto', color: 'var(--ac2)', fontSize: 14 }}>›</span>
             </button>

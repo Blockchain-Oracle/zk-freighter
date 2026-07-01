@@ -112,6 +112,7 @@ function blockersForNullResult(events: readonly XlmShieldProgressEvent[]): reado
   if (gap !== undefined) {
     return [
       `ASP membership/indexer precondition stopped before proving; latest observed sync gap was ${gap.toLocaleString()} ledgers. If the ASP leaf was just inserted, wait a few ledgers and retry.`,
+      'If this wallet has not prepared shield access yet, run Prepare shield access once before shielding.',
     ]
   }
 

@@ -136,10 +136,10 @@ importers:
         specifier: 1.21.0
         version: 1.21.0(react@19.2.6)
       react:
-        specifier: ^19.2.6
+        specifier: 19.2.6
         version: 19.2.6
       react-dom:
-        specifier: ^19.2.6
+        specifier: 19.2.6
         version: 19.2.6(react@19.2.6)
     devDependencies:
       '@eslint/js':
@@ -198,16 +198,16 @@ importers:
         version: link:../../packages/ui
       lucide-react:
         specifier: 1.21.0
-        version: 1.21.0(react@19.2.7)
+        version: 1.21.0(react@19.2.6)
       qrcode.react:
         specifier: 4.2.0
-        version: 4.2.0(react@19.2.7)
+        version: 4.2.0(react@19.2.6)
       react:
-        specifier: ^19.2.6
-        version: 19.2.7
+        specifier: 19.2.6
+        version: 19.2.6
       react-dom:
-        specifier: ^19.2.6
-        version: 19.2.7(react@19.2.7)
+        specifier: 19.2.6
+        version: 19.2.6(react@19.2.6)
     devDependencies:
       '@eslint/js':
         specifier: ^10.0.1
@@ -295,10 +295,10 @@ importers:
         specifier: ^19.2.3
         version: 19.2.3(@types/react@19.2.14)
       react:
-        specifier: ^19.2.6
+        specifier: 19.2.6
         version: 19.2.6
       react-dom:
-        specifier: ^19.2.6
+        specifier: 19.2.6
         version: 19.2.6(react@19.2.6)
       typescript:
         specifier: ~6.0.2
@@ -2684,17 +2684,8 @@ packages:
     peerDependencies:
       react: ^19.2.6
 
-  react-dom@19.2.7:
-    resolution: {integrity: sha512-t0BRVXvbiE/o20Hfw669rLbMCDWtYZLvmJigy2f0MxsXF+71pxhR3xOkspmsO8h3ZlNzyibAmtCa3l4lYKk6gQ==}
-    peerDependencies:
-      react: ^19.2.7
-
   react@19.2.6:
     resolution: {integrity: sha512-sfWGGfavi0xr8Pg0sVsyHMAOziVYKgPLNrS7ig+ivMNb3wbCBw3KxtflsGBAwD3gYQlE/AEZsTLgToRrSCjb0Q==}
-    engines: {node: '>=0.10.0'}
-
-  react@19.2.7:
-    resolution: {integrity: sha512-HNe9WslTbXmFK8o8cmwgAeJFSBvt1bPdHCVKtaaV+WlAN36mpT4hcRpwbf3fY56ar2oIXzsBpOAiIRHAdY0OlQ==}
     engines: {node: '>=0.10.0'}
 
   readable-stream@2.3.8:
@@ -5108,10 +5099,6 @@ snapshots:
     dependencies:
       react: 19.2.6
 
-  lucide-react@1.21.0(react@19.2.7):
-    dependencies:
-      react: 19.2.7
-
   magic-string@0.30.21:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.5
@@ -5446,10 +5433,6 @@ snapshots:
     dependencies:
       react: 19.2.6
 
-  qrcode.react@4.2.0(react@19.2.7):
-    dependencies:
-      react: 19.2.7
-
   quansync@0.2.11: {}
 
   quick-format-unescaped@4.0.4: {}
@@ -5471,14 +5454,7 @@ snapshots:
       react: 19.2.6
       scheduler: 0.27.0
 
-  react-dom@19.2.7(react@19.2.7):
-    dependencies:
-      react: 19.2.7
-      scheduler: 0.27.0
-
   react@19.2.6: {}
-
-  react@19.2.7: {}
 
   readable-stream@2.3.8:
     dependencies:

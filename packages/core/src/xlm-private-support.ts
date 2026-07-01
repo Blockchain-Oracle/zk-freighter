@@ -104,6 +104,7 @@ export function blockersForNullResult(
     if (match) {
       return [
         `ASP membership/indexer precondition stopped before proving; latest observed sync gap was ${Number(match[1]).toLocaleString()} ledgers. Wait for indexing, then retry.`,
+        'If this wallet has not prepared shield access yet, run Prepare shield access once before sending privately.',
       ]
     }
   }

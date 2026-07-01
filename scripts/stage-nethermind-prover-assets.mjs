@@ -6,6 +6,7 @@ const referenceRoot = join(repoRoot, 'reference/stellar-private-payments')
 const sourceCircuitDir = join(referenceRoot, 'target/circuits-artifacts/release')
 const sourceKeyDir = join(referenceRoot, 'deployments/testnet/circuit_keys')
 const sourceDistDir = join(referenceRoot, 'dist')
+const confidentialCircuitDir = join(repoRoot, 'circuits/target')
 const publicRoot = join(repoRoot, 'apps/web/public')
 const managedDirs = ['js', 'circuits', 'circuit_keys', 'nethermind']
 
@@ -40,6 +41,18 @@ const files = [
   {
     src: join(sourceCircuitDir, 'selectiveDisclosure_1.r1cs'),
     dest: join(publicRoot, 'circuits/selectiveDisclosure_1.r1cs'),
+  },
+  {
+    src: join(confidentialCircuitDir, 'circuit_register.json'),
+    dest: join(publicRoot, 'circuits/circuit_register.json'),
+  },
+  {
+    src: join(confidentialCircuitDir, 'circuit_transfer.json'),
+    dest: join(publicRoot, 'circuits/circuit_transfer.json'),
+  },
+  {
+    src: join(confidentialCircuitDir, 'circuit_withdraw.json'),
+    dest: join(publicRoot, 'circuits/circuit_withdraw.json'),
   },
   {
     src: join(sourceKeyDir, 'policy_tx_2_2_proving_key.bin'),

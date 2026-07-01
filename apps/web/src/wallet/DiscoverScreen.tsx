@@ -10,9 +10,9 @@ import {
 } from '@zk-fighter/core'
 import { BoundaryBadge, Button, Callout, truncateMiddle } from '@zk-fighter/ui'
 import type { WalletScreen } from './screens'
+import { readStoredPublish, writeStoredPublish } from './discoveryStorage'
 
 const STELLAR_ADDRESS = /^G[A-Z2-7]{55}$/
-const STORAGE_PREFIX = 'zk-fighter:discover-publish:v1'
 
 const fieldStyle: CSSProperties = {
   width: '100%', boxSizing: 'border-box', padding: '11px 13px', borderRadius: 11,
@@ -162,23 +162,4 @@ export function DiscoverScreen({ identity, network, onNav }: DiscoverScreenProps
       </div>
     </section>
   )
-}
-
-function storageKey(network: NetworkKey, publicKey: string): string {
-  return `${STORAGE_PREFIX}:${network}:${publicKey}`
-}
-
-function readStoredPublish(network: NetworkKey, publicKey: string): PublicDiscoveryPublishReport | null {
-  try {
-    const value = window.localStorage.getItem(storageKey(network, publicKey))
-    if (!value) return null
-    const parsed = JSON.parse(value) as PublicDiscoveryPublishReport
-    return parsed.status === 'submitted' || parsed.status === 'partial' ? parsed : null
-  } catch {
-    return null
-  }
-}
-
-function writeStoredPublish(report: PublicDiscoveryPublishReport): void {
-  window.localStorage.setItem(storageKey(report.network, report.userAddress), JSON.stringify(report))
 }

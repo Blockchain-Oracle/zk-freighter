@@ -141,7 +141,7 @@ function renderScreen(props: {
 }) {
   if (props.screen === 'home') return <ExtensionHome status={props.status} sendRuntimeMessage={props.sendRuntimeMessage} navigate={props.navigate} openSheet={props.openSheet} />
   if (props.screen === 'activity') return <ExtensionActivityPanel sendRuntimeMessage={props.sendRuntimeMessage} />
-  if (props.screen === 'receive') return <ExtensionReceiveScreen status={props.status} navigate={props.navigate} />
+  if (props.screen === 'receive') return <ExtensionReceiveScreen status={props.status} navigate={props.navigate} sendRuntimeMessage={props.sendRuntimeMessage} />
   if (props.screen === 'settings') return <RouteFrame title="Settings" onBack={() => props.navigate('home')}><ExtensionSettingsScreen status={props.status} sendRuntimeMessage={props.sendRuntimeMessage} lockWallet={props.lockWallet} /></RouteFrame>
   if (props.screen === 'publicView') return <RouteFrame title="Public view" badge={<BoundaryBadge tone="public">Public</BoundaryBadge>} onBack={() => props.navigate('home')}><ExtensionPublicViewScreen status={props.status} navigate={props.navigate} openSheet={props.openSheet} /></RouteFrame>
   if (props.screen === 'signingDisabled') return <RouteFrame title="Signing disabled" onBack={() => props.navigate('home')}><ExtensionSigningDisabledScreen /></RouteFrame>

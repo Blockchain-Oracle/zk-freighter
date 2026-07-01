@@ -6,7 +6,7 @@ export default defineConfig({
   publicDir: '../web/public',
   // Tailwind v4 must go through WXT's Vite hook (not a standalone config). It emits
   // static CSS, so the `script-src 'self' 'wasm-unsafe-eval'` CSP stays clean.
-  vite: () => ({ plugins: [tailwindcss()] }),
+  vite: () => ({ resolve: { dedupe: ['react', 'react-dom'] }, plugins: [tailwindcss()] }),
   manifest: {
     name: 'ZK Fighter',
     description: 'Compact wallet for shielded Stellar payments.',

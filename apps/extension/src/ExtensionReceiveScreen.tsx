@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { Button } from '@zk-fighter/ui'
 
-import type { DappWalletStatus } from './dappMessages'
+import { dappMessageTypes, type DappWalletStatus, type DiscoverStatusResponse } from './dappMessages'
 import { shorten } from './extension-format'
 import type { ExtensionNavigate } from './extension-routes'
 import { Badge, Caption, GhostButton, Panel, SectionHeader } from './extension-ui'
@@ -12,10 +12,21 @@ type ReceiveTab = 'qr' | 'code' | 'public'
 interface ReceiveScreenProps {
   readonly status: DappWalletStatus
   readonly navigate: ExtensionNavigate
+  readonly sendRuntimeMessage: (message: object) => Promise<unknown>
 }
 
-export function ExtensionReceiveScreen({ status, navigate }: ReceiveScreenProps) {
+export function ExtensionReceiveScreen({ status, navigate, sendRuntimeMessage }: ReceiveScreenProps) {
   const [tab, setTab] = useState<ReceiveTab>('qr')
+  const [discoverableCode, setDiscoverableCode] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    void (async () => {
+      const response = (await sendRuntimeMessage({ type: dappMessageTypes.discoverStatus })) as DiscoverStatusResponse
+      if (!cancelled) setDiscoverableCode(response.discoverable ? response.receiveCode ?? status.privateReceiveCode : null)
+    })()
+    return () => { cancelled = true }
+  }, [sendRuntimeMessage, status.privateReceiveCode, status.publicKey, status.network])
 
   async function copy(value: string) {
     await navigator.clipboard.writeText(value)
@@ -77,7 +88,9 @@ export function ExtensionReceiveScreen({ status, navigate }: ReceiveScreenProps)
         </div>
       ) : null}
 
-      <Button fullWidth onClick={() => navigate('discover')}>Make my code discoverable</Button>
+      <Button fullWidth variant={discoverableCode ? 'secondary' : 'primary'} onClick={() => navigate('discover')}>
+        {discoverableCode ? `Discoverable · ${shorten(discoverableCode, 10, 6)}` : 'Make my code discoverable'}
+      </Button>
     </Panel>
   )
 }

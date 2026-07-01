@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import {
+  insertAspMembershipLeaf,
   isShieldedAssetEnabled,
   loadPublicStellarBalances,
   parseAssetAmountToStroops,
   submitXlmShieldDeposit,
   submitXlmUnshieldWithdrawal,
   type AssetCode,
+  type AspMembershipInsertReport,
   type NetworkKey,
   type PublicBalancesReport,
   type WalletIdentity,
@@ -65,6 +67,8 @@ export function ShieldScreen({ identity, network, balance, initialTab = 'shield'
   const [pubResult, setPubResult] = useState<{ key: string; report: PublicBalancesReport } | null>(null)
   const [events, setEvents] = useState<readonly ProofFlowEvent[]>([])
   const [report, setReport] = useState<NormalReport | null>(null)
+  const [accessBusy, setAccessBusy] = useState(false)
+  const [accessReport, setAccessReport] = useState<AspMembershipInsertReport | null>(null)
   const runIdRef = useRef(0)
   const isUnshield = tab === 'unshield'
   const pubKey = `${identity.stellarPublicKey}:${network}`
@@ -105,6 +109,16 @@ export function ShieldScreen({ identity, network, balance, initialTab = 'shield'
     if (available == null) return
     const buffer = !isUnshield && asset === 'XLM' ? XLM_FEE_RESERVE_BUFFER_STROOPS : 0n
     setAmount(stroopsToAmountInput(available > buffer ? available - buffer : 0n))
+  }
+
+  async function prepareShieldAccess() {
+    setAccessBusy(true)
+    setAccessReport(null)
+    try {
+      setAccessReport(await insertAspMembershipLeaf({ identity, network }))
+    } finally {
+      setAccessBusy(false)
+    }
   }
 
   async function run() {
@@ -185,7 +199,18 @@ export function ShieldScreen({ identity, network, balance, initialTab = 'shield'
             <span style={{ flex: 'none', width: 22, height: 22, borderRadius: 7, background: 'rgba(229,103,92,.16)', display: 'grid', placeItems: 'center', color: 'var(--dng)', fontSize: 12 }}>!</span>
             <span style={{ fontSize: 12, lineHeight: 1.5, color: 'var(--tx2)' }}>Destination and amount become <b style={{ color: 'var(--dng)' }}>public on Stellar</b>. The pool can’t hide a withdrawal.</span>
           </div>
-        ) : null}
+        ) : (
+          <>
+            <Button variant="secondary" fullWidth loading={accessBusy} disabled={accessBusy || !poolEnabled} onClick={() => void prepareShieldAccess()}>Prepare shield access</Button>
+            <Callout tone={accessReport?.status === 'submitted' ? 'info' : accessReport ? 'warn' : 'public'} title={accessReport ? `Shield access ${accessReport.status}` : 'One-time public setup.'}>
+              {accessReport
+                ? accessReport.status === 'submitted'
+                  ? `Access transaction submitted${accessReport.txHash ? ` (${truncateMiddle(accessReport.txHash, 8, 6)})` : ''}. Wait a few ledgers, then shield.`
+                  : accessReport.blockers[0] ?? accessReport.error ?? 'Shield access setup did not complete.'
+                : 'Run this once before the first shield if the pool needs your ASP membership leaf indexed.'}
+            </Callout>
+          </>
+        )}
         <Segmented options={ASSET_OPTIONS} value={asset} onChange={(value) => setAsset(value as AssetCode)} size="sm" />
         <div style={{ border: '1px solid var(--bd2)', borderRadius: 14, background: 'var(--card)', padding: '20px 16px' }}>
           <AmountInput value={amount} onChange={setAmount} asset={asset} autoFocus invalid={amountError != null} onMax={available != null && available > 0n ? applyMax : undefined} />
