@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { NETWORKS, getCctpSource, getEnabledCctpSources, getNetworkConfig, isShieldedAssetEnabled } from './networks'
+import { privateEventContractIds } from './privacy-contracts'
 
 describe('NETWORKS', () => {
   it('records verified testnet and mainnet SAC IDs', () => {
@@ -38,6 +39,19 @@ describe('NETWORKS', () => {
     expect(NETWORKS.mainnet.assets.USDC.poolId).toBe(
       'CDV45TTXDDUKBMK2IWPJRUYQSRVEWHTRPKCN2VZ7GEV2HVMRPBOD2KR7',
     )
+  })
+
+  it('records private event contract sets for bootnode indexing', () => {
+    expect(privateEventContractIds('testnet')).toEqual([
+      NETWORKS.testnet.assets.XLM.poolId,
+      NETWORKS.testnet.assets.USDC.poolId,
+      'CCXIGPJJY6UHIETXFCIV77HFVJSFS6HAVRSMHJFV6UVENXPJOC2WA3Y2',
+    ])
+    expect(privateEventContractIds('mainnet')).toEqual([
+      NETWORKS.mainnet.assets.XLM.poolId,
+      NETWORKS.mainnet.assets.USDC.poolId,
+      'CCYY3LLTVD2UW3Z4QD76PICZNIUH3PXKWJSKJVAENBIYON7QVAQIW5PP',
+    ])
   })
 
   it('records current Stellar CCTP V2 config', () => {

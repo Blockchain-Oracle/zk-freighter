@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { NETWORKS } from '@zk-fighter/core'
+import { NETWORKS, privateAspMembershipContractId } from '@zk-fighter/core'
 import { readConfig } from './config.js'
 
 describe('bootnode config', () => {
@@ -19,6 +19,7 @@ describe('bootnode config', () => {
     expect(config.allowedContracts).toEqual([
       NETWORKS.testnet.assets.XLM.poolId,
       NETWORKS.testnet.assets.USDC.poolId,
+      privateAspMembershipContractId('testnet'),
     ])
   })
 

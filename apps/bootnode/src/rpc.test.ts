@@ -8,7 +8,10 @@ const config: BootnodeConfig = {
   port: 8788,
   upstreamRpcUrl: 'https://rpc.invalid',
   network: 'testnet',
-  allowedContracts: ['CCCHESF5HNGMCP5ZLGFBKBTW23YXNAJ6LTGSK7CO3FKFIVEHFE3CD4LZ'],
+  allowedContracts: [
+    'CCCHESF5HNGMCP5ZLGFBKBTW23YXNAJ6LTGSK7CO3FKFIVEHFE3CD4LZ',
+    'CCXIGPJJY6UHIETXFCIV77HFVJSFS6HAVRSMHJFV6UVENXPJOC2WA3Y2',
+  ],
 }
 
 class Store implements BootnodeStore {
@@ -51,6 +54,35 @@ describe('bootnode rpc handler', () => {
     }))
 
     await expect(response.json()).resolves.toMatchObject({ error: { code: -32602 } })
+  })
+
+  it('accepts Nethermind pool sync filters that include ASP membership events', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({
+      jsonrpc: '2.0',
+      id: 22,
+      result: { events: [] },
+    }), { status: 200, headers: { 'content-type': 'application/json' } })))
+
+    const handler = createHandler(config, new Store())
+    const response = await handler(new Request('http://local/rpc', {
+      method: 'POST',
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 22,
+        method: 'getEvents',
+        params: {
+          filters: [{
+            contractIds: config.allowedContracts,
+            topics: [['**']],
+            type: 'contract',
+          }],
+          pagination: { limit: 1 },
+          startLedger: 3381514,
+        },
+      }),
+    }))
+
+    await expect(response.json()).resolves.toMatchObject({ result: { events: [] } })
   })
 
   it('rejects getEvents requests without explicit pool contract filters', async () => {

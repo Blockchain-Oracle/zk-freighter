@@ -22,7 +22,7 @@ export function createHandler(config: BootnodeConfig, store: BootnodeStore): (re
     if (!isRpcRequest(body)) return rpcError(null, -32600, 'Invalid JSON-RPC request.')
     if (!body.method || !allowedMethods.has(body.method)) return rpcError(body.id, -32601, 'Method not allowed by ZK Fighter bootnode.')
     if (body.method === 'getEvents' && !paramsUseAllowedContracts(body.params, config.allowedContracts)) {
-      return rpcError(body.id, -32602, 'Event request must filter by ZK Fighter pool contracts only.')
+      return rpcError(body.id, -32602, 'Event request must filter by ZK Fighter private index contracts only.')
     }
     return proxyWithCache(body, config, store)
   }

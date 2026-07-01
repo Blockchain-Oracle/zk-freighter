@@ -1,4 +1,4 @@
-import { NETWORKS, type NetworkKey } from '@zk-fighter/core'
+import { NETWORKS, privateEventContractIds, type NetworkKey } from '@zk-fighter/core'
 
 export interface BootnodeConfig {
   readonly port: number
@@ -10,13 +10,12 @@ export interface BootnodeConfig {
 
 export function readConfig(env: NodeJS.ProcessEnv = process.env): BootnodeConfig {
   const network = env.ZKF_BOOTNODE_NETWORK === 'mainnet' ? 'mainnet' : 'testnet'
-  const pools = Object.values(NETWORKS[network].assets).flatMap((asset) => asset.poolId ? [asset.poolId] : [])
   return {
     port: parseNumber(env.PORT, 8788),
     databaseUrl: text(env.DATABASE_URL),
     upstreamRpcUrl: text(env.ZKF_BOOTNODE_UPSTREAM_RPC_URL) ?? NETWORKS[network].rpcUrl,
     network,
-    allowedContracts: list(env.ZKF_BOOTNODE_ALLOWED_CONTRACTS) ?? pools,
+    allowedContracts: list(env.ZKF_BOOTNODE_ALLOWED_CONTRACTS) ?? privateEventContractIds(network),
   }
 }
 

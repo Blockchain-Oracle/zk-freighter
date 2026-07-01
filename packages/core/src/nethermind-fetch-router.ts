@@ -38,11 +38,11 @@ async function routedTarget(
   const bootnodeUrl = routes.get(normalizeUrl(url))
   if (!bootnodeUrl) return undefined
 
-  const method = await jsonRpcMethod(input, init)
-  if (!method || !eventMethods.has(method)) return undefined
+  const body = await jsonRpcBody(input, init)
+  if (!body || !eventMethods.has(body.method)) return undefined
 
   if (input instanceof Request) {
-    return { input: new Request(bootnodeUrl, input), init }
+    return { input: bootnodeUrl, init: requestInitFrom(input, init, body.text) }
   }
   return { input: bootnodeUrl, init }
 }
@@ -54,12 +54,15 @@ function requestUrl(input: RequestInfo | URL): string | undefined {
   return undefined
 }
 
-async function jsonRpcMethod(input: RequestInfo | URL, init?: RequestInit): Promise<string | undefined> {
-  const body = await requestBodyText(input, init)
-  if (!body) return undefined
+async function jsonRpcBody(
+  input: RequestInfo | URL,
+  init?: RequestInit,
+): Promise<{ readonly method: string; readonly text: string } | undefined> {
+  const text = await requestBodyText(input, init)
+  if (!text) return undefined
   try {
-    const parsed = JSON.parse(body) as unknown
-    return isRecord(parsed) && typeof parsed.method === 'string' ? parsed.method : undefined
+    const parsed = JSON.parse(text) as unknown
+    return isRecord(parsed) && typeof parsed.method === 'string' ? { method: parsed.method, text } : undefined
   } catch {
     return undefined
   }
@@ -73,6 +76,15 @@ async function requestBodyText(input: RequestInfo | URL, init?: RequestInit): Pr
 
 function normalizeUrl(value: string): string {
   return value.replace(/\/+$/u, '')
+}
+
+function requestInitFrom(request: Request, init: RequestInit | undefined, body: string): RequestInit {
+  return {
+    method: init?.method ?? request.method,
+    headers: init?.headers ?? request.headers,
+    body,
+    signal: init?.signal ?? request.signal,
+  }
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

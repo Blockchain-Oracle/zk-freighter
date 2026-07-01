@@ -47,8 +47,10 @@ describe('Nethermind event fetch router', () => {
 
   it('routes Request objects without consuming the original body', async () => {
     const calls: string[] = []
-    globalThis.fetch = vi.fn(async (input: RequestInfo | URL) => {
+    const bodies: string[] = []
+    globalThis.fetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       calls.push(input instanceof Request ? input.url : String(input))
+      bodies.push(input instanceof Request ? await input.clone().text() : String(init?.body ?? ''))
       return new Response('{}')
     }) as typeof fetch
 
@@ -60,6 +62,7 @@ describe('Nethermind event fetch router', () => {
     await fetch(request)
 
     expect(calls).toEqual([bootnodeUrl])
+    expect(bodies[0]).toContain('getLatestLedger')
     await expect(request.text()).resolves.toContain('getLatestLedger')
   })
 })
