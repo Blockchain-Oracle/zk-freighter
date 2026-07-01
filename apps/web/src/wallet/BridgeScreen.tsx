@@ -167,7 +167,7 @@ export function BridgeScreen({ identity, network, balance }: BridgeScreenProps) 
       const amountStroops = usdcToAtomic(shieldAmount, 7) ?? ARRIVED_USDC_SHIELD_STROOPS
       const result = await submitXlmShieldDeposit({ asset: 'USDC', identity, network, amountStroops })
       setShieldReport(result)
-      if (result.status === 'submitted') balance.refresh()
+      if (result.status === 'submitted') balance.refresh({ syncBeforeRead: true })
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Shield failed.')
     } finally {

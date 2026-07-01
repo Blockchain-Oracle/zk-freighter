@@ -97,7 +97,7 @@ export class ExtensionDappRuntime {
           recordConfidentialActivity(report, ready.network)
         })
       case dappMessageTypes.balances:
-        return this.balances()
+        return this.balances(message.syncBeforeRead === true)
       case dappMessageTypes.demoFundingStatus:
         return this.demoFundingStatus()
       case dappMessageTypes.demoFundingRequest:
@@ -225,10 +225,10 @@ export class ExtensionDappRuntime {
     return quickShieldFlow(ready, this.runShield, asset, amountStroops, timeoutMs)
   }
 
-  private async balances(): Promise<DappBalancesResponse> {
+  private async balances(syncBeforeRead = false): Promise<DappBalancesResponse> {
     const ready = await requireUnlockedDappWallet(this.unlockedMnemonic)
     if (!ready.ok) return { ok: false, syncing: false, error: ready.error }
-    return balancesFlow(ready, this.runBalances, () => this.unlockedMnemonic, this.refreshingBalances)
+    return balancesFlow(ready, this.runBalances, () => this.unlockedMnemonic, this.refreshingBalances, syncBeforeRead)
   }
 
   private async demoFundingStatus(): Promise<DemoFundingResponse> {

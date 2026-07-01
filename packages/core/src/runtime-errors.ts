@@ -42,7 +42,10 @@ export function classifyPrivateRuntimeIssue(error: unknown): PrivateRuntimeIssue
     }
   }
 
-  if (/ZKF_RUNTIME_TIMEOUT|private engine.*timed out|note scan.*timed out|local private engine/i.test(message)) {
+  if (
+    /ZKF_RUNTIME_TIMEOUT|private engine.*timed out|note scan.*timed out|local private engine|Storage Worker Communication Error|operation timed out after \d+ ms/i
+      .test(message)
+  ) {
     return {
       kind: 'stalled',
       title: 'ZK engine did not answer.',

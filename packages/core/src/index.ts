@@ -1,5 +1,6 @@
 export * from './amount'
 export * from './assets'
+export * from './asp-access-state'
 export * from './asp-membership'
 export * from './confidential'
 export * from './asp-membership-insert'

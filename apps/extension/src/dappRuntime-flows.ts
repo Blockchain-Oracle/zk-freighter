@@ -210,7 +210,13 @@ export async function bridgeSourceBalancesFlow(ready: FlowReady, sourceChainKey:
  * refresh when stale; a cold cache scans synchronously. `getUnlocked` is read LIVE
  * after the async scan so a refresh that finishes post-lock never re-writes the cache.
  */
-export async function balancesFlow(ready: FlowReady, runner: ExtensionBalancesRunner | undefined, getUnlocked: () => string | null, refreshing: Set<string>): Promise<DappBalancesResponse> {
+export async function balancesFlow(
+  ready: FlowReady,
+  runner: ExtensionBalancesRunner | undefined,
+  getUnlocked: () => string | null,
+  refreshing: Set<string>,
+  syncBeforeRead = false,
+): Promise<DappBalancesResponse> {
   if (!runner) return { ok: false, syncing: false, error: 'Extension balance runner is unavailable.' }
   const state = await readStoredDappWallet()
   const identity = identityForMnemonic(ready.mnemonic, state)
@@ -218,12 +224,12 @@ export async function balancesFlow(ready: FlowReady, runner: ExtensionBalancesRu
   const key = balanceCacheKey(ready.network, identity.stellarPublicKey)
 
   const cached = await readBalanceCache(key)
-  if (cached) {
+  if (cached && !syncBeforeRead) {
     if (isBalanceStale(cached)) void refreshBalances(runner, key, ready.mnemonic, ready.network, refreshing, getUnlocked)
     return { ok: true, balances: cached, syncing: refreshing.has(key) }
   }
   try {
-    const fresh = await runner({ mnemonic: ready.mnemonic, network: ready.network })
+    const fresh = await runner({ mnemonic: ready.mnemonic, network: ready.network, syncBeforeRead })
     await writeBalanceCache(key, fresh)
     return { ok: true, balances: fresh, syncing: false }
   } catch (error) {

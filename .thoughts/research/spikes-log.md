@@ -2329,3 +2329,28 @@ These are upload/install estimates only. They do not include contract-instance d
   - XLM shield transaction: `d2c8fd0ff44feacf4d7461a564b8ad361b788dbf662d331ef18be087079e7bc0`; [stellar.expert](https://stellar.expert/explorer/testnet/tx/d2c8fd0ff44feacf4d7461a564b8ad361b788dbf662d331ef18be087079e7bc0).
   - Result: `proofGenerated: true`, `transactionSubmitted: true`, `durationMs: 15578`, attempts `1`.
   - Balance scan result: `shieldedXlmStroops: 1000000`, `shieldedUsdcStroops: 0`, `noteCount: 1`, blockers `[]`.
+
+## 2026-07-01 — ASP setup idempotency and passive balance reads
+
+- **Symptom:** repeated shield clicks kept submitting ASP setup and immediately starting deposit/proof work while the pool indexer was still catching up. Home/Activity balance loads could also start full private syncs and compete with foreground proving.
+- **Fix:** added a non-secret ASP access state keyed by network, public address, pool contract, and ASP leaf. A fresh one-button shield run now submits setup once and returns `Shield access is confirming` instead of immediately racing the proof builder. Later retries reuse the stored setup and mark access `ready` after a successful deposit.
+- **Balance behavior:** web and extension Home/Activity balance loads now do passive note reads by default. Explicit user refreshes, post-submit refreshes, and smoke assertions can still request `syncBeforeRead: true`.
+- **Error copy:** `Storage Worker Communication Error: operation timed out after ... ms` is now classified as a stalled private engine, not a generic Stellar RPC/network failure.
+- **Verification:**
+  - `CI=true pnpm --filter @zk-fighter/core test`
+  - `CI=true pnpm --filter @zk-fighter/web typecheck`
+  - `CI=true pnpm --filter @zk-fighter/web build`
+  - `CI=true pnpm --filter @zk-fighter/extension typecheck`
+  - `CI=true pnpm --filter @zk-fighter/extension test`
+  - `CI=true pnpm --filter @zk-fighter/extension build`
+  - `CI=true pnpm --filter @zk-fighter/bootnode typecheck`
+  - `CI=true pnpm --filter @zk-fighter/bootnode build`
+  - `CI=true pnpm --filter @zk-fighter/bootnode test`
+  - `node scripts/check-file-size.mjs`
+- **Runtime smoke:** `CI=true pnpm extension:quickshield`
+  - User address: `GBHZM5ZMZ3F4PPU323DH3PJDTJFLXWEYESU23L3CW4LGNET3H7MI2VCP`.
+  - Funding transaction: `c2b009b5001c3b416bc9fffa329186c4659f5935c8806959c60338cf047f1b36`.
+  - ASP insert transaction: `121ccb99d17ba9bc2b68a0f5fb6af35f02c81191410b3251a0aff314aa4b37bd`; [stellar.expert](https://stellar.expert/explorer/testnet/tx/121ccb99d17ba9bc2b68a0f5fb6af35f02c81191410b3251a0aff314aa4b37bd).
+  - XLM shield transaction: `633a947d2ecb74484913bd0817903e8e78ce896b1e5cb3970d3559875fc81373`; [stellar.expert](https://stellar.expert/explorer/testnet/tx/633a947d2ecb74484913bd0817903e8e78ce896b1e5cb3970d3559875fc81373).
+  - Result: `proofGenerated: true`, `transactionSubmitted: true`, `durationMs: 19058`, attempts `1`.
+  - Balance scan result: `shieldedXlmStroops: 1000000`, `shieldedUsdcStroops: 0`, `noteCount: 1`, blockers `[]`.

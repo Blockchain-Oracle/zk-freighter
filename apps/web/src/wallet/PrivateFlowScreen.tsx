@@ -148,7 +148,7 @@ export function PrivateFlowScreen({ config, identity, network, balance, onNav }:
       if (runIdRef.current !== runId) return
       recordPrivateFlowResult(activity, activityArgs, result)
       setReport(result)
-      if (result.status === 'submitted') balance.refresh()
+      if (result.status === 'submitted') balance.refresh({ syncBeforeRead: true })
     } catch (cause) {
       if (runIdRef.current !== runId) return
       recordFlowFailure(activity, activityArgs, cause, 'Private send failed before completion.')

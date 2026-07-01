@@ -13,8 +13,12 @@ export interface ShieldedBalanceState {
   usdc: XlmNotesReport | null
   /** Set only when the load itself unexpectedly rejects (vs. a returned blocked/failed report). */
   error: string | null
-  /** Re-run the load (e.g. a manual "Refresh notes"). */
-  refresh: () => void
+  /** Re-run the load. Pass syncBeforeRead only for explicit user sync or after a finished foreground flow. */
+  refresh: (options?: ShieldedBalanceRefreshOptions) => void
+}
+
+interface ShieldedBalanceRefreshOptions {
+  readonly syncBeforeRead?: boolean
 }
 
 interface LoadResult {
@@ -22,6 +26,11 @@ interface LoadResult {
   readonly xlm: XlmNotesReport | null
   readonly usdc: XlmNotesReport | null
   readonly error: string | null
+}
+
+interface LoadRequest {
+  readonly tick: number
+  readonly syncBeforeRead: boolean
 }
 
 /**
@@ -33,18 +42,28 @@ interface LoadResult {
  * once per identity/network.
  */
 export function useShieldedBalance(identity: WalletIdentity, network: NetworkKey, enabled = true): ShieldedBalanceState {
-  const [tick, setTick] = useState(0)
+  const [request, setRequest] = useState<LoadRequest>({ tick: 0, syncBeforeRead: false })
   const [result, setResult] = useState<LoadResult | null>(null)
-  const requestKey = `${identity.stellarPublicKey}:${network}:${tick}`
+  const requestKey = `${identity.stellarPublicKey}:${network}:${request.tick}:${request.syncBeforeRead ? 'sync' : 'read'}`
 
-  const refresh = useCallback(() => setTick((value) => value + 1), [])
+  const refresh = useCallback((options: ShieldedBalanceRefreshOptions = {}) => {
+    setRequest((value) => ({
+      tick: value.tick + 1,
+      syncBeforeRead: options.syncBeforeRead ?? false,
+    }))
+  }, [])
 
   useEffect(() => {
     if (!enabled) return
     let cancelled = false
     void (async () => {
       try {
-        const reports = await loadXlmShieldedNoteSet({ identity, network, assets: ['XLM', 'USDC'], syncBeforeRead: true })
+        const reports = await loadXlmShieldedNoteSet({
+          identity,
+          network,
+          assets: ['XLM', 'USDC'],
+          syncBeforeRead: request.syncBeforeRead,
+        })
         if (!cancelled) {
           setResult({ key: requestKey, xlm: reports.XLM ?? null, usdc: reports.USDC ?? null, error: null })
         }
@@ -65,7 +84,7 @@ export function useShieldedBalance(identity: WalletIdentity, network: NetworkKey
     return () => {
       cancelled = true
     }
-  }, [enabled, identity, network, requestKey])
+  }, [enabled, identity, network, request.syncBeforeRead, requestKey])
 
   const data = enabled && result?.key === requestKey ? result : null
   return {

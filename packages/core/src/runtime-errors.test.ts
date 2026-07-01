@@ -19,4 +19,10 @@ describe('private runtime errors', () => {
     expect(issue.kind).toBe('stalled')
     expect(issue.retryable).toBe(true)
   })
+
+  it('classifies storage worker operation timeouts as stalled private runtime errors', () => {
+    const issue = classifyPrivateRuntimeIssue('Storage Worker Communication Error: operation timed out after 60000 ms')
+    expect(issue.kind).toBe('stalled')
+    expect(issue.title).toContain('ZK engine')
+  })
 })

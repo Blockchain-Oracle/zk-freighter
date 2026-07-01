@@ -171,7 +171,7 @@ export function HomeScreen({ identity, network, balance, onNav }: HomeScreenProp
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
           <Pill label={loading ? 'SYNCING' : 'SYNCED'} tone={loading ? 'warn' : 'pos'} dot pulse={loading} />
-          <button onClick={refresh} title="Refresh notes" style={{ display: 'grid', placeItems: 'center', width: 36, height: 36, borderRadius: 11, border: '1px solid var(--bd)', background: 'var(--card)', color: 'var(--tx2)', cursor: 'pointer', fontSize: 14 }}>⟳</button>
+          <button onClick={() => refresh({ syncBeforeRead: true })} title="Refresh notes" style={{ display: 'grid', placeItems: 'center', width: 36, height: 36, borderRadius: 11, border: '1px solid var(--bd)', background: 'var(--card)', color: 'var(--tx2)', cursor: 'pointer', fontSize: 14 }}>⟳</button>
         </div>
       </div>
 

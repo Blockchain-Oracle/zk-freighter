@@ -23,6 +23,7 @@ function sumUnspentStroops(notes: readonly XlmShieldedNote[]): bigint {
 export async function runLoadBalances(payload: { readonly [key: string]: unknown }): Promise<DappBalances> {
   const mnemonic = String(payload['mnemonic'] ?? '')
   const network = asNetworkKey(payload['network'])
+  const syncBeforeRead = payload['syncBeforeRead'] === true
   const identity = deriveWalletIdentity(mnemonic, network)
 
   // Public load is isolated so a Horizon failure can't take down a good shielded
@@ -36,7 +37,7 @@ export async function runLoadBalances(payload: { readonly [key: string]: unknown
     }))
     .catch((error: unknown) => ({ ok: false, xlm: 0n, usdc: 0n, error: error instanceof Error ? error.message : String(error) }))
 
-  const reports = await loadXlmShieldedNoteSet({ identity, network, assets: ['XLM', 'USDC'], syncBeforeRead: true })
+  const reports = await loadXlmShieldedNoteSet({ identity, network, assets: ['XLM', 'USDC'], syncBeforeRead })
   const xlm = reports.XLM
   const usdc = reports.USDC
   const pub = await publicScan

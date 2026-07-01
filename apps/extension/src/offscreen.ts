@@ -4,6 +4,7 @@ import { browser } from 'wxt/browser'
 import { runPrivateTransfer, runUnshieldWithdrawal } from './offscreen-private-actions'
 import { runConfidentialOp } from './offscreen-confidential-actions'
 import { runLoadBalances } from './offscreen-balance-actions'
+import { runAspInsert } from './offscreen-asp-actions'
 import { runDiscoverLookup, runDiscoverPublish } from './offscreen-discover-actions'
 import { runDisclosure, runDisclosureVerify } from './offscreen-disclosure-actions'
 import { serializeChromeMessage } from './chrome-message-serialization'
@@ -189,20 +190,6 @@ async function runShieldDeposit(payload: { readonly [key: string]: unknown }) {
     amountStroops,
     timeoutMs,
     runAspSetup: true,
-  })
-}
-
-async function runAspInsert(payload: { readonly [key: string]: unknown }) {
-  const mnemonic = typeof payload.mnemonic === 'string' ? payload.mnemonic : ''
-  const network = asNetworkKey(payload.network)
-
-  if (!mnemonic) {
-    throw new Error('Missing extension wallet mnemonic.')
-  }
-
-  return insertAspMembershipLeaf({
-    identity: deriveWalletIdentity(mnemonic, network),
-    network,
   })
 }
 

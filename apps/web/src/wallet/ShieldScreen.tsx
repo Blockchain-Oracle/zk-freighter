@@ -150,7 +150,7 @@ export function ShieldScreen({ identity, network, balance, initialTab = 'shield'
         error: result.error ?? result.blockers[0],
       })
       setReport(normalize(result))
-      if (result.status === 'submitted') balance.refresh()
+      if (result.status === 'submitted') balance.refresh({ syncBeforeRead: true })
     } catch (cause) {
       // submit fns return failed/blocked reports rather than throwing — a throw is a genuine
       // fault; leave report null so ProofRun shows its honest "lost track" branch.

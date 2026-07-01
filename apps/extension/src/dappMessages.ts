@@ -100,6 +100,7 @@ export type DappRuntimeMessage =
     }
   | {
       readonly type: typeof dappMessageTypes.balances
+      readonly syncBeforeRead?: boolean
     }
   | {
       readonly type: typeof dappMessageTypes.demoFundingStatus

@@ -125,7 +125,7 @@ async function main() {
 async function waitForShieldedBalance(cdp, pageUrl, targetAsset, minimumStroops) {
   let latest
   for (let attempt = 1; attempt <= 8; attempt += 1) {
-    latest = await runtimeMessage(cdp, pageUrl, { type: 'zkf.extension.balances' })
+    latest = await runtimeMessage(cdp, pageUrl, { type: 'zkf.extension.balances', syncBeforeRead: true })
     const balances = latest?.balances
     const raw = targetAsset === 'USDC' ? balances?.shieldedUsdcStroops : balances?.shieldedXlmStroops
     const otherRaw = targetAsset === 'USDC' ? balances?.shieldedXlmStroops : balances?.shieldedUsdcStroops

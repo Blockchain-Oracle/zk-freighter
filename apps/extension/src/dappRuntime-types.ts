@@ -28,7 +28,7 @@ export interface ExtensionShieldRequest {
 
 export interface ExtensionAspInsertRequest { readonly mnemonic: string; readonly network: NetworkKey }
 export interface ExtensionUsdcTrustlineRequest { readonly mnemonic: string; readonly network: NetworkKey }
-export interface ExtensionBalancesRequest { readonly mnemonic: string; readonly network: NetworkKey }
+export interface ExtensionBalancesRequest { readonly mnemonic: string; readonly network: NetworkKey; readonly syncBeforeRead?: boolean }
 export interface ExtensionDiscoverRequest { readonly network: NetworkKey; readonly ownerAddress: string }
 export interface ExtensionDiscoverPublishRequest { readonly mnemonic: string; readonly network: NetworkKey }
 
