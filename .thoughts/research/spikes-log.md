@@ -2309,3 +2309,23 @@ These are upload/install estimates only. They do not include contract-instance d
   - XLM shield transaction: `0673517bef207df4c612fcb033536cd9b854db857d31d67bd55ef1a6f0e8cb08`; [stellar.expert](https://stellar.expert/explorer/testnet/tx/0673517bef207df4c612fcb033536cd9b854db857d31d67bd55ef1a6f0e8cb08).
   - Result: `proofGenerated: true`, `transactionSubmitted: true`, `durationMs: 14393`, attempts `1`.
   - Balance scan result: `shieldedXlmStroops: 1000000`, `shieldedUsdcStroops: 0`, `noteCount: 1`, blockers `[]`.
+
+## 2026-07-01 — Foreground proving storage timeout widened for Zen/web deposit
+
+- **Symptom:** Zen/web XLM shield attempts submitted the ASP setup transaction, then failed before proof generation with `Storage Worker Communication Error: operation timed out after 10000 ms`. The visible progress stopped at `Building witness inputs…` after `Waiting to sync N ledger(s)` and `Processing pending pool events…`.
+- **Runtime observation:** bootnode requests to `http://127.0.0.1:8788/rpc` returned HTTP 200 and advanced the local cursor; the failure happened after event fetch, inside the storage-worker witness/prerequisite loop.
+- **Fix:** kept the foreground raw-event sync path, but moved both `ProcessRawEvents` and `Transact` witness-input storage requests onto a shared 60s proving-step worker budget. Web shielded balance reads now call `syncBeforeRead` before reading XLM/USDC notes, and core note-set defaults were widened to a 90s runtime job timeout with a 60s pool-sync timeout.
+- **Build:** rebuilt Nethermind browser assets with Homebrew LLVM and restaged with `pnpm prover:stage`. Tracked reproducibility patch updated: `patches/nethermind/foreground-raw-sync.patch`.
+- **Verification:**
+  - `CI=true pnpm --filter @zk-fighter/web build`
+  - `CI=true pnpm --filter @zk-fighter/extension build:local`
+  - `node scripts/check-file-size.mjs`
+  - `CI=true pnpm --filter @zk-fighter/core test -- xlm-private xlm-private-timeout`
+  - `cargo test -p state unsupported_raw_events_do_not_block_processing`
+- **Runtime smoke:** `CI=true pnpm extension:quickshield`
+  - User address: `GBNIA7KFYAZKLYMKBRVGCVOZLDHSW4I3X6VMKZA3IV26I3L7ZGYVJQOV`.
+  - Funding transaction: `3e691915228614cf96f53e02b7373580e4bd79fcbdef12ef6b853077f82a9be5`.
+  - ASP insert transaction: `16f07ade1dd7bb6302850132cfd9a535ddaf7983c0c9510b28954d95aa7f5b17`; [stellar.expert](https://stellar.expert/explorer/testnet/tx/16f07ade1dd7bb6302850132cfd9a535ddaf7983c0c9510b28954d95aa7f5b17).
+  - XLM shield transaction: `d2c8fd0ff44feacf4d7461a564b8ad361b788dbf662d331ef18be087079e7bc0`; [stellar.expert](https://stellar.expert/explorer/testnet/tx/d2c8fd0ff44feacf4d7461a564b8ad361b788dbf662d331ef18be087079e7bc0).
+  - Result: `proofGenerated: true`, `transactionSubmitted: true`, `durationMs: 15578`, attempts `1`.
+  - Balance scan result: `shieldedXlmStroops: 1000000`, `shieldedUsdcStroops: 0`, `noteCount: 1`, blockers `[]`.

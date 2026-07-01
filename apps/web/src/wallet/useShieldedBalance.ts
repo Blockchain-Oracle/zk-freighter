@@ -44,7 +44,7 @@ export function useShieldedBalance(identity: WalletIdentity, network: NetworkKey
     let cancelled = false
     void (async () => {
       try {
-        const reports = await loadXlmShieldedNoteSet({ identity, network, assets: ['XLM', 'USDC'] })
+        const reports = await loadXlmShieldedNoteSet({ identity, network, assets: ['XLM', 'USDC'], syncBeforeRead: true })
         if (!cancelled) {
           setResult({ key: requestKey, xlm: reports.XLM ?? null, usdc: reports.USDC ?? null, error: null })
         }

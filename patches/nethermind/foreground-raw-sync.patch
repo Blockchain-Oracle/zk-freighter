@@ -50,6 +50,10 @@ diff --git a/app/crates/platforms/web/src/client/mod.rs b/app/crates/platforms/w
 --- a/app/crates/platforms/web/src/client/mod.rs
 +++ b/app/crates/platforms/web/src/client/mod.rs
 @@
+ const WORKER_PING_TIMEOUT_MS: u32 = 60_000;
++pub(super) const STORAGE_PROVING_STEP_TIMEOUT_MS: u32 = 60_000;
+ const PROVER_REQUEST_TIMEOUT_MS: u32 = 30 * 60 * 1_000;
+@@
      pub(super) async fn process_pending_events(&self) -> Result<(), JsError> {
          match self
              .storage_request(StorageWorkerRequest::ProcessPending, 60_000)
@@ -62,7 +66,10 @@ diff --git a/app/crates/platforms/web/src/client/mod.rs b/app/crates/platforms/w
 +
 +    pub(super) async fn process_pending_raw_events(&self) -> Result<(), JsError> {
 +        match self
-+            .storage_request(StorageWorkerRequest::ProcessRawEvents, 10_000)
++            .storage_request(
++                StorageWorkerRequest::ProcessRawEvents,
++                STORAGE_PROVING_STEP_TIMEOUT_MS,
++            )
 +            .await?
 +        {
 +            StorageWorkerResponse::Saved => Ok(()),
@@ -91,9 +98,24 @@ diff --git a/app/crates/platforms/web/src/client/transact.rs b/app/crates/platfo
 --- a/app/crates/platforms/web/src/client/transact.rs
 +++ b/app/crates/platforms/web/src/client/transact.rs
 @@
+-    WebClient, emit_progress, parse_ext_amount_decimal, parse_input_note_ids,
++    STORAGE_PROVING_STEP_TIMEOUT_MS, WebClient, emit_progress, parse_ext_amount_decimal, parse_input_note_ids,
+     parse_note_amount_decimal, parse_output_amounts, parse_output_recipient_keys,
+     parse_u32_decimal,
+ };
+@@
 -            let req = TransactRequest {
 +            let requires_note_derivation = !step.input_commitments.is_empty();
 +            let req = TransactRequest {
+@@
+-                .storage_request(StorageWorkerRequest::Transact(req), 5_000)
++                .storage_request(
++                    StorageWorkerRequest::Transact(req),
++                    STORAGE_PROVING_STEP_TIMEOUT_MS,
++                )
+                 .await?
+             {
+                 StorageWorkerResponse::TransactParams(p) => break p,
 @@
 -                    self.sync_pool_events().await?;
 +                    if requires_note_derivation {

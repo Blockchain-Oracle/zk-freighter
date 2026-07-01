@@ -17,9 +17,9 @@ import type {
 export type XlmShieldedNoteSetReport = Partial<Record<AssetCode, XlmNotesReport>>
 
 const shieldedAssets: readonly AssetCode[] = ['XLM', 'USDC']
-const defaultRuntimeJobTimeoutMs = 35_000
+const defaultRuntimeJobTimeoutMs = 90_000
 const defaultStorageStepTimeoutMs = 10_000
-const defaultPoolSyncTimeoutMs = 25_000
+const defaultPoolSyncTimeoutMs = 60_000
 
 export async function loadXlmShieldedNotes(
   options: LoadXlmShieldedNotesOptions,
