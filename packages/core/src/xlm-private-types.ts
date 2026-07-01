@@ -78,6 +78,9 @@ export interface LoadXlmShieldedNotesOptions {
   readonly identity: WalletIdentity
   readonly network: NetworkKey
   readonly limit?: number
+  /** Foreground event sync is expensive; passive balance reads default to local notes. */
+  readonly syncBeforeRead?: boolean
+  readonly timeoutMs?: number
   readonly now?: () => number
   readonly importWebModule?: NethermindModuleImporter
 }

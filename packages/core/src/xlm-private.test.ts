@@ -80,11 +80,12 @@ describe('XLM private actions', () => {
     ])
   })
 
-  it('syncs pool events before reading notes when the runtime exposes sync', async () => {
+  it('syncs pool events before reading notes when explicitly requested', async () => {
     const calls: string[] = []
     await loadXlmShieldedNotes({
       identity,
       network: 'testnet',
+      syncBeforeRead: true,
       importWebModule: importer({
         deriveAndSaveUserKeys: async () => undefined,
         syncPoolEvents: async () => {

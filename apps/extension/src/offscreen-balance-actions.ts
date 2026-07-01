@@ -1,7 +1,7 @@
 import {
   deriveWalletIdentity,
   loadPublicStellarBalances,
-  loadXlmShieldedNotes,
+  loadXlmShieldedNoteSet,
   type NetworkKey,
   type XlmShieldedNote,
 } from '@zk-fighter/core'
@@ -36,21 +36,22 @@ export async function runLoadBalances(payload: { readonly [key: string]: unknown
     }))
     .catch((error: unknown) => ({ ok: false, xlm: 0n, usdc: 0n, error: error instanceof Error ? error.message : String(error) }))
 
-  const xlm = await loadXlmShieldedNotes({ identity, network, asset: 'XLM' })
-  const usdc = await loadXlmShieldedNotes({ identity, network, asset: 'USDC' })
+  const reports = await loadXlmShieldedNoteSet({ identity, network, assets: ['XLM', 'USDC'] })
+  const xlm = reports.XLM
+  const usdc = reports.USDC
   const pub = await publicScan
 
-  const shieldedOk = xlm.status === 'loaded' && usdc.status === 'loaded'
-  const rawBlockers = [...xlm.blockers, ...usdc.blockers]
+  const shieldedOk = xlm?.status === 'loaded' && usdc?.status === 'loaded'
+  const rawBlockers = [...(xlm?.blockers ?? []), ...(usdc?.blockers ?? [])]
   if (!pub.ok) rawBlockers.push(`Public balance unavailable${pub.error ? `: ${pub.error}` : '.'}`)
   const blockers = uniqueBlockers(rawBlockers)
 
   return {
-    shieldedXlmStroops: sumUnspentStroops(xlm.notes).toString(),
-    shieldedUsdcStroops: sumUnspentStroops(usdc.notes).toString(),
+    shieldedXlmStroops: sumUnspentStroops(xlm?.notes ?? []).toString(),
+    shieldedUsdcStroops: sumUnspentStroops(usdc?.notes ?? []).toString(),
     publicXlmStroops: pub.xlm.toString(),
     publicUsdcStroops: pub.usdc.toString(),
-    noteCount: xlm.notes.length + usdc.notes.length,
+    noteCount: (xlm?.notes.length ?? 0) + (usdc?.notes.length ?? 0),
     shieldedOk,
     publicOk: pub.ok,
     blockers,

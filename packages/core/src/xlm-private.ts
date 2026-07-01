@@ -11,12 +11,12 @@ import {
   defaultNow,
   explorerUrl,
   keyHex,
-  parseNote,
   poolIdForAsset,
   prepareClient,
   proofWasGenerated,
 } from './xlm-private-support'
 import { isShieldedAssetEnabled } from './networks'
+import { loadXlmShieldedNotes as loadNotesForAsset } from './xlm-notes'
 import type {
   LoadXlmShieldedNotesOptions,
   SubmitXlmPrivateTransferOptions,
@@ -28,68 +28,7 @@ import type {
   XlmPrivateSubmitReport,
 } from './xlm-private-types'
 
-export async function loadXlmShieldedNotes(
-  options: LoadXlmShieldedNotesOptions,
-): Promise<XlmNotesReport> {
-  const now = options.now ?? defaultNow
-  const asset = options.asset ?? 'XLM'
-  const started = now()
-  const poolContractId = poolIdForAsset(options.network, asset)
-
-  if (!poolContractId || !isShieldedAssetEnabled(options.network, asset)) {
-    return notesBlocked(`${asset} pool is not configured for this network.`)
-  }
-
-  try {
-    const notes = await runWithNethermindWebClient(options.network, async (client) => {
-      const ready = await prepareClient(options, client)
-      if (!ready.getUnspentUserNotes) {
-        throw new Error('Nethermind WebClient does not expose pool-filtered note loading')
-      }
-
-      await ready.syncPoolEvents?.()
-      const raw = await ready.getUnspentUserNotes(poolContractId, options.identity.stellarPublicKey)
-      return Array.isArray(raw) ? raw.map(parseNote).filter((note) => note !== undefined) : []
-    }, options.importWebModule)
-
-    return {
-      status: 'loaded',
-      asset,
-      durationMs: Math.round(now() - started),
-      network: options.network,
-      poolContractId,
-      userAddress: options.identity.stellarPublicKey,
-      notes,
-      blockers: [],
-    }
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'unknown note loading error'
-    return {
-      status: 'failed',
-      asset,
-      durationMs: Math.round(now() - started),
-      network: options.network,
-      poolContractId,
-      userAddress: options.identity.stellarPublicKey,
-      notes: [],
-      blockers: [message],
-      error: message,
-    }
-  }
-
-  function notesBlocked(blocker: string): XlmNotesReport {
-    return {
-      status: 'blocked',
-      asset,
-      durationMs: Math.round(now() - started),
-      network: options.network,
-      poolContractId,
-      userAddress: options.identity.stellarPublicKey,
-      notes: [],
-      blockers: [blocker],
-    }
-  }
-}
+export { loadXlmShieldedNoteSet, loadXlmShieldedNotes } from './xlm-notes'
 
 async function submitXlmPrivateAction(
   action: XlmPrivateAction,
@@ -288,5 +227,5 @@ export async function submitXlmUnshieldWithdrawal(
 export function loadAssetShieldedNotes(
   options: LoadXlmShieldedNotesOptions & { readonly asset: AssetCode },
 ): Promise<XlmNotesReport> {
-  return loadXlmShieldedNotes(options)
+  return loadNotesForAsset(options)
 }

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import {
-  loadXlmShieldedNotes,
+  loadXlmShieldedNoteSet,
   type NetworkKey,
   type WalletIdentity,
   type XlmNotesReport,
@@ -44,10 +44,9 @@ export function useShieldedBalance(identity: WalletIdentity, network: NetworkKey
     let cancelled = false
     void (async () => {
       try {
-        const xlm = await loadXlmShieldedNotes({ identity, network, asset: 'XLM' })
-        const usdc = await loadXlmShieldedNotes({ identity, network, asset: 'USDC' })
+        const reports = await loadXlmShieldedNoteSet({ identity, network, assets: ['XLM', 'USDC'] })
         if (!cancelled) {
-          setResult({ key: requestKey, xlm, usdc, error: null })
+          setResult({ key: requestKey, xlm: reports.XLM ?? null, usdc: reports.USDC ?? null, error: null })
         }
       } catch (cause: unknown) {
         if (!cancelled) {

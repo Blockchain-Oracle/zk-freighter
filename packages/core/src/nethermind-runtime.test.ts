@@ -14,7 +14,7 @@ describe('loadNethermindWebClient', () => {
     Object.defineProperty(globalThis, 'navigator', { configurable: true, value: originalNavigator })
   })
 
-  it('disables the Nethermind background event listener for explicit app-managed sync', async () => {
+  it('enables the Nethermind background event listener for bootnode-backed indexing', async () => {
     const client = {} as NethermindWebClient
     const configs: unknown[] = []
 
@@ -41,14 +41,12 @@ describe('loadNethermindWebClient', () => {
     expect(configs[0]).toMatchObject({
       rpcUrl: expectedRpcUrl,
       bootnodeUrl: undefined,
-      backgroundEvents: false,
+      backgroundEvents: true,
     })
   })
 
   it('does not reuse a cached client across network changes', async () => {
     const configs: unknown[] = []
-    let clientFreed = 0
-    let handleFreed = 0
 
     class TestConfig {
       constructor(readonly rpcUrl: string) {
@@ -60,8 +58,7 @@ describe('loadNethermindWebClient', () => {
       default: async () => undefined,
       Config: TestConfig,
       mainThread: async () => ({
-        webClient: { free: () => { clientFreed += 1 } } as NethermindWebClient,
-        free: () => { handleFreed += 1 },
+        webClient: {} as NethermindWebClient,
       }),
     })
 
@@ -71,8 +68,6 @@ describe('loadNethermindWebClient', () => {
     expect(configs).toHaveLength(2)
     expect(configs[0]).toMatchObject({ rpcUrl: expectedRpcUrl })
     expect(configs[1]).toMatchObject({ rpcUrl: 'https://mainnet.sorobanrpc.com' })
-    expect(clientFreed).toBe(1)
-    expect(handleFreed).toBe(1)
   })
 
   it('reports a friendly busy error when another browser tab holds the runtime lock', async () => {
@@ -114,6 +109,32 @@ describe('loadNethermindWebClient', () => {
     await loadNethermindWebClient('mainnet', importer)
 
     expect(initCount).toBe(1)
+  })
+
+  it('suppresses the benign Nethermind logger double-init console error', async () => {
+    const originalError = console.error
+    const messages: string[] = []
+    console.error = (...args: unknown[]) => {
+      messages.push(args.map((arg) => String(arg)).join(' '))
+    }
+
+    const importer = async (): Promise<NethermindWebModule> => ({
+      default: async () => undefined,
+      Config: class TestConfig {
+        constructor(readonly rpcUrl: string) {}
+      },
+      mainThread: async () => {
+        console.error('attempted to set a logger after the logging system was already initialized')
+        return { webClient: {} as NethermindWebClient }
+      },
+    })
+
+    try {
+      await loadNethermindWebClient('testnet', importer)
+      expect(messages).toEqual([])
+    } finally {
+      console.error = originalError
+    }
   })
 
   it('serializes Nethermind client operations through the shared queue', async () => {
@@ -158,13 +179,12 @@ describe('loadNethermindWebClient', () => {
     let markFirstStarted!: () => void
     const firstCanFinish = new Promise<void>((resolve) => { releaseFirst = resolve })
     const firstStarted = new Promise<void>((resolve) => { markFirstStarted = resolve })
-    let clientFreed = 0
     const importer = async (): Promise<NethermindWebModule> => ({
       default: async () => undefined,
       Config: class TestConfig {
         constructor(readonly rpcUrl: string) {}
       },
-      mainThread: async () => ({ webClient: { free: () => { clientFreed += 1 } } as NethermindWebClient }),
+      mainThread: async () => ({ webClient: {} as NethermindWebClient }),
     })
 
     const first = runWithNethermindWebClient('testnet', async () => {
@@ -175,7 +195,6 @@ describe('loadNethermindWebClient', () => {
 
     await firstStarted
     await restartNethermindWebClientCache()
-    expect(clientFreed).toBe(1)
 
     await expect(runWithNethermindWebClient('mainnet', async () => 'second', importer)).resolves.toBe('second')
 

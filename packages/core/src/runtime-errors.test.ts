@@ -13,4 +13,10 @@ describe('private runtime errors', () => {
     expect(issue.kind).toBe('rpc-sync-gap')
     expect(privateRuntimeErrorText(issue.raw)).toContain('RPC window')
   })
+
+  it('classifies stalled local private runtime timeouts separately from network errors', () => {
+    const issue = classifyPrivateRuntimeIssue('ZKF_RUNTIME_TIMEOUT: XLM shielded note scan timed out after 20s.')
+    expect(issue.kind).toBe('stalled')
+    expect(issue.retryable).toBe(true)
+  })
 })

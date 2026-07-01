@@ -1,4 +1,4 @@
-export type PrivateRuntimeIssueKind = 'busy' | 'rpc-sync-gap' | 'syncing' | 'network' | 'unknown'
+export type PrivateRuntimeIssueKind = 'busy' | 'rpc-sync-gap' | 'syncing' | 'stalled' | 'network' | 'unknown'
 
 export interface PrivateRuntimeIssue {
   readonly kind: PrivateRuntimeIssueKind
@@ -37,6 +37,16 @@ export function classifyPrivateRuntimeIssue(error: unknown): PrivateRuntimeIssue
       kind: 'syncing',
       title: 'Pool is still syncing.',
       body: 'The shielded pool indexer is catching up. Try again after a few ledgers.',
+      retryable: true,
+      raw: message,
+    }
+  }
+
+  if (/ZKF_RUNTIME_TIMEOUT|private engine.*timed out|note scan.*timed out|local private engine/i.test(message)) {
+    return {
+      kind: 'stalled',
+      title: 'ZK engine did not answer.',
+      body: 'The local private engine stalled while reading shielded notes. Retry after it restarts; if it persists, close other ZK Fighter tabs and reload.',
       retryable: true,
       raw: message,
     }

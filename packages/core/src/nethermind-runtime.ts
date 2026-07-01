@@ -23,7 +23,8 @@ export type {
 export const NETHERMIND_WEB_MODULE_PATH = '/js/web.js'
 
 const defaultImporterKey = 'default'
-const backgroundEventListenerEnabled = false
+const backgroundEventListenerEnabled = true
+const pendingDisposeTimeoutMs = 1_000
 const clientCache = new Map<string, RuntimeClientEntry>()
 const moduleInitCache = new Map<string, Promise<NethermindWebModule>>()
 const clientLocks = new Map<string, RuntimeLock>()
@@ -121,16 +122,14 @@ async function loadFreshNethermindWebClient(
   let handle: NethermindMainThreadHandle | undefined
   try {
     const networkConfig = getNetworkConfig(network)
-    const started = await captureRuntimeWorkers(() => mod.mainThread(
+    const started = await captureRuntimeWorkers(() => suppressNethermindLoggerInitError(() => mod.mainThread(
       new mod.Config(networkConfig.rpcUrl, networkConfig.bootnodeUrl, backgroundEventListenerEnabled),
-    ))
+    )))
     handle = started.result
     const client = handle.webClient
     return {
       client,
       dispose: once(() => {
-        disposeRuntimeObject(client)
-        disposeRuntimeObject(handle)
         const terminated = terminateRuntimeWorkers(started.workers)
         lock.release()
         if (clientLocks.get(cacheKey) === lock) clientLocks.delete(cacheKey)
@@ -138,7 +137,6 @@ async function loadFreshNethermindWebClient(
       }),
     }
   } catch (error) {
-    disposeRuntimeObject(handle)
     lock.release()
     clientLocks.delete(cacheKey)
     throw error
@@ -184,17 +182,44 @@ async function disposeAllCachedClients(options: { readonly clearModule?: boolean
 }
 
 async function disposeCachedClient(key: string, entry: RuntimeClientEntry): Promise<number> {
-  const dispose = await entry.dispose.catch(() => undefined)
+  const dispose = await settleWithin(entry.dispose.catch(() => undefined), pendingDisposeTimeoutMs)
+  if (!dispose) {
+    void entry.dispose
+      .then((lateDispose) => waitForRuntimeWorkersToClose(lateDispose()))
+      .catch((error) => console.warn('[nethermind-runtime] late dispose failed', error))
+    if (clientCache.get(key) === entry) clientCache.delete(key)
+    return 0
+  }
   const terminated = dispose?.() ?? 0
   if (clientCache.get(key) === entry) clientCache.delete(key)
   return terminated
 }
 
-function disposeRuntimeObject(value: { free?: () => void } | undefined): void {
+async function settleWithin<T>(promise: Promise<T>, timeoutMs: number): Promise<T | undefined> {
+  let timer: ReturnType<typeof setTimeout> | undefined
   try {
-    value?.free?.()
-  } catch (error) {
-    console.warn('[nethermind-runtime] dispose failed', error)
+    return await Promise.race([
+      promise,
+      new Promise<undefined>((resolve) => {
+        timer = setTimeout(() => resolve(undefined), timeoutMs)
+      }),
+    ])
+  } finally {
+    if (timer) clearTimeout(timer)
+  }
+}
+
+async function suppressNethermindLoggerInitError<T>(create: () => Promise<T>): Promise<T> {
+  const original = console.error
+  console.error = (...args: unknown[]) => {
+    const message = args.map((arg) => String(arg)).join(' ')
+    if (/attempted to set a logger after the logging system was already initialized/i.test(message)) return
+    original(...args)
+  }
+  try {
+    return await create()
+  } finally {
+    console.error = original
   }
 }
 
