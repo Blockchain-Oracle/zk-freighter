@@ -14,7 +14,7 @@ describe('loadNethermindWebClient', () => {
     Object.defineProperty(globalThis, 'navigator', { configurable: true, value: originalNavigator })
   })
 
-  it('enables the Nethermind background event listener for bootnode-backed indexing', async () => {
+  it('disables the Nethermind background event listener so foreground jobs own sync', async () => {
     const client = {} as NethermindWebClient
     const configs: unknown[] = []
 
@@ -41,7 +41,7 @@ describe('loadNethermindWebClient', () => {
     expect(configs[0]).toMatchObject({
       rpcUrl: expectedRpcUrl,
       bootnodeUrl: undefined,
-      backgroundEvents: true,
+      backgroundEvents: false,
     })
   })
 

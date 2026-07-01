@@ -24,7 +24,7 @@ export type {
 export const NETHERMIND_WEB_MODULE_PATH = '/js/web.js'
 
 const defaultImporterKey = 'default'
-const backgroundEventListenerEnabled = true
+const backgroundEventListenerEnabled = false
 const pendingDisposeTimeoutMs = 1_000
 const clientCache = new Map<string, RuntimeClientEntry>()
 const moduleInitCache = new Map<string, Promise<NethermindWebModule>>()
