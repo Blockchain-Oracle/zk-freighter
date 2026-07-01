@@ -182,4 +182,39 @@ describe('loadNethermindWebClient', () => {
     releaseFirst()
     await expect(first).resolves.toBe('first')
   })
+
+  it('terminates Nethermind workers when the runtime is restarted', async () => {
+    const originalWorker = (globalThis as typeof globalThis & { Worker?: unknown }).Worker
+    let terminated = 0
+
+    class TestWorker {
+      constructor(readonly url: string) {}
+      terminate() {
+        terminated += 1
+      }
+    }
+
+    Object.defineProperty(globalThis, 'Worker', { configurable: true, value: TestWorker })
+
+    const importer = async (): Promise<NethermindWebModule> => ({
+      default: async () => undefined,
+      Config: class TestConfig {
+        constructor(readonly rpcUrl: string) {}
+      },
+      mainThread: async () => {
+        const WorkerCtor = (globalThis as typeof globalThis & { Worker: new (url: string) => TestWorker }).Worker
+        new WorkerCtor('/js/storage-worker.js')
+        new WorkerCtor('/js/prover-worker.js')
+        return { webClient: {} as NethermindWebClient }
+      },
+    })
+
+    try {
+      await loadNethermindWebClient('testnet', importer)
+      await restartNethermindWebClientCache()
+      expect(terminated).toBe(2)
+    } finally {
+      Object.defineProperty(globalThis, 'Worker', { configurable: true, value: originalWorker })
+    }
+  })
 })

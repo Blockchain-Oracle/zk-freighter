@@ -32,7 +32,7 @@ interface LoadResult {
  * fabricated balance. Lift this to the shell so the (expensive) prover load runs
  * once per identity/network.
  */
-export function useShieldedBalance(identity: WalletIdentity, network: NetworkKey): ShieldedBalanceState {
+export function useShieldedBalance(identity: WalletIdentity, network: NetworkKey, enabled = true): ShieldedBalanceState {
   const [tick, setTick] = useState(0)
   const [result, setResult] = useState<LoadResult | null>(null)
   const requestKey = `${identity.stellarPublicKey}:${network}:${tick}`
@@ -40,6 +40,7 @@ export function useShieldedBalance(identity: WalletIdentity, network: NetworkKey
   const refresh = useCallback(() => setTick((value) => value + 1), [])
 
   useEffect(() => {
+    if (!enabled) return
     let cancelled = false
     void (async () => {
       try {
@@ -65,11 +66,11 @@ export function useShieldedBalance(identity: WalletIdentity, network: NetworkKey
     return () => {
       cancelled = true
     }
-  }, [identity, network, requestKey])
+  }, [enabled, identity, network, requestKey])
 
-  const data = result?.key === requestKey ? result : null
+  const data = enabled && result?.key === requestKey ? result : null
   return {
-    loading: data === null,
+    loading: !enabled || data === null,
     xlm: data?.xlm ?? null,
     usdc: data?.usdc ?? null,
     error: data?.error ?? null,

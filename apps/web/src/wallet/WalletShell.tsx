@@ -79,7 +79,7 @@ export function WalletShell({
   const { theme, toggleTheme } = useTheme()
   // Loaded once for the whole shell so the expensive prover note-load is shared
   // across Home + Activity instead of re-running on every tab switch.
-  const balance = useShieldedBalance(identity, network)
+  const balance = useShieldedBalance(identity, network, !privateEngineSwitching)
 
   function navItemStyle(active: boolean) {
     return {

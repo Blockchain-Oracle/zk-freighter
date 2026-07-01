@@ -1,87 +1,26 @@
 import { getNetworkConfig, type NetworkKey } from './networks'
+import {
+  captureRuntimeWorkers,
+  terminateRuntimeWorkers,
+  waitForRuntimeWorkersToClose,
+} from './runtime-worker-capture'
+import type {
+  NethermindMainThreadHandle,
+  NethermindModuleImporter,
+  NethermindWebClient,
+  NethermindWebModule,
+} from './nethermind-runtime-types'
+
+export type {
+  NethermindMainThreadHandle,
+  NethermindModuleImporter,
+  NethermindPreparedProverTx,
+  NethermindWebClient,
+  NethermindWebModule,
+  PreparedSorobanTx,
+} from './nethermind-runtime-types'
 
 export const NETHERMIND_WEB_MODULE_PATH = '/js/web.js'
-
-export interface NethermindWebModule {
-  readonly default: () => Promise<unknown>
-  readonly Config: new (rpcUrl: string, bootnodeUrl?: string, backgroundEvents?: boolean) => unknown
-  readonly mainThread: (config: unknown) => Promise<NethermindMainThreadHandle>
-}
-
-export interface NethermindMainThreadHandle {
-  readonly webClient: NethermindWebClient
-  free?(): void
-}
-
-export interface PreparedSorobanTx {
-  readonly txXdr: string
-  readonly authEntries: readonly string[]
-  readonly latestLedger: number
-}
-
-export interface NethermindPreparedProverTx {
-  readonly proofUncompressed: readonly number[]
-  readonly extData: unknown
-  readonly prepared: unknown
-  readonly sorobanTx: PreparedSorobanTx
-}
-
-export interface NethermindWebClient {
-  free?(): void
-  deriveAndSaveUserKeys(address: string, signature: Uint8Array): Promise<void>
-  syncPoolEvents?(): Promise<void>
-  getUserNotes?(address: string, limit: number): Promise<unknown>
-  getUnspentUserNotes?(poolContractId: string, address: string): Promise<unknown>
-  prepareRegisterPublicKeys?(
-    poolContractId: string,
-    userAddress: string,
-    notePublicKeyHex: string,
-    encryptionPublicKeyHex: string,
-  ): Promise<PreparedSorobanTx>
-  getRecentPublicKeys?(limit: number): Promise<unknown>
-  generateSelectiveDisclosure?(
-    poolContractId: string,
-    userAddress: string,
-    selectedCommitmentHex: string,
-    authorityLabel: string,
-    authorityIdentityPayloadHex: string,
-    purpose: string,
-    contextNonce: bigint,
-    onStatus: (event: unknown) => void,
-  ): Promise<unknown | null>
-  verifySelectiveDisclosure?(receiptJson: string, expectedVkHash: string): Promise<unknown>
-  executeDeposit?(
-    poolContractId: string,
-    userAddress: string,
-    amount: bigint,
-    outputAmounts: readonly bigint[],
-    submit: (prepared: NethermindPreparedProverTx) => Promise<string>,
-    onStatus: (event: unknown) => void,
-  ): Promise<readonly string[] | null>
-  executeTransfer?(
-    poolContractId: string,
-    userAddress: string,
-    amount: bigint,
-    recipientNoteKeyHex: string,
-    recipientEncryptionKeyHex: string,
-    submit: (prepared: NethermindPreparedProverTx) => Promise<string>,
-    onStatus: (event: unknown) => void,
-  ): Promise<readonly string[] | null>
-  executeWithdraw?(
-    poolContractId: string,
-    userAddress: string,
-    withdrawRecipient: string,
-    amount: bigint,
-    submit: (prepared: NethermindPreparedProverTx) => Promise<string>,
-    onStatus: (event: unknown) => void,
-  ): Promise<readonly string[] | null>
-  aspState?(): Promise<unknown>
-  deriveAspUserLeaf?(membershipBlinding: bigint, notePublicKeyHex: string): Promise<unknown>
-  getASPSecret(address: string): Promise<unknown>
-  getUserKeys(address: string): Promise<unknown>
-}
-
-export type NethermindModuleImporter = () => Promise<NethermindWebModule>
 
 const defaultImporterKey = 'default'
 const backgroundEventListenerEnabled = false
@@ -97,8 +36,8 @@ interface RuntimeLock {
   release(): void
 }
 
-type RuntimeClientEntry = { readonly network: NetworkKey; readonly client: Promise<NethermindWebClient>; readonly dispose: Promise<() => void> }
-type LoadedRuntimeClient = { readonly client: NethermindWebClient; readonly dispose: () => void }
+type RuntimeClientEntry = { readonly network: NetworkKey; readonly client: Promise<NethermindWebClient>; readonly dispose: Promise<() => number> }
+type LoadedRuntimeClient = { readonly client: NethermindWebClient; readonly dispose: () => number }
 
 export async function importNethermindWebModule(): Promise<NethermindWebModule> {
   const moduleUrl =
@@ -118,7 +57,7 @@ export async function loadNethermindWebClient(
     return cached.client
   }
   if (cached) {
-    await disposeCachedClient(key, cached)
+    await waitForRuntimeWorkersToClose(await disposeCachedClient(key, cached))
     clientCache.delete(key)
   }
 
@@ -126,7 +65,7 @@ export async function loadNethermindWebClient(
   const entry: RuntimeClientEntry = {
     network,
     client: loading.then((runtime) => runtime.client),
-    dispose: loading.then((runtime) => runtime.dispose, () => () => undefined),
+    dispose: loading.then((runtime) => runtime.dispose, () => () => 0),
   }
   clientCache.set(key, entry)
   try {
@@ -182,17 +121,20 @@ async function loadFreshNethermindWebClient(
   let handle: NethermindMainThreadHandle | undefined
   try {
     const networkConfig = getNetworkConfig(network)
-    handle = await mod.mainThread(
+    const started = await captureRuntimeWorkers(() => mod.mainThread(
       new mod.Config(networkConfig.rpcUrl, networkConfig.bootnodeUrl, backgroundEventListenerEnabled),
-    )
+    ))
+    handle = started.result
     const client = handle.webClient
     return {
       client,
       dispose: once(() => {
         disposeRuntimeObject(client)
         disposeRuntimeObject(handle)
+        const terminated = terminateRuntimeWorkers(started.workers)
         lock.release()
         if (clientLocks.get(cacheKey) === lock) clientLocks.delete(cacheKey)
+        return terminated
       }),
     }
   } catch (error) {
@@ -234,16 +176,18 @@ export async function restartNethermindWebClientCache(options: { readonly clearM
 async function disposeAllCachedClients(options: { readonly clearModule?: boolean } = {}): Promise<void> {
   const entries = Array.from(clientCache.entries())
   clientCache.clear()
-  await Promise.all(entries.map(([key, entry]) => disposeCachedClient(key, entry)))
+  const terminated = await Promise.all(entries.map(([key, entry]) => disposeCachedClient(key, entry)))
   for (const lock of clientLocks.values()) lock.release()
   clientLocks.clear()
   if (options.clearModule) moduleInitCache.clear()
+  await waitForRuntimeWorkersToClose(terminated.reduce((sum, count) => sum + count, 0))
 }
 
-async function disposeCachedClient(key: string, entry: RuntimeClientEntry): Promise<void> {
+async function disposeCachedClient(key: string, entry: RuntimeClientEntry): Promise<number> {
   const dispose = await entry.dispose.catch(() => undefined)
-  dispose?.()
+  const terminated = dispose?.() ?? 0
   if (clientCache.get(key) === entry) clientCache.delete(key)
+  return terminated
 }
 
 function disposeRuntimeObject(value: { free?: () => void } | undefined): void {
@@ -254,12 +198,14 @@ function disposeRuntimeObject(value: { free?: () => void } | undefined): void {
   }
 }
 
-function once(fn: () => void): () => void {
+function once(fn: () => number): () => number {
   let called = false
+  let value = 0
   return () => {
-    if (called) return
+    if (called) return value
     called = true
-    fn()
+    value = fn()
+    return value
   }
 }
 
