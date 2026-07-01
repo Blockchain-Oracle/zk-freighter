@@ -10,6 +10,7 @@ import type {
   NethermindWebClient,
   NethermindWebModule,
 } from './nethermind-runtime-types'
+import { installNethermindEventFetchRouter } from './nethermind-fetch-router'
 
 export type {
   NethermindMainThreadHandle,
@@ -120,8 +121,13 @@ async function loadFreshNethermindWebClient(
   clientLocks.set(cacheKey, lock)
   const mod = await initializeNethermindWebModule(importer)
   let handle: NethermindMainThreadHandle | undefined
+  let restoreEventFetch: () => void = () => undefined
   try {
     const networkConfig = getNetworkConfig(network)
+    restoreEventFetch = installNethermindEventFetchRouter({
+      rpcUrl: networkConfig.rpcUrl,
+      bootnodeUrl: networkConfig.bootnodeUrl,
+    })
     const started = await captureRuntimeWorkers(() => suppressNethermindLoggerInitError(() => mod.mainThread(
       new mod.Config(networkConfig.rpcUrl, networkConfig.bootnodeUrl, backgroundEventListenerEnabled),
     )))
@@ -131,12 +137,14 @@ async function loadFreshNethermindWebClient(
       client,
       dispose: once(() => {
         const terminated = terminateRuntimeWorkers(started.workers)
+        restoreEventFetch()
         lock.release()
         if (clientLocks.get(cacheKey) === lock) clientLocks.delete(cacheKey)
         return terminated
       }),
     }
   } catch (error) {
+    restoreEventFetch()
     lock.release()
     clientLocks.delete(cacheKey)
     throw error
