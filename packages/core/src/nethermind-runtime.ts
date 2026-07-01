@@ -10,6 +10,7 @@ export interface NethermindWebModule {
 
 export interface NethermindMainThreadHandle {
   readonly webClient: NethermindWebClient
+  free?(): void
 }
 
 export interface PreparedSorobanTx {
@@ -26,6 +27,7 @@ export interface NethermindPreparedProverTx {
 }
 
 export interface NethermindWebClient {
+  free?(): void
   deriveAndSaveUserKeys(address: string, signature: Uint8Array): Promise<void>
   syncPoolEvents?(): Promise<void>
   getUserNotes?(address: string, limit: number): Promise<unknown>
@@ -83,16 +85,20 @@ export type NethermindModuleImporter = () => Promise<NethermindWebModule>
 
 const defaultImporterKey = 'default'
 const backgroundEventListenerEnabled = false
-const clientCache = new Map<string, { readonly network: NetworkKey; readonly client: Promise<NethermindWebClient> }>()
+const clientCache = new Map<string, RuntimeClientEntry>()
 const moduleInitCache = new Map<string, Promise<NethermindWebModule>>()
 const clientLocks = new Map<string, RuntimeLock>()
 const importerIds = new WeakMap<NethermindModuleImporter, number>()
 let nextImporterId = 1
 let runtimeQueue: Promise<void> = Promise.resolve()
+let runtimeReset: Promise<void> = Promise.resolve()
 
 interface RuntimeLock {
   release(): void
 }
+
+type RuntimeClientEntry = { readonly network: NetworkKey; readonly client: Promise<NethermindWebClient>; readonly dispose: Promise<() => void> }
+type LoadedRuntimeClient = { readonly client: NethermindWebClient; readonly dispose: () => void }
 
 export async function importNethermindWebModule(): Promise<NethermindWebModule> {
   const moduleUrl =
@@ -112,14 +118,19 @@ export async function loadNethermindWebClient(
     return cached.client
   }
   if (cached) {
-    await releaseRuntimeLock(key)
+    await disposeCachedClient(key, cached)
     clientCache.delete(key)
   }
 
   const loading = loadFreshNethermindWebClient(network, importer, key)
-  clientCache.set(key, { network, client: loading })
+  const entry: RuntimeClientEntry = {
+    network,
+    client: loading.then((runtime) => runtime.client),
+    dispose: loading.then((runtime) => runtime.dispose, () => () => undefined),
+  }
+  clientCache.set(key, entry)
   try {
-    return await loading
+    return await entry.client
   } catch (error) {
     clientCache.delete(key)
     throw error
@@ -131,7 +142,10 @@ export async function runWithNethermindWebClient<T>(
   operation: (client: NethermindWebClient) => Promise<T>,
   importer: NethermindModuleImporter = importNethermindWebModule,
 ): Promise<T> {
-  const run = async () => operation(await loadNethermindWebClient(network, importer))
+  const run = async () => {
+    await runtimeReset
+    return operation(await loadNethermindWebClient(network, importer))
+  }
   const next = runtimeQueue.catch(() => undefined).then(run)
   runtimeQueue = next.then(() => undefined, () => undefined)
   return next
@@ -161,17 +175,28 @@ async function loadFreshNethermindWebClient(
   network: NetworkKey,
   importer: NethermindModuleImporter,
   cacheKey: string,
-): Promise<NethermindWebClient> {
+): Promise<LoadedRuntimeClient> {
   const lock = await acquireRuntimeLock(cacheKey)
   clientLocks.set(cacheKey, lock)
   const mod = await initializeNethermindWebModule(importer)
+  let handle: NethermindMainThreadHandle | undefined
   try {
     const networkConfig = getNetworkConfig(network)
-    const handle = await mod.mainThread(
+    handle = await mod.mainThread(
       new mod.Config(networkConfig.rpcUrl, networkConfig.bootnodeUrl, backgroundEventListenerEnabled),
     )
-    return handle.webClient
+    const client = handle.webClient
+    return {
+      client,
+      dispose: once(() => {
+        disposeRuntimeObject(client)
+        disposeRuntimeObject(handle)
+        lock.release()
+        if (clientLocks.get(cacheKey) === lock) clientLocks.delete(cacheKey)
+      }),
+    }
   } catch (error) {
+    disposeRuntimeObject(handle)
     lock.release()
     clientLocks.delete(cacheKey)
     throw error
@@ -195,24 +220,47 @@ function cacheKeyForImporter(importer: NethermindModuleImporter): string {
 }
 
 export function clearNethermindWebClientCache(options: { readonly clearModule?: boolean } = {}): void {
-  for (const lock of clientLocks.values()) lock.release()
-  clientCache.clear()
-  if (options.clearModule) moduleInitCache.clear()
-  clientLocks.clear()
+  void disposeAllCachedClients(options)
 }
 
 export async function restartNethermindWebClientCache(options: { readonly clearModule?: boolean } = {}): Promise<void> {
-  const restart = runtimeQueue.catch(() => undefined).then(() => {
-    clearNethermindWebClientCache(options)
-  })
-  runtimeQueue = restart.then(() => undefined, () => undefined)
+  void runtimeQueue.catch(() => undefined)
+  const restart = runtimeReset.catch(() => undefined).then(() => disposeAllCachedClients(options))
+  runtimeReset = restart.then(() => undefined, () => undefined)
+  runtimeQueue = runtimeReset
   await restart
 }
 
-async function releaseRuntimeLock(key: string): Promise<void> {
-  clientLocks.get(key)?.release()
-  clientLocks.delete(key)
-  await new Promise((resolve) => setTimeout(resolve, 0))
+async function disposeAllCachedClients(options: { readonly clearModule?: boolean } = {}): Promise<void> {
+  const entries = Array.from(clientCache.entries())
+  clientCache.clear()
+  await Promise.all(entries.map(([key, entry]) => disposeCachedClient(key, entry)))
+  for (const lock of clientLocks.values()) lock.release()
+  clientLocks.clear()
+  if (options.clearModule) moduleInitCache.clear()
+}
+
+async function disposeCachedClient(key: string, entry: RuntimeClientEntry): Promise<void> {
+  const dispose = await entry.dispose.catch(() => undefined)
+  dispose?.()
+  if (clientCache.get(key) === entry) clientCache.delete(key)
+}
+
+function disposeRuntimeObject(value: { free?: () => void } | undefined): void {
+  try {
+    value?.free?.()
+  } catch (error) {
+    console.warn('[nethermind-runtime] dispose failed', error)
+  }
+}
+
+function once(fn: () => void): () => void {
+  let called = false
+  return () => {
+    if (called) return
+    called = true
+    fn()
+  }
 }
 
 async function acquireRuntimeLock(key: string): Promise<RuntimeLock> {

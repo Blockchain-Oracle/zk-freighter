@@ -25,6 +25,7 @@ const offscreenDiscoverPublishMessageType = 'zkf.offscreen.discoverPublish'
 const offscreenDisclosureMessageType = 'zkf.offscreen.disclosure'
 const offscreenDisclosureVerifyMessageType = 'zkf.offscreen.disclosureVerify'
 let offscreenQueue: Promise<unknown> = Promise.resolve()
+let offscreenReset: Promise<void> = Promise.resolve()
 
 interface MessagePayload { readonly type?: string }
 
@@ -206,18 +207,25 @@ function parseBridgeAmountAtomic(value: string | undefined): bigint {
 }
 
 async function sendOffscreenMessage(message: { readonly type: string; readonly [key: string]: unknown }): Promise<unknown> {
-  offscreenQueue = offscreenQueue.catch(() => undefined).then(() => sendOffscreenMessageNow(message))
+  offscreenQueue = offscreenQueue.catch(() => undefined).then(async () => {
+    await offscreenReset
+    return sendOffscreenMessageNow(message)
+  })
   return offscreenQueue
 }
 
 async function resetOffscreenRuntime(): Promise<void> {
-  offscreenQueue = offscreenQueue.catch(() => undefined).then(async () => {
-    const offscreen = offscreenApi()
-    if (offscreen?.closeDocument === undefined) return
-    const hasDocument = offscreen.hasDocument === undefined ? true : await offscreen.hasDocument()
-    if (hasDocument) await offscreen.closeDocument()
-  })
-  await offscreenQueue
+  void offscreenQueue.catch(() => undefined)
+  offscreenReset = offscreenReset.catch(() => undefined).then(closeOffscreenDocument)
+  offscreenQueue = offscreenReset
+  await offscreenReset
+}
+
+async function closeOffscreenDocument(): Promise<void> {
+  const offscreen = offscreenApi()
+  if (offscreen?.closeDocument === undefined) return
+  const hasDocument = offscreen.hasDocument === undefined ? true : await offscreen.hasDocument()
+  if (hasDocument) await offscreen.closeDocument()
 }
 
 async function sendOffscreenMessageNow(message: { readonly type: string; readonly [key: string]: unknown }): Promise<unknown> {

@@ -30,9 +30,14 @@ import { WalletShell } from './wallet/WalletShell'
 
 const networks = Object.keys(NETWORKS) as NetworkKey[]
 const themeStorageKey = 'zk-fighter:theme:v1'
+const networkStorageKey = 'zk-fighter:network:v1'
+
+function storedNetwork(): NetworkKey {
+  return window.localStorage.getItem(networkStorageKey) === 'mainnet' ? 'mainnet' : 'testnet'
+}
 
 function App() {
-  const [network, setNetwork] = useState<NetworkKey>('testnet')
+  const [network, setNetwork] = useState<NetworkKey>(() => storedNetwork())
   const [vault, setVault] = useState<EncryptedVault | null>(() => getStoredVault())
   const [passkeyEnvelope, setPasskeyEnvelope] = useState<PasskeyEnvelope | null>(() => getStoredPasskeyEnvelope())
   const [identity, setIdentity] = useState<WalletIdentity | null>(null)
@@ -139,6 +144,7 @@ function App() {
   }
 
   function changeNetwork(nextNetwork: NetworkKey) {
+    window.localStorage.setItem(networkStorageKey, nextNetwork)
     setPrivateEngineSwitching(true)
     void restartNethermindWebClientCache().finally(() => setPrivateEngineSwitching(false))
     setNetwork(nextNetwork)

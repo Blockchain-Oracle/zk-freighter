@@ -5,6 +5,7 @@ import type { ShieldedBalanceState } from './useShieldedBalance'
 import { formatStroops, sumSpendableStroops } from './format'
 import { describeNotesIssue } from './balanceIssue'
 import type { WalletScreen } from './screens'
+import { readWebActivity, subscribeWebActivity, type WebActivityRecord } from './webActivityStore'
 
 interface HomeScreenProps {
   identity: WalletIdentity
@@ -138,6 +139,7 @@ export function HomeScreen({ identity, network, balance, onNav }: HomeScreenProp
   const { loading, xlm, usdc, refresh } = balance
   const [publicBalances, setPublicBalances] = useState<PublicBalancesReport | null>(null)
   const [publicLoading, setPublicLoading] = useState(true)
+  const [activity, setActivity] = useState<readonly WebActivityRecord[]>(() => readWebActivity(network).slice(0, 3))
   const usdcShown = spendable(usdc, 2)
   const xlmShown = spendable(xlm, 3)
   const issue = describeNotesIssue(firstBlocker(balance))
@@ -153,6 +155,12 @@ export function HomeScreen({ identity, network, balance, onNav }: HomeScreenProp
       .finally(() => { if (!cancelled) setPublicLoading(false) })
     return () => { cancelled = true }
   }, [identity.stellarPublicKey, network])
+
+  useEffect(() => {
+    const load = () => setActivity(readWebActivity(network).slice(0, 3))
+    load()
+    return subscribeWebActivity(load)
+  }, [network])
 
   return (
     <section style={{ width: '100%', maxWidth: 1024, margin: '0 auto', padding: '30px 38px 40px', display: 'flex', flexDirection: 'column', gap: 24 }}>
@@ -196,9 +204,23 @@ export function HomeScreen({ identity, network, balance, onNav }: HomeScreenProp
           <button onClick={() => onNav('activity')} style={{ marginLeft: 'auto', background: 'none', border: 'none', fontSize: 11.5, color: 'var(--ac2)', fontWeight: 600, cursor: 'pointer' }}>See all →</button>
         </div>
         <div style={{ padding: '16px 2px', borderTop: '1px solid var(--bd)', fontSize: 12, color: 'var(--tx3)' }}>
-          {loading ? 'Loading shielded notes…' : 'Open Activity for your shielded notes and public boundary legs.'}
+          {activity.length > 0 ? activity.map((record) => <HomeActivityRow key={record.id} record={record} />) : loading ? 'Loading shielded notes…' : 'Open Activity for your shielded notes and public boundary legs.'}
         </div>
       </div>
     </section>
+  )
+}
+
+function HomeActivityRow({ record }: { readonly record: WebActivityRecord }) {
+  const amount = record.amountStroops && record.asset ? `${formatStroops(BigInt(record.amountStroops), record.asset === 'XLM' ? 3 : 2)} ${record.asset}` : record.asset
+  const label = record.intent === 'confidentialSetup' ? 'Confidential setup' : record.intent[0].toUpperCase() + record.intent.slice(1)
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderBottom: '1px solid var(--bd)' }}>
+      <span style={{ width: 27, height: 27, borderRadius: '50%', background: record.boundary === 'public' ? 'rgba(240,181,77,.14)' : 'rgba(94,124,250,.13)', color: record.boundary === 'public' ? 'var(--warn)' : 'var(--ac2)', display: 'grid', placeItems: 'center', flex: 'none' }}>{record.boundary === 'public' ? '↗' : '◆'}</span>
+      <span style={{ minWidth: 0 }}>
+        <span style={{ display: 'block', fontSize: 12.5, color: 'var(--tx)', fontWeight: 700 }}>{label}{amount ? ` · ${amount}` : ''}</span>
+        <span style={{ display: 'block', marginTop: 3, font: '600 9.5px/1 var(--fm)', color: 'var(--tx3)' }}>{record.status} · {record.boundary}</span>
+      </span>
+    </div>
   )
 }

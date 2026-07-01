@@ -47,6 +47,8 @@ describe('loadNethermindWebClient', () => {
 
   it('does not reuse a cached client across network changes', async () => {
     const configs: unknown[] = []
+    let clientFreed = 0
+    let handleFreed = 0
 
     class TestConfig {
       constructor(readonly rpcUrl: string) {
@@ -57,7 +59,10 @@ describe('loadNethermindWebClient', () => {
     const importer = async (): Promise<NethermindWebModule> => ({
       default: async () => undefined,
       Config: TestConfig,
-      mainThread: async () => ({ webClient: {} as NethermindWebClient }),
+      mainThread: async () => ({
+        webClient: { free: () => { clientFreed += 1 } } as NethermindWebClient,
+        free: () => { handleFreed += 1 },
+      }),
     })
 
     await loadNethermindWebClient('testnet', importer)
@@ -66,6 +71,8 @@ describe('loadNethermindWebClient', () => {
     expect(configs).toHaveLength(2)
     expect(configs[0]).toMatchObject({ rpcUrl: expectedRpcUrl })
     expect(configs[1]).toMatchObject({ rpcUrl: 'https://mainnet.sorobanrpc.com' })
+    expect(clientFreed).toBe(1)
+    expect(handleFreed).toBe(1)
   })
 
   it('reports a friendly busy error when another browser tab holds the runtime lock', async () => {
@@ -146,18 +153,18 @@ describe('loadNethermindWebClient', () => {
     expect(maxActive).toBe(1)
   })
 
-  it('queues runtime restarts behind active Nethermind operations', async () => {
+  it('preempts active scans when the runtime is restarted', async () => {
     let releaseFirst!: () => void
     let markFirstStarted!: () => void
-    let restartFinished = false
     const firstCanFinish = new Promise<void>((resolve) => { releaseFirst = resolve })
     const firstStarted = new Promise<void>((resolve) => { markFirstStarted = resolve })
+    let clientFreed = 0
     const importer = async (): Promise<NethermindWebModule> => ({
       default: async () => undefined,
       Config: class TestConfig {
         constructor(readonly rpcUrl: string) {}
       },
-      mainThread: async () => ({ webClient: {} as NethermindWebClient }),
+      mainThread: async () => ({ webClient: { free: () => { clientFreed += 1 } } as NethermindWebClient }),
     })
 
     const first = runWithNethermindWebClient('testnet', async () => {
@@ -165,15 +172,14 @@ describe('loadNethermindWebClient', () => {
       await firstCanFinish
       return 'first'
     }, importer)
-    const restart = restartNethermindWebClientCache().then(() => { restartFinished = true })
 
     await firstStarted
-    await Promise.resolve()
-    expect(restartFinished).toBe(false)
+    await restartNethermindWebClientCache()
+    expect(clientFreed).toBe(1)
+
+    await expect(runWithNethermindWebClient('mainnet', async () => 'second', importer)).resolves.toBe('second')
 
     releaseFirst()
     await expect(first).resolves.toBe('first')
-    await restart
-    expect(restartFinished).toBe(true)
   })
 })
