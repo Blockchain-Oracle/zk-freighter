@@ -35,3 +35,4 @@ For local testing, `pnpm extension:build:local` sets:
 
 - `VITE_ZKF_TESTNET_FUNDING_API_URL=http://127.0.0.1:8787`
 - `VITE_ZKF_TESTNET_BOOTNODE_URL=http://127.0.0.1:8788/rpc`
+- `VITE_ZKF_MAINNET_BOOTNODE_URL=http://127.0.0.1:8789/rpc`

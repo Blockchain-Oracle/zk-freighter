@@ -19,7 +19,8 @@ Local defaults:
 - web preview: `4173`
 - landing preview: `4174`
 - funding API: `8787`
-- bootnode: `8788`
+- bootnode testnet: `8788`
+- bootnode mainnet: `8789`
 
 The Node services also accept `PORT`, which is what most hosts set during deployment.
 
@@ -72,6 +73,7 @@ Production extension builds should provide deployed endpoints:
 ```bash
 VITE_ZKF_TESTNET_FUNDING_API_URL=https://api.<domain> \
 VITE_ZKF_TESTNET_BOOTNODE_URL=https://bootnode.<domain>/rpc \
+VITE_ZKF_MAINNET_BOOTNODE_URL=https://mainnet-bootnode.<domain>/rpc \
 pnpm extension:build
 ```
 

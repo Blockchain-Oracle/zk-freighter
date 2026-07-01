@@ -20,12 +20,14 @@ The web app does not require environment variables for normal local development.
 
 - funding API: `http://127.0.0.1:8787`
 - bootnode RPC: `http://127.0.0.1:8788/rpc`
+- mainnet bootnode RPC: `http://127.0.0.1:8789/rpc`
 
 For deployed builds, set service URLs at build time only when the deployment target requires non-local endpoints:
 
 ```bash
 VITE_ZKF_TESTNET_FUNDING_API_URL=https://api.<domain> \
 VITE_ZKF_TESTNET_BOOTNODE_URL=https://bootnode.<domain>/rpc \
+VITE_ZKF_MAINNET_BOOTNODE_URL=https://mainnet-bootnode.<domain>/rpc \
 pnpm web:build
 ```
 

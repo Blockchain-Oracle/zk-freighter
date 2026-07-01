@@ -37,6 +37,7 @@ function endpointFor(network: NetworkKey, env: RuntimeEnv, key: string): string 
   if (explicit) return trimTrailingSlash(explicit)
   if (key === 'FUNDING_API_URL' && network === 'testnet' && isLocalDevelopment()) return 'http://127.0.0.1:8787'
   if (key === 'BOOTNODE_URL' && network === 'testnet' && isLocalDevelopment()) return 'http://127.0.0.1:8788/rpc'
+  if (key === 'BOOTNODE_URL' && network === 'mainnet' && isLocalDevelopment()) return 'http://127.0.0.1:8789/rpc'
   return undefined
 }
 

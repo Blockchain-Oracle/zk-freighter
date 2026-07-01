@@ -26,9 +26,12 @@ describe('resolveRuntimeEndpoints', () => {
     })
   })
 
-  it('does not invent mainnet service endpoints', () => {
+  it('uses the local mainnet bootnode endpoint without enabling mainnet funding', () => {
     vi.stubGlobal('location', { hostname: 'localhost' })
 
-    expect(resolveRuntimeEndpoints('mainnet', {})).toEqual({})
+    expect(resolveRuntimeEndpoints('mainnet', {})).toEqual({
+      bootnodeUrl: 'http://127.0.0.1:8789/rpc',
+      fundingApiUrl: undefined,
+    })
   })
 })
