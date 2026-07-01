@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Segmented } from '@zk-fighter/ui'
+import type { NetworkKey } from '@zk-fighter/core'
 
 import type { ActivityRecord } from './activity-store'
 import { dappMessageTypes, type ActivityResponse } from './dappMessages'
@@ -46,7 +47,7 @@ function ago(ts: number): string {
   return hours < 24 ? `${hours}h ago` : `${Math.floor(hours / 24)}d ago`
 }
 
-export function ExtensionActivityPanel({ sendRuntimeMessage }: { sendRuntimeMessage: (message: object) => Promise<unknown> }) {
+export function ExtensionActivityPanel({ network, sendRuntimeMessage }: { readonly network: NetworkKey; readonly sendRuntimeMessage: (message: object) => Promise<unknown> }) {
   const [records, setRecords] = useState<readonly ActivityRecord[]>([])
   const [filter, setFilter] = useState<Filter>('all')
   const [loading, setLoading] = useState(true)
@@ -55,14 +56,14 @@ export function ExtensionActivityPanel({ sendRuntimeMessage }: { sendRuntimeMess
     let cancelled = false
     void (async () => {
       try {
-        const res = (await sendRuntimeMessage({ type: dappMessageTypes.activity })) as ActivityResponse
+        const res = (await sendRuntimeMessage({ type: dappMessageTypes.activity, network })) as ActivityResponse
         if (!cancelled) setRecords(res?.records ?? [])
       } finally {
         if (!cancelled) setLoading(false)
       }
     })()
     return () => { cancelled = true }
-  }, [sendRuntimeMessage])
+  }, [network, sendRuntimeMessage])
 
   const shown = records.filter((record) => (filter === 'all' ? true : filter === 'pending' ? record.status === 'pending' : record.boundary === filter))
 

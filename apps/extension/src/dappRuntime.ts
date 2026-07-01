@@ -21,22 +21,8 @@ import {
   type QuickShieldResponse,
 } from './dappMessages'
 import { clearAllBalanceCache } from './balance-cache'
-import {
-  activityFlow,
-  balancesFlow,
-  bridgeSourceBalancesFlow,
-  demoFundingRequestFlow,
-  demoFundingStatusFlow,
-  discoverFlow,
-  discoverPublishFlow,
-  discoverStatusFlow,
-  privateTransferFlow,
-  quickShieldFlow,
-  receiveCodeForIdentity,
-  recordBridgeActivity,
-  recordConfidentialActivity,
-  unshieldFlow,
-} from './dappRuntime-flows'
+import { activityFlow, balancesFlow, bridgeSourceBalancesFlow, demoFundingRequestFlow, demoFundingStatusFlow, discoverFlow, discoverPublishFlow, discoverStatusFlow, privateTransferFlow, quickShieldFlow, receiveCodeForIdentity, recordBridgeActivity, recordConfidentialActivity, unshieldFlow } from './dappRuntime-flows'
+import { publicTransferFlow } from './dappRuntime-public-flow'
 import { passkeyCreateFlow, passkeyPrepareCreateFlow, passkeyRemoveFlow, passkeySupportFlow, passkeyUnlockFlow, setNetworkFlow } from './dappRuntime-wallet'
 import { freighterResponse } from './dappRuntimeHelpers'
 import { identityForMnemonic, readStoredDappWallet, requireUnlockedDappWallet, writeStoredDappWallet } from './dappRuntimeState'
@@ -46,6 +32,7 @@ import type {
   ExtensionBridgeRunner,
   ExtensionConfidentialRunner,
   ExtensionDisclosureRunner,
+  ExtensionDisclosureVerifyRunner,
   ExtensionDiscoverPublishRunner,
   ExtensionDiscoverRunner,
   ExtensionPrivateTransferRunner,
@@ -72,6 +59,8 @@ export class ExtensionDappRuntime {
     private readonly runDiscover?: ExtensionDiscoverRunner,
     private readonly runDiscoverPublish?: ExtensionDiscoverPublishRunner,
     private readonly runDisclosure?: ExtensionDisclosureRunner,
+    private readonly runDisclosureVerify?: ExtensionDisclosureVerifyRunner,
+    private readonly resetPrivateRuntime?: () => Promise<void>,
   ) {}
 
   canHandle(type: string | undefined): boolean {
@@ -117,6 +106,8 @@ export class ExtensionDappRuntime {
         return { ok: true, surface: 'extension-popup', coordinator: 'offscreen-queue', proving: 'offscreen' }
       case dappMessageTypes.privateTransfer:
         return this.privateTransfer(message.asset, message.amountStroops, message.receiveCode, message.timeoutMs)
+      case dappMessageTypes.publicTransfer:
+        return this.publicTransfer(message.asset, message.amountStroops, message.recipientAddress)
       case dappMessageTypes.unshield:
         return this.unshield(message.asset, message.amountStroops, message.recipientAddress, message.timeoutMs)
       case dappMessageTypes.discover:
@@ -127,10 +118,13 @@ export class ExtensionDappRuntime {
         return this.discoverPublish()
       case dappMessageTypes.disclosure:
         return this.gated(this.runDisclosure, 'disclosure', { asset: message.asset, authority: message.authority, purpose: message.purpose })
+      case dappMessageTypes.disclosureVerify:
+        return this.gated(this.runDisclosureVerify, 'disclosure verify', { artifactJson: message.artifactJson })
       case dappMessageTypes.activity:
-        return activityFlow()
+        return activityFlow(message.network)
       case dappMessageTypes.setNetwork:
         await setNetworkFlow(message.network)
+        await this.resetPrivateRuntime?.()
         return this.status()
       case dappMessageTypes.passkeySupport:
         return passkeySupportFlow()
@@ -253,6 +247,12 @@ export class ExtensionDappRuntime {
     const ready = await requireUnlockedDappWallet(this.unlockedMnemonic)
     if (!ready.ok) return { ok: false, error: ready.error }
     return privateTransferFlow(ready, this.runPrivateTransfer, asset, amountStroops, receiveCode, timeoutMs)
+  }
+
+  private async publicTransfer(asset: AssetCode, amountStroops: string, recipientAddress: string) {
+    const ready = await requireUnlockedDappWallet(this.unlockedMnemonic)
+    if (!ready.ok) return { ok: false, error: ready.error }
+    return publicTransferFlow(ready, asset, amountStroops, recipientAddress)
   }
 
   private async unshield(asset: AssetCode, amountStroops: string, recipientAddress: string, timeoutMs?: number): Promise<PrivateActionResponse> {

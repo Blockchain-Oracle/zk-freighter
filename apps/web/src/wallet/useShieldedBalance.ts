@@ -41,16 +41,14 @@ export function useShieldedBalance(identity: WalletIdentity, network: NetworkKey
 
   useEffect(() => {
     let cancelled = false
-    void Promise.all([
-      loadXlmShieldedNotes({ identity, network, asset: 'XLM' }),
-      loadXlmShieldedNotes({ identity, network, asset: 'USDC' }),
-    ])
-      .then(([xlm, usdc]) => {
+    void (async () => {
+      try {
+        const xlm = await loadXlmShieldedNotes({ identity, network, asset: 'XLM' })
+        const usdc = await loadXlmShieldedNotes({ identity, network, asset: 'USDC' })
         if (!cancelled) {
           setResult({ key: requestKey, xlm, usdc, error: null })
         }
-      })
-      .catch((cause: unknown) => {
+      } catch (cause: unknown) {
         if (!cancelled) {
           // loadXlmShieldedNotes returns failed/blocked reports rather than throwing,
           // so reaching here is a genuinely unexpected fault — surface it, never swallow.
@@ -62,7 +60,8 @@ export function useShieldedBalance(identity: WalletIdentity, network: NetworkKey
             error: cause instanceof Error ? cause.message : 'Unexpected error loading shielded notes.',
           })
         }
-      })
+      }
+    })()
     return () => {
       cancelled = true
     }

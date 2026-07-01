@@ -1,7 +1,7 @@
 import { bytesToBigIntLE, bytesToHex } from './bytes'
 import type { WalletIdentity } from './identity'
 import { getNetworkConfig, type NetworkKey } from './networks'
-import { loadNethermindWebClient, type NethermindModuleImporter } from './nethermind-runtime'
+import { runWithNethermindWebClient, type NethermindModuleImporter } from './nethermind-runtime'
 import { poseidon2Hash2Bn254 } from './poseidon2-bn254'
 
 const aspMembershipLeafDomain = 1n
@@ -144,25 +144,32 @@ export async function runAspMembershipPreflight(
   }
 
   try {
-    const client = await loadNethermindWebClient(options.network, options.importWebModule)
-    if (!client.aspState || !client.deriveAspUserLeaf) {
-      return baseReport(options, 'blocked', ['Nethermind WebClient does not expose ASP preflight APIs.'])
+    const result = await runWithNethermindWebClient(options.network, async (client) => {
+      if (!client.aspState || !client.deriveAspUserLeaf) {
+        return { kind: 'blocked' as const, blockers: ['Nethermind WebClient does not expose ASP preflight APIs.'] }
+      }
+
+      await client.deriveAndSaveUserKeys(
+        options.identity.stellarPublicKey,
+        options.identity.keyDerivationSignature,
+      )
+      const userKeysStored = Boolean(await client.getUserKeys(options.identity.stellarPublicKey))
+      const aspSecretStored = Boolean(await client.getASPSecret(options.identity.stellarPublicKey))
+      const referenceLeaf = normalizeHex(
+        await client.deriveAspUserLeaf(
+          BigInt(leaf.membershipBlindingDecimal),
+          leaf.notePublicKeyHex,
+        ),
+      )
+      const referenceLeafMatches = referenceLeaf === leaf.membershipLeafHex
+      const contractState = parseAspMembershipState(await client.aspState())
+      return { kind: 'ready' as const, userKeysStored, aspSecretStored, referenceLeafMatches, contractState }
+    }, options.importWebModule)
+    if (result.kind === 'blocked') {
+      return baseReport(options, 'blocked', result.blockers)
     }
 
-    await client.deriveAndSaveUserKeys(
-      options.identity.stellarPublicKey,
-      options.identity.keyDerivationSignature,
-    )
-    const userKeysStored = Boolean(await client.getUserKeys(options.identity.stellarPublicKey))
-    const aspSecretStored = Boolean(await client.getASPSecret(options.identity.stellarPublicKey))
-    const referenceLeaf = normalizeHex(
-      await client.deriveAspUserLeaf(
-        BigInt(leaf.membershipBlindingDecimal),
-        leaf.notePublicKeyHex,
-      ),
-    )
-    const referenceLeafMatches = referenceLeaf === leaf.membershipLeafHex
-    const contractState = parseAspMembershipState(await client.aspState())
+    const { userKeysStored, aspSecretStored, referenceLeafMatches, contractState } = result
     const canInsertWithoutAdmin = contractState?.adminInsertOnly === false
     const blockers = [
       referenceLeafMatches ? undefined : 'Local ASP leaf derivation does not match the Nethermind runtime.',

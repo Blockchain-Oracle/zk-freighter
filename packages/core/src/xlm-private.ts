@@ -1,6 +1,6 @@
 import { decodeReceiveCode } from './receive-code'
 import type { AssetCode } from './assets'
-import type { NethermindPreparedProverTx } from './nethermind-runtime'
+import { runWithNethermindWebClient, type NethermindPreparedProverTx } from './nethermind-runtime'
 import {
   submitPreparedSorobanTx,
   type SorobanSubmitStatus,
@@ -9,14 +9,12 @@ import {
   blockersForNullResult,
   buildNethermindEvent,
   defaultNow,
-  defaultPrivateActionTimeoutMs,
   explorerUrl,
   keyHex,
   parseNote,
   poolIdForAsset,
   prepareClient,
   proofWasGenerated,
-  timeoutAfter,
 } from './xlm-private-support'
 import { isShieldedAssetEnabled } from './networks'
 import type {
@@ -43,14 +41,16 @@ export async function loadXlmShieldedNotes(
   }
 
   try {
-    const client = await prepareClient(options)
-    if (!client.getUnspentUserNotes) {
-      throw new Error('Nethermind WebClient does not expose pool-filtered note loading')
-    }
+    const notes = await runWithNethermindWebClient(options.network, async (client) => {
+      const ready = await prepareClient(options, client)
+      if (!ready.getUnspentUserNotes) {
+        throw new Error('Nethermind WebClient does not expose pool-filtered note loading')
+      }
 
-    await client.syncPoolEvents?.()
-    const raw = await client.getUnspentUserNotes(poolContractId, options.identity.stellarPublicKey)
-    const notes = Array.isArray(raw) ? raw.map(parseNote).filter((note) => note !== undefined) : []
+      await ready.syncPoolEvents?.()
+      const raw = await ready.getUnspentUserNotes(poolContractId, options.identity.stellarPublicKey)
+      return Array.isArray(raw) ? raw.map(parseNote).filter((note) => note !== undefined) : []
+    }, options.importWebModule)
 
     return {
       status: 'loaded',
@@ -147,10 +147,7 @@ async function submitXlmPrivateAction(
       txHashes.push(result.hash)
       return result.hash
     }
-    const hashes = await Promise.race([
-      run(submit, (event) => record(buildNethermindEvent(event, Math.round(now() - started)))),
-      timeoutAfter(options.timeoutMs ?? defaultPrivateActionTimeoutMs),
-    ])
+    const hashes = await run(submit, (event) => record(buildNethermindEvent(event, Math.round(now() - started))))
     const finalHashes = txHashes.length > 0 ? txHashes : [...(hashes ?? [])]
 
     if (finalHashes.length === 0) {
@@ -237,25 +234,27 @@ export async function submitXlmPrivateTransfer(
   }
 
   return submitXlmPrivateAction('transfer', options, async (submit, onStatus) => {
-    const client = await prepareClient(options)
-    const poolContractId = poolIdForAsset(options.network, options.asset ?? 'XLM')
-    if (!poolContractId) {
-      throw new Error(`${options.asset ?? 'XLM'} pool is not configured for this network.`)
-    }
-    if (!client.executeTransfer) {
-      throw new Error('Nethermind WebClient does not expose executeTransfer')
-    }
+    return runWithNethermindWebClient(options.network, async (client) => {
+      const ready = await prepareClient(options, client)
+      const poolContractId = poolIdForAsset(options.network, options.asset ?? 'XLM')
+      if (!poolContractId) {
+        throw new Error(`${options.asset ?? 'XLM'} pool is not configured for this network.`)
+      }
+      if (!ready.executeTransfer) {
+        throw new Error('Nethermind WebClient does not expose executeTransfer')
+      }
 
-    await client.syncPoolEvents?.()
-    return client.executeTransfer(
-      poolContractId,
-      options.identity.stellarPublicKey,
-      options.amountStroops,
-      keyHex(decoded.value.notePublicKey),
-      keyHex(decoded.value.encryptionPublicKey),
-      submit,
-      onStatus,
-    )
+      await ready.syncPoolEvents?.()
+      return ready.executeTransfer(
+        poolContractId,
+        options.identity.stellarPublicKey,
+        options.amountStroops,
+        keyHex(decoded.value.notePublicKey),
+        keyHex(decoded.value.encryptionPublicKey),
+        submit,
+        onStatus,
+      )
+    }, options.importWebModule)
   })
 }
 
@@ -263,24 +262,26 @@ export async function submitXlmUnshieldWithdrawal(
   options: SubmitXlmUnshieldWithdrawalOptions,
 ): Promise<XlmPrivateSubmitReport> {
   return submitXlmPrivateAction('withdraw', options, async (submit, onStatus) => {
-    const client = await prepareClient(options)
-    const poolContractId = poolIdForAsset(options.network, options.asset ?? 'XLM')
-    if (!poolContractId) {
-      throw new Error(`${options.asset ?? 'XLM'} pool is not configured for this network.`)
-    }
-    if (!client.executeWithdraw) {
-      throw new Error('Nethermind WebClient does not expose executeWithdraw')
-    }
+    return runWithNethermindWebClient(options.network, async (client) => {
+      const ready = await prepareClient(options, client)
+      const poolContractId = poolIdForAsset(options.network, options.asset ?? 'XLM')
+      if (!poolContractId) {
+        throw new Error(`${options.asset ?? 'XLM'} pool is not configured for this network.`)
+      }
+      if (!ready.executeWithdraw) {
+        throw new Error('Nethermind WebClient does not expose executeWithdraw')
+      }
 
-    await client.syncPoolEvents?.()
-    return client.executeWithdraw(
-      poolContractId,
-      options.identity.stellarPublicKey,
-      options.recipientAddress,
-      options.amountStroops,
-      submit,
-      onStatus,
-    )
+      await ready.syncPoolEvents?.()
+      return ready.executeWithdraw(
+        poolContractId,
+        options.identity.stellarPublicKey,
+        options.recipientAddress,
+        options.amountStroops,
+        submit,
+        onStatus,
+      )
+    }, options.importWebModule)
   })
 }
 

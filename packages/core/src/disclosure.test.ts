@@ -160,6 +160,33 @@ describe('disclosure artifacts', () => {
     expect(report.blockers[0]).toContain('secret')
   })
 
+  it('fails closed when the artifact network does not match the verifier network', async () => {
+    const client = {
+      verifySelectiveDisclosure: async () => {
+        throw new Error('verifier should not run for a mismatched network')
+      },
+    }
+    const artifact = {
+      kind: DISCLOSURE_ARTIFACT_KIND,
+      version: 1,
+      network: 'testnet',
+      ownerAddress: 'GABC',
+      activity: { asset: 'XLM', amountStroops: note.amountStroops, commitment: note.id, createdAtLedger: 1, leafIndex: 1 },
+      receipt: receipt(),
+      warnings: ['Read-only'],
+    }
+
+    const report = await verifyDisclosureArtifact({
+      artifactJson: JSON.stringify(artifact),
+      network: 'mainnet',
+      importWebModule: async () => moduleForClient(client),
+    })
+
+    expect(report.status).toBe('failed')
+    expect(report.blockers[0]).toContain('testnet')
+    expect(report.blockers[0]).toContain('mainnet')
+  })
+
   it('generates against the configured mainnet pool when selected', async () => {
     const identity = deriveWalletIdentity(mnemonic, 'mainnet')
     const calls: string[] = []

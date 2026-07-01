@@ -97,7 +97,7 @@ interface UnlockScreenProps {
 }
 
 /** The returning-user unlock card. */
-export function UnlockScreen({ network, busy, passkeyEnabled, unlockPassword, error, onPassword, onPasswordUnlock, onPasskeyUnlock }: UnlockScreenProps) {
+export function UnlockScreen({ network, busy, unlockPassword, error, onPassword, onPasswordUnlock }: UnlockScreenProps) {
   return (
     <OnboardCard>
       <CardTop left={<Logo size={24} />} title="ZK Fighter" right={<TestnetPill network={network} />} />
@@ -115,9 +115,8 @@ export function UnlockScreen({ network, busy, passkeyEnabled, unlockPassword, er
         </div>
         {error ? <div style={{ fontSize: 11.5, color: 'var(--dng)' }}>{error}</div> : null}
         <Button fullWidth loading={busy} disabled={!unlockPassword} onClick={onPasswordUnlock}>Unlock</Button>
-        {passkeyEnabled ? <Button variant="secondary" fullWidth loading={busy} onClick={onPasskeyUnlock}>Unlock with passkey</Button> : null}
         <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.5, textAlign: 'center', marginTop: 'auto' }}>
-          Passkey is a convenience unlock — never a recovery method. Your seed phrase is the only way back in.
+          Your seed phrase is the only recovery path. ZK Fighter cannot recover it for you.
         </div>
       </CardBody>
     </OnboardCard>

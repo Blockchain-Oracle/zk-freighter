@@ -1,4 +1,5 @@
-import type { WalletIdentity, XlmNotesReport } from '@zk-fighter/core'
+import { loadPublicStellarBalances, type AssetCode, type NetworkKey, type PublicBalancesReport, type WalletIdentity, type XlmNotesReport } from '@zk-fighter/core'
+import { useEffect, useState } from 'react'
 import { Button, Callout, PublicCard, ShieldedCard, Pill, truncateMiddle } from '@zk-fighter/ui'
 import type { ShieldedBalanceState } from './useShieldedBalance'
 import { formatStroops, sumSpendableStroops } from './format'
@@ -7,6 +8,7 @@ import type { WalletScreen } from './screens'
 
 interface HomeScreenProps {
   identity: WalletIdentity
+  network: NetworkKey
   balance: ShieldedBalanceState
   onNav: (screen: WalletScreen) => void
 }
@@ -107,25 +109,50 @@ function CrossingStrip({ onNav }: { onNav: (screen: WalletScreen) => void }) {
   )
 }
 
-function PublicFace({ identity, onShield }: { identity: WalletIdentity; onShield: () => void }) {
+function AssetIcon({ asset }: { readonly asset: AssetCode }) {
+  return <img src={`/asset-icons/${asset === 'USDC' ? 'usdc' : 'xlm'}.svg`} alt="" style={{ width: 22, height: 22, display: 'block' }} />
+}
+
+function PublicFace({ identity, balances, loading, onShield }: { identity: WalletIdentity; balances: PublicBalancesReport | null; loading: boolean; onShield: () => void }) {
+  const known = balances?.status === 'loaded' || balances?.status === 'unfunded'
   return (
     <div style={{ position: 'absolute', inset: 0, padding: '22px 22px', display: 'flex', flexDirection: 'column' }}>
       <span style={{ alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: 7, padding: '4px 9px', border: '1px solid rgba(229,180,92,.4)', background: 'rgba(229,180,92,.08)', borderRadius: 999, fontSize: 8.5, fontFamily: 'var(--fm)', letterSpacing: '.12em', color: 'var(--warn)' }}>PUBLIC · STELLAR</span>
-      <div style={{ marginTop: 'auto', fontSize: 11, color: 'var(--tx3)', lineHeight: 1.5 }}>Visible on-chain until you shield it.</div>
+      <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 9 }}>
+        {(['USDC', 'XLM'] as const).map((asset) => (
+          <div key={asset} style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+            <AssetIcon asset={asset} />
+            <span style={{ font: '700 21px/1 var(--fm)', color: known ? 'var(--tx)' : 'var(--tx3)', letterSpacing: '-.02em' }}>{loading ? '…' : known ? formatStroops(balances!.balances[asset], asset === 'USDC' ? 2 : 3) : '—'}</span>
+            <span style={{ fontSize: 11, color: 'var(--tx2)', fontWeight: 800 }}>{asset}</span>
+          </div>
+        ))}
+      </div>
+      <div style={{ marginTop: 10, fontSize: 11, color: 'var(--tx3)', lineHeight: 1.5 }}>Visible on-chain until you shield it.</div>
       <div style={{ marginTop: 6, fontSize: 10.5, color: 'var(--tx3)', fontFamily: 'var(--fm)' }}>{truncateMiddle(identity.stellarPublicKey, 6, 4)}</div>
       <button onClick={onShield} style={{ marginTop: 14, alignSelf: 'flex-start', padding: '9px 16px', border: 'none', borderRadius: 10, background: 'var(--ac)', color: '#fff', fontSize: 12, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', boxShadow: 'var(--shadow-glow)' }}>Shield now</button>
     </div>
   )
 }
 
-export function HomeScreen({ identity, balance, onNav }: HomeScreenProps) {
+export function HomeScreen({ identity, network, balance, onNav }: HomeScreenProps) {
   const { loading, xlm, usdc, refresh } = balance
+  const [publicBalances, setPublicBalances] = useState<PublicBalancesReport | null>(null)
+  const [publicLoading, setPublicLoading] = useState(true)
   const usdcShown = spendable(usdc, 2)
   const xlmShown = spendable(xlm, 3)
   const issue = describeNotesIssue(firstBlocker(balance))
   const notes: NoteRow[] = []
   collectNotes(usdc, 'USDC', 2, notes)
   collectNotes(xlm, 'XLM', 3, notes)
+
+  useEffect(() => {
+    let cancelled = false
+    setPublicLoading(true)
+    void loadPublicStellarBalances({ address: identity.stellarPublicKey, network })
+      .then((report) => { if (!cancelled) setPublicBalances(report) })
+      .finally(() => { if (!cancelled) setPublicLoading(false) })
+    return () => { cancelled = true }
+  }, [identity.stellarPublicKey, network])
 
   return (
     <section style={{ width: '100%', maxWidth: 1024, margin: '0 auto', padding: '30px 38px 40px', display: 'flex', flexDirection: 'column', gap: 24 }}>
@@ -148,7 +175,7 @@ export function HomeScreen({ identity, balance, onNav }: HomeScreenProps) {
           </ShieldedCard>
           <CrossingStrip onNav={onNav} />
           <PublicCard style={{ flex: 1, border: 'none', borderRadius: 0 }}>
-            <PublicFace identity={identity} onShield={() => onNav('shield')} />
+            <PublicFace identity={identity} balances={publicBalances} loading={publicLoading} onShield={() => onNav('shield')} />
           </PublicCard>
         </div>
       </div>

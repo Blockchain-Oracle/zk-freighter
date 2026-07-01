@@ -1,6 +1,5 @@
 import { NETWORKS, type NetworkKey, type PasskeyEnvelope, type WalletIdentity } from '@zk-fighter/core'
 import { BoundaryBadge, Segmented, truncateMiddle, useTheme } from '@zk-fighter/ui'
-import { PasskeySettings } from './PasskeySettings'
 import type { WalletScreen } from './screens'
 import type { CSSProperties, ReactNode } from 'react'
 
@@ -33,7 +32,7 @@ interface SettingsScreenProps {
   onLock: () => void
 }
 
-export function SettingsScreen({ identity, network, receiveCode, passkeyEnvelope, onChangeNetwork, onPasskeyEnvelopeChange, onNav, onLock }: SettingsScreenProps) {
+export function SettingsScreen({ identity, network, receiveCode, onChangeNetwork, onNav, onLock }: SettingsScreenProps) {
   const { theme, setTheme } = useTheme()
 
   return (
@@ -52,7 +51,9 @@ export function SettingsScreen({ identity, network, receiveCode, passkeyEnvelope
           <div style={groupStyle}>
             <div style={groupHeader}>SECURITY</div>
             <div style={{ padding: '16px 18px' }}>
-              <PasskeySettings identity={identity} passkeyEnvelope={passkeyEnvelope} onPasskeyEnvelopeChange={onPasskeyEnvelopeChange} />
+              <div style={{ fontSize: 12.5, lineHeight: 1.55, color: 'var(--tx2)' }}>
+                Seed phrase recovery is the only recovery path. Keep your vault password and seed phrase separate.
+              </div>
             </div>
           </div>
 

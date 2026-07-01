@@ -2,9 +2,11 @@ import {
   deriveWalletIdentity,
   generateDisclosureArtifact,
   loadXlmShieldedNotes,
+  verifyDisclosureArtifact,
   type AssetCode,
   type GenerateDisclosureReport,
   type NetworkKey,
+  type VerifyDisclosureReport,
 } from '@zk-fighter/core'
 
 // Disclosure runs in the offscreen (it proves with the selectiveDisclosure circuit).
@@ -47,6 +49,13 @@ export async function runDisclosure(payload: { readonly [key: string]: unknown }
     authorityLabel: authority,
     authorityIdentityPayloadHex: `0x${hexOf(authority)}`,
     purpose,
+  })
+}
+
+export function runDisclosureVerify(payload: { readonly [key: string]: unknown }): Promise<VerifyDisclosureReport> {
+  return verifyDisclosureArtifact({
+    artifactJson: String(payload['artifactJson'] ?? ''),
+    network: asNetworkKey(payload['network']),
   })
 }
 

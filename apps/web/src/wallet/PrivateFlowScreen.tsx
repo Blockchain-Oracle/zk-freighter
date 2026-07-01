@@ -16,6 +16,7 @@ import { proofFlowModel } from './proofFlow'
 import { ProofRun, type ProofRunCopy, type ProofTerminalInfo } from './ProofRun'
 import { FlowStepRail } from './flowChrome'
 import type { WalletScreen } from './screens'
+import { recordFlowFailure, recordPendingFlow, recordPrivateFlowResult } from './activityRecorders'
 
 const ASSET_OPTIONS = [
   { value: 'USDC', label: 'USDC' },
@@ -125,6 +126,14 @@ export function PrivateFlowScreen({ config, identity, network, balance, onNav }:
     setEvents([])
     setReport(null)
     setStep('running')
+    const activityArgs = {
+      network,
+      intent: 'send',
+      boundary: 'shielded',
+      asset,
+      amountStroops: parsed.stroops.toString(),
+    } as const
+    const activity = recordPendingFlow(activityArgs)
     try {
       const result = await config.run({
         asset,
@@ -137,10 +146,12 @@ export function PrivateFlowScreen({ config, identity, network, balance, onNav }:
         },
       })
       if (runIdRef.current !== runId) return
+      recordPrivateFlowResult(activity, activityArgs, result)
       setReport(result)
       if (result.status === 'submitted') balance.refresh()
     } catch (cause) {
       if (runIdRef.current !== runId) return
+      recordFlowFailure(activity, activityArgs, cause, 'Private send failed before completion.')
       // submit fns return failed/blocked reports rather than throwing, so reaching here is a
       // genuinely unexpected rejection where we do NOT know whether a tx was broadcast — leave
       // the report null so ProofRun routes to its honest "lost track — check Activity" branch.

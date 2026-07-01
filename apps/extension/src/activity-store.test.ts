@@ -64,4 +64,43 @@ describe('activity store', () => {
       txHash: 'terminal-hash',
     })
   })
+
+  it('filters records to the requested network', async () => {
+    storageState.values[storageKey] = [
+      {
+        id: 'testnet-op',
+        kind: 'shield',
+        status: 'submitted',
+        boundary: 'public',
+        network: 'testnet',
+        ts: 2,
+      },
+      {
+        id: 'mainnet-op',
+        kind: 'shield',
+        status: 'submitted',
+        boundary: 'public',
+        network: 'mainnet',
+        ts: 1,
+      },
+    ]
+
+    await expect(readActivity('testnet')).resolves.toMatchObject([{ id: 'testnet-op' }])
+    await expect(readActivity('mainnet')).resolves.toMatchObject([{ id: 'mainnet-op' }])
+  })
+
+  it('hides legacy records without a network from normal reads', async () => {
+    storageState.values[storageKey] = [
+      {
+        id: 'legacy-op',
+        kind: 'shield',
+        status: 'submitted',
+        boundary: 'public',
+        ts: 1,
+      },
+    ]
+
+    await expect(readActivity()).resolves.toEqual([])
+    await expect(readActivity('testnet')).resolves.toEqual([])
+  })
 })

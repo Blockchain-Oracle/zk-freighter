@@ -2,7 +2,7 @@ import type { AssetCode } from './assets'
 import { BYTE_LENGTH_32, assertByteLength, bytesToHex, hexToBytes } from './bytes'
 import type { WalletIdentity } from './identity'
 import { getNetworkConfig, isShieldedAssetEnabled, type NetworkKey } from './networks'
-import { loadNethermindWebClient, type NethermindModuleImporter, type PreparedSorobanTx } from './nethermind-runtime'
+import { runWithNethermindWebClient, type NethermindModuleImporter, type PreparedSorobanTx } from './nethermind-runtime'
 import { encodeReceiveCode, RECEIVE_CODE_VERSION } from './receive-code'
 import {
   submitPreparedSorobanTx,
@@ -148,50 +148,53 @@ export async function publishPrivateReceiveDiscovery(
   }
 
   try {
-    const client = await loadNethermindWebClient(options.network, options.importWebModule)
-    const submit = options.submitPreparedTx ?? submitPreparedSorobanTx
+    const reports = await runWithNethermindWebClient(options.network, async (client) => {
+      const submit = options.submitPreparedTx ?? submitPreparedSorobanTx
 
-    if (!client.prepareRegisterPublicKeys) {
-      throw new Error('Nethermind WebClient does not expose prepareRegisterPublicKeys')
-    }
-
-    const reports: PublicDiscoveryPoolReport[] = []
-
-    for (const [asset, poolContractId] of pools) {
-      const statusEvents: SorobanSubmitStatus[] = []
-      try {
-        const prepared = await client.prepareRegisterPublicKeys(
-          poolContractId,
-          options.identity.stellarPublicKey,
-          notePublicKeyHex,
-          encryptionPublicKeyHex,
-        )
-        const result = await submit(prepared, {
-          identity: options.identity,
-          network: options.network,
-          onStatus: (event) => statusEvents.push(event),
-        })
-
-        reports.push({
-          asset,
-          poolContractId,
-          status: 'submitted',
-          txHash: result.hash,
-          explorerUrl: explorerUrl(options.network, result.hash),
-          signedAuthEntryCount: result.signedAuthEntryCount,
-          statusEvents,
-        })
-      } catch (error) {
-        reports.push({
-          asset,
-          poolContractId,
-          status: 'failed',
-          signedAuthEntryCount: 0,
-          statusEvents,
-          error: error instanceof Error ? error.message : 'public discovery publish failed',
-        })
+      if (!client.prepareRegisterPublicKeys) {
+        throw new Error('Nethermind WebClient does not expose prepareRegisterPublicKeys')
       }
-    }
+
+      const poolReports: PublicDiscoveryPoolReport[] = []
+
+      for (const [asset, poolContractId] of pools) {
+        const statusEvents: SorobanSubmitStatus[] = []
+        try {
+          const prepared = await client.prepareRegisterPublicKeys(
+            poolContractId,
+            options.identity.stellarPublicKey,
+            notePublicKeyHex,
+            encryptionPublicKeyHex,
+          )
+          const result = await submit(prepared, {
+            identity: options.identity,
+            network: options.network,
+            onStatus: (event) => statusEvents.push(event),
+          })
+
+          poolReports.push({
+            asset,
+            poolContractId,
+            status: 'submitted',
+            txHash: result.hash,
+            explorerUrl: explorerUrl(options.network, result.hash),
+            signedAuthEntryCount: result.signedAuthEntryCount,
+            statusEvents,
+          })
+        } catch (error) {
+          poolReports.push({
+            asset,
+            poolContractId,
+            status: 'failed',
+            signedAuthEntryCount: 0,
+            statusEvents,
+            error: error instanceof Error ? error.message : 'public discovery publish failed',
+          })
+        }
+      }
+
+      return poolReports
+    }, options.importWebModule)
 
     const submittedCount = reports.filter((report) => report.status === 'submitted').length
     const blockers = reports.flatMap((report) => (report.error ? [`${report.asset}: ${report.error}`] : []))
@@ -224,19 +227,14 @@ export async function lookupPublishedReceiveCode(
   options: PublicDiscoveryLookupOptions,
 ): Promise<PublicDiscoveryLookupReport> {
   try {
-    const client = await loadNethermindWebClient(options.network, options.importWebModule)
-
-    if (!client.getRecentPublicKeys) {
-      return {
-        status: 'blocked',
-        network: options.network,
-        ownerAddress: options.ownerAddress,
-        blockers: ['Nethermind WebClient does not expose public discovery lookup.'],
+    const entries = await runWithNethermindWebClient(options.network, async (client) => {
+      if (!client.getRecentPublicKeys) {
+        throw new Error('Nethermind WebClient does not expose public discovery lookup.')
       }
-    }
 
-    await client.syncPoolEvents?.()
-    const entries = parsePublicKeys(await client.getRecentPublicKeys(options.limit ?? publicKeyLookupLimit))
+      await client.syncPoolEvents?.()
+      return parsePublicKeys(await client.getRecentPublicKeys(options.limit ?? publicKeyLookupLimit))
+    }, options.importWebModule)
     const match = entries.find((entry) => entry.address === options.ownerAddress)
 
     if (!match) {

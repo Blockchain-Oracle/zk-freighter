@@ -1,7 +1,7 @@
 import { getNetworkConfig, type NetworkKey } from './networks'
 import type { WalletIdentity } from './identity'
 import {
-  loadNethermindWebClient,
+  runWithNethermindWebClient,
   type NethermindModuleImporter,
 } from './nethermind-runtime'
 
@@ -124,39 +124,39 @@ export async function runNethermindDryDepositProofAttempt(
   }
 
   try {
-    const client = await loadNethermindWebClient(options.network, options.importWebModule)
+    const result = await runWithNethermindWebClient(options.network, async (client) => {
+      if (!client.executeDeposit) {
+        throw new Error('Nethermind WebClient does not expose executeDeposit')
+      }
 
-    if (!client.executeDeposit) {
-      throw new Error('Nethermind WebClient does not expose executeDeposit')
-    }
+      await client.deriveAndSaveUserKeys(
+        options.identity.stellarPublicKey,
+        options.identity.keyDerivationSignature,
+      )
+      userKeysStored = Boolean(await client.getUserKeys(options.identity.stellarPublicKey))
+      aspSecretStored = Boolean(await client.getASPSecret(options.identity.stellarPublicKey))
 
-    await client.deriveAndSaveUserKeys(
-      options.identity.stellarPublicKey,
-      options.identity.keyDerivationSignature,
-    )
-    userKeysStored = Boolean(await client.getUserKeys(options.identity.stellarPublicKey))
-    aspSecretStored = Boolean(await client.getASPSecret(options.identity.stellarPublicKey))
-
-    const amount = options.amountStroops ?? defaultAmountStroops
-    const attempt = client.executeDeposit(
-      poolContractId,
-      options.identity.stellarPublicKey,
-      amount,
-      [amount, 0n],
-      async (_prepared) => {
-        submitReached = true
-        throw new Error('dry-run submit disabled')
-      },
-      (event) => {
-        statusEvents.push({
-          elapsedMs: Math.round(now() - started),
-          flow: stringField(event, 'flow'),
-          message: stringField(event, 'message'),
-          step: stringField(event, 'step'),
-        })
-      },
-    )
-    const result = await Promise.race([attempt, timeoutAfter(options.timeoutMs ?? defaultTimeoutMs)])
+      const amount = options.amountStroops ?? defaultAmountStroops
+      const attempt = client.executeDeposit(
+        poolContractId,
+        options.identity.stellarPublicKey,
+        amount,
+        [amount, 0n],
+        async (_prepared) => {
+          submitReached = true
+          throw new Error('dry-run submit disabled')
+        },
+        (event) => {
+          statusEvents.push({
+            elapsedMs: Math.round(now() - started),
+            flow: stringField(event, 'flow'),
+            message: stringField(event, 'message'),
+            step: stringField(event, 'step'),
+          })
+        },
+      )
+      return Promise.race([attempt, timeoutAfter(options.timeoutMs ?? defaultTimeoutMs)])
+    }, options.importWebModule)
     const proofGenerated = proofWasGenerated(statusEvents, submitReached)
 
     if (result === null) {

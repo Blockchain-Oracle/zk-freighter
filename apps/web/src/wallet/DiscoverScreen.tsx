@@ -128,8 +128,12 @@ export function DiscoverScreen({ identity, network, onNav }: DiscoverScreenProps
           {discoverable ? (
             <div style={{ padding: 14, border: '1px solid rgba(53,199,123,.42)', borderRadius: 12, background: 'rgba(53,199,123,.08)' }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--pos)' }}>Ready to receive through Discover</div>
+              <div style={{ font: '600 10px/1.4 var(--fm)', color: 'var(--tx3)', marginTop: 6 }}>Public · {truncateMiddle(identity.stellarPublicKey, 8, 8)}</div>
               <div style={{ font: '600 10px/1.4 var(--fm)', color: 'var(--tx3)', marginTop: 6 }}>{truncateMiddle(selfLookup?.receiveCode ?? receiveCode, 10, 6)}</div>
-              <Button variant="secondary" fullWidth onClick={() => copyCode(selfLookup?.receiveCode ?? receiveCode)} style={{ marginTop: 10 }}>{copied ? 'Copied' : 'Copy code'}</Button>
+              <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                <Button variant="secondary" fullWidth onClick={() => copyCode(identity.stellarPublicKey)}>{copied ? 'Copied' : 'Copy public'}</Button>
+                <Button variant="secondary" fullWidth onClick={() => copyCode(selfLookup?.receiveCode ?? receiveCode)}>{copied ? 'Copied' : 'Copy code'}</Button>
+              </div>
             </div>
           ) : (
             <Button fullWidth loading={publishing} onClick={publish}>Make discoverable</Button>

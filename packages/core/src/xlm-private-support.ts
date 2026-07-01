@@ -2,7 +2,7 @@ import { bytesToHex } from './bytes'
 import type { AssetCode } from './assets'
 import type { WalletIdentity } from './identity'
 import { getNetworkConfig, type NetworkKey } from './networks'
-import { loadNethermindWebClient, type NethermindModuleImporter } from './nethermind-runtime'
+import { loadNethermindWebClient, type NethermindModuleImporter, type NethermindWebClient } from './nethermind-runtime'
 import type { XlmPrivateProgressEvent, XlmShieldedNote } from './xlm-private-types'
 
 export const defaultPrivateActionTimeoutMs = 30 * 60 * 1_000
@@ -135,8 +135,8 @@ export async function prepareClient(options: {
   readonly identity: WalletIdentity
   readonly network: NetworkKey
   readonly importWebModule?: NethermindModuleImporter
-}) {
-  const client = await loadNethermindWebClient(options.network, options.importWebModule)
+}, existingClient?: NethermindWebClient) {
+  const client = existingClient ?? await loadNethermindWebClient(options.network, options.importWebModule)
   await client.deriveAndSaveUserKeys(
     options.identity.stellarPublicKey,
     options.identity.keyDerivationSignature,

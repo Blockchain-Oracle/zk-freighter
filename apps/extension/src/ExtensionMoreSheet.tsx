@@ -46,7 +46,7 @@ export function ExtensionMoreSheet({ status, navigate, openSheet, lockWallet }: 
       title: 'Account',
       rows: [
         { id: 'signing', icon: <KeyRound size={15} />, title: 'Signing disabled', detail: 'External dApp signing stays closed', action: () => navigate('signingDisabled') },
-        { id: 'lock', icon: <Lock size={15} />, title: 'Lock wallet', detail: 'Require password or passkey next time', action: () => void lockWallet() },
+        { id: 'lock', icon: <Lock size={15} />, title: 'Lock wallet', detail: 'Require password next time', action: () => void lockWallet() },
       ],
     },
   ]
@@ -59,7 +59,7 @@ export function ExtensionMoreSheet({ status, navigate, openSheet, lockWallet }: 
           <div style={{ fontSize: 11, color: 'var(--tx2)', marginTop: 4 }}>{status.network} wallet</div>
         </div>
       </div>
-      <MoreRow row={{ id: 'settings', icon: <Settings size={15} />, title: 'Settings', detail: 'Passkey, network, appearance', action: () => navigate('settings') }} />
+      <MoreRow row={{ id: 'settings', icon: <Settings size={15} />, title: 'Settings', detail: 'Network, appearance, recovery', action: () => navigate('settings') }} />
       {groups.map((group) => (
         <section key={group.title} style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <div style={{ font: '800 9px/1 var(--fm)', letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--tx3)', padding: '6px 2px 3px' }}>{group.title}</div>

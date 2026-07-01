@@ -4,6 +4,7 @@ import type {
   CctpBridgeReport,
   CctpSourceKey,
   GenerateDisclosureReport,
+  VerifyDisclosureReport,
   NetworkKey,
   PublicDiscoveryPublishReport,
   PublicDiscoveryLookupReport,
@@ -57,6 +58,12 @@ export interface ExtensionDisclosureRequest {
   readonly purpose: string
 }
 
+export interface ExtensionDisclosureVerifyRequest {
+  readonly mnemonic: string
+  readonly network: NetworkKey
+  readonly artifactJson: string
+}
+
 export interface ExtensionBridgeRequest {
   readonly mnemonic: string
   readonly network: NetworkKey
@@ -84,3 +91,4 @@ export type ExtensionUnshieldRunner = (request: ExtensionUnshieldRequest) => Pro
 export type ExtensionDiscoverRunner = (request: ExtensionDiscoverRequest) => Promise<PublicDiscoveryLookupReport>
 export type ExtensionDiscoverPublishRunner = (request: ExtensionDiscoverPublishRequest) => Promise<PublicDiscoveryPublishReport>
 export type ExtensionDisclosureRunner = (request: ExtensionDisclosureRequest) => Promise<GenerateDisclosureReport>
+export type ExtensionDisclosureVerifyRunner = (request: ExtensionDisclosureVerifyRequest) => Promise<VerifyDisclosureReport>

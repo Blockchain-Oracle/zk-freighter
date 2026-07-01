@@ -36,11 +36,9 @@ export async function runLoadBalances(payload: { readonly [key: string]: unknown
     }))
     .catch((error: unknown) => ({ ok: false, xlm: 0n, usdc: 0n, error: error instanceof Error ? error.message : String(error) }))
 
-  const [xlm, usdc, pub] = await Promise.all([
-    loadXlmShieldedNotes({ identity, network, asset: 'XLM' }),
-    loadXlmShieldedNotes({ identity, network, asset: 'USDC' }),
-    publicScan,
-  ])
+  const xlm = await loadXlmShieldedNotes({ identity, network, asset: 'XLM' })
+  const usdc = await loadXlmShieldedNotes({ identity, network, asset: 'USDC' })
+  const pub = await publicScan
 
   const shieldedOk = xlm.status === 'loaded' && usdc.status === 'loaded'
   const rawBlockers = [...xlm.blockers, ...usdc.blockers]

@@ -158,7 +158,7 @@ export function OnboardingFlow({ network, networks, busy, onChangeNetwork, onCre
             <div style={labelStyle}>CONFIRM</div>
             <PasswordField value={confirm} onChange={setConfirm} onEnter={() => { if (passwordsMatch) void create() }} />
           </div>
-          <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.5 }}>Passkey unlock can be enabled later in Settings.</div>
+          <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.5 }}>Your seed phrase remains the recovery path. Store it offline before funding the wallet.</div>
           {error ? <div style={{ fontSize: 11.5, color: 'var(--dng)' }}>{error}</div> : null}
           <Button fullWidth loading={busy} disabled={!passwordsMatch} onClick={() => void create()} style={{ marginTop: 'auto' }}>{mode === 'create' ? 'Create wallet' : 'Restore wallet'}</Button>
         </CardBody>

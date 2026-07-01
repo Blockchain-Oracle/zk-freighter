@@ -68,11 +68,11 @@ export function ExtensionHome({ status, sendRuntimeMessage, navigate, openSheet 
   useEffect(() => {
     let cancelled = false
     void (async () => {
-      const res = (await sendRuntimeMessage({ type: dappMessageTypes.activity })) as ActivityResponse
+      const res = (await sendRuntimeMessage({ type: dappMessageTypes.activity, network: status.network })) as ActivityResponse
       if (!cancelled) setRecords(res?.records?.slice(0, 3) ?? [])
     })()
     return () => { cancelled = true }
-  }, [sendRuntimeMessage])
+  }, [sendRuntimeMessage, status.network])
 
   const shieldedKnown = balances?.shieldedOk === true
   const publicKnown = balances?.publicOk === true

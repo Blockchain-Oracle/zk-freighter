@@ -1,19 +1,12 @@
-import type {
-  AspMembershipInsertReport,
-  AssetCode,
-  StellarUsdcTrustlineReport,
-  XlmShieldSubmitReport,
-} from '@zk-fighter/core'
+import type { AssetCode, XlmShieldSubmitReport } from '@zk-fighter/core'
 import { isShieldedAssetEnabled, parseAssetAmountToStroops } from '@zk-fighter/core'
-import { Activity, Shield } from 'lucide-react'
+import { Shield } from 'lucide-react'
 import { useState } from 'react'
 import { Button, Callout, Segmented } from '@zk-fighter/ui'
 
 import {
   dappMessageTypes,
   type DappWalletStatus,
-  type PrepareShieldAccessResponse,
-  type PrepareUsdcReceiveResponse,
   type QuickShieldResponse,
 } from './dappMessages'
 import { amountLabel, defaultShieldAmounts, shorten } from './extension-format'
@@ -21,6 +14,14 @@ import { Badge, BlockerList, Caption, Copy, ErrorText, ExplorerLink, MetaRow, Pa
 import { balanceLabel, balanceStroops, maxAmountInput, useExtensionBalances } from './useExtensionBalances'
 
 const latestEventCount = 6
+
+type ShieldReportWithPrerequisites = XlmShieldSubmitReport & {
+  readonly prerequisites?: {
+    readonly usdcTrustline?: { readonly status: string; readonly txHash?: string; readonly explorerUrl?: string }
+    readonly aspInsert?: { readonly status: string; readonly txHash?: string; readonly explorerUrl?: string; readonly blockers?: readonly string[] }
+    readonly events?: readonly { readonly elapsedMs: number; readonly stage: string; readonly message: string }[]
+  }
+}
 
 interface ExtensionQuickShieldPanelProps {
   readonly status: DappWalletStatus | null
@@ -31,46 +32,15 @@ export function ExtensionQuickShieldPanel({ status, sendRuntimeMessage }: Extens
   const [asset, setAsset] = useState<AssetCode>('XLM')
   const [amountInput, setAmountInput] = useState(defaultAmountInput('XLM'))
   const [busy, setBusy] = useState(false)
-  const [accessBusy, setAccessBusy] = useState(false)
-  const [usdcBusy, setUsdcBusy] = useState(false)
-  const [report, setReport] = useState<XlmShieldSubmitReport | null>(null)
-  const [accessReport, setAccessReport] = useState<AspMembershipInsertReport | null>(null)
-  const [usdcReport, setUsdcReport] = useState<StellarUsdcTrustlineReport | null>(null)
+  const [report, setReport] = useState<ShieldReportWithPrerequisites | null>(null)
   const [error, setError] = useState('')
   const publicBalance = useExtensionBalances(sendRuntimeMessage)
   const poolEnabled = status ? isShieldedAssetEnabled(status.network, asset) : false
   const disabledReason = !status?.unlocked ? 'Unlock the extension vault first.' : !poolEnabled ? `${asset} pool is not configured for this network.` : ''
-  const usdcReady = asset === 'USDC' && (usdcReport?.status === 'ready' || usdcReport?.status === 'created')
   const available = balanceStroops(publicBalance.balances, 'public', asset)
   const parsedAmount = parseAssetAmountToStroops(amountInput, asset)
   const overBalance = parsedAmount.ok && available !== null && parsedAmount.stroops > available
   const amountError = overBalance ? `Amount exceeds your public ${asset} balance.` : ''
-
-  async function prepareShieldAccess() {
-    setAccessBusy(true)
-    setError('')
-    setAccessReport(null)
-    try {
-      const response = (await sendRuntimeMessage({ type: dappMessageTypes.prepareShieldAccess })) as PrepareShieldAccessResponse
-      if (!response.ok || !response.report) setError(response.error ?? 'Shield access setup did not return a report.')
-      else setAccessReport(response.report)
-    } finally {
-      setAccessBusy(false)
-    }
-  }
-
-  async function prepareUsdcReceive() {
-    setUsdcBusy(true)
-    setError('')
-    setUsdcReport(null)
-    try {
-      const response = (await sendRuntimeMessage({ type: dappMessageTypes.prepareUsdcReceive })) as PrepareUsdcReceiveResponse
-      if (!response.ok || !response.report) setError(usdcReceiveErrorText(response.error))
-      else setUsdcReport(response.report)
-    } finally {
-      setUsdcBusy(false)
-    }
-  }
 
   async function runQuickShield() {
     const parsed = parseAssetAmountToStroops(amountInput, asset)
@@ -84,7 +54,7 @@ export function ExtensionQuickShieldPanel({ status, sendRuntimeMessage }: Extens
     try {
       const response = (await sendRuntimeMessage({ type: dappMessageTypes.quickShield, asset, amountStroops: parsed.stroops.toString() })) as QuickShieldResponse
       if (!response.ok || !response.report) setError(response.error ?? 'QuickShield did not return a report.')
-      else setReport(response.report)
+      else setReport(response.report as ShieldReportWithPrerequisites)
     } finally {
       setBusy(false)
     }
@@ -101,25 +71,9 @@ export function ExtensionQuickShieldPanel({ status, sendRuntimeMessage }: Extens
     <Panel label="QuickShield">
       <SectionHeader title="QuickShield" right={<Badge tone="progress">{status?.network ?? 'locked'}</Badge>} />
       <Callout tone="public">Shield/deposit is public. Privacy starts after funds enter the shielded pool.</Callout>
-
-      <Button variant="secondary" fullWidth loading={accessBusy} disabled={Boolean(disabledReason) || accessBusy || busy} onClick={() => void prepareShieldAccess()}>
-        <Activity size={15} aria-hidden="true" /> {accessBusy ? 'Preparing…' : 'Prepare shield access'}
-      </Button>
-      <Copy>{disabledReason || accessReportLabel(accessReport)}</Copy>
-      {accessReport ? <ReportCard rows={[['ASP SETUP', accessReport.status], ['TRANSACTION', accessReport.txHash ? shorten(accessReport.txHash, 10, 8) : 'Not submitted']]} explorer={accessReport.explorerUrl} explorerText="View public setup" blockers={accessReport.blockers} /> : null}
-
-      {asset === 'USDC' && !usdcReady ? (
-        <>
-          <Button variant="secondary" fullWidth loading={usdcBusy} disabled={Boolean(disabledReason) || accessBusy || busy || usdcBusy} onClick={() => void prepareUsdcReceive()}>
-            <Activity size={15} aria-hidden="true" /> {usdcBusy ? 'Checking USDC…' : 'Enable USDC receiving'}
-          </Button>
-          <Copy>{disabledReason || usdcReportLabel(usdcReport)}</Copy>
-          {usdcReport ? <ReportCard rows={[['USDC RECEIVE', usdcReport.status], ['PUBLIC ACCOUNT', shorten(usdcReport.userAddress, 8, 8)]]} explorer={usdcReport.explorerUrl} explorerText="View public setup" /> : null}
-        </>
-      ) : null}
+      <Copy>{disabledReason || 'Shield checks public balance, USDC receiving, shield access, pool sync, proof, and submit in one run.'}</Copy>
 
       <Segmented options={(['XLM', 'USDC'] as const).map((value) => ({ value, label: value }))} value={asset} onChange={selectAsset} size="sm" />
-      {usdcReady ? <Copy>{usdcReportLabel(usdcReport)}</Copy> : null}
       <div>
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: 6 }}>
           <Caption>AMOUNT</Caption>
@@ -150,14 +104,17 @@ function ReportCard({ rows, explorer, explorerText, blockers }: { rows: Readonly
   )
 }
 
-function ShieldReport({ report, asset }: { readonly report: XlmShieldSubmitReport; readonly asset: AssetCode }) {
+function ShieldReport({ report, asset }: { readonly report: ShieldReportWithPrerequisites; readonly asset: AssetCode }) {
   return (
     <div style={{ border: '1px solid var(--bd)', borderRadius: 12, padding: 12, background: 'var(--card)', display: 'flex', flexDirection: 'column', gap: 6 }}>
+      {report.prerequisites?.usdcTrustline ? <ReportCard rows={[['USDC RECEIVE', report.prerequisites.usdcTrustline.status], ['TRANSACTION', report.prerequisites.usdcTrustline.txHash ? shorten(report.prerequisites.usdcTrustline.txHash, 10, 8) : 'Not submitted']]} explorer={report.prerequisites.usdcTrustline.explorerUrl} explorerText="View USDC setup" /> : null}
+      {report.prerequisites?.aspInsert ? <ReportCard rows={[['SHIELD ACCESS', report.prerequisites.aspInsert.status], ['TRANSACTION', report.prerequisites.aspInsert.txHash ? shorten(report.prerequisites.aspInsert.txHash, 10, 8) : 'Not submitted']]} explorer={report.prerequisites.aspInsert.explorerUrl} explorerText="View shield setup" blockers={report.prerequisites.aspInsert.blockers} /> : null}
       <MetaRow label="POOL">{report.poolContractId ? shorten(report.poolContractId, 10, 8) : 'Unavailable'}</MetaRow>
       <MetaRow label="PROOF">{report.proofGenerated ? 'Generated' : 'Not generated'}</MetaRow>
       <MetaRow label="TRANSACTION">{report.transactionSubmitted ? 'Confirmed' : 'Not submitted'}</MetaRow>
       {report.explorerUrl ? <ExplorerLink href={report.explorerUrl}>View public deposit ↗</ExplorerLink> : null}
       <BlockerList blockers={report.blockers} />
+      {report.prerequisites?.events?.length ? <BlockerList blockers={report.prerequisites.events.slice(-4).map((event) => `${event.stage} · ${event.message}`)} /> : null}
       <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 4 }}>
         {report.statusEvents.slice(-latestEventCount).map((event, index) => (
           <li key={`${event.elapsedMs}-${index}`} style={{ fontSize: 10.5, color: 'var(--tx3)', fontFamily: 'var(--fm)' }}>
@@ -168,26 +125,6 @@ function ShieldReport({ report, asset }: { readonly report: XlmShieldSubmitRepor
       <Copy>Amount: {amountLabel(report.amountStroops, asset)}</Copy>
     </div>
   )
-}
-
-function accessReportLabel(report: AspMembershipInsertReport | null): string {
-  if (!report) return 'Run once before the first shield if the pool needs a public setup transaction.'
-  if (report.status === 'submitted') return `Prepared ${shorten(report.txHash ?? '', 12, 10)}`
-  return `${report.status} after ${report.statusEvents.at(-1)?.elapsedMs.toLocaleString() ?? '0'} ms`
-}
-
-function usdcReportLabel(report: StellarUsdcTrustlineReport | null): string {
-  if (!report) return 'Checks whether this public address can receive USDC. If needed, it submits the one-time public setup transaction and may reserve 0.5 XLM.'
-  if (report.status === 'created') return `USDC receiving enabled ${shorten(report.txHash ?? '', 12, 10)}`
-  return 'USDC receiving is ready. Fund the public address before shielding.'
-}
-
-function usdcReceiveErrorText(error: unknown): string {
-  const message = error instanceof Error ? error.message : String(error ?? '')
-  if (/not funded/i.test(message)) return 'Fund this Stellar address with XLM first, then enable USDC receiving.'
-  if (/insufficient|underfunded|tx_insufficient_balance|op_underfunded/i.test(message)) return 'Add enough XLM for the one-time 0.5 XLM reserve and network fee, then try again.'
-  if (/friendbot/i.test(message)) return 'Testnet funding failed. Try again after the faucet recovers.'
-  return message ? 'USDC receiving setup failed. Check the network and XLM reserve, then try again.' : 'USDC receive preparation did not return a report.'
 }
 
 function defaultAmountInput(asset: AssetCode): string {

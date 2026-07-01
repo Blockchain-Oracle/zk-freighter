@@ -40,7 +40,7 @@ export function recordOp(
   kind: ActivityKind,
   boundary: ActivityBoundary,
   status: ActivityStatus,
-  fields: { asset?: string; amountStroops?: string; txHash?: string; explorerUrl?: string; network?: NetworkKey },
+  fields: { asset?: string; amountStroops?: string; txHash?: string; explorerUrl?: string; network: NetworkKey },
   id: string = crypto.randomUUID(),
 ): string {
   void recordActivity({ id, kind, boundary, status, ts: Date.now(), ...fields }).catch((error: unknown) => {
@@ -49,8 +49,8 @@ export function recordOp(
   return id
 }
 
-export async function activityFlow(): Promise<ActivityResponse> {
-  return { ok: true, records: await readActivity() }
+export async function activityFlow(network?: NetworkKey): Promise<ActivityResponse> {
+  return { ok: true, records: await readActivity(network) }
 }
 
 export async function quickShieldFlow(ready: FlowReady, runner: ExtensionShieldRunner | undefined, asset: AssetCode, amountStroops?: string, timeoutMs?: number): Promise<QuickShieldResponse> {

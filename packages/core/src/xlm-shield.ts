@@ -2,7 +2,7 @@ import type { WalletIdentity } from './identity'
 import type { AssetCode } from './assets'
 import { getNetworkConfig, isShieldedAssetEnabled, type NetworkKey } from './networks'
 import {
-  loadNethermindWebClient,
+  runWithNethermindWebClient,
   type NethermindModuleImporter,
   type NethermindPreparedProverTx,
 } from './nethermind-runtime'
@@ -11,7 +11,6 @@ import {
   type SorobanSubmitStatus,
   type SubmitPreparedSorobanTxOptions,
 } from './soroban-submit'
-import { defaultPrivateActionTimeoutMs } from './xlm-private-support'
 
 const defaultShieldAmountStroops = 1_000_000n
 const syncGapPattern = /sync ([0-9]+) ledger/
@@ -75,12 +74,6 @@ function stringField(value: unknown, field: string): string | undefined {
   }
 
   return value[field]
-}
-
-function timeoutAfter(ms: number, asset: AssetCode): Promise<never> {
-  return new Promise((_, reject) => {
-    setTimeout(() => reject(new Error(`${asset} shield submit timed out after ${ms} ms`)), ms)
-  })
 }
 
 function explorerUrl(network: NetworkKey, txHash: string): string {
@@ -159,53 +152,52 @@ export async function submitXlmShieldDeposit(
   }
 
   try {
-    const client = await loadNethermindWebClient(options.network, options.importWebModule)
+    const hashes = await runWithNethermindWebClient(options.network, async (client) => {
+      if (!client.executeDeposit) {
+        throw new Error('Nethermind WebClient does not expose executeDeposit')
+      }
 
-    if (!client.executeDeposit) {
-      throw new Error('Nethermind WebClient does not expose executeDeposit')
-    }
+      await client.deriveAndSaveUserKeys(
+        options.identity.stellarPublicKey,
+        options.identity.keyDerivationSignature,
+      )
 
-    await client.deriveAndSaveUserKeys(
-      options.identity.stellarPublicKey,
-      options.identity.keyDerivationSignature,
-    )
-
-    const attempt = client.executeDeposit(
-      poolContractId,
-      options.identity.stellarPublicKey,
-      amount,
-      [amount, 0n],
-      async (prepared: NethermindPreparedProverTx) => {
-        submitReached = true
-        const result = await submitPreparedSorobanTx(prepared, {
-          identity: options.identity,
-          network: options.network,
-          onStatus: (event: SorobanSubmitStatus) => {
-            record({
-              elapsedMs: Math.round(now() - started),
-              source: 'soroban',
-              message: event.message,
-              step: event.stage,
-            })
-          },
-          ...options.submitOptions,
-        })
-        txHash = result.hash
-        transactionSubmitted = true
-        signedAuthEntryCount = result.signedAuthEntryCount
-        return result.hash
-      },
-      (event) => {
-        record({
-          elapsedMs: Math.round(now() - started),
-          source: 'nethermind',
-          flow: stringField(event, 'flow'),
-          message: stringField(event, 'message') ?? stringField(event, 'step') ?? 'status',
-          step: stringField(event, 'stage') ?? stringField(event, 'step'),
-        })
-      },
-    )
-    const hashes = await Promise.race([attempt, timeoutAfter(options.timeoutMs ?? defaultPrivateActionTimeoutMs, asset)])
+      return client.executeDeposit(
+        poolContractId,
+        options.identity.stellarPublicKey,
+        amount,
+        [amount, 0n],
+        async (prepared: NethermindPreparedProverTx) => {
+          submitReached = true
+          const result = await submitPreparedSorobanTx(prepared, {
+            identity: options.identity,
+            network: options.network,
+            onStatus: (event: SorobanSubmitStatus) => {
+              record({
+                elapsedMs: Math.round(now() - started),
+                source: 'soroban',
+                message: event.message,
+                step: event.stage,
+              })
+            },
+            ...options.submitOptions,
+          })
+          txHash = result.hash
+          transactionSubmitted = true
+          signedAuthEntryCount = result.signedAuthEntryCount
+          return result.hash
+        },
+        (event) => {
+          record({
+            elapsedMs: Math.round(now() - started),
+            source: 'nethermind',
+            flow: stringField(event, 'flow'),
+            message: stringField(event, 'message') ?? stringField(event, 'step') ?? 'status',
+            step: stringField(event, 'stage') ?? stringField(event, 'step'),
+          })
+        },
+      )
+    }, options.importWebModule)
     const finalHash = txHash ?? hashes?.[0]
 
     if (!finalHash) {

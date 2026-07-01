@@ -1,13 +1,11 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import {
-  insertAspMembershipLeaf,
   isShieldedAssetEnabled,
   loadPublicStellarBalances,
   parseAssetAmountToStroops,
-  submitXlmShieldDeposit,
+  submitShieldWithPrerequisites,
   submitXlmUnshieldWithdrawal,
   type AssetCode,
-  type AspMembershipInsertReport,
   type NetworkKey,
   type PublicBalancesReport,
   type WalletIdentity,
@@ -21,6 +19,7 @@ import { formatStroops, stroopsToAmountInput, sumSpendableStroops } from './form
 import { proofFlowModel, type ProofFlowEvent } from './proofFlow'
 import { ProofRun, type ProofTerminalInfo } from './ProofRun'
 import type { WalletScreen } from './screens'
+import { recordWebActivity } from './webActivityStore'
 
 const XLM_FEE_RESERVE_BUFFER_STROOPS = 25_000_000n
 const ASSET_OPTIONS = [
@@ -49,6 +48,14 @@ function normalize(report: XlmShieldSubmitReport | XlmPrivateSubmitReport): Norm
   return { status: report.status, submitReached: report.submitReached, explorerUrls, error: report.error ?? report.blockers[0] }
 }
 
+function txHashFrom(report: XlmShieldSubmitReport | XlmPrivateSubmitReport): string | undefined {
+  return 'txHashes' in report ? report.txHashes[0] : report.txHash
+}
+
+function explorerUrlFrom(report: XlmShieldSubmitReport | XlmPrivateSubmitReport): string | undefined {
+  return 'explorerUrls' in report ? report.explorerUrls[0] : report.explorerUrl
+}
+
 interface ShieldScreenProps {
   identity: WalletIdentity
   network: NetworkKey
@@ -67,8 +74,6 @@ export function ShieldScreen({ identity, network, balance, initialTab = 'shield'
   const [pubResult, setPubResult] = useState<{ key: string; report: PublicBalancesReport } | null>(null)
   const [events, setEvents] = useState<readonly ProofFlowEvent[]>([])
   const [report, setReport] = useState<NormalReport | null>(null)
-  const [accessBusy, setAccessBusy] = useState(false)
-  const [accessReport, setAccessReport] = useState<AspMembershipInsertReport | null>(null)
   const runIdRef = useRef(0)
   const isUnshield = tab === 'unshield'
   const pubKey = `${identity.stellarPublicKey}:${network}`
@@ -111,31 +116,54 @@ export function ShieldScreen({ identity, network, balance, initialTab = 'shield'
     setAmount(stroopsToAmountInput(available > buffer ? available - buffer : 0n))
   }
 
-  async function prepareShieldAccess() {
-    setAccessBusy(true)
-    setAccessReport(null)
-    try {
-      setAccessReport(await insertAspMembershipLeaf({ identity, network }))
-    } finally {
-      setAccessBusy(false)
-    }
-  }
-
   async function run() {
     if (!parsed.ok) return
     const runId = ++runIdRef.current
     setEvents([]); setReport(null); setStep('running')
     const onStatus = (event: ProofFlowEvent) => { if (runIdRef.current === runId) setEvents((prev) => [...prev, event]) }
+    const onPrerequisiteStatus = (event: { readonly message: string }) => {
+      onStatus({ source: 'nethermind', message: event.message })
+    }
+    const activity = recordWebActivity({
+      network,
+      intent: isUnshield ? 'unshield' : 'shield',
+      boundary: 'public',
+      status: 'pending',
+      asset,
+      amountStroops: parsed.stroops.toString(),
+    })
     try {
       const result = isUnshield
         ? await submitXlmUnshieldWithdrawal({ asset, identity, network, amountStroops: parsed.stroops, recipientAddress: recipient.trim(), onStatus })
-        : await submitXlmShieldDeposit({ asset, identity, network, amountStroops: parsed.stroops, onStatus })
+        : await submitShieldWithPrerequisites({ asset, identity, network, amountStroops: parsed.stroops, onStatus, onPrerequisiteStatus })
       if (runIdRef.current !== runId) return
+      recordWebActivity({
+        id: activity.id,
+        network,
+        intent: isUnshield ? 'unshield' : 'shield',
+        boundary: 'public',
+        status: result.status,
+        asset,
+        amountStroops: parsed.stroops.toString(),
+        txHash: txHashFrom(result),
+        explorerUrl: explorerUrlFrom(result),
+        error: result.error ?? result.blockers[0],
+      })
       setReport(normalize(result))
       if (result.status === 'submitted') balance.refresh()
     } catch (cause) {
       // submit fns return failed/blocked reports rather than throwing — a throw is a genuine
       // fault; leave report null so ProofRun shows its honest "lost track" branch.
+      recordWebActivity({
+        id: activity.id,
+        network,
+        intent: isUnshield ? 'unshield' : 'shield',
+        boundary: 'public',
+        status: 'failed',
+        asset,
+        amountStroops: parsed.stroops.toString(),
+        error: cause instanceof Error ? cause.message : 'Boundary action failed before completion.',
+      })
       console.error('[ShieldScreen] unexpected submit rejection', cause)
     } finally {
       if (runIdRef.current === runId) { setStep('result'); runIdRef.current += 1 }
@@ -200,16 +228,9 @@ export function ShieldScreen({ identity, network, balance, initialTab = 'shield'
             <span style={{ fontSize: 12, lineHeight: 1.5, color: 'var(--tx2)' }}>Destination and amount become <b style={{ color: 'var(--dng)' }}>public on Stellar</b>. The pool can’t hide a withdrawal.</span>
           </div>
         ) : (
-          <>
-            <Button variant="secondary" fullWidth loading={accessBusy} disabled={accessBusy || !poolEnabled} onClick={() => void prepareShieldAccess()}>Prepare shield access</Button>
-            <Callout tone={accessReport?.status === 'submitted' ? 'info' : accessReport ? 'warn' : 'public'} title={accessReport ? `Shield access ${accessReport.status}` : 'One-time public setup.'}>
-              {accessReport
-                ? accessReport.status === 'submitted'
-                  ? `Access transaction submitted${accessReport.txHash ? ` (${truncateMiddle(accessReport.txHash, 8, 6)})` : ''}. Wait a few ledgers, then shield.`
-                  : accessReport.blockers[0] ?? accessReport.error ?? 'Shield access setup did not complete.'
-                : 'Run this once before the first shield if the pool needs your ASP membership leaf indexed.'}
-            </Callout>
-          </>
+          <Callout tone="public" title="Setup runs automatically.">
+            ZK Fighter checks your public balance, prepares USDC receiving when needed, prepares shield access, then runs the real shield deposit.
+          </Callout>
         )}
         <Segmented options={ASSET_OPTIONS} value={asset} onChange={(value) => setAsset(value as AssetCode)} size="sm" />
         <div style={{ border: '1px solid var(--bd2)', borderRadius: 14, background: 'var(--card)', padding: '20px 16px' }}>

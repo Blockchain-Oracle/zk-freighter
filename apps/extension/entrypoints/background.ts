@@ -1,37 +1,8 @@
 import '../src/runtime-env'
-import {
-  createSeedEvmClient,
-  deriveWalletIdentity,
-  ensureStellarUsdcTrustline,
-  extensionReadinessDigest,
-  getCctpSource,
-  phase11ExtensionReadiness,
-  resumeCctpBridgeToStellar,
-  runCctpBridgeToStellar,
-  type AspMembershipInsertReport,
-  type CctpBridgeReport,
-  type GenerateDisclosureReport,
-  type PublicDiscoveryLookupReport,
-  type PublicDiscoveryPublishReport,
-  type StellarUsdcTrustlineReport,
-  type XlmPrivateSubmitReport,
-  type XlmShieldSubmitReport,
-} from '@zk-fighter/core'
+import { createSeedEvmClient, deriveWalletIdentity, ensureStellarUsdcTrustline, extensionReadinessDigest, getCctpSource, phase11ExtensionReadiness, resumeCctpBridgeToStellar, runCctpBridgeToStellar, type AspMembershipInsertReport, type CctpBridgeReport, type GenerateDisclosureReport, type PublicDiscoveryLookupReport, type PublicDiscoveryPublishReport, type StellarUsdcTrustlineReport, type VerifyDisclosureReport, type XlmPrivateSubmitReport, type XlmShieldSubmitReport } from '@zk-fighter/core'
 import { browser } from 'wxt/browser'
 
-import type {
-  ExtensionAspInsertRequest,
-  ExtensionBalancesRequest,
-  ExtensionBridgeRequest,
-  ExtensionConfidentialRequest,
-  ExtensionDisclosureRequest,
-  ExtensionDiscoverPublishRequest,
-  ExtensionDiscoverRequest,
-  ExtensionPrivateTransferRequest,
-  ExtensionShieldRequest,
-  ExtensionUnshieldRequest,
-  ExtensionUsdcTrustlineRequest,
-} from '../src/dappRuntime-types'
+import type { ExtensionAspInsertRequest, ExtensionBalancesRequest, ExtensionBridgeRequest, ExtensionConfidentialRequest, ExtensionDisclosureRequest, ExtensionDisclosureVerifyRequest, ExtensionDiscoverPublishRequest, ExtensionDiscoverRequest, ExtensionPrivateTransferRequest, ExtensionShieldRequest, ExtensionUnshieldRequest, ExtensionUsdcTrustlineRequest } from '../src/dappRuntime-types'
 import { type DappBalances, type DappRuntimeMessage } from '../src/dappMessages'
 import { ExtensionDappRuntime } from '../src/dappRuntime'
 import { assertOffscreenSuccess } from '../src/offscreen-response'
@@ -52,11 +23,10 @@ const offscreenLoadBalancesMessageType = 'zkf.offscreen.loadBalances'
 const offscreenDiscoverLookupMessageType = 'zkf.offscreen.discoverLookup'
 const offscreenDiscoverPublishMessageType = 'zkf.offscreen.discoverPublish'
 const offscreenDisclosureMessageType = 'zkf.offscreen.disclosure'
+const offscreenDisclosureVerifyMessageType = 'zkf.offscreen.disclosureVerify'
 let offscreenQueue: Promise<unknown> = Promise.resolve()
 
-type MessagePayload = {
-  readonly type?: string
-}
+interface MessagePayload { readonly type?: string }
 
 export default defineBackground(() => {
   const dappRuntime = new ExtensionDappRuntime(
@@ -71,6 +41,8 @@ export default defineBackground(() => {
     runDiscoverInOffscreen,
     runDiscoverPublishInOffscreen,
     runDisclosureInOffscreen,
+    runDisclosureVerifyInOffscreen,
+    resetOffscreenRuntime,
   )
 
   browser.runtime.onInstalled.addListener(() => {
@@ -180,6 +152,10 @@ async function runDisclosureInOffscreen(request: ExtensionDisclosureRequest): Pr
   return (await sendOffscreenMessage({ type: offscreenDisclosureMessageType, ...request })) as GenerateDisclosureReport
 }
 
+async function runDisclosureVerifyInOffscreen(request: ExtensionDisclosureVerifyRequest): Promise<VerifyDisclosureReport> {
+  return (await sendOffscreenMessage({ type: offscreenDisclosureVerifyMessageType, ...request })) as VerifyDisclosureReport
+}
+
 async function runAspInsertInOffscreen(request: ExtensionAspInsertRequest): Promise<AspMembershipInsertReport> {
   return (await sendOffscreenMessage({ type: offscreenInsertAspMessageType, ...request })) as AspMembershipInsertReport
 }
@@ -234,17 +210,18 @@ async function sendOffscreenMessage(message: { readonly type: string; readonly [
   return offscreenQueue
 }
 
+async function resetOffscreenRuntime(): Promise<void> {
+  offscreenQueue = offscreenQueue.catch(() => undefined).then(async () => {
+    const offscreen = offscreenApi()
+    if (offscreen?.closeDocument === undefined) return
+    const hasDocument = offscreen.hasDocument === undefined ? true : await offscreen.hasDocument()
+    if (hasDocument) await offscreen.closeDocument()
+  })
+  await offscreenQueue
+}
+
 async function sendOffscreenMessageNow(message: { readonly type: string; readonly [key: string]: unknown }): Promise<unknown> {
-  const offscreen = (chrome as typeof chrome & {
-    readonly offscreen?: {
-      readonly createDocument?: (parameters: {
-        url: string
-        reasons: readonly string[]
-        justification: string
-      }) => Promise<void>
-      readonly hasDocument?: () => Promise<boolean>
-    }
-  }).offscreen
+  const offscreen = offscreenApi()
 
   if (offscreen?.createDocument === undefined) {
     throw new Error('Chrome offscreen API is unavailable.')
@@ -260,4 +237,28 @@ async function sendOffscreenMessageNow(message: { readonly type: string; readonl
   }
 
   return assertOffscreenSuccess(await browser.runtime.sendMessage(message))
+}
+
+function offscreenApi():
+  | {
+      readonly createDocument?: (parameters: {
+        url: string
+        reasons: readonly string[]
+        justification: string
+      }) => Promise<void>
+      readonly hasDocument?: () => Promise<boolean>
+      readonly closeDocument?: () => Promise<void>
+    }
+  | undefined {
+  return (chrome as typeof chrome & {
+    readonly offscreen?: {
+      readonly createDocument?: (parameters: {
+        url: string
+        reasons: readonly string[]
+        justification: string
+      }) => Promise<void>
+      readonly hasDocument?: () => Promise<boolean>
+      readonly closeDocument?: () => Promise<void>
+    }
+  }).offscreen
 }

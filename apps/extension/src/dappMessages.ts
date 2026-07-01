@@ -26,11 +26,13 @@ export const dappMessageTypes = {
   demoFundingRequest: 'zkf.extension.demoFunding.request',
   privateRuntimeStatus: 'zkf.extension.privateRuntime.status',
   privateTransfer: 'zkf.extension.dapp.privateTransfer',
+  publicTransfer: 'zkf.extension.dapp.publicTransfer',
   unshield: 'zkf.extension.dapp.unshield',
   discover: 'zkf.extension.dapp.discover',
   discoverStatus: 'zkf.extension.dapp.discoverStatus',
   discoverPublish: 'zkf.extension.dapp.discoverPublish',
   disclosure: 'zkf.extension.dapp.disclosure',
+  disclosureVerify: 'zkf.extension.dapp.disclosureVerify',
   activity: 'zkf.extension.dapp.activity',
   setNetwork: 'zkf.extension.dapp.setNetwork',
   passkeySupport: 'zkf.extension.dapp.passkeySupport',
@@ -116,6 +118,12 @@ export type DappRuntimeMessage =
       readonly timeoutMs?: number
     }
   | {
+      readonly type: typeof dappMessageTypes.publicTransfer
+      readonly asset: AssetCode
+      readonly amountStroops: string
+      readonly recipientAddress: string
+    }
+  | {
       readonly type: typeof dappMessageTypes.unshield
       readonly asset: AssetCode
       readonly amountStroops: string
@@ -139,7 +147,12 @@ export type DappRuntimeMessage =
       readonly purpose: string
     }
   | {
+      readonly type: typeof dappMessageTypes.disclosureVerify
+      readonly artifactJson: string
+    }
+  | {
       readonly type: typeof dappMessageTypes.activity
+      readonly network?: NetworkKey
     }
   | {
       readonly type: typeof dappMessageTypes.setNetwork

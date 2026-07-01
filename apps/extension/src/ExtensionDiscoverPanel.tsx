@@ -82,8 +82,10 @@ export function ExtensionDiscoverPanel({ status, sendRuntimeMessage, onPay }: { 
       {discoverStatus?.discoverable ? (
         <div style={{ border: '1px solid var(--pos)', borderRadius: 12, background: 'rgba(53,199,123,.08)', padding: '12px 14px' }}>
           <div style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--pos)' }}>Your code is discoverable</div>
+          <div style={{ font: '600 10.5px/1.4 var(--fm)', color: 'var(--tx3)', marginTop: 6 }}>Public · {shorten(status.publicKey, 8, 8)}</div>
           <div style={{ font: '600 10.5px/1.4 var(--fm)', color: 'var(--tx3)', marginTop: 6 }}>{shorten(discoverStatus.receiveCode ?? status.privateReceiveCode, 10, 6)}</div>
           <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+            <Button variant="secondary" fullWidth onClick={() => void navigator.clipboard.writeText(status.publicKey)}>Copy public</Button>
             <Button variant="secondary" fullWidth onClick={() => void navigator.clipboard.writeText(discoverStatus.receiveCode ?? status.privateReceiveCode)}>Copy code</Button>
             <Button variant="secondary" fullWidth onClick={() => { setAddress(status.publicKey); void lookupAddress(status.publicKey) }}>Check</Button>
           </div>

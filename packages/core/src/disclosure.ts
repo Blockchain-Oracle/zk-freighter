@@ -1,4 +1,4 @@
-import { loadNethermindWebClient, type NethermindModuleImporter } from './nethermind-runtime'
+import { runWithNethermindWebClient, type NethermindModuleImporter } from './nethermind-runtime'
 import { isShieldedAssetEnabled, type NetworkKey } from './networks'
 import { appendNethermindEvent, defaultNow, keyHex, poolIdForAsset, prepareClient } from './xlm-private-support'
 import type { XlmPrivateProgressEvent } from './xlm-private-types'
@@ -55,21 +55,23 @@ export async function generateDisclosureArtifact(
 
   try {
     const nonceHex = normalizedFieldHex(options.contextNonceHex ?? randomDisclosureNonceHex(), 'context nonce')
-    const client = await prepareClient(options)
-    if (!client.generateSelectiveDisclosure) {
-      throw new Error('Nethermind WebClient does not expose generateSelectiveDisclosure')
-    }
+    const receipt = await runWithNethermindWebClient(options.network, async (client) => {
+      const ready = await prepareClient(options, client)
+      if (!ready.generateSelectiveDisclosure) {
+        throw new Error('Nethermind WebClient does not expose generateSelectiveDisclosure')
+      }
 
-    const receipt = await client.generateSelectiveDisclosure(
-      poolContractId,
-      options.identity.stellarPublicKey,
-      options.note.id,
-      requiredText(options.authorityLabel, 'Authority label'),
-      normalizedPayloadHex(options.authorityIdentityPayloadHex, 'Authority identity payload'),
-      requiredText(options.purpose, 'Purpose'),
-      BigInt(nonceHex),
-      (event) => appendNethermindEvent(statusEvents, event, Math.round(now() - started)),
-    )
+      return ready.generateSelectiveDisclosure(
+        poolContractId,
+        options.identity.stellarPublicKey,
+        options.note.id,
+        requiredText(options.authorityLabel, 'Authority label'),
+        normalizedPayloadHex(options.authorityIdentityPayloadHex, 'Authority identity payload'),
+        requiredText(options.purpose, 'Purpose'),
+        BigInt(nonceHex),
+        (event) => appendNethermindEvent(statusEvents, event, Math.round(now() - started)),
+      )
+    }, options.importWebModule)
     if (!isDisclosureReceipt(receipt)) {
       return blockedReport('Nethermind returned no disclosure receipt. The note may need ASP/indexer sync.')
     }
@@ -148,18 +150,20 @@ export async function verifyDisclosureArtifact(options: {
     if (spendAuthorityPresent) {
       return verificationFailure('Artifact contains secret or spend-authority-shaped fields.', true)
     }
-
-    const client = await loadNethermindWebClient(options.network, options.importWebModule)
-    if (!client.verifySelectiveDisclosure) {
-      throw new Error('Nethermind WebClient does not expose verifySelectiveDisclosure')
+    if (parsed.network !== options.network) {
+      return verificationFailure(`Disclosure artifact is for ${parsed.network}, not ${options.network}.`)
     }
 
-    const report = parseVerificationReport(
-      await client.verifySelectiveDisclosure(
+    const report = await runWithNethermindWebClient(options.network, async (client) => {
+      if (!client.verifySelectiveDisclosure) {
+        throw new Error('Nethermind WebClient does not expose verifySelectiveDisclosure')
+      }
+
+      return parseVerificationReport(await client.verifySelectiveDisclosure(
         JSON.stringify(parsed.receipt),
         options.expectedVkHash ?? CANONICAL_SELECTIVE_DISCLOSURE_1_VK_HASH,
-      ),
-    )
+      ))
+    }, options.importWebModule)
     const fullyVerified = report.proofVerified && report.contextVerified && report.knownRootStatus
     return {
       status: fullyVerified ? 'verified' : 'rejected',
@@ -290,7 +294,6 @@ function requiredText(value: string, label: string): string {
 function isHex(value: unknown, length: number): value is string {
   return typeof value === 'string' && value.length === length && /^0x[0-9a-f]+$/.test(value)
 }
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
 }

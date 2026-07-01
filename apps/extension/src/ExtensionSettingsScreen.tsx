@@ -48,7 +48,7 @@ export function ExtensionSettingsScreen({ status, sendRuntimeMessage, lockWallet
       </SettingBlock>
 
       <SettingBlock label="Recovery">
-        <Copy>Seed phrase recovery is the only recovery path in the extension. Passkey unlock stays on the web app for now.</Copy>
+        <Copy>Seed phrase recovery is the only recovery path. Keep it offline; ZK Fighter cannot recover it for you.</Copy>
       </SettingBlock>
 
       <Button variant="danger" fullWidth onClick={() => void lockWallet()}>Lock wallet</Button>

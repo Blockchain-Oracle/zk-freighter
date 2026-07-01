@@ -88,6 +88,7 @@ const moduleInitCache = new Map<string, Promise<NethermindWebModule>>()
 const clientLocks = new Map<string, RuntimeLock>()
 const importerIds = new WeakMap<NethermindModuleImporter, number>()
 let nextImporterId = 1
+let runtimeQueue: Promise<void> = Promise.resolve()
 
 interface RuntimeLock {
   release(): void
@@ -123,6 +124,17 @@ export async function loadNethermindWebClient(
     clientCache.delete(key)
     throw error
   }
+}
+
+export async function runWithNethermindWebClient<T>(
+  network: NetworkKey,
+  operation: (client: NethermindWebClient) => Promise<T>,
+  importer: NethermindModuleImporter = importNethermindWebModule,
+): Promise<T> {
+  const run = async () => operation(await loadNethermindWebClient(network, importer))
+  const next = runtimeQueue.catch(() => undefined).then(run)
+  runtimeQueue = next.then(() => undefined, () => undefined)
+  return next
 }
 
 export async function initializeNethermindWebModule(
@@ -182,11 +194,19 @@ function cacheKeyForImporter(importer: NethermindModuleImporter): string {
   return String(next)
 }
 
-export function clearNethermindWebClientCache(): void {
+export function clearNethermindWebClientCache(options: { readonly clearModule?: boolean } = {}): void {
   for (const lock of clientLocks.values()) lock.release()
   clientCache.clear()
-  moduleInitCache.clear()
+  if (options.clearModule) moduleInitCache.clear()
   clientLocks.clear()
+}
+
+export async function restartNethermindWebClientCache(options: { readonly clearModule?: boolean } = {}): Promise<void> {
+  const restart = runtimeQueue.catch(() => undefined).then(() => {
+    clearNethermindWebClientCache(options)
+  })
+  runtimeQueue = restart.then(() => undefined, () => undefined)
+  await restart
 }
 
 async function releaseRuntimeLock(key: string): Promise<void> {

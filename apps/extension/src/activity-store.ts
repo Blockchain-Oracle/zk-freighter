@@ -19,7 +19,7 @@ export interface ActivityRecord {
   readonly amountStroops?: string
   readonly txHash?: string
   readonly explorerUrl?: string
-  readonly network?: NetworkKey
+  readonly network: NetworkKey
   readonly ts: number
 }
 
@@ -38,14 +38,14 @@ async function writeActivityRecord(record: ActivityRecord): Promise<void> {
   await browser.storage.local.set({ [storageKey]: next })
 }
 
-export async function readActivity(): Promise<readonly ActivityRecord[]> {
+export async function readActivity(network?: NetworkKey): Promise<readonly ActivityRecord[]> {
   await activityWriteQueue.catch(() => undefined)
   const records = await readStoredRecords()
   const reconciled = await reconcile(records)
   if (reconciled.changed) {
     await writeReconciledRecords(reconciled.records)
   }
-  return readStoredRecords()
+  return network === undefined ? filterNetworked(await readStoredRecords()) : filterByNetwork(await readStoredRecords(), network)
 }
 
 async function readStoredRecords(): Promise<readonly ActivityRecord[]> {
@@ -71,6 +71,14 @@ function mergeReconciledRecord(record: ActivityRecord, update: ActivityRecord | 
 
 function isRecord(value: unknown): value is ActivityRecord {
   return typeof value === 'object' && value !== null && 'id' in value && 'kind' in value && 'status' in value && 'ts' in value
+}
+
+function filterNetworked(records: readonly ActivityRecord[]): readonly ActivityRecord[] {
+  return records.filter((record) => record.network === 'testnet' || record.network === 'mainnet')
+}
+
+function filterByNetwork(records: readonly ActivityRecord[], network: NetworkKey): readonly ActivityRecord[] {
+  return records.filter((record) => record.network === network)
 }
 
 async function reconcile(records: readonly ActivityRecord[]): Promise<{ readonly changed: boolean; readonly records: readonly ActivityRecord[] }> {

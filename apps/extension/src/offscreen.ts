@@ -1,24 +1,11 @@
 import './runtime-env'
-import {
-  deriveWalletIdentity,
-  extensionReadinessDigest,
-  generateSeedPhrase,
-  ensureStellarUsdcTrustline,
-  initializeNethermindWebModule,
-  insertAspMembershipLeaf,
-  phase11ExtensionReadiness,
-  runNethermindDryDepositProofAttempt,
-  submitXlmShieldDeposit,
-  type AssetCode,
-  type NetworkKey,
-  type WalletIdentity,
-} from '@zk-fighter/core'
+import { deriveWalletIdentity, ensureStellarUsdcTrustline, extensionReadinessDigest, generateSeedPhrase, initializeNethermindWebModule, insertAspMembershipLeaf, phase11ExtensionReadiness, runNethermindDryDepositProofAttempt, submitShieldWithPrerequisites, type AssetCode, type NetworkKey, type WalletIdentity } from '@zk-fighter/core'
 import { browser } from 'wxt/browser'
 import { runPrivateTransfer, runUnshieldWithdrawal } from './offscreen-private-actions'
 import { runConfidentialOp } from './offscreen-confidential-actions'
 import { runLoadBalances } from './offscreen-balance-actions'
 import { runDiscoverLookup, runDiscoverPublish } from './offscreen-discover-actions'
-import { runDisclosure } from './offscreen-disclosure-actions'
+import { runDisclosure, runDisclosureVerify } from './offscreen-disclosure-actions'
 
 const offscreenStatusMessageType = 'zkf.offscreen.status'
 const nethermindProbeMessageType = 'zkf.offscreen.nethermindProbe'
@@ -35,6 +22,7 @@ const loadBalancesMessageType = 'zkf.offscreen.loadBalances'
 const discoverLookupMessageType = 'zkf.offscreen.discoverLookup'
 const discoverPublishMessageType = 'zkf.offscreen.discoverPublish'
 const disclosureMessageType = 'zkf.offscreen.disclosure'
+const disclosureVerifyMessageType = 'zkf.offscreen.disclosureVerify'
 const extensionProofAttemptTimeoutMs = 18_000
 const deepProofAttemptTimeoutMs = 180_000
 const statusEventLimit = 8
@@ -133,6 +121,13 @@ browser.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) 
       return true
     }
 
+    if (payload.type === disclosureVerifyMessageType) {
+      void runDisclosureVerify(payload).then(sendResponse, (error: unknown) => {
+        sendResponse({ ok: false, error: error instanceof Error ? error.message : String(error) })
+      })
+      return true
+    }
+
     if (payload.type !== nethermindProbeMessageType) {
       return false
     }
@@ -185,12 +180,13 @@ async function runShieldDeposit(payload: { readonly [key: string]: unknown }) {
     throw new Error('Missing extension wallet mnemonic.')
   }
 
-  return submitXlmShieldDeposit({
+  return submitShieldWithPrerequisites({
     asset,
     identity: deriveWalletIdentity(mnemonic, network),
     network,
     amountStroops,
     timeoutMs,
+    runAspSetup: true,
   })
 }
 
@@ -284,15 +280,11 @@ async function runExtensionDryProofAttempt(): Promise<unknown> {
 }
 
 function asNetworkKey(value: unknown): NetworkKey {
-  if (value === 'testnet' || value === 'mainnet') {
-    return value
-  }
+  if (value === 'testnet' || value === 'mainnet') return value
   throw new Error('Unsupported shield network.')
 }
 
 function asAssetCode(value: unknown): AssetCode {
-  if (value === 'XLM' || value === 'USDC') {
-    return value
-  }
+  if (value === 'XLM' || value === 'USDC') return value
   throw new Error('Unsupported shield asset.')
 }

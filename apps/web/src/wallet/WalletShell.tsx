@@ -34,6 +34,7 @@ interface WalletShellProps {
   network: NetworkKey
   receiveCode: string
   passkeyEnvelope: PasskeyEnvelope | null
+  privateEngineSwitching: boolean
   onChangeNetwork: (network: NetworkKey) => void
   onPasskeyEnvelopeChange: (envelope: PasskeyEnvelope | null) => void
   onLock: () => void
@@ -69,6 +70,7 @@ export function WalletShell({
   network,
   receiveCode,
   passkeyEnvelope,
+  privateEngineSwitching,
   onChangeNetwork,
   onPasskeyEnvelopeChange,
   onLock,
@@ -134,7 +136,12 @@ export function WalletShell({
       </aside>
 
       <main style={{ flex: 1, minWidth: 0, height: '100%', overflowY: 'auto' }}>
-        {screen === 'home' ? <HomeScreen identity={identity} balance={balance} onNav={setScreen} /> : null}
+        {privateEngineSwitching ? (
+          <div style={{ margin: '18px auto 0', width: 'calc(100% - 56px)', maxWidth: 760, border: '1px solid rgba(240,181,77,.32)', borderRadius: 12, background: 'rgba(240,181,77,.08)', color: 'var(--tx2)', padding: '10px 12px', fontSize: 12, fontWeight: 650 }}>
+            Switching private engine… shielded scans and proofs will resume on {network}.
+          </div>
+        ) : null}
+        {screen === 'home' ? <HomeScreen identity={identity} network={network} balance={balance} onNav={setScreen} /> : null}
         {screen === 'shield' ? <ShieldScreen identity={identity} network={network} balance={balance} onNav={setScreen} /> : null}
         {screen === 'send' ? <SendScreen identity={identity} network={network} balance={balance} onNav={setScreen} /> : null}
         {screen === 'unshield' ? <UnshieldScreen identity={identity} network={network} balance={balance} onNav={setScreen} /> : null}
@@ -142,7 +149,7 @@ export function WalletShell({
         {screen === 'bridge' ? <BridgeScreen identity={identity} network={network} balance={balance} onNav={setScreen} /> : null}
         {screen === 'disclosure' ? <DisclosureScreen identity={identity} network={network} balance={balance} onNav={setScreen} /> : null}
         {screen === 'confidential' ? <ConfidentialScreen identity={identity} network={network} onNav={setScreen} /> : null}
-        {screen === 'activity' ? <ActivityScreen balance={balance} /> : null}
+        {screen === 'activity' ? <ActivityScreen balance={balance} network={network} /> : null}
         {screen === 'receive' ? <ReceiveScreen identity={identity} network={network} receiveCode={receiveCode} onNav={setScreen} /> : null}
         {screen === 'settings' ? (
           <SettingsScreen

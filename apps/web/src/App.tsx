@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react'
 import {
   NETWORKS,
-  clearNethermindWebClientCache,
   createEncryptedVault,
   deriveWalletIdentity,
   encodeReceiveCode,
   requestDemoFunding,
+  restartNethermindWebClientCache,
   unlockPasskeyEnvelope,
   unlockEncryptedVault,
   type EncryptedVault,
@@ -42,6 +42,7 @@ function App() {
   const [unlockPassword, setUnlockPassword] = useState('')
   const [unlockError, setUnlockError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [privateEngineSwitching, setPrivateEngineSwitching] = useState(false)
 
   const receiveCode = useMemo(() => {
     if (!identity) return ''
@@ -138,7 +139,8 @@ function App() {
   }
 
   function changeNetwork(nextNetwork: NetworkKey) {
-    clearNethermindWebClientCache()
+    setPrivateEngineSwitching(true)
+    void restartNethermindWebClientCache().finally(() => setPrivateEngineSwitching(false))
     setNetwork(nextNetwork)
     setIdentity((current) => (current ? deriveWalletIdentity(current.mnemonic, nextNetwork) : null))
   }
@@ -155,6 +157,7 @@ function App() {
             network={network}
             receiveCode={receiveCode}
             passkeyEnvelope={passkeyEnvelope}
+            privateEngineSwitching={privateEngineSwitching}
             onChangeNetwork={changeNetwork}
             onPasskeyEnvelopeChange={savePasskeyEnvelope}
             onLock={() => { setIdentity(null); setFlow('unlock') }}

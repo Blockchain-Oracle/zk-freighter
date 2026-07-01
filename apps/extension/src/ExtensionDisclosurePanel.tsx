@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import type { AssetCode, GenerateDisclosureReport } from '@zk-fighter/core'
+import type { AssetCode, GenerateDisclosureReport, VerifyDisclosureReport } from '@zk-fighter/core'
 import { Button, Callout, Segmented } from '@zk-fighter/ui'
 
-import { dappMessageTypes, type DisclosureResponse } from './dappMessages'
+import { dappMessageTypes, type DisclosureResponse, type DisclosureVerifyResponse } from './dappMessages'
 import { ProvingView } from './extension-private-views'
 import { Caption, Copy, ErrorText, fieldStyle } from './extension-ui'
 
@@ -11,12 +11,16 @@ import { Caption, Copy, ErrorText, fieldStyle } from './extension-ui'
 // returns the SAME read-only receipt the web app produces. Never fabricated.
 
 type Step = 'form' | 'proving' | 'done'
+type Mode = 'create' | 'verify'
 
 export function ExtensionDisclosurePanel({ sendRuntimeMessage }: { sendRuntimeMessage: (message: object) => Promise<unknown> }) {
+  const [mode, setMode] = useState<Mode>('create')
   const [asset, setAsset] = useState<AssetCode>('USDC')
   const [authority, setAuthority] = useState('')
   const [purpose, setPurpose] = useState('Q3-2026 audit')
   const [report, setReport] = useState<GenerateDisclosureReport | null>(null)
+  const [verifyReport, setVerifyReport] = useState<VerifyDisclosureReport | null>(null)
+  const [artifactJson, setArtifactJson] = useState('')
   const [error, setError] = useState('')
   const [step, setStep] = useState<Step>('form')
   const [copied, setCopied] = useState(false)
@@ -32,6 +36,25 @@ export function ExtensionDisclosurePanel({ sendRuntimeMessage }: { sendRuntimeMe
         setStep('done')
       } else {
         setError(res.error ?? 'Disclosure generation failed.')
+        setStep('form')
+      }
+    } catch {
+      setError('Couldn’t reach the wallet — try again.')
+      setStep('form')
+    }
+  }
+
+  async function verify() {
+    if (!artifactJson.trim()) return
+    setStep('proving')
+    setError('')
+    try {
+      const res = (await sendRuntimeMessage({ type: dappMessageTypes.disclosureVerify, artifactJson })) as DisclosureVerifyResponse
+      if (res.ok && res.report) {
+        setVerifyReport(res.report)
+        setStep('done')
+      } else {
+        setError(res.error ?? 'Disclosure verification failed.')
         setStep('form')
       }
     } catch {
@@ -65,26 +88,49 @@ export function ExtensionDisclosurePanel({ sendRuntimeMessage }: { sendRuntimeMe
     )
   }
 
+  if (step === 'done' && verifyReport) {
+    const ok = verifyReport.status === 'verified'
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <Callout tone={ok ? 'info' : 'warn'} title={ok ? 'Proof verified.' : 'Proof not verified.'}>
+          {ok ? 'Proof, context, and known-root checks passed. The receipt is read-only.' : verifyReport.blockers[0] ?? 'Verification did not pass.'}
+        </Callout>
+        {verifyReport.error ? <ErrorText>{verifyReport.error}</ErrorText> : null}
+        <Button variant="secondary" fullWidth onClick={() => { setStep('form'); setVerifyReport(null) }}>Done</Button>
+      </div>
+    )
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       <div style={{ fontWeight: 800, fontSize: 17, letterSpacing: '-.02em' }}>Disclosure</div>
       <Copy>Prove you own a specific note to an auditor — revealing that note’s amount to them, but not your other notes, your balance, or any power to spend.</Copy>
-      <Segmented options={(['USDC', 'XLM'] as const).map((value) => ({ value, label: value }))} value={asset} onChange={(value) => setAsset(value as AssetCode)} size="sm" />
-      <div>
-        <Caption style={{ display: 'block', marginBottom: 6 }}>NOTE</Caption>
-        <div style={{ ...fieldStyle, color: 'var(--tx2)' }}>Your largest unspent {asset} note will be disclosed.</div>
-      </div>
-      <div>
-        <Caption style={{ display: 'block', marginBottom: 6 }}>AUTHORITY</Caption>
-        <input value={authority} onChange={(event) => setAuthority(event.target.value)} placeholder="e.g. Acme Bank compliance" style={fieldStyle} />
-      </div>
-      <div>
-        <Caption style={{ display: 'block', marginBottom: 6 }}>PURPOSE</Caption>
-        <input value={purpose} onChange={(event) => setPurpose(event.target.value)} placeholder="e.g. Q3-2026 audit" style={fieldStyle} />
-      </div>
-      <Callout tone="info">Proving runs on your device — nothing uploaded. The receipt is read-only; it cannot move funds.</Callout>
+      <Segmented options={[{ value: 'create', label: 'Create proof' }, { value: 'verify', label: 'Verify a proof' }]} value={mode} onChange={(value) => { setMode(value as Mode); setError('') }} size="sm" />
+      {mode === 'create' ? (
+        <>
+          <Segmented options={(['USDC', 'XLM'] as const).map((value) => ({ value, label: value }))} value={asset} onChange={(value) => setAsset(value as AssetCode)} size="sm" />
+          <div>
+            <Caption style={{ display: 'block', marginBottom: 6 }}>NOTE</Caption>
+            <div style={{ ...fieldStyle, color: 'var(--tx2)' }}>Your largest unspent {asset} note will be disclosed.</div>
+          </div>
+          <div>
+            <Caption style={{ display: 'block', marginBottom: 6 }}>AUTHORITY</Caption>
+            <input value={authority} onChange={(event) => setAuthority(event.target.value)} placeholder="e.g. Acme Bank compliance" style={fieldStyle} />
+          </div>
+          <div>
+            <Caption style={{ display: 'block', marginBottom: 6 }}>PURPOSE</Caption>
+            <input value={purpose} onChange={(event) => setPurpose(event.target.value)} placeholder="e.g. Q3-2026 audit" style={fieldStyle} />
+          </div>
+          <Callout tone="info">Proving runs on your device — nothing uploaded. The receipt is read-only; it cannot move funds.</Callout>
+        </>
+      ) : (
+        <div>
+          <Caption style={{ display: 'block', marginBottom: 6 }}>RECEIPT JSON</Caption>
+          <textarea value={artifactJson} onChange={(event) => setArtifactJson(event.target.value)} rows={7} placeholder="{…}" style={{ ...fieldStyle, resize: 'vertical' }} />
+        </div>
+      )}
       {error ? <ErrorText>{error}</ErrorText> : null}
-      <Button fullWidth disabled={!authority.trim()} onClick={() => void generate()}>Generate disclosure proof</Button>
+      <Button fullWidth disabled={mode === 'create' ? !authority.trim() : !artifactJson.trim()} onClick={() => void (mode === 'create' ? generate() : verify())}>{mode === 'create' ? 'Create proof' : 'Verify proof'}</Button>
     </div>
   )
 }

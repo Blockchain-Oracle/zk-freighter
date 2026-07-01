@@ -8,12 +8,14 @@ import type {
   NetworkKey,
   PasskeyEnvelope,
   PasskeySupportReport,
+  PublicStellarPaymentReport,
   PublicDiscoveryLookupReport,
   PublicDiscoveryPublishReport,
   FundingApiReport,
   StellarUsdcTrustlineReport,
   XlmPrivateSubmitReport,
   XlmShieldSubmitReport,
+  VerifyDisclosureReport,
 } from '@zk-fighter/core'
 
 import type { ActivityRecord } from './activity-store'
@@ -136,6 +138,12 @@ export interface PrivateActionResponse {
   readonly error?: string
 }
 
+export interface PublicActionResponse {
+  readonly ok: boolean
+  readonly report?: PublicStellarPaymentReport
+  readonly error?: string
+}
+
 export interface DiscoverLookupResponse {
   readonly ok: boolean
   readonly report?: PublicDiscoveryLookupReport
@@ -160,6 +168,12 @@ export interface DiscoverStatusResponse {
 export interface DisclosureResponse {
   readonly ok: boolean
   readonly report?: GenerateDisclosureReport
+  readonly error?: string
+}
+
+export interface DisclosureVerifyResponse {
+  readonly ok: boolean
+  readonly report?: VerifyDisclosureReport
   readonly error?: string
 }
 
@@ -194,10 +208,12 @@ export type DappRuntimeResponse =
   | DemoFundingResponse
   | PrivateRuntimeStatusResponse
   | PrivateActionResponse
+  | PublicActionResponse
   | DiscoverLookupResponse
   | DiscoverStatusResponse
   | DiscoverPublishResponse
   | DisclosureResponse
+  | DisclosureVerifyResponse
   | ActivityResponse
   | PasskeySupportResponse
   | PasskeyPrepareCreateResponse
