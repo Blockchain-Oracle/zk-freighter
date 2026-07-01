@@ -2281,3 +2281,16 @@ These are upload/install estimates only. They do not include contract-instance d
 - **Result:** `proofGenerated: true`, `transactionSubmitted: true`, `durationMs: 15904`, attempts `1`.
 - **Balance scan result:** `shieldedXlmStroops: 0`, `shieldedUsdcStroops: 10000000`, `noteCount: 1`, `shieldedOk: true`, blockers `[]`.
 - **Fix verified:** extension balance reads now use the Nethermind runtime's pool-filtered `getUnspentUserNotes(poolContractId, address)` path. The smoke script fails if the submitted asset leaks into the other shielded asset balance.
+
+## 2026-07-01 — Nethermind storage worker pending-event stall fix
+
+- **Symptom:** Zen/web shield attempts failed before proving with `Storage Worker Communication Error: operation timed out after 60000 ms`.
+- **Root cause:** Nethermind `ProcessPending` loops until `process_events` and `process_notes` report no work. Unsupported or unparseable raw contract events were fetched by `get_unprocessed_events`, logged, but never persisted into any processed table. The worker then revisited the same raw rows forever until the 60s request timeout.
+- **Fix:** patched `reference/stellar-private-payments` locally so unsupported raw events are preserved in `raw_contract_events`, marked in a new `ignored_contract_events` table, and excluded from future `get_unprocessed_events` scans. Tracked reproducibility patch: `patches/nethermind/ignore-unsupported-events.patch`.
+- **Build:** rebuilt Nethermind browser assets with Homebrew LLVM (`CC_wasm32_unknown_unknown=/opt/homebrew/opt/llvm/bin/clang`, `CXX_wasm32_unknown_unknown=/opt/homebrew/opt/llvm/bin/clang++`, `AR_wasm32_unknown_unknown=/opt/homebrew/opt/llvm/bin/llvm-ar`, `make release`) and restaged with `pnpm prover:stage`.
+- **Verification:**
+  - `cargo test -p state unsupported_raw_events_do_not_block_processing`
+  - `CI=true pnpm --filter @zk-fighter/web build`
+  - `CI=true pnpm --filter @zk-fighter/extension build:local`
+  - `node scripts/check-file-size.mjs`
+- **Local runtime:** restarted web dev server on `http://localhost:4173/`; funding API `8787`, testnet bootnode `8788`, and mainnet bootnode `8789` health checks returned `ok`.

@@ -1,0 +1,171 @@
+diff --git a/app/crates/core/state/src/processor.rs b/app/crates/core/state/src/processor.rs
+index af71894..f1d3082 100644
+--- a/app/crates/core/state/src/processor.rs
++++ b/app/crates/core/state/src/processor.rs
+@@ -11,14 +11,14 @@ pub fn process_events(storage: &mut Storage, limit: u32) -> Result<bool> {
+     let mut commitments = vec![];
+     let mut pubkeys = vec![];
+     let mut leaves = vec![];
++    let mut ignored = vec![];
+     while let Some(event) = unprocessed.pop() {
++        let event_id = event.id.clone();
+         let parsed = match parse_event(event) {
+             Ok(parsed) => parsed,
+             Err(e) => {
+-                // we shouldn't delete broken events
+-                // we should fix the logic then
+-                // update the software and handle them
+-                log::error!("cannot process event: {e:?}");
++                log::warn!("ignoring unsupported raw event {event_id}: {e:?}");
++                ignored.push((event_id, format!("parse error: {e}")));
+                 continue;
+             }
+         };
+@@ -27,13 +27,34 @@ pub fn process_events(storage: &mut Storage, limit: u32) -> Result<bool> {
+             ProcessedEvent::Commitment(ev) => commitments.push(ev),
+             ProcessedEvent::PublicKey(ev) => pubkeys.push(ev),
+             ProcessedEvent::LeafAdded(ev) => leaves.push(ev),
+-            _ => log::warn!("event won't be saved to the storage: {parsed:?}"),
++            ProcessedEvent::LeafInserted(ev) => {
++                log::warn!(
++                    "ignoring unsupported ASP non-membership insert event {}",
++                    ev.id
++                );
++                ignored.push((ev.id, "unsupported asp non-membership insert".to_string()));
++            }
++            ProcessedEvent::LeafUpdated(ev) => {
++                log::warn!(
++                    "ignoring unsupported ASP non-membership update event {}",
++                    ev.id
++                );
++                ignored.push((ev.id, "unsupported asp non-membership update".to_string()));
++            }
++            ProcessedEvent::LeafDeleted(ev) => {
++                log::warn!(
++                    "ignoring unsupported ASP non-membership delete event {}",
++                    ev.id
++                );
++                ignored.push((ev.id, "unsupported asp non-membership delete".to_string()));
++            }
+         }
+     }
+     storage.save_nullifier_events_batch(&nullifiers)?;
+     storage.save_commitment_events_batch(&commitments)?;
+     storage.save_public_key_events_batch(&pubkeys)?;
+     storage.save_leaf_added_events_batch(&leaves)?;
++    storage.save_ignored_contract_events_batch(&ignored)?;
+     Ok(true)
+ }
+ 
+diff --git a/app/crates/core/state/src/schema.sql b/app/crates/core/state/src/schema.sql
+index ea4c900..8333298 100644
+--- a/app/crates/core/state/src/schema.sql
++++ b/app/crates/core/state/src/schema.sql
+@@ -53,6 +53,15 @@ CREATE TABLE raw_contract_events (
+ );
+ CREATE INDEX idx_raw_contract_events_ledger_id ON raw_contract_events(ledger, id);
+ 
++-- Raw events fetched from tracked contracts but not needed by the wallet's
++-- local note/proof state model. Keeping an explicit marker preserves the raw
++-- event while preventing the processor from looping on it forever.
++CREATE TABLE ignored_contract_events (
++    event_id TEXT PRIMARY KEY,
++    reason TEXT NOT NULL,
++    FOREIGN KEY (event_id) REFERENCES raw_contract_events(id) ON DELETE CASCADE
++);
++
+ -- User accounts known to this local database (one per Stellar address).
+ CREATE TABLE accounts (
+     id INTEGER PRIMARY KEY,
+diff --git a/app/crates/core/state/src/storage.rs b/app/crates/core/state/src/storage.rs
+index a8736ba..28aa318 100644
+--- a/app/crates/core/state/src/storage.rs
++++ b/app/crates/core/state/src/storage.rs
+@@ -11,7 +11,16 @@ use types::{
+ // shouldn't be changed for WASM OPFS otherwise the db will be lost
+ const DB_NAME: &str = "poolstellar.sqlite";
+ 
+-const MIGRATION_ARRAY: &[M] = &[M::up(include_str!("schema.sql"))];
++const MIGRATION_ARRAY: &[M] = &[
++    M::up(include_str!("schema.sql")),
++    M::up(
++        "CREATE TABLE IF NOT EXISTS ignored_contract_events (
++            event_id TEXT PRIMARY KEY,
++            reason TEXT NOT NULL,
++            FOREIGN KEY (event_id) REFERENCES raw_contract_events(id) ON DELETE CASCADE
++        );",
++    ),
++];
+ const MIGRATIONS: Migrations = Migrations::from_slice(MIGRATION_ARRAY);
+ 
+ pub struct Storage {
+@@ -685,6 +694,32 @@ impl Storage {
+         Ok(())
+     }
+ 
++    /// Mark raw events that are intentionally not part of the wallet's local
++    /// state model so the processor does not revisit them forever.
++    pub fn save_ignored_contract_events_batch(
++        &mut self,
++        events: &[(String, String)],
++    ) -> Result<()> {
++        if events.is_empty() {
++            return Ok(());
++        }
++
++        let tx = self.conn.transaction()?;
++        {
++            let mut stmt = tx.prepare(
++                "INSERT INTO ignored_contract_events (event_id, reason)
++                    VALUES (?1, ?2)
++                    ON CONFLICT(event_id) DO UPDATE SET reason = excluded.reason",
++            )?;
++
++            for (event_id, reason) in events {
++                stmt.execute(params![event_id, reason])?;
++            }
++        }
++        tx.commit()?;
++        Ok(())
++    }
++
+     /// Checks whether ASP membership data is usable for proving at the current
+     /// network tip.
+     ///
+@@ -857,10 +892,12 @@ impl Storage {
+                 LEFT JOIN public_keys p ON r.id = p.event_id
+                 LEFT JOIN asp_membership_leaves l ON r.id = l.event_id
+                 LEFT JOIN pool_nullifiers n ON r.id = n.event_id
++                LEFT JOIN ignored_contract_events i ON r.id = i.event_id
+                 WHERE pc.event_id IS NULL
+                 AND p.event_id IS NULL
+                 AND n.event_id IS NULL
+                 AND l.event_id IS NULL
++                AND i.event_id IS NULL
+                 ORDER BY r.ledger ASC, r.id ASC
+                 LIMIT ?1",
+         )?;
+@@ -1279,6 +1316,23 @@ mod tests {
+         }
+     }
+ 
++    #[test]
++    fn unsupported_raw_events_do_not_block_processing() -> Result<()> {
++        let mut storage = Storage::connect_with_connection(Connection::open_in_memory()?)?;
++        storage.save_events_batch(&ContractsEventData {
++            cursor: "cursor".to_string(),
++            latest_ledger: 1,
++            events: vec![dummy_event("unsupported-event-1")],
++        })?;
++
++        assert_eq!(storage.get_unprocessed_events(50)?.len(), 1);
++        assert!(crate::process_events(&mut storage, 50)?);
++        assert!(storage.get_unprocessed_events(50)?.is_empty());
++        assert!(!crate::process_events(&mut storage, 50)?);
++
++        Ok(())
++    }
++
+     #[test]
+     fn get_recent_public_keys_reads_public_keys_with_ledger() -> Result<()> {
+         let mut storage = Storage::connect_with_connection(Connection::open_in_memory()?)?;
