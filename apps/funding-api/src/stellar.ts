@@ -97,6 +97,10 @@ async function submitUsdcFunding(destination: string, keypair: Keypair, amountSt
   if (!issuer) throw new Error('Testnet USDC issuer is not configured.')
   const server = new Horizon.Server(network.horizonUrl)
   const source = await server.loadAccount(keypair.publicKey())
+  const sourceBalance = balanceFor('USDC', source)
+  if ((sourceBalance ?? 0n) < amountStroops) {
+    throw new Error(`Funding wallet has only ${stellarAmount(sourceBalance ?? 0n)} USDC; lower ZKF_TESTNET_FUND_USDC or top up the funder.`)
+  }
   const fee = await server.fetchBaseFee()
   const tx = new TransactionBuilder(source, { fee: String(fee), networkPassphrase: network.passphrase })
     .addOperation(Operation.payment({ destination, asset: new Asset('USDC', issuer), amount: stellarAmount(amountStroops) }))

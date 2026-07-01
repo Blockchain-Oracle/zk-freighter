@@ -6,6 +6,7 @@ import { runConfidentialOp } from './offscreen-confidential-actions'
 import { runLoadBalances } from './offscreen-balance-actions'
 import { runDiscoverLookup, runDiscoverPublish } from './offscreen-discover-actions'
 import { runDisclosure, runDisclosureVerify } from './offscreen-disclosure-actions'
+import { serializeChromeMessage } from './chrome-message-serialization'
 
 const offscreenStatusMessageType = 'zkf.offscreen.status'
 const nethermindProbeMessageType = 'zkf.offscreen.nethermindProbe'
@@ -30,61 +31,62 @@ let deepProofIdentity: WalletIdentity | undefined
 
 browser.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) => {
   const payload = typeof message === 'object' && message !== null ? (message as { type?: string }) : {}
+  const respond = (response: unknown) => sendResponse(serializeChromeMessage(response))
 
   if (payload.type !== offscreenStatusMessageType) {
     if (payload.type === dryProofAttemptMessageType) {
-      void runExtensionDryProofAttempt().then(sendResponse)
+      void runExtensionDryProofAttempt().then(respond)
       return true
     }
 
     if (payload.type === prepareDeepProofMessageType) {
       deepProofIdentity = deriveWalletIdentity(generateSeedPhrase(), 'testnet')
-      sendResponse({ ok: true, userAddress: deepProofIdentity.stellarPublicKey })
+      respond({ ok: true, userAddress: deepProofIdentity.stellarPublicKey })
       return true
     }
 
     if (payload.type === aspInsertAndDryProofMessageType) {
-      void runAspInsertAndDryProof().then(sendResponse)
+      void runAspInsertAndDryProof().then(respond)
       return true
     }
 
     if (payload.type === submitShieldDepositMessageType) {
-      void runShieldDeposit(payload).then(sendResponse, (error: unknown) => {
+      void runShieldDeposit(payload).then(respond, (error: unknown) => {
         sendResponse({ ok: false, error: error instanceof Error ? error.message : String(error) })
       })
       return true
     }
 
     if (payload.type === insertAspMembershipMessageType) {
-      void runAspInsert(payload).then(sendResponse, (error: unknown) => {
+      void runAspInsert(payload).then(respond, (error: unknown) => {
         sendResponse({ ok: false, error: error instanceof Error ? error.message : String(error) })
       })
       return true
     }
 
     if (payload.type === prepareUsdcReceiveMessageType) {
-      void runUsdcReceivePreparation(payload).then(sendResponse, (error: unknown) => {
+      void runUsdcReceivePreparation(payload).then(respond, (error: unknown) => {
         sendResponse({ ok: false, error: error instanceof Error ? error.message : String(error) })
       })
       return true
     }
 
     if (payload.type === privateTransferMessageType) {
-      void runPrivateTransfer(payload).then(sendResponse, (error: unknown) => {
+      void runPrivateTransfer(payload).then(respond, (error: unknown) => {
         sendResponse({ ok: false, error: error instanceof Error ? error.message : String(error) })
       })
       return true
     }
 
     if (payload.type === unshieldWithdrawalMessageType) {
-      void runUnshieldWithdrawal(payload).then(sendResponse, (error: unknown) => {
+      void runUnshieldWithdrawal(payload).then(respond, (error: unknown) => {
         sendResponse({ ok: false, error: error instanceof Error ? error.message : String(error) })
       })
       return true
     }
 
     if (payload.type === confidentialMessageType) {
-      void runConfidentialOp(payload).then(sendResponse, (error: unknown) => {
+      void runConfidentialOp(payload).then(respond, (error: unknown) => {
         sendResponse({ ok: false, error: error instanceof Error ? error.message : String(error) })
       })
       return true
@@ -92,7 +94,7 @@ browser.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) 
 
     if (payload.type === loadBalancesMessageType) {
       // Real balance scan (fetch+decrypt notes + Horizon) — no proving.
-      void runLoadBalances(payload).then(sendResponse, (error: unknown) => {
+      void runLoadBalances(payload).then(respond, (error: unknown) => {
         sendResponse({ ok: false, error: error instanceof Error ? error.message : String(error) })
       })
       return true
@@ -100,14 +102,14 @@ browser.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) 
 
     if (payload.type === discoverLookupMessageType) {
       // Public discovery lookup (getRecentPublicKeys) — no proving, no secret.
-      void runDiscoverLookup(payload).then(sendResponse, (error: unknown) => {
+      void runDiscoverLookup(payload).then(respond, (error: unknown) => {
         sendResponse({ ok: false, error: error instanceof Error ? error.message : String(error) })
       })
       return true
     }
 
     if (payload.type === discoverPublishMessageType) {
-      void runDiscoverPublish(payload).then(sendResponse, (error: unknown) => {
+      void runDiscoverPublish(payload).then(respond, (error: unknown) => {
         sendResponse({ ok: false, error: error instanceof Error ? error.message : String(error) })
       })
       return true
@@ -115,14 +117,14 @@ browser.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) 
 
     if (payload.type === disclosureMessageType) {
       // selectiveDisclosure proof — read-only receipt; proves note ownership only.
-      void runDisclosure(payload).then(sendResponse, (error: unknown) => {
+      void runDisclosure(payload).then(respond, (error: unknown) => {
         sendResponse({ ok: false, error: error instanceof Error ? error.message : String(error) })
       })
       return true
     }
 
     if (payload.type === disclosureVerifyMessageType) {
-      void runDisclosureVerify(payload).then(sendResponse, (error: unknown) => {
+      void runDisclosureVerify(payload).then(respond, (error: unknown) => {
         sendResponse({ ok: false, error: error instanceof Error ? error.message : String(error) })
       })
       return true
@@ -132,11 +134,11 @@ browser.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) 
       return false
     }
 
-    void probeNethermindModule().then(sendResponse)
+    void probeNethermindModule().then(respond)
     return true
   }
 
-  sendResponse({
+  respond({
     ok: true,
     readiness: phase11ExtensionReadiness,
     digest: extensionReadinessDigest(),
