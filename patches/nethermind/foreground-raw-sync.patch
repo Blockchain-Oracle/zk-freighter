@@ -1,0 +1,106 @@
+diff --git a/app/crates/platforms/web/src/protocol.rs b/app/crates/platforms/web/src/protocol.rs
+--- a/app/crates/platforms/web/src/protocol.rs
++++ b/app/crates/platforms/web/src/protocol.rs
+@@
+     ProcessPending,
++    ProcessRawEvents,
+     ClearIndexingCursors,
+     DeriveSaveUserKeys(Address, KeyDerivationSignature, String),
+diff --git a/app/crates/platforms/web/src/workers/storage.rs b/app/crates/platforms/web/src/workers/storage.rs
+--- a/app/crates/platforms/web/src/workers/storage.rs
++++ b/app/crates/platforms/web/src/workers/storage.rs
+@@
+         StorageWorkerRequest::ProcessPending => {
+             log::trace!("[{WORKER_NAME}] processing pending raw events and notes");
+             process_until_empty().await?;
+             StorageWorkerResponse::Saved
+         }
++        StorageWorkerRequest::ProcessRawEvents => {
++            log::trace!("[{WORKER_NAME}] processing pending raw events");
++            process_raw_events_until_empty().await?;
++            StorageWorkerResponse::Saved
++        }
+@@
+             log::trace!(
+                 "[{WORKER_NAME}] saved notes, encryption keys, and ASP secret for the account {address}"
+             );
+-            kick_processor();
+             StorageWorkerResponse::Saved
+         }
+@@
+ async fn process_until_empty() -> anyhow::Result<()> {
+@@
+     Ok(())
+ }
++
++async fn process_raw_events_until_empty() -> anyhow::Result<()> {
++    const FETCH_LIMIT: u32 = 50;
++
++    loop {
++        let did_raw = with_storage_mut!(s => process_events(s, FETCH_LIMIT)?)?;
++        if !did_raw {
++            break;
++        }
++        // Yield to avoid blocking other worker messages while catching up.
++        gloo_timers::future::TimeoutFuture::new(0).await;
++    }
++    Ok(())
++}
+diff --git a/app/crates/platforms/web/src/client/mod.rs b/app/crates/platforms/web/src/client/mod.rs
+--- a/app/crates/platforms/web/src/client/mod.rs
++++ b/app/crates/platforms/web/src/client/mod.rs
+@@
+     pub(super) async fn process_pending_events(&self) -> Result<(), JsError> {
+         match self
+             .storage_request(StorageWorkerRequest::ProcessPending, 60_000)
+             .await?
+         {
+             StorageWorkerResponse::Saved => Ok(()),
+             other => Err(JsError::new(&format!("Unexpected response: {:?}", other))),
+         }
+     }
++
++    pub(super) async fn process_pending_raw_events(&self) -> Result<(), JsError> {
++        match self
++            .storage_request(StorageWorkerRequest::ProcessRawEvents, 10_000)
++            .await?
++        {
++            StorageWorkerResponse::Saved => Ok(()),
++            other => Err(JsError::new(&format!("Unexpected response: {:?}", other))),
++        }
++    }
+@@
+     #[wasm_bindgen(js_name = syncPoolEvents)]
+     pub async fn sync_pool_events(&self) -> Result<(), JsError> {
+@@
+         self.process_pending_events().await
+     }
++
++    async fn sync_pool_events_for_proving(&self) -> Result<(), JsError> {
++        let indexer = Indexer::init(&self.rpc_url, self.clone(), self.contract_config)
++            .await
++            .map_err(|e| JsError::new(&e.to_string()))?;
++
++        indexer
++            .fetch_contract_events()
++            .await
++            .map_err(|e| JsError::new(&e.to_string()))?;
++        self.process_pending_raw_events().await
++    }
+diff --git a/app/crates/platforms/web/src/client/transact.rs b/app/crates/platforms/web/src/client/transact.rs
+--- a/app/crates/platforms/web/src/client/transact.rs
++++ b/app/crates/platforms/web/src/client/transact.rs
+@@
+-            let req = TransactRequest {
++            let requires_note_derivation = !step.input_commitments.is_empty();
++            let req = TransactRequest {
+@@
+-                    self.sync_pool_events().await?;
++                    if requires_note_derivation {
++                        self.sync_pool_events().await?;
++                    } else {
++                        self.sync_pool_events_for_proving().await?;
++                    }
+                     TimeoutFuture::new(1_000).await;
+                     continue;
+                 }

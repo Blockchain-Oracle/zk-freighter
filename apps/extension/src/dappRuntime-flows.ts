@@ -59,6 +59,7 @@ export async function quickShieldFlow(ready: FlowReady, runner: ExtensionShieldR
   try {
     const report = await runner({ mnemonic: ready.mnemonic, network: ready.network, asset, amountStroops, timeoutMs })
     recordOp('shield', 'public', toActivityStatus(report.status), { asset, amountStroops: report.amountStroops, txHash: report.txHash, explorerUrl: report.explorerUrl, network: ready.network }, activityId)
+    if (report.status === 'submitted') void clearAllBalanceCache()
     return { ok: true, report }
   } catch (error) {
     recordOp('shield', 'public', 'failed', { asset, amountStroops, network: ready.network }, activityId)

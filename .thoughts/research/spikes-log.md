@@ -2294,3 +2294,18 @@ These are upload/install estimates only. They do not include contract-instance d
   - `CI=true pnpm --filter @zk-fighter/extension build:local`
   - `node scripts/check-file-size.mjs`
 - **Local runtime:** restarted web dev server on `http://localhost:4173/`; funding API `8787`, testnet bootnode `8788`, and mainnet bootnode `8789` health checks returned `ok`.
+
+## 2026-07-01 — Foreground shield sync no longer waits on full note derivation
+
+- **Symptom:** after the unsupported-event fix, Zen still showed `Deposit failed` with `Storage Worker Communication Error: operation timed out after 60000 ms`; console showed bootnode `getEvents` requests returning 200 and the failure occurring after `Building witness inputs…`.
+- **Root cause:** shield/deposit foreground sync called `syncPoolEvents()`, which processed raw ASP/pool events and also derived notes for every known local account. Key derivation also kicked the same full background processor before deposit began. A deposit has no input commitments, so it should not wait behind full note derivation.
+- **Fix:** added a raw-event-only storage worker request for proving prerequisites and removed the key-derivation background processor kick. Deposit paths with no input commitments now use raw-event sync; send/unshield paths with input notes still use full note sync. Tracked reproducibility patch: `patches/nethermind/foreground-raw-sync.patch`.
+- **Build:** rebuilt Nethermind browser assets with Homebrew LLVM and restaged with `pnpm prover:stage`.
+- **Extension cache follow-up:** `quickShieldFlow` now clears balance cache after a submitted shield, and extension balance scans explicitly call `syncBeforeRead` before `getUnspentUserNotes`.
+- **Runtime smoke:** `CI=true pnpm extension:quickshield`
+  - User address: `GCKSPZRG6UNUSMJ6Q4DK3AJPA4SHY3RIUET3XXLLBUT56OVAAK42DH62`.
+  - Funding transaction: `e7c16718d5d42be71a3393e8afd262d8962cb83ebbcc65a0dc76639e4a3b4bbb`.
+  - ASP insert transaction: `d011ec602e9a64a70bf3da646e7b09ef142ee97c24debd83c9816d9d204631f9`; [stellar.expert](https://stellar.expert/explorer/testnet/tx/d011ec602e9a64a70bf3da646e7b09ef142ee97c24debd83c9816d9d204631f9).
+  - XLM shield transaction: `0673517bef207df4c612fcb033536cd9b854db857d31d67bd55ef1a6f0e8cb08`; [stellar.expert](https://stellar.expert/explorer/testnet/tx/0673517bef207df4c612fcb033536cd9b854db857d31d67bd55ef1a6f0e8cb08).
+  - Result: `proofGenerated: true`, `transactionSubmitted: true`, `durationMs: 14393`, attempts `1`.
+  - Balance scan result: `shieldedXlmStroops: 1000000`, `shieldedUsdcStroops: 0`, `noteCount: 1`, blockers `[]`.
