@@ -1,5 +1,6 @@
 import { NETWORKS, type NetworkKey, type PasskeyEnvelope, type WalletIdentity } from '@zk-fighter/core'
 import { BoundaryBadge, Segmented, truncateMiddle, useTheme } from '@zk-fighter/ui'
+import { requestPrivateEngineStorageReset } from '../privateEngineStorage'
 import type { WalletScreen } from './screens'
 import type { CSSProperties, ReactNode } from 'react'
 
@@ -35,6 +36,11 @@ interface SettingsScreenProps {
 export function SettingsScreen({ identity, network, receiveCode, onChangeNetwork, onNav, onLock }: SettingsScreenProps) {
   const { theme, setTheme } = useTheme()
 
+  function resetPrivateEngineCache() {
+    requestPrivateEngineStorageReset()
+    window.location.reload()
+  }
+
   return (
     <section style={{ width: '100%', maxWidth: 880, margin: '0 auto', padding: '30px 34px 44px', display: 'flex', flexDirection: 'column', gap: 8 }}>
       <div style={{ fontWeight: 800, fontSize: 26, letterSpacing: '-.025em' }}>Settings</div>
@@ -61,6 +67,18 @@ export function SettingsScreen({ identity, network, receiveCode, onChangeNetwork
             <div style={groupHeader}>PREFERENCES</div>
             <Rev label="Network" top><Segmented options={NETWORK_OPTIONS} value={network} onChange={(value) => onChangeNetwork(value as NetworkKey)} size="sm" /></Rev>
             <Rev label="Appearance"><Segmented options={THEME_OPTIONS} value={theme} onChange={(value) => setTheme(value as 'light' | 'dark')} size="sm" /></Rev>
+          </div>
+
+          <div style={groupStyle}>
+            <div style={groupHeader}>PRIVATE ENGINE</div>
+            <div style={{ padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ fontSize: 12.5, lineHeight: 1.55, color: 'var(--tx2)' }}>
+                If shielded notes stall after browser restarts or network switches, reset the local OPFS scan cache. Your vault, seed phrase, public address and activity stay in place.
+              </div>
+              <button onClick={resetPrivateEngineCache} style={{ alignSelf: 'flex-start', padding: '10px 12px', border: '1px solid rgba(94,124,250,.35)', borderRadius: 11, background: 'rgba(94,124,250,.08)', color: 'var(--tx)', fontSize: 12.5, fontWeight: 750, cursor: 'pointer' }}>
+                Reset private engine cache
+              </button>
+            </div>
           </div>
         </div>
 
