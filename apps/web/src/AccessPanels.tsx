@@ -4,19 +4,6 @@ import { Button, Logo } from '@zk-fighter/ui'
 
 export type WalletSetupMode = 'create' | 'import'
 
-export const onboardFieldStyle: CSSProperties = {
-  width: '100%',
-  boxSizing: 'border-box',
-  padding: '13px 14px',
-  borderRadius: 13,
-  border: '1px solid var(--bd2)',
-  background: 'var(--card)',
-  color: 'var(--tx)',
-  fontSize: 13.5,
-  fontFamily: 'inherit',
-  outline: 'none',
-}
-
 /** The floating onboarding/unlock card (Onboarding HiFi `.card`). */
 export function OnboardCard({ children }: { children: ReactNode }) {
   return (

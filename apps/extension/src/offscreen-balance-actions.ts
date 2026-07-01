@@ -7,6 +7,7 @@ import {
 } from '@zk-fighter/core'
 
 import type { DappBalances } from './dappMessages'
+import { uniqueBlockers } from './balance-issue'
 
 function sumUnspentStroops(notes: readonly XlmShieldedNote[]): bigint {
   return notes.reduce((total, note) => (note.spent ? total : total + BigInt(note.amountStroops)), 0n)
@@ -42,8 +43,9 @@ export async function runLoadBalances(payload: { readonly [key: string]: unknown
   ])
 
   const shieldedOk = xlm.status === 'loaded' && usdc.status === 'loaded'
-  const blockers = [...xlm.blockers, ...usdc.blockers]
-  if (!pub.ok) blockers.push(`Public balance unavailable${pub.error ? `: ${pub.error}` : '.'}`)
+  const rawBlockers = [...xlm.blockers, ...usdc.blockers]
+  if (!pub.ok) rawBlockers.push(`Public balance unavailable${pub.error ? `: ${pub.error}` : '.'}`)
+  const blockers = uniqueBlockers(rawBlockers)
 
   return {
     shieldedXlmStroops: sumUnspentStroops(xlm.notes).toString(),

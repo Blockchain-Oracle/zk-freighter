@@ -5,7 +5,7 @@ import { extensionReadinessDigest, phase11ExtensionReadiness } from './extension
 describe('phase11ExtensionReadiness', () => {
   it('keeps unproven extension claims gated while marking proven runtime checks ready', () => {
     expect(phase11ExtensionReadiness.status).toBe('in-progress')
-    expect(phase11ExtensionReadiness.judgedSurface).toBe('web app')
+    expect(phase11ExtensionReadiness.judgedSurface).toBe('web + extension popup')
     expect(phase11ExtensionReadiness.capabilities).toContainEqual(
       expect.objectContaining({
         id: 'dapp-profile',
@@ -35,7 +35,7 @@ describe('phase11ExtensionReadiness', () => {
     expect(digest).toContain('Status: in-progress')
     expect(digest).toContain('External dApp signing: deferred')
     expect(digest).toContain('QuickShield and bridge companion')
-    expect(digest).toContain('bridge handoff opens the web bridge route')
+    expect(digest).toContain('extension-native bridge route renders')
     expect(digest).toContain('public-key access and signing fail closed')
     expect(digest).toContain('dry XLM deposit proof')
     expect(digest).not.toContain('signed a valid transaction XDR')

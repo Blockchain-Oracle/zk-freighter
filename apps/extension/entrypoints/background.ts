@@ -1,3 +1,4 @@
+import '../src/runtime-env'
 import {
   createSeedEvmClient,
   deriveWalletIdentity,
@@ -11,6 +12,7 @@ import {
   type CctpBridgeReport,
   type GenerateDisclosureReport,
   type PublicDiscoveryLookupReport,
+  type PublicDiscoveryPublishReport,
   type StellarUsdcTrustlineReport,
   type XlmPrivateSubmitReport,
   type XlmShieldSubmitReport,
@@ -23,17 +25,18 @@ import type {
   ExtensionBridgeRequest,
   ExtensionConfidentialRequest,
   ExtensionDisclosureRequest,
+  ExtensionDiscoverPublishRequest,
   ExtensionDiscoverRequest,
   ExtensionPrivateTransferRequest,
   ExtensionShieldRequest,
   ExtensionUnshieldRequest,
   ExtensionUsdcTrustlineRequest,
-} from '../src/dappRuntime'
+} from '../src/dappRuntime-types'
 import { type DappBalances, type DappRuntimeMessage } from '../src/dappMessages'
 import { ExtensionDappRuntime } from '../src/dappRuntime'
+import { assertOffscreenSuccess } from '../src/offscreen-response'
 
 const statusMessageType = 'zkf.extension.status'
-const openSidePanelMessageType = 'zkf.extension.openSidePanel'
 const offscreenStatusMessageType = 'zkf.extension.offscreenStatus'
 const nethermindProbeMessageType = 'zkf.extension.nethermindProbe'
 const dryProofAttemptMessageType = 'zkf.extension.dryProofAttempt'
@@ -47,7 +50,9 @@ const offscreenConfidentialMessageType = 'zkf.offscreen.confidential'
 const offscreenUnshieldWithdrawalMessageType = 'zkf.offscreen.unshieldWithdrawal'
 const offscreenLoadBalancesMessageType = 'zkf.offscreen.loadBalances'
 const offscreenDiscoverLookupMessageType = 'zkf.offscreen.discoverLookup'
+const offscreenDiscoverPublishMessageType = 'zkf.offscreen.discoverPublish'
 const offscreenDisclosureMessageType = 'zkf.offscreen.disclosure'
+let offscreenQueue: Promise<unknown> = Promise.resolve()
 
 type MessagePayload = {
   readonly type?: string
@@ -64,6 +69,7 @@ export default defineBackground(() => {
     runPrivateTransferInOffscreen,
     runUnshieldInOffscreen,
     runDiscoverInOffscreen,
+    runDiscoverPublishInOffscreen,
     runDisclosureInOffscreen,
   )
 
@@ -88,13 +94,6 @@ export default defineBackground(() => {
         ok: true,
         readiness: phase11ExtensionReadiness,
         digest: extensionReadinessDigest(),
-      })
-      return true
-    }
-
-    if (payload.type === openSidePanelMessageType) {
-      void openSidePanel(sender.tab?.windowId).then((opened) => {
-        sendResponse({ ok: opened })
       })
       return true
     }
@@ -142,21 +141,6 @@ function asMessagePayload(message: unknown): MessagePayload {
   return typeof message === 'object' && message !== null ? (message as MessagePayload) : {}
 }
 
-async function openSidePanel(windowId: number | undefined): Promise<boolean> {
-  const sidePanel = (browser as typeof browser & {
-    readonly sidePanel?: {
-      readonly open?: (options: { windowId: number }) => Promise<void>
-    }
-  }).sidePanel
-
-  if (windowId === undefined || sidePanel?.open === undefined) {
-    return false
-  }
-
-  await sidePanel.open({ windowId })
-  return true
-}
-
 async function runShieldInOffscreen(request: ExtensionShieldRequest): Promise<XlmShieldSubmitReport> {
   return (await sendOffscreenMessage({ type: offscreenSubmitShieldMessageType, ...request })) as XlmShieldSubmitReport
 }
@@ -183,6 +167,15 @@ async function runDiscoverInOffscreen(request: ExtensionDiscoverRequest): Promis
   return (await sendOffscreenMessage({ type: offscreenDiscoverLookupMessageType, ...request })) as PublicDiscoveryLookupReport
 }
 
+async function runDiscoverPublishInOffscreen(
+  request: ExtensionDiscoverPublishRequest,
+): Promise<PublicDiscoveryPublishReport> {
+  return (await sendOffscreenMessage({
+    type: offscreenDiscoverPublishMessageType,
+    ...request,
+  })) as PublicDiscoveryPublishReport
+}
+
 async function runDisclosureInOffscreen(request: ExtensionDisclosureRequest): Promise<GenerateDisclosureReport> {
   return (await sendOffscreenMessage({ type: offscreenDisclosureMessageType, ...request })) as GenerateDisclosureReport
 }
@@ -200,8 +193,8 @@ async function runUsdcTrustlineInOffscreen(
   })) as StellarUsdcTrustlineReport
 }
 
-// Native CCTP bridge — runs entirely in the background (no prover, no offscreen, no
-// web-app handoff). The seed-derived EVM key signs the approve+burn itself.
+// Native CCTP bridge runs in the background. The seed-derived EVM key signs the
+// approve+burn itself; no external dApp signer is used.
 async function runBridgeNatively(request: ExtensionBridgeRequest): Promise<CctpBridgeReport> {
   const identity = deriveWalletIdentity(request.mnemonic, request.network)
   const resumeHash = request.resumeBurnHash?.trim()
@@ -213,6 +206,7 @@ async function runBridgeNatively(request: ExtensionBridgeRequest): Promise<CctpB
       evmBurnTxHash: resumeHash,
     })
   }
+  const amountAtomic = parseBridgeAmountAtomic(request.amountAtomic)
 
   await ensureStellarUsdcTrustline({ identity, network: request.network })
   const source = getCctpSource(request.network, request.sourceChainKey)
@@ -225,10 +219,22 @@ async function runBridgeNatively(request: ExtensionBridgeRequest): Promise<CctpB
     network: request.network,
     sourceChainKey: request.sourceChainKey,
     evmClient,
+    amountAtomic,
   })
 }
 
+function parseBridgeAmountAtomic(value: string | undefined): bigint {
+  if (value === undefined) throw new Error('Bridge amount is required.')
+  if (!/^[1-9]\d*$/u.test(value)) throw new Error('Bridge amount must be a positive decimal atomic value.')
+  return BigInt(value)
+}
+
 async function sendOffscreenMessage(message: { readonly type: string; readonly [key: string]: unknown }): Promise<unknown> {
+  offscreenQueue = offscreenQueue.catch(() => undefined).then(() => sendOffscreenMessageNow(message))
+  return offscreenQueue
+}
+
+async function sendOffscreenMessageNow(message: { readonly type: string; readonly [key: string]: unknown }): Promise<unknown> {
   const offscreen = (chrome as typeof chrome & {
     readonly offscreen?: {
       readonly createDocument?: (parameters: {
@@ -241,7 +247,7 @@ async function sendOffscreenMessage(message: { readonly type: string; readonly [
   }).offscreen
 
   if (offscreen?.createDocument === undefined) {
-    return { ok: false, error: 'Chrome offscreen API is unavailable.' }
+    throw new Error('Chrome offscreen API is unavailable.')
   }
 
   const hasDocument = offscreen.hasDocument === undefined ? false : await offscreen.hasDocument()
@@ -253,5 +259,5 @@ async function sendOffscreenMessage(message: { readonly type: string; readonly [
     })
   }
 
-  return browser.runtime.sendMessage(message)
+  return assertOffscreenSuccess(await browser.runtime.sendMessage(message))
 }

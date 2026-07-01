@@ -6,7 +6,6 @@ import { loadNethermindWebClient, type NethermindModuleImporter } from './nether
 import type { XlmPrivateProgressEvent, XlmShieldedNote } from './xlm-private-types'
 
 export const defaultPrivateActionTimeoutMs = 30 * 60 * 1_000
-export const defaultNoteLimit = 200
 
 const hexPrefix = '0x'
 const syncGapPattern = /sync ([0-9]+) ledger/

@@ -9,6 +9,7 @@ import {
 
 export const vaultStorageKey = 'zk-fighter:vault:v1'
 export const passkeyEnvelopeStorageKey = 'zk-fighter:passkey-envelope:v1'
+export const walletPublicKeyStorageKey = 'zk-fighter:wallet-public-key:v1'
 export const passwordMinLength = 8
 
 export function truncateMiddle(value: string, head = 14, tail = 10): string {
@@ -37,6 +38,11 @@ export function getStoredPasskeyEnvelope(): PasskeyEnvelope | null {
 
   const parsed = parsePasskeyEnvelope(stored)
   return parsed.ok ? parsed.value : null
+}
+
+export function getStoredWalletPublicKey(): string | null {
+  const stored = window.localStorage.getItem(walletPublicKeyStorageKey)
+  return stored && /^G[A-Z2-7]{55}$/.test(stored) ? stored : null
 }
 
 export function vaultErrorText(error: VaultError): string {

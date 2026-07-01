@@ -62,7 +62,7 @@ async function main() {
   try {
     const cdp = await connect(profileDir)
     const extensionId = await findExtensionId(cdp, profileDir, stderr)
-    const pageUrl = `chrome-extension://${extensionId}/sidepanel.html`
+    const pageUrl = `chrome-extension://${extensionId}/popup.html`
     const recoveryPhrase = network === 'mainnet'
       ? await recoveryPhraseForMainnetRun(mainnetFundingOptions)
       : generateMnemonic(wordlist, 128)
@@ -98,6 +98,7 @@ async function main() {
     if (shield.report.status !== 'submitted') {
       throw new Error(`QuickShield did not submit after retries: ${JSON.stringify(redactReport(shield))}`)
     }
+    const balances = await waitForShieldedBalance(cdp, pageUrl, asset, BigInt(amountStroops))
 
     cdp.close()
     console.log(JSON.stringify({
@@ -111,6 +112,7 @@ async function main() {
       usdcFunding,
       access: summarizeAsp(access.report),
       quickShield: summarizeShield(shield.report),
+      balances: summarizeBalances(balances),
       attempts: shield.attempts,
     }, null, 2))
   } finally {
@@ -118,6 +120,22 @@ async function main() {
     await waitForExit(chrome)
     await rm(profileDir, { force: true, recursive: true })
   }
+}
+
+async function waitForShieldedBalance(cdp, pageUrl, targetAsset, minimumStroops) {
+  let latest
+  for (let attempt = 1; attempt <= 8; attempt += 1) {
+    latest = await runtimeMessage(cdp, pageUrl, { type: 'zkf.extension.balances' })
+    const balances = latest?.balances
+    const raw = targetAsset === 'USDC' ? balances?.shieldedUsdcStroops : balances?.shieldedXlmStroops
+    const otherRaw = targetAsset === 'USDC' ? balances?.shieldedXlmStroops : balances?.shieldedUsdcStroops
+    if (latest?.ok && balances?.shieldedOk && BigInt(raw ?? '0') >= minimumStroops) {
+      if (BigInt(otherRaw ?? '0') !== 0n) throw new Error(`Shielded ${targetAsset} leaked into the other asset: ${JSON.stringify(balances)}`)
+      return balances
+    }
+    await delay(5_000)
+  }
+  throw new Error(`Shielded balance did not include submitted ${targetAsset}: ${JSON.stringify(latest)}`)
 }
 
 async function prepareUsdcReceive(cdp, pageUrl) {
@@ -198,7 +216,6 @@ function shouldRetry(report) {
   return report?.status === 'blocked' &&
     report.blockers?.some((blocker) => /ASP membership|indexer|sync|wait/i.test(blocker))
 }
-
 function summarizeUsdcReceive(report) {
   return {
     status: report.status,
@@ -207,7 +224,6 @@ function summarizeUsdcReceive(report) {
     friendbotHash: report.friendbotHash,
   }
 }
-
 function summarizeAsp(report) {
   return {
     status: report.status,
@@ -228,6 +244,19 @@ function summarizeShield(report) {
     transactionSubmitted: report.transactionSubmitted,
     signedAuthEntryCount: report.signedAuthEntryCount,
     durationMs: report.durationMs,
+  }
+}
+
+function summarizeBalances(report) {
+  return {
+    shieldedXlmStroops: report.shieldedXlmStroops,
+    shieldedUsdcStroops: report.shieldedUsdcStroops,
+    publicXlmStroops: report.publicXlmStroops,
+    publicUsdcStroops: report.publicUsdcStroops,
+    noteCount: report.noteCount,
+    shieldedOk: report.shieldedOk,
+    publicOk: report.publicOk,
+    blockers: report.blockers,
   }
 }
 

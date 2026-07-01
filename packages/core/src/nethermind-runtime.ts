@@ -29,6 +29,7 @@ export interface NethermindWebClient {
   deriveAndSaveUserKeys(address: string, signature: Uint8Array): Promise<void>
   syncPoolEvents?(): Promise<void>
   getUserNotes?(address: string, limit: number): Promise<unknown>
+  getUnspentUserNotes?(poolContractId: string, address: string): Promise<unknown>
   prepareRegisterPublicKeys?(
     poolContractId: string,
     userAddress: string,
@@ -81,11 +82,16 @@ export interface NethermindWebClient {
 export type NethermindModuleImporter = () => Promise<NethermindWebModule>
 
 const defaultImporterKey = 'default'
-const bootnodeUrl = undefined
 const backgroundEventListenerEnabled = false
-const clientCache = new Map<string, Promise<NethermindWebClient>>()
+const clientCache = new Map<string, { readonly network: NetworkKey; readonly client: Promise<NethermindWebClient> }>()
+const moduleInitCache = new Map<string, Promise<NethermindWebModule>>()
+const clientLocks = new Map<string, RuntimeLock>()
 const importerIds = new WeakMap<NethermindModuleImporter, number>()
 let nextImporterId = 1
+
+interface RuntimeLock {
+  release(): void
+}
 
 export async function importNethermindWebModule(): Promise<NethermindWebModule> {
   const moduleUrl =
@@ -99,14 +105,18 @@ export async function loadNethermindWebClient(
   network: NetworkKey,
   importer: NethermindModuleImporter = importNethermindWebModule,
 ): Promise<NethermindWebClient> {
-  const key = `${network}:${cacheKeyForImporter(importer)}`
+  const key = cacheKeyForImporter(importer)
   const cached = clientCache.get(key)
+  if (cached?.network === network) {
+    return cached.client
+  }
   if (cached) {
-    return cached
+    await releaseRuntimeLock(key)
+    clientCache.delete(key)
   }
 
-  const loading = loadFreshNethermindWebClient(network, importer)
-  clientCache.set(key, loading)
+  const loading = loadFreshNethermindWebClient(network, importer, key)
+  clientCache.set(key, { network, client: loading })
   try {
     return await loading
   } catch (error) {
@@ -115,16 +125,45 @@ export async function loadNethermindWebClient(
   }
 }
 
+export async function initializeNethermindWebModule(
+  importer: NethermindModuleImporter = importNethermindWebModule,
+): Promise<NethermindWebModule> {
+  const key = cacheKeyForImporter(importer)
+  const cached = moduleInitCache.get(key)
+  if (cached) return cached
+
+  const loading = importer().then(async (mod) => {
+    await mod.default()
+    return mod
+  })
+  moduleInitCache.set(key, loading)
+  try {
+    return await loading
+  } catch (error) {
+    moduleInitCache.delete(key)
+    throw error
+  }
+}
+
 async function loadFreshNethermindWebClient(
   network: NetworkKey,
   importer: NethermindModuleImporter,
+  cacheKey: string,
 ): Promise<NethermindWebClient> {
-  const mod = await importer()
-  await mod.default()
-  const handle = await mod.mainThread(
-    new mod.Config(getNetworkConfig(network).rpcUrl, bootnodeUrl, backgroundEventListenerEnabled),
-  )
-  return handle.webClient
+  const lock = await acquireRuntimeLock(cacheKey)
+  clientLocks.set(cacheKey, lock)
+  const mod = await initializeNethermindWebModule(importer)
+  try {
+    const networkConfig = getNetworkConfig(network)
+    const handle = await mod.mainThread(
+      new mod.Config(networkConfig.rpcUrl, networkConfig.bootnodeUrl, backgroundEventListenerEnabled),
+    )
+    return handle.webClient
+  } catch (error) {
+    lock.release()
+    clientLocks.delete(cacheKey)
+    throw error
+  }
 }
 
 function cacheKeyForImporter(importer: NethermindModuleImporter): string {
@@ -144,5 +183,46 @@ function cacheKeyForImporter(importer: NethermindModuleImporter): string {
 }
 
 export function clearNethermindWebClientCache(): void {
+  for (const lock of clientLocks.values()) lock.release()
   clientCache.clear()
+  moduleInitCache.clear()
+  clientLocks.clear()
+}
+
+async function releaseRuntimeLock(key: string): Promise<void> {
+  clientLocks.get(key)?.release()
+  clientLocks.delete(key)
+  await new Promise((resolve) => setTimeout(resolve, 0))
+}
+
+async function acquireRuntimeLock(key: string): Promise<RuntimeLock> {
+  const locks = globalThis.navigator?.locks
+  if (!locks) return { release: () => undefined }
+
+  let settled = false
+  const acquired = new Promise<RuntimeLock | null>((resolve) => {
+    void locks.request(`zkf-nethermind:${key}`, { ifAvailable: true }, async (lock) => {
+      if (!lock) {
+        resolve(null)
+        return
+      }
+
+      let releaseLock: (() => void) | undefined
+      const hold = new Promise<void>((release) => { releaseLock = release })
+      resolve({
+        release: () => {
+          if (settled) return
+          settled = true
+          releaseLock?.()
+        },
+      })
+      await hold
+    })
+  })
+
+  const lock = await acquired
+  if (!lock) {
+    throw new Error('ZKF_RUNTIME_BUSY: another ZK Fighter window is using the local private database.')
+  }
+  return lock
 }

@@ -1,11 +1,24 @@
 import { spawn } from 'node:child_process'
 import { existsSync } from 'node:fs'
-import { mkdtemp, readFile, rm } from 'node:fs/promises'
+import { mkdtemp, rm } from 'node:fs/promises'
 import http from 'node:http'
 import os from 'node:os'
 import path from 'node:path'
 
 import { CdpClient } from './cdp-client.mjs'
+import {
+  chromeArgs,
+  closePage,
+  delay,
+  evalPage,
+  fetchJson,
+  findExtensionId,
+  openPage,
+  pageTimeoutMs,
+  readDevToolsPort,
+  waitForExit,
+  waitStepMs,
+} from './extension-cdp-harness.mjs'
 
 const chromeForTestingPath = path.resolve(
   '.cache/chrome-for-testing/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing',
@@ -13,16 +26,21 @@ const chromeForTestingPath = path.resolve(
 const regularChromePath = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
 const chromePath = process.env.ZKF_CHROME_PATH ?? (existsSync(chromeForTestingPath) ? chromeForTestingPath : regularChromePath)
 const extensionDir = path.resolve('apps/extension/.output/chrome-mv3')
-const devToolsFile = 'DevToolsActivePort'
-const waitStepMs = 100
-const launchTimeoutMs = 10_000
-const pageTimeoutMs = 5_000
 const localPort = 43177
+const mnemonic = 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about'
+const password = 'zkf-runtime-test-password'
+const moreRouteChecks = [
+  { action: 'more-settings', expected: 'Settings' },
+  { action: 'more-discover', expected: 'Discover' },
+  { action: 'more-disclosure', expected: 'Disclosure' },
+  { action: 'more-confidential', expected: 'Confidential' },
+  { action: 'more-evidence', expected: 'Extension readiness' },
+]
 
 async function main() {
   const profileDir = await mkdtemp(path.join(os.tmpdir(), 'zkf-extension-chrome-'))
   const server = await startTestServer()
-  const chrome = spawn(chromePath, chromeArgs(profileDir), { stdio: ['ignore', 'ignore', 'pipe'] })
+  const chrome = spawn(chromePath, chromeArgs(profileDir, extensionDir), { stdio: ['ignore', 'ignore', 'pipe'] })
   const stderr = []
   chrome.stderr.on('data', (chunk) => {
     stderr.push(String(chunk))
@@ -35,13 +53,9 @@ async function main() {
     await cdp.open()
 
     const extensionId = await findExtensionId(cdp, profileDir, stderr)
-    // Fresh profile has no vault, so both surfaces render the Access card (the
-    // redesigned locked state); the runtime messages below carry the real guarantees.
     const popupText = await pageText(cdp, `chrome-extension://${extensionId}/popup.html`, 'Set up your wallet')
     assertIncludes(popupText, 'Import a recovery phrase', 'popup access card renders')
     assertIncludes(popupText, 'VAULT PASSWORD', 'popup vault password field renders')
-
-    await pageText(cdp, `chrome-extension://${extensionId}/sidepanel.html`, 'Set up your wallet')
 
     const offscreenStatus = await evaluateOnPage(
       cdp,
@@ -70,6 +84,67 @@ async function main() {
       throw new Error(`Unexpected dry proof attempt: ${JSON.stringify(dryProofAttempt)}`)
     }
 
+    const extensionPage = `chrome-extension://${extensionId}/popup.html`
+    const imported = await runtimeMessage(cdp, extensionPage, {
+      type: 'zkf.extension.dapp.importVault',
+      mnemonic,
+      password,
+      network: 'testnet',
+    })
+    if (!imported?.publicKey || !imported.privateReceiveCode) {
+      throw new Error(`Vault import did not return wallet identity: ${JSON.stringify(imported)}`)
+    }
+    const missingBridgeAmount = await runtimeMessage(cdp, extensionPage, { type: 'zkf.extension.bridge.run', sourceChainKey: 'base' })
+    if (missingBridgeAmount?.ok !== false || !String(missingBridgeAmount.error).includes('amount')) throw new Error(`Bridge without amount was not rejected: ${JSON.stringify(missingBridgeAmount)}`)
+    const hexBridgeAmount = await runtimeMessage(cdp, extensionPage, { type: 'zkf.extension.bridge.run', sourceChainKey: 'base', amountAtomic: '0x10' })
+    if (hexBridgeAmount?.ok !== false || !String(hexBridgeAmount.error).includes('positive decimal')) throw new Error(`Hex bridge amount was not rejected: ${JSON.stringify(hexBridgeAmount)}`)
+
+    const popupPage = await openPage(cdp, extensionPage)
+    try {
+      await waitForTextOnPage(cdp, popupPage, 'SHIELDED BALANCE')
+
+      await clickAction(cdp, popupPage, 'action-send')
+      await waitForTextOnPage(cdp, popupPage, 'Send privately')
+      await clickAction(cdp, popupPage, 'sheet-close')
+
+      await clickAction(cdp, popupPage, 'action-receive')
+      await waitForTextOnPage(cdp, popupPage, 'PRIVATE RECEIVE CODE')
+      await clickAction(cdp, popupPage, 'receive-tab-public'); await waitForTextOnPage(cdp, popupPage, 'PUBLIC STELLAR ADDRESS')
+      await clickAction(cdp, popupPage, 'tab-home')
+      await waitForTextOnPage(cdp, popupPage, 'SHIELDED BALANCE')
+
+      await clickAction(cdp, popupPage, 'action-shield')
+      await waitForTextOnPage(cdp, popupPage, 'QuickShield'); await waitForTextOnPage(cdp, popupPage, 'AMOUNT')
+      await setField(cdp, popupPage, 'shield-amount', '0.2'); await waitForTextOnPage(cdp, popupPage, 'Shield 0.2 XLM')
+      await clickAction(cdp, popupPage, 'sheet-close')
+
+      await clickAction(cdp, popupPage, 'action-bridge')
+      await waitForTextOnPage(cdp, popupPage, 'Bridge then shield'); await waitForTextOnPage(cdp, popupPage, 'PUBLIC STELLAR USDC')
+      await setField(cdp, popupPage, 'bridge-amount', '1.25'); await waitForTextOnPage(cdp, popupPage, '1.25 USDC')
+      await clickAction(cdp, popupPage, 'route-back')
+
+      await clickAction(cdp, popupPage, 'tab-activity')
+      await waitForTextOnPage(cdp, popupPage, 'Activity')
+      await clickAction(cdp, popupPage, 'tab-receive')
+      await waitForTextOnPage(cdp, popupPage, 'PRIVATE RECEIVE CODE')
+
+      for (const check of moreRouteChecks) {
+        await clickAction(cdp, popupPage, 'tab-more')
+        await waitForTextOnPage(cdp, popupPage, 'PROVE & DISCOVER')
+        await clickAction(cdp, popupPage, check.action)
+        await waitForTextOnPage(cdp, popupPage, check.expected)
+        await clickAction(cdp, popupPage, 'route-back')
+        await waitForTextOnPage(cdp, popupPage, 'SHIELDED BALANCE')
+      }
+
+      await clickAction(cdp, popupPage, 'tab-more')
+      await waitForTextOnPage(cdp, popupPage, 'Move')
+      await clickAction(cdp, popupPage, 'sheet-close')
+      await waitForNoDialog(cdp, popupPage)
+    } finally {
+      await closePage(cdp, popupPage)
+    }
+
     const contentStatus = await evaluateOnPage(cdp, `http://127.0.0.1:${localPort}/`, contentProbe('status'))
     if (!contentStatus?.ok || contentStatus.readiness?.status !== 'in-progress') {
       throw new Error(`Unexpected content-script status response: ${JSON.stringify(contentStatus)}`)
@@ -88,7 +163,7 @@ async function main() {
           extensionId,
           chrome: version.Browser,
           popup: 'rendered',
-          sidePanel: 'rendered',
+          popupClicks: ['home-actions', 'bottom-tabs', 'more-routes', 'sheet-close', 'route-back'],
           offscreen: offscreenStatus.proverRuntime,
           nethermindModule: {
             runtime: nethermindProbe.runtime,
@@ -118,76 +193,6 @@ async function main() {
   }
 }
 
-function chromeArgs(profileDir) {
-  return [
-    '--no-first-run',
-    '--no-default-browser-check',
-    '--disable-background-networking',
-    '--disable-component-extensions-with-background-pages',
-    '--disable-sync',
-    '--enable-extensions',
-    '--window-size=1200,900',
-    '--remote-debugging-port=0',
-    `--user-data-dir=${profileDir}`,
-    `--disable-extensions-except=${extensionDir}`,
-    `--load-extension=${extensionDir}`,
-    'about:blank',
-  ]
-}
-
-async function readDevToolsPort(profileDir) {
-  const started = Date.now()
-  const file = path.join(profileDir, devToolsFile)
-  while (Date.now() - started < launchTimeoutMs) {
-    try {
-      const [port] = (await readFile(file, 'utf8')).trim().split('\n')
-      return port
-    } catch {
-      await delay(waitStepMs)
-    }
-  }
-  throw new Error('Chrome did not expose DevToolsActivePort before timeout.')
-}
-
-async function findExtensionId(cdp, profileDir, stderr) {
-  const started = Date.now()
-  let candidates = []
-  while (Date.now() - started < pageTimeoutMs) {
-    const { targetInfos } = await cdp.command('Target.getTargets')
-    candidates = targetInfos.filter((item) => item.url?.startsWith('chrome-extension://'))
-    const target = candidates.find((item) => item.url?.endsWith('/background.js'))
-    if (target) {
-      return new URL(target.url).hostname
-    }
-
-    const profileId = await extensionIdFromProfile(profileDir)
-    if (profileId) {
-      return profileId
-    }
-
-    await delay(waitStepMs)
-  }
-  throw new Error(
-    `No ZK Fighter extension appeared in Chrome. Candidates: ${JSON.stringify(candidates)} Stderr: ${stderr.join('').slice(-2000)}`,
-  )
-}
-
-async function extensionIdFromProfile(profileDir) {
-  const preferencesFile = path.join(profileDir, 'Default', 'Preferences')
-  try {
-    const preferences = JSON.parse(await readFile(preferencesFile, 'utf8'))
-    const settings = preferences.extensions?.settings ?? {}
-    for (const [id, setting] of Object.entries(settings)) {
-      if (setting?.manifest?.name === 'ZK Fighter') {
-        return id
-      }
-    }
-  } catch {
-    return undefined
-  }
-  return undefined
-}
-
 async function pageText(cdp, url, expected) {
   const expression = `new Promise((resolve) => {
     const started = Date.now();
@@ -206,38 +211,59 @@ async function pageText(cdp, url, expected) {
   return text
 }
 
-async function evaluateOnPage(cdp, url, expression) {
-  const { targetId } = await cdp.command('Target.createTarget', { url })
-  const { sessionId } = await cdp.command('Target.attachToTarget', { targetId, flatten: true })
-  await cdp.command('Runtime.enable', {}, sessionId)
-  await waitForReadyState(cdp, sessionId)
-  const { result } = await cdp.command(
-    'Runtime.evaluate',
-    {
-      awaitPromise: true,
-      expression,
-      returnByValue: true,
-    },
-    sessionId,
-  )
-  await cdp.command('Target.closeTarget', { targetId })
-  return result.value
+async function waitForTextOnPage(cdp, page, expected) {
+  const expression = `new Promise((resolve) => {
+    const started = Date.now();
+    const check = () => {
+      const text = document.body?.innerText ?? '';
+      if (text.includes(${JSON.stringify(expected)}) || Date.now() - started > ${pageTimeoutMs}) {
+        resolve(text);
+        return;
+      }
+      setTimeout(check, ${waitStepMs});
+    };
+    check();
+  })`
+  const text = await evalPage(cdp, page, expression)
+  assertIncludes(text, expected, `popup click flow renders ${expected}`)
+  return text
 }
 
-async function waitForReadyState(cdp, sessionId) {
-  const started = Date.now()
-  while (Date.now() - started < pageTimeoutMs) {
-    const { result } = await cdp.command(
-      'Runtime.evaluate',
-      { expression: 'document.readyState', returnByValue: true },
-      sessionId,
-    )
-    if (result.value === 'complete' || result.value === 'interactive') {
-      return
-    }
-    await delay(waitStepMs)
-  }
-  throw new Error('Page did not reach an interactive readyState before timeout.')
+async function clickAction(cdp, page, action) {
+  const result = await evalPage(cdp, page, `(() => { const element = document.querySelector('[data-zkf-action="${action}"]'); if (!element) return { ok: false, text: document.body?.innerText ?? '' }; element.click(); return { ok: true }; })()`)
+  if (!result?.ok) throw new Error(`Missing click target ${action}. Actual: ${String(result?.text ?? '').slice(0, 500)}`)
+  await delay(80)
+}
+
+async function setField(cdp, page, action, value) {
+  const result = await evalPage(cdp, page, `(() => { const element = document.querySelector('[data-zkf-action="${action}"]'); if (!element) return false; Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(element, ${JSON.stringify(value)}); element.dispatchEvent(new Event('input', { bubbles: true })); return true; })()`)
+  if (!result) throw new Error(`Missing field ${action}.`); await delay(80)
+}
+
+async function waitForNoDialog(cdp, page) {
+  const expression = `new Promise((resolve) => {
+    const started = Date.now();
+    const check = () => {
+      const present = Boolean(document.querySelector('[role="dialog"]'));
+      if (!present || Date.now() - started > ${pageTimeoutMs}) {
+        resolve(!present);
+        return;
+      }
+      setTimeout(check, ${waitStepMs});
+    };
+    check();
+  })`
+  const closed = await evalPage(cdp, page, expression)
+  if (!closed) throw new Error('Sheet dialog did not close.')
+}
+
+async function evaluateOnPage(cdp, url, expression) {
+  const page = await openPage(cdp, url)
+  try { return await evalPage(cdp, page, expression) } finally { await closePage(cdp, page) }
+}
+
+async function runtimeMessage(cdp, url, message) {
+  return evaluateOnPage(cdp, url, `chrome.runtime.sendMessage(${JSON.stringify(message)})`)
 }
 
 function contentProbe(method) {
@@ -264,35 +290,10 @@ function startTestServer() {
   })
 }
 
-async function fetchJson(url) {
-  const response = await fetch(url)
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status} for ${url}`)
-  }
-  return response.json()
-}
-
 function assertIncludes(value, expected, label) {
   if (!String(value).includes(expected)) {
     throw new Error(`${label} did not include ${expected}. Actual: ${String(value).slice(0, 500)}`)
   }
 }
 
-function delay(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms))
-}
-
-function waitForExit(process) {
-  if (process.exitCode !== null) {
-    return Promise.resolve()
-  }
-
-  return new Promise((resolve) => {
-    process.once('exit', resolve)
-  })
-}
-
-main().catch((error) => {
-  console.error(error)
-  process.exit(1)
-})
+main().catch((error) => { console.error(error); process.exit(1) })

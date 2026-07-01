@@ -48,7 +48,7 @@ async function main() {
     const mnemonic = await readRecoveryPhrase()
     const cdp = await connect(profileDir)
     const extensionId = await findExtensionId(cdp, profileDir, stderr)
-    const pageUrl = `chrome-extension://${extensionId}/sidepanel.html`
+    const pageUrl = `chrome-extension://${extensionId}/popup.html`
     const imported = await runtimeMessage(cdp, pageUrl, {
       type: 'zkf.extension.dapp.importVault',
       mnemonic,
@@ -60,11 +60,10 @@ async function main() {
     }
 
     const transfer = await runPrivateActionWithRetries(cdp, pageUrl, {
-      type: 'zkf.extension.privateTransfer',
-      mnemonic,
-      network,
+      type: 'zkf.extension.dapp.privateTransfer',
       asset,
       amountStroops: transferAmountStroops,
+      receiveCode: imported.privateReceiveCode,
       timeoutMs: privateActionTimeoutMs,
     })
     if (transfer.status !== 'submitted') {
@@ -73,9 +72,7 @@ async function main() {
 
     await delay(retryDelayMs)
     const withdraw = await runPrivateActionWithRetries(cdp, pageUrl, {
-      type: 'zkf.extension.unshieldWithdrawal',
-      mnemonic,
-      network,
+      type: 'zkf.extension.dapp.unshield',
       asset,
       amountStroops: withdrawAmountStroops,
       recipientAddress: imported.publicKey,
@@ -106,12 +103,13 @@ async function runPrivateActionWithRetries(cdp, pageUrl, message) {
   let latest
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     latest = await runtimeMessage(cdp, pageUrl, message)
-    if (latest?.status === 'submitted' || !shouldRetry(latest)) {
-      return latest
+    const report = latest?.report
+    if (report?.status === 'submitted' || !shouldRetry(report)) {
+      return report
     }
     await delay(retryDelayMs)
   }
-  return latest
+  return latest?.report ?? latest
 }
 
 function shouldRetry(report) {

@@ -186,7 +186,7 @@ export async function resumeCctpBridgeToStellar(options: ResumeCctpBridgeOptions
   const events: CctpBridgeProgressEvent[] = []
   const network = getNetworkConfig(options.network)
   const evmSource = getCctpSource(options.network, options.sourceChainKey)
-  const amount = options.amountAtomic ?? defaultBridgeAmountAtomic
+  const amount = options.amountAtomic
   const maxFee = options.maxFeeAtomic ?? defaultMaxFeeAtomic
   const finalityThreshold = options.finalityThreshold ?? standardFinalityThreshold
   const blockers = [...getCctpBridgeBlockers(options.network, options.sourceChainKey)]
@@ -258,8 +258,8 @@ export async function resumeCctpBridgeToStellar(options: ResumeCctpBridgeOptions
       sourceDomain: source.domain,
       sourceChainId: source.chainId,
       sourceGasToken: source.gasToken,
-      amountAtomic: amount.toString(),
-      amountDisplay: bridgeAmountDisplay(amount),
+      amountAtomic: amount?.toString() ?? '',
+      amountDisplay: amount ? bridgeAmountDisplay(amount) : 'Resumed burn amount not verified',
       maxFeeAtomic: maxFee.toString(),
       finalityThreshold,
       evmApproveTxHash: approveTx,

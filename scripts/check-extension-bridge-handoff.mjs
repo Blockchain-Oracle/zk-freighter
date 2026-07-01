@@ -17,8 +17,6 @@ const launchTimeoutMs = 10_000
 const pageTimeoutMs = 5_000
 const waitStepMs = 100
 const password = 'zkf-extension-bridge-test'
-const resumeBurnHash = `0x${'c'.repeat(64)}`
-const sourceChainKey = 'base'
 
 async function main() {
   const profileDir = await mkdtemp(path.join(os.tmpdir(), 'zkf-extension-bridge-'))
@@ -29,7 +27,7 @@ async function main() {
   try {
     const cdp = await connect(profileDir)
     const extensionId = await findExtensionId(cdp, profileDir, stderr)
-    const extensionUrl = `chrome-extension://${extensionId}/sidepanel.html`
+    const extensionUrl = `chrome-extension://${extensionId}/popup.html`
     const recoveryPhrase = generateMnemonic(wordlist, 128)
     const imported = await runtimeMessage(cdp, extensionUrl, {
       type: 'zkf.extension.dapp.importVault',
@@ -41,33 +39,17 @@ async function main() {
       throw new Error(`Extension vault import failed: ${JSON.stringify(imported)}`)
     }
 
-    const opened = await runtimeMessage(cdp, extensionUrl, {
-      type: 'zkf.extension.bridge.open',
-      sourceChainKey,
-      resumeBurnHash,
-    })
-    if (!opened?.ok || !opened.url) {
-      throw new Error(`Bridge handoff did not open: ${JSON.stringify(opened)}`)
+    const routeText = await pageText(cdp, `chrome-extension://${extensionId}/popup.html#/bridge`, 'Bridge then shield')
+    if (!routeText.includes('Bridge then shield') || !routeText.includes('FUND THIS EVM ADDRESS') || !routeText.includes('RESUME BURN HASH')) {
+      throw new Error(`Bridge route controls did not render: ${routeText.slice(0, 800)}`)
     }
-
-    const tabUrl = await waitForBridgeTarget(cdp, opened.url)
-    assertBridgeUrl(opened.url, imported.publicKey)
-    assertBridgeUrl(tabUrl, imported.publicKey)
 
     cdp.close()
     console.log(JSON.stringify({
       ok: true,
       extensionId,
       publicKey: imported.publicKey,
-      returnedUrl: opened.url,
-      openedTabUrl: tabUrl,
-      handoff: {
-        action: 'bridge',
-        network: 'testnet',
-        sourceChainKey,
-        destination: imported.publicKey,
-        resumeBurnHash,
-      },
+      popupRoute: 'bridge-rendered',
     }, null, 2))
   } finally {
     chrome.kill('SIGTERM')
@@ -76,34 +58,8 @@ async function main() {
   }
 }
 
-function assertBridgeUrl(value, publicKey) {
-  const url = new URL(value)
-  if (url.origin !== 'http://localhost:5173') throw new Error(`Unexpected bridge origin: ${value}`)
-  if (url.searchParams.get('zkfAction') !== 'bridge') throw new Error(`Missing bridge action: ${value}`)
-  if (url.searchParams.get('network') !== 'testnet') throw new Error(`Missing testnet handoff: ${value}`)
-  if (url.searchParams.get('sourceChain') !== sourceChainKey) throw new Error(`Source chain mismatch: ${value}`)
-  if (url.searchParams.get('destination') !== publicKey) throw new Error(`Destination mismatch: ${value}`)
-  if (url.searchParams.get('resumeBurnHash') !== resumeBurnHash) throw new Error(`Resume hash mismatch: ${value}`)
-}
-
 async function runtimeMessage(cdp, extensionUrl, message) {
-  return evaluateOnPage(cdp, extensionUrl, `chrome.runtime.sendMessage(${JSON.stringify(message)})`)
-}
-
-async function waitForBridgeTarget(cdp, expectedUrl) {
-  const expected = new URL(expectedUrl)
-  const started = Date.now()
-  while (Date.now() - started < pageTimeoutMs) {
-    const { targetInfos } = await cdp.command('Target.getTargets')
-    const target = targetInfos.find((item) => {
-      if (!item.url?.startsWith('http://localhost:5173/')) return false
-      const url = new URL(item.url)
-      return url.searchParams.get('destination') === expected.searchParams.get('destination')
-    })
-    if (target?.url) return target.url
-    await delay(waitStepMs)
-  }
-  throw new Error('Bridge handoff tab did not appear before timeout.')
+  return evaluateOnPage(cdp, extensionUrl, `new Promise((resolve) => chrome.runtime.sendMessage(${JSON.stringify(message)}, resolve))`)
 }
 
 function chromeArgs(profileDir) {
@@ -179,6 +135,21 @@ async function evaluateOnPage(cdp, url, expression) {
   const { result } = await cdp.command('Runtime.evaluate', { awaitPromise: true, expression, returnByValue: true }, sessionId)
   await cdp.command('Target.closeTarget', { targetId })
   return result.value
+}
+
+async function pageText(cdp, url, expected) {
+  return evaluateOnPage(cdp, url, `new Promise((resolve) => {
+    const started = Date.now();
+    const check = () => {
+      const text = document.body?.innerText ?? '';
+      if (text.includes(${JSON.stringify(expected)}) || Date.now() - started > ${pageTimeoutMs}) {
+        resolve(text);
+        return;
+      }
+      setTimeout(check, ${waitStepMs});
+    };
+    check();
+  })`)
 }
 
 async function waitForReadyState(cdp, sessionId) {

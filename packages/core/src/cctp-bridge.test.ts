@@ -5,6 +5,7 @@ import {
   buildCctpForwarderHookData,
   encodeApproveUsdcData,
   encodeDepositForBurnWithHookData,
+  parseEvmUsdcAmountToAtomic,
   stellarContractStrkeyToBytes32,
 } from './cctp-encoding'
 import { pollCctpAttestation } from './cctp-iris'
@@ -58,6 +59,12 @@ describe('CCTP bridge helpers', () => {
   it('formats EVM USDC atomic amounts with six decimals', () => {
     expect(bridgeAmountDisplay(1_230_000n)).toBe('1.23 USDC')
   })
+
+  it('parses EVM USDC display amounts into six-decimal atomic units', () => {
+    expect(parseEvmUsdcAmountToAtomic('1.25')).toEqual({ ok: true, atomic: 1_250_000n })
+    expect(parseEvmUsdcAmountToAtomic('0')).toEqual({ ok: false, error: 'Bridge amount must be greater than zero.' })
+    expect(parseEvmUsdcAmountToAtomic('1.1234567')).toEqual({ ok: false, error: 'Enter a USDC amount with up to 6 decimal places.' })
+  })
 })
 
 describe('CCTP bridge flow', () => {
@@ -105,6 +112,7 @@ describe('CCTP bridge flow', () => {
       identity,
       network: 'testnet',
       sourceChainKey: 'base',
+      amountAtomic: 250_000n,
       sleep: async () => undefined,
       fetch: async () => Response.json(completeAttestation),
       submitMintAndForward: async ({ onStatus }) => {
@@ -132,7 +140,8 @@ describe('CCTP bridge flow', () => {
       getCctpSource('testnet', 'base')?.usdcContract,
       getCctpSource('testnet', 'base')?.tokenMessenger,
     ])
-    expect(sent[0]?.data).toBe(encodeApproveUsdcData(getCctpSource('testnet', 'base')?.tokenMessenger ?? '', 1_000_500n))
+    expect(report.amountDisplay).toBe('0.25 USDC')
+    expect(sent[0]?.data).toBe(encodeApproveUsdcData(getCctpSource('testnet', 'base')?.tokenMessenger ?? '', 250_500n))
     expect(sent.every((transaction) => transaction.chainIdHex === '0x14a34')).toBe(true)
     expect(progress).toContain('Base Sepolia USDC approval submitted')
     expect(progress).toContain('Base Sepolia CCTP burn submitted')

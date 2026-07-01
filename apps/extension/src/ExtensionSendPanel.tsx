@@ -6,6 +6,7 @@ import { dappMessageTypes, type DappWalletStatus, type PrivateActionResponse } f
 import { PrivateTerminal, ProvingView } from './extension-private-views'
 import { shorten } from './extension-format'
 import { Caption, ErrorText, MetaRow, fieldStyle } from './extension-ui'
+import { balanceLabel, balanceStroops, maxAmountInput, useExtensionBalances } from './useExtensionBalances'
 
 // Send (shielded → shielded). Real integration: the offscreen runs the proving +
 // submit (submitXlmPrivateTransfer); the popup shows an honest proving ring while
@@ -36,10 +37,14 @@ export function ExtensionSendPanel({ status, sendRuntimeMessage, initialCode }: 
   const [amount, setAmount] = useState('')
   const [report, setReport] = useState<XlmPrivateSubmitReport | null>(null)
   const [error, setError] = useState('')
+  const shieldedBalance = useExtensionBalances(sendRuntimeMessage)
 
   const stroops = toStroops(amount)
+  const available = balanceStroops(shieldedBalance.balances, 'shielded', asset)
+  const overBalance = stroops !== null && available !== null && BigInt(stroops) > available
   const codeError = code.trim() ? validateCode(code, status.network) : null
-  const canReview = Boolean(stroops) && code.trim().length > 0 && !codeError
+  const amountError = overBalance ? `Amount exceeds your shielded ${asset} balance.` : null
+  const canReview = Boolean(stroops) && code.trim().length > 0 && !codeError && !amountError
 
   async function send() {
     if (!stroops) return
@@ -104,7 +109,11 @@ export function ExtensionSendPanel({ status, sendRuntimeMessage, initialCode }: 
       <div style={{ display: 'flex', alignItems: 'center', gap: 9, border: '1px solid var(--bd2)', borderRadius: 14, background: 'var(--card)', padding: '14px 16px' }}>
         <input value={amount} onChange={(event) => setAmount(event.target.value)} inputMode="decimal" placeholder="0.00" style={{ flex: 1, minWidth: 0, background: 'none', border: 'none', outline: 'none', color: 'var(--tx)', fontFamily: 'var(--fm)', fontWeight: 600, fontSize: 24, letterSpacing: '-.02em' }} />
         <span style={{ fontSize: 12, color: 'var(--tx3)', fontWeight: 600 }}>{asset}</span>
+        <button type="button" onClick={() => setAmount(maxAmountInput(available))} disabled={available === null || available <= 0n} style={{ border: 0, background: 'transparent', color: available && available > 0n ? 'var(--ac2)' : 'var(--tx3)', fontSize: 11, fontWeight: 800, cursor: available && available > 0n ? 'pointer' : 'default' }}>Max</button>
       </div>
+      <div style={{ fontSize: 10.5, color: 'var(--tx3)' }}>Spendable shielded balance: <b style={{ color: 'var(--tx2)', fontFamily: 'var(--fm)' }}>{balanceLabel(available, asset, shieldedBalance.loading)}</b></div>
+      {amountError ? <ErrorText>{amountError}</ErrorText> : null}
+      {shieldedBalance.error ? <ErrorText>{shieldedBalance.error}</ErrorText> : null}
       <Button fullWidth disabled={!canReview} onClick={() => setStep('review')}>Review</Button>
     </div>
   )

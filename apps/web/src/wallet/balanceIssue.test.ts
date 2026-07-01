@@ -14,7 +14,12 @@ describe('describeNotesIssue', () => {
 
   it('explains a ledger-range / RPC re-index error', () => {
     const issue = describeNotesIssue('jsonrpc error: -32600 - startLedger must be within the ledger range: 3170109 - 3291068')
-    expect(issue?.title.toLowerCase()).toMatch(/catching up|indexer/)
+    expect(issue?.title.toLowerCase()).toContain('rpc window')
+  })
+
+  it('explains local private database lock errors', () => {
+    const issue = describeNotesIssue('Another tab or window is using this app local database.')
+    expect(issue?.title.toLowerCase()).toContain('zk engine')
   })
 
   it('points USDC trustline issues to receiving setup', () => {

@@ -1,3 +1,5 @@
+import { classifyPrivateRuntimeIssue } from '@zk-fighter/core'
+
 export interface NotesIssue {
   readonly title: string
   readonly body: string
@@ -9,6 +11,11 @@ export function describeNotesIssue(blocker: string | null | undefined): NotesIss
   const message = blocker?.trim()
   if (!message) {
     return null
+  }
+
+  const runtimeIssue = classifyPrivateRuntimeIssue(message)
+  if (runtimeIssue.kind !== 'unknown') {
+    return { title: runtimeIssue.title, body: runtimeIssue.body }
   }
 
   if (/sync \d+ ledger|ASP membership|indexer precondition/i.test(message)) {

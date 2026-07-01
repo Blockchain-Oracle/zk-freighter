@@ -47,7 +47,7 @@ describe('XLM shield submit', () => {
 
     expect(report.status).toBe('blocked')
     expect(report.asset).toBe('USDC')
-    expect(poolId).toBe('CCY6R2BJQ2LAYINOZZLDLHJCWRRPVQNRTWEWCWO7FIDD3BRDQJCAOHKY')
+    expect(poolId).toBe('CDKOY3DXCCS3KHBDAE7G2E735YRPDGGAWRKSN25V4VFVKZOMKWXKTCNK')
     expect(report.proofGenerated).toBe(false)
     expect(report.transactionSubmitted).toBe(false)
     expect(report.blockers[0]).toContain('ASP membership/indexer')

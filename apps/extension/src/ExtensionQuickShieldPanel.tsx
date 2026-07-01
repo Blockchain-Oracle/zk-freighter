@@ -4,7 +4,7 @@ import type {
   StellarUsdcTrustlineReport,
   XlmShieldSubmitReport,
 } from '@zk-fighter/core'
-import { isShieldedAssetEnabled } from '@zk-fighter/core'
+import { isShieldedAssetEnabled, parseAssetAmountToStroops } from '@zk-fighter/core'
 import { Activity, Shield } from 'lucide-react'
 import { useState } from 'react'
 import { Button, Callout, Segmented } from '@zk-fighter/ui'
@@ -17,7 +17,8 @@ import {
   type QuickShieldResponse,
 } from './dappMessages'
 import { amountLabel, defaultShieldAmounts, shorten } from './extension-format'
-import { Badge, BlockerList, Copy, ErrorText, ExplorerLink, MetaRow, Panel, SectionHeader } from './extension-ui'
+import { Badge, BlockerList, Caption, Copy, ErrorText, ExplorerLink, MetaRow, Panel, SectionHeader, fieldStyle } from './extension-ui'
+import { balanceLabel, balanceStroops, maxAmountInput, useExtensionBalances } from './useExtensionBalances'
 
 const latestEventCount = 6
 
@@ -28,6 +29,7 @@ interface ExtensionQuickShieldPanelProps {
 
 export function ExtensionQuickShieldPanel({ status, sendRuntimeMessage }: ExtensionQuickShieldPanelProps) {
   const [asset, setAsset] = useState<AssetCode>('XLM')
+  const [amountInput, setAmountInput] = useState(defaultAmountInput('XLM'))
   const [busy, setBusy] = useState(false)
   const [accessBusy, setAccessBusy] = useState(false)
   const [usdcBusy, setUsdcBusy] = useState(false)
@@ -35,8 +37,14 @@ export function ExtensionQuickShieldPanel({ status, sendRuntimeMessage }: Extens
   const [accessReport, setAccessReport] = useState<AspMembershipInsertReport | null>(null)
   const [usdcReport, setUsdcReport] = useState<StellarUsdcTrustlineReport | null>(null)
   const [error, setError] = useState('')
+  const publicBalance = useExtensionBalances(sendRuntimeMessage)
   const poolEnabled = status ? isShieldedAssetEnabled(status.network, asset) : false
   const disabledReason = !status?.unlocked ? 'Unlock the extension vault first.' : !poolEnabled ? `${asset} pool is not configured for this network.` : ''
+  const usdcReady = asset === 'USDC' && (usdcReport?.status === 'ready' || usdcReport?.status === 'created')
+  const available = balanceStroops(publicBalance.balances, 'public', asset)
+  const parsedAmount = parseAssetAmountToStroops(amountInput, asset)
+  const overBalance = parsedAmount.ok && available !== null && parsedAmount.stroops > available
+  const amountError = overBalance ? `Amount exceeds your public ${asset} balance.` : ''
 
   async function prepareShieldAccess() {
     setAccessBusy(true)
@@ -65,16 +73,28 @@ export function ExtensionQuickShieldPanel({ status, sendRuntimeMessage }: Extens
   }
 
   async function runQuickShield() {
+    const parsed = parseAssetAmountToStroops(amountInput, asset)
+    if (!parsed.ok) {
+      setError(parsed.error)
+      return
+    }
     setBusy(true)
     setError('')
     setReport(null)
     try {
-      const response = (await sendRuntimeMessage({ type: dappMessageTypes.quickShield, asset, amountStroops: defaultShieldAmounts[asset].toString() })) as QuickShieldResponse
+      const response = (await sendRuntimeMessage({ type: dappMessageTypes.quickShield, asset, amountStroops: parsed.stroops.toString() })) as QuickShieldResponse
       if (!response.ok || !response.report) setError(response.error ?? 'QuickShield did not return a report.')
       else setReport(response.report)
     } finally {
       setBusy(false)
     }
+  }
+
+  function selectAsset(value: string) {
+    const next = value as AssetCode
+    setAsset(next)
+    setAmountInput(defaultAmountInput(next))
+    setError('')
   }
 
   return (
@@ -88,7 +108,7 @@ export function ExtensionQuickShieldPanel({ status, sendRuntimeMessage }: Extens
       <Copy>{disabledReason || accessReportLabel(accessReport)}</Copy>
       {accessReport ? <ReportCard rows={[['ASP SETUP', accessReport.status], ['TRANSACTION', accessReport.txHash ? shorten(accessReport.txHash, 10, 8) : 'Not submitted']]} explorer={accessReport.explorerUrl} explorerText="View public setup" blockers={accessReport.blockers} /> : null}
 
-      {asset === 'USDC' ? (
+      {asset === 'USDC' && !usdcReady ? (
         <>
           <Button variant="secondary" fullWidth loading={usdcBusy} disabled={Boolean(disabledReason) || accessBusy || busy || usdcBusy} onClick={() => void prepareUsdcReceive()}>
             <Activity size={15} aria-hidden="true" /> {usdcBusy ? 'Checking USDC…' : 'Enable USDC receiving'}
@@ -98,11 +118,22 @@ export function ExtensionQuickShieldPanel({ status, sendRuntimeMessage }: Extens
         </>
       ) : null}
 
-      <Segmented options={(['XLM', 'USDC'] as const).map((value) => ({ value, label: value }))} value={asset} onChange={(value) => setAsset(value as AssetCode)} size="sm" />
-      <Button fullWidth loading={busy} disabled={Boolean(disabledReason) || busy} onClick={() => void runQuickShield()}>
-        <Shield size={15} aria-hidden="true" /> {busy ? 'Shielding…' : `Shield ${amountLabel(defaultShieldAmounts[asset], asset)}`}
+      <Segmented options={(['XLM', 'USDC'] as const).map((value) => ({ value, label: value }))} value={asset} onChange={selectAsset} size="sm" />
+      {usdcReady ? <Copy>{usdcReportLabel(usdcReport)}</Copy> : null}
+      <div>
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 6 }}>
+          <Caption>AMOUNT</Caption>
+          <button type="button" onClick={() => setAmountInput(maxAmountInput(available))} disabled={available === null || available <= 0n} style={{ marginLeft: 'auto', border: 0, background: 'transparent', color: available && available > 0n ? 'var(--ac2)' : 'var(--tx3)', fontSize: 10.5, fontWeight: 800, cursor: available && available > 0n ? 'pointer' : 'default' }}>Max</button>
+        </div>
+        <input data-zkf-action="shield-amount" value={amountInput} onChange={(event) => setAmountInput(event.target.value)} inputMode="decimal" placeholder="0.00" style={fieldStyle} />
+        <Copy>Available public balance: {balanceLabel(available, asset, publicBalance.loading)}</Copy>
+      </div>
+      <Button fullWidth loading={busy} disabled={Boolean(disabledReason) || Boolean(amountError) || busy} onClick={() => void runQuickShield()}>
+        <Shield size={15} aria-hidden="true" /> {busy ? 'Shielding…' : `Shield ${amountInput || '0'} ${asset}`}
       </Button>
       <Copy>{disabledReason || reportLabel(report, asset)}</Copy>
+      {amountError ? <ErrorText>{amountError}</ErrorText> : null}
+      {publicBalance.error ? <ErrorText>{publicBalance.error}</ErrorText> : null}
       {error ? <ErrorText>{error}</ErrorText> : null}
       {report ? <ShieldReport report={report} asset={asset} /> : null}
     </Panel>
@@ -159,8 +190,12 @@ function usdcReceiveErrorText(error: unknown): string {
   return message ? 'USDC receiving setup failed. Check the network and XLM reserve, then try again.' : 'USDC receive preparation did not return a report.'
 }
 
+function defaultAmountInput(asset: AssetCode): string {
+  return amountLabel(defaultShieldAmounts[asset], asset).replace(` ${asset}`, '')
+}
+
 function reportLabel(report: XlmShieldSubmitReport | null, asset: AssetCode): string {
-  if (!report) return `Runs the same ${asset} shield path as the web app through the extension offscreen runtime.`
+  if (!report) return `Runs the real ${asset} shield path through the extension offscreen runtime.`
   if (report.status === 'submitted') return `Submitted ${shorten(report.txHash ?? '', 12, 10)}`
   return `${report.status} after ${report.durationMs.toLocaleString()} ms`
 }

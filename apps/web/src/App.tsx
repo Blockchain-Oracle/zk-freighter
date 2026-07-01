@@ -1,9 +1,11 @@
 import { useMemo, useState } from 'react'
 import {
   NETWORKS,
+  clearNethermindWebClientCache,
   createEncryptedVault,
   deriveWalletIdentity,
   encodeReceiveCode,
+  requestDemoFunding,
   unlockPasskeyEnvelope,
   unlockEncryptedVault,
   type EncryptedVault,
@@ -14,11 +16,13 @@ import {
 import { ThemeProvider } from '@zk-fighter/ui'
 import {
   getStoredPasskeyEnvelope,
+  getStoredWalletPublicKey,
   getStoredVault,
   passkeyEnvelopeStorageKey,
   passkeyErrorText,
   vaultErrorText,
   vaultStorageKey,
+  walletPublicKeyStorageKey,
 } from './app-helpers'
 import { UnlockScreen } from './AccessPanels'
 import { OnboardingFlow } from './OnboardingFlow'
@@ -50,7 +54,9 @@ function App() {
   }, [identity, network])
 
   function enterWith(seedPhrase: string) {
-    setIdentity(deriveWalletIdentity(seedPhrase, network))
+    const nextIdentity = deriveWalletIdentity(seedPhrase, network)
+    window.localStorage.setItem(walletPublicKeyStorageKey, nextIdentity.stellarPublicKey)
+    setIdentity(nextIdentity)
   }
 
   async function createVault(seedPhrase: string, password: string): Promise<{ ok: boolean; error?: string }> {
@@ -59,8 +65,24 @@ function App() {
     setBusy(false)
     if (!encrypted.ok) return { ok: false, error: vaultErrorText(encrypted.error) }
     window.localStorage.setItem(vaultStorageKey, JSON.stringify(encrypted.value))
+    window.localStorage.setItem(walletPublicKeyStorageKey, deriveWalletIdentity(seedPhrase, network).stellarPublicKey)
     setVault(encrypted.value)
     return { ok: true }
+  }
+
+  async function requestOnboardingDemoFunding(seedPhrase: string): Promise<{ ok: boolean; message: string }> {
+    setBusy(true)
+    try {
+      const report = await requestDemoFunding({ identity: deriveWalletIdentity(seedPhrase, network), network })
+      const ok = report.status === 'ready'
+      const message = report.blockers[0]
+        ?? (report.status === 'funded' ? 'Funding transaction submitted. Wait a few ledgers, then check balances before shielding.'
+          : ok ? 'Testnet funding is ready.'
+            : 'Testnet funding did not complete.')
+      return { ok, message }
+    } finally {
+      setBusy(false)
+    }
   }
 
   async function unlockWallet() {
@@ -73,7 +95,14 @@ function App() {
       setUnlockError(vaultErrorText(unlocked.error))
       return
     }
-    enterWith(unlocked.value)
+    const nextIdentity = deriveWalletIdentity(unlocked.value, network)
+    const storedPublicKey = getStoredWalletPublicKey()
+    if (storedPublicKey && storedPublicKey !== nextIdentity.stellarPublicKey) {
+      setUnlockError('Vault password unlocked a different wallet identity.')
+      return
+    }
+    window.localStorage.setItem(walletPublicKeyStorageKey, nextIdentity.stellarPublicKey)
+    setIdentity(nextIdentity)
     setUnlockPassword('')
   }
 
@@ -87,16 +116,29 @@ function App() {
       setUnlockError(passkeyErrorText(unlocked.error))
       return
     }
-    enterWith(unlocked.value)
+    const nextIdentity = deriveWalletIdentity(unlocked.value, network)
+    const storedPublicKey = getStoredWalletPublicKey()
+    if (!storedPublicKey) {
+      setUnlockError('Passkey metadata is missing the wallet identity. Unlock with your password and set it up again.')
+      return
+    }
+    if (storedPublicKey !== nextIdentity.stellarPublicKey) {
+      setUnlockError('Passkey decrypted a different wallet than this vault.')
+      return
+    }
+    setIdentity(nextIdentity)
   }
 
   function savePasskeyEnvelope(envelope: PasskeyEnvelope | null) {
-    if (envelope) window.localStorage.setItem(passkeyEnvelopeStorageKey, JSON.stringify(envelope))
-    else window.localStorage.removeItem(passkeyEnvelopeStorageKey)
+    if (envelope) {
+      window.localStorage.setItem(passkeyEnvelopeStorageKey, JSON.stringify(envelope))
+      if (identity) window.localStorage.setItem(walletPublicKeyStorageKey, identity.stellarPublicKey)
+    } else window.localStorage.removeItem(passkeyEnvelopeStorageKey)
     setPasskeyEnvelope(envelope)
   }
 
   function changeNetwork(nextNetwork: NetworkKey) {
+    clearNethermindWebClientCache()
     setNetwork(nextNetwork)
     setIdentity((current) => (current ? deriveWalletIdentity(current.mnemonic, nextNetwork) : null))
   }
@@ -142,6 +184,7 @@ function App() {
           busy={busy}
           onChangeNetwork={changeNetwork}
           onCreate={createVault}
+          onDemoFunding={requestOnboardingDemoFunding}
           onEnter={enterWith}
         />
       )}

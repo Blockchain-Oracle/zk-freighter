@@ -11,6 +11,10 @@ import {
   submitConfidentialMerge,
   type NetworkKey,
 } from '@zk-fighter/core'
+import { scanConfidentialIncoming } from '@zk-fighter/core/confidential/receive'
+import { submitConfidentialRegister } from '@zk-fighter/core/confidential/register'
+import { submitConfidentialTransfer } from '@zk-fighter/core/confidential/transfer'
+import { submitConfidentialWithdraw } from '@zk-fighter/core/confidential/withdraw'
 
 // The compiled circuit is just bytecode + abi JSON; keep a loose shape here so we
 // don't pull the heavy prover types into this light dispatch module.
@@ -60,7 +64,6 @@ export async function runConfidentialMerge(payload: { readonly [key: string]: un
 
 export async function runConfidentialScan(payload: { readonly [key: string]: unknown }) {
   const { mnemonic, network } = base(payload)
-  const { scanConfidentialIncoming } = await import('@zk-fighter/core/confidential/receive')
   const result = await scanConfidentialIncoming({ identity: deriveWalletIdentity(mnemonic, network), network })
   // bigint isn't structured-clone friendly across the message boundary — stringify.
   return { count: result.receipts.length, creditedTotal: result.creditedTotal.toString() }
@@ -68,19 +71,16 @@ export async function runConfidentialScan(payload: { readonly [key: string]: unk
 
 export async function runConfidentialRegister(payload: { readonly [key: string]: unknown }) {
   const { mnemonic, network } = base(payload)
-  const { submitConfidentialRegister } = await import('@zk-fighter/core/confidential/register')
   return submitConfidentialRegister({ identity: deriveWalletIdentity(mnemonic, network), network, circuit: await loadCircuit('circuit_register') })
 }
 
 export async function runConfidentialWithdraw(payload: { readonly [key: string]: unknown }) {
   const { mnemonic, network } = base(payload)
-  const { submitConfidentialWithdraw } = await import('@zk-fighter/core/confidential/withdraw')
   return submitConfidentialWithdraw({ identity: deriveWalletIdentity(mnemonic, network), network, amount: amountOf(payload), to: recipientOf(payload), circuit: await loadCircuit('circuit_withdraw') })
 }
 
 export async function runConfidentialTransfer(payload: { readonly [key: string]: unknown }) {
   const { mnemonic, network } = base(payload)
-  const { submitConfidentialTransfer } = await import('@zk-fighter/core/confidential/transfer')
   return submitConfidentialTransfer({ identity: deriveWalletIdentity(mnemonic, network), network, amount: amountOf(payload), to: recipientOf(payload), circuit: await loadCircuit('circuit_transfer') })
 }
 

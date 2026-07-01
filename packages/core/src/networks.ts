@@ -1,4 +1,5 @@
 import type { AssetCode } from './assets'
+import { resolveRuntimeEndpoints } from './runtime-config'
 
 export type NetworkKey = 'testnet' | 'mainnet'
 export type CctpSourceKey = 'ethereum' | 'base' | 'arbitrum' | 'optimism'
@@ -63,6 +64,8 @@ export interface NetworkConfig {
   readonly rpcUrl: string
   readonly horizonUrl: string
   readonly explorerTxUrl: string
+  readonly bootnodeUrl?: string
+  readonly fundingApiUrl?: string
   readonly assets: Record<AssetCode, NetworkAssetConfig>
   readonly cctp?: CctpConfig
   readonly confidential?: ConfidentialConfig
@@ -80,14 +83,14 @@ export const NETWORKS = {
       XLM: {
         code: 'XLM',
         sacId: 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC',
-        poolId: 'CBQ46IL6HQA2VTPERULO7DBAKHMJ7ZCNVOSDIIX3HLC5T7MSPB6Z5SMY',
+        poolId: 'CCCHESF5HNGMCP5ZLGFBKBTW23YXNAJ6LTGSK7CO3FKFIVEHFE3CD4LZ',
         shieldedPool: 'enabled',
       },
       USDC: {
         code: 'USDC',
         issuer: 'GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5',
         sacId: 'CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA',
-        poolId: 'CCY6R2BJQ2LAYINOZZLDLHJCWRRPVQNRTWEWCWO7FIDD3BRDQJCAOHKY',
+        poolId: 'CDKOY3DXCCS3KHBDAE7G2E735YRPDGGAWRKSN25V4VFVKZOMKWXKTCNK',
         shieldedPool: 'enabled',
       },
     },
@@ -246,7 +249,12 @@ export const NETWORKS = {
 } as const satisfies Record<NetworkKey, NetworkConfig>
 
 export function getNetworkConfig(key: NetworkKey): NetworkConfig {
-  return NETWORKS[key]
+  const endpoints = resolveRuntimeEndpoints(key)
+  return {
+    ...NETWORKS[key],
+    ...(endpoints.bootnodeUrl ? { bootnodeUrl: endpoints.bootnodeUrl } : {}),
+    ...(endpoints.fundingApiUrl ? { fundingApiUrl: endpoints.fundingApiUrl } : {}),
+  }
 }
 
 export function getDefaultCctpSource(network: NetworkKey): EvmCctpSourceConfig | undefined {

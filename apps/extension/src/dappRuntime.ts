@@ -1,49 +1,52 @@
 import {
   createEncryptedVault,
   deriveEvmAddress,
-  encodeReceiveCode,
   unlockEncryptedVault,
-  type AspMembershipInsertReport,
   type AssetCode,
-  type CctpBridgeReport,
-  type CctpSourceKey,
   type FreighterBridgeRequest,
-  type GenerateDisclosureReport,
   type NetworkKey,
-  type PublicDiscoveryLookupReport,
-  type StellarUsdcTrustlineReport,
-  type XlmPrivateSubmitReport,
-  type XlmShieldSubmitReport,
 } from '@zk-fighter/core'
-
 import {
   dappMessageTypes,
-  type ConfidentialOpKind,
-  type ConfidentialResponse,
-  type DappBalances,
+  type BridgeSourceBalancesResponse,
   type DappBalancesResponse,
   type DappRuntimeMessage,
   type DappRuntimeResponse,
-  type ActivityResponse,
   type DappWalletStatus,
-  type DisclosureResponse,
+  type DemoFundingResponse,
   type DiscoverLookupResponse,
-  type PrepareShieldAccessResponse,
-  type PrepareUsdcReceiveResponse,
+  type DiscoverPublishResponse,
+  type DiscoverStatusResponse,
   type PrivateActionResponse,
-  type QuickBridgeResponse,
   type QuickShieldResponse,
 } from './dappMessages'
-import { recordActivity, readActivity, type ActivityBoundary, type ActivityKind, type ActivityStatus } from './activity-store'
-import { balanceCacheKey, clearAllBalanceCache, isBalanceStale, readBalanceCache, writeBalanceCache } from './balance-cache'
-import { freighterResponse, openExtensionSidePanel } from './dappRuntimeHelpers'
-import { identityForMnemonic, readStoredDappWallet, writeStoredDappWallet } from './dappRuntimeState'
+import { clearAllBalanceCache } from './balance-cache'
+import {
+  activityFlow,
+  balancesFlow,
+  bridgeSourceBalancesFlow,
+  demoFundingRequestFlow,
+  demoFundingStatusFlow,
+  discoverFlow,
+  discoverPublishFlow,
+  discoverStatusFlow,
+  privateTransferFlow,
+  quickShieldFlow,
+  receiveCodeForIdentity,
+  recordBridgeActivity,
+  recordConfidentialActivity,
+  unshieldFlow,
+} from './dappRuntime-flows'
+import { passkeyCreateFlow, passkeyPrepareCreateFlow, passkeyRemoveFlow, passkeySupportFlow, passkeyUnlockFlow, setNetworkFlow } from './dappRuntime-wallet'
+import { freighterResponse } from './dappRuntimeHelpers'
+import { identityForMnemonic, readStoredDappWallet, requireUnlockedDappWallet, writeStoredDappWallet } from './dappRuntimeState'
 import type {
   ExtensionAspInsertRunner,
   ExtensionBalancesRunner,
   ExtensionBridgeRunner,
   ExtensionConfidentialRunner,
   ExtensionDisclosureRunner,
+  ExtensionDiscoverPublishRunner,
   ExtensionDiscoverRunner,
   ExtensionPrivateTransferRunner,
   ExtensionShieldRunner,
@@ -51,24 +54,10 @@ import type {
   ExtensionUsdcTrustlineRunner,
 } from './dappRuntime-types'
 
-export type {
-  ExtensionAspInsertRequest,
-  ExtensionBalancesRequest,
-  ExtensionBridgeRequest,
-  ExtensionConfidentialRequest,
-  ExtensionDisclosureRequest,
-  ExtensionDiscoverRequest,
-  ExtensionPrivateTransferRequest,
-  ExtensionShieldRequest,
-  ExtensionUnshieldRequest,
-  ExtensionUsdcTrustlineRequest,
-} from './dappRuntime-types'
-
-interface MessageSender { readonly tab?: { readonly windowId?: number } }
+interface MessageSender { readonly tab?: { readonly windowId?: number }; readonly url?: string }
 
 export class ExtensionDappRuntime {
   private unlockedMnemonic: string | null = null
-  /** Cache keys with a background balance refresh in flight (dedupes scans). */
   private readonly refreshingBalances = new Set<string>()
 
   constructor(
@@ -81,6 +70,7 @@ export class ExtensionDappRuntime {
     private readonly runPrivateTransfer?: ExtensionPrivateTransferRunner,
     private readonly runUnshield?: ExtensionUnshieldRunner,
     private readonly runDiscover?: ExtensionDiscoverRunner,
+    private readonly runDiscoverPublish?: ExtensionDiscoverPublishRunner,
     private readonly runDisclosure?: ExtensionDisclosureRunner,
   ) {}
 
@@ -102,29 +92,57 @@ export class ExtensionDappRuntime {
         void clearAllBalanceCache()
         return this.status()
       case dappMessageTypes.prepareShieldAccess:
-        return this.prepareShieldAccess()
+        return this.gated(this.runAspInsert, 'ASP insert', {})
       case dappMessageTypes.prepareUsdcReceive:
-        return this.prepareUsdcReceive()
+        return this.gated(this.runUsdcTrustline, 'USDC receive setup', {})
       case dappMessageTypes.quickShield:
         return this.quickShield(message.asset, message.amountStroops, message.timeoutMs)
       case dappMessageTypes.quickBridge:
-        return this.quickBridge(message.sourceChainKey, message.resumeBurnHash)
+        return this.gated(this.runBridge, 'native bridge', { sourceChainKey: message.sourceChainKey, amountAtomic: message.amountAtomic, resumeBurnHash: message.resumeBurnHash }, (report, ready) => {
+          recordBridgeActivity(report, ready.network)
+        })
+      case dappMessageTypes.bridgeSourceBalances:
+        return this.bridgeSourceBalances(message.sourceChainKey)
       case dappMessageTypes.confidential:
-        return this.confidential(message.op, message.amount, message.to)
+        return this.gated(this.runConfidential, 'confidential', { op: message.op, amount: message.amount, to: message.to }, (report, ready) => {
+          recordConfidentialActivity(report, ready.network)
+        })
       case dappMessageTypes.balances:
         return this.balances()
+      case dappMessageTypes.demoFundingStatus:
+        return this.demoFundingStatus()
+      case dappMessageTypes.demoFundingRequest:
+        return this.demoFundingRequest()
+      case dappMessageTypes.privateRuntimeStatus:
+        return { ok: true, surface: 'extension-popup', coordinator: 'offscreen-queue', proving: 'offscreen' }
       case dappMessageTypes.privateTransfer:
-        return this.privateTransfer(message.asset, message.amountStroops, message.receiveCode)
+        return this.privateTransfer(message.asset, message.amountStroops, message.receiveCode, message.timeoutMs)
       case dappMessageTypes.unshield:
-        return this.unshield(message.asset, message.amountStroops, message.recipientAddress)
+        return this.unshield(message.asset, message.amountStroops, message.recipientAddress, message.timeoutMs)
       case dappMessageTypes.discover:
         return this.discover(message.ownerAddress)
+      case dappMessageTypes.discoverStatus:
+        return this.discoverStatus()
+      case dappMessageTypes.discoverPublish:
+        return this.discoverPublish()
       case dappMessageTypes.disclosure:
-        return this.disclosure(message.asset, message.authority, message.purpose)
+        return this.gated(this.runDisclosure, 'disclosure', { asset: message.asset, authority: message.authority, purpose: message.purpose })
       case dappMessageTypes.activity:
-        return this.activity()
+        return activityFlow()
+      case dappMessageTypes.setNetwork:
+        await setNetworkFlow(message.network)
+        return this.status()
+      case dappMessageTypes.passkeySupport:
+        return passkeySupportFlow()
+      case dappMessageTypes.passkeyPrepareCreate:
+        return passkeyPrepareCreateFlow(message.password, sender)
+      case dappMessageTypes.passkeyCreate:
+        return passkeyCreateFlow(message.password, message.material, sender)
+      case dappMessageTypes.passkeyUnlock:
+        return this.unlockWithPasskey(message.material, sender)
+      case dappMessageTypes.passkeyRemove:
+        return passkeyRemoveFlow(sender)
       case dappMessageTypes.freighterRequest:
-        void openExtensionSidePanel(sender?.tab?.windowId)
         return this.handleFreighterRequest(message.request)
     }
   }
@@ -136,11 +154,13 @@ export class ExtensionDappRuntime {
     }
 
     this.unlockedMnemonic = message.mnemonic
+    const identity = identityForMnemonic(message.mnemonic, { network: message.network ?? 'testnet' })
     // A new/replaced wallet must not inherit a previous wallet's cached balances.
     await clearAllBalanceCache()
     await writeStoredDappWallet({
       vault: created.value,
       network: message.network ?? 'testnet',
+      walletPublicKey: identity?.stellarPublicKey,
     })
     return this.status()
   }
@@ -171,6 +191,7 @@ export class ExtensionDappRuntime {
       publicKey: identity?.stellarPublicKey ?? '',
       privateReceiveCode: identity ? receiveCodeForIdentity(identity, state.network) : '',
       evmAddress: this.unlockedMnemonic ? deriveEvmAddress(this.unlockedMnemonic) : '',
+      passkeyEnabled: state.passkeyEnvelope !== undefined,
       ...(error === undefined ? {} : { error }),
     }
   }
@@ -180,259 +201,94 @@ export class ExtensionDappRuntime {
     return freighterResponse(request, state.network)
   }
 
-  private async prepareShieldAccess(): Promise<PrepareShieldAccessResponse> {
-    const ready = await this.requireUnlockedWallet()
-    if (!ready.ok) {
-      return ready
-    }
-
-    if (!this.runAspInsert) {
-      return { ok: false, error: 'Extension offscreen ASP insert runner is unavailable.' }
-    }
-
+  /**
+   * Run an offscreen op behind the unlock gate. The unlocked mnemonic is injected
+   * HERE (never from the popup); a missing runner or a thrown error becomes a
+   * structured failure. Shared by the simple runner-delegating handlers so each
+   * stays one line + the gate is enforced uniformly.
+   */
+  private async gated<Q extends { mnemonic: string; network: NetworkKey }, T>(
+    runner: ((request: Q) => Promise<T>) | undefined,
+    name: string,
+    extra: Omit<Q, 'mnemonic' | 'network'>,
+    afterReport?: (report: T, ready: { readonly mnemonic: string; readonly network: NetworkKey }) => void,
+  ): Promise<{ ok: true; report: T } | { ok: false; error: string }> {
+    const ready = await requireUnlockedDappWallet(this.unlockedMnemonic)
+    if (!ready.ok) return { ok: false, error: ready.error }
+    if (!runner) return { ok: false, error: `Extension ${name} runner is unavailable.` }
     try {
-      return {
-        ok: true,
-        report: await this.runAspInsert({
-          mnemonic: ready.mnemonic,
-          network: ready.network,
-        }),
-      }
-    } catch (error) {
-      return { ok: false, error: error instanceof Error ? error.message : String(error) }
-    }
-  }
-
-  private async prepareUsdcReceive(): Promise<PrepareUsdcReceiveResponse> {
-    const ready = await this.requireUnlockedWallet()
-    if (!ready.ok) {
-      return ready
-    }
-
-    if (!this.runUsdcTrustline) {
-      return { ok: false, error: 'Extension offscreen USDC receive setup is unavailable.' }
-    }
-
-    try {
-      return {
-        ok: true,
-        report: await this.runUsdcTrustline({
-          mnemonic: ready.mnemonic,
-          network: ready.network,
-        }),
-      }
+      const report = await runner({ mnemonic: ready.mnemonic, network: ready.network, ...extra } as Q)
+      afterReport?.(report, ready)
+      return { ok: true, report }
     } catch (error) {
       return { ok: false, error: error instanceof Error ? error.message : String(error) }
     }
   }
 
   private async quickShield(asset: AssetCode, amountStroops?: string, timeoutMs?: number): Promise<QuickShieldResponse> {
-    const ready = await this.requireUnlockedWallet()
-    if (!ready.ok) {
-      return ready
-    }
-
-    if (!this.runShield) {
-      return { ok: false, error: 'Extension offscreen shield runner is unavailable.' }
-    }
-
-    try {
-      const report = await this.runShield({ mnemonic: ready.mnemonic, network: ready.network, asset, amountStroops, timeoutMs })
-      void this.record('shield', 'public', toActivityStatus(report.status), { asset, amountStroops: report.amountStroops, txHash: report.txHash, explorerUrl: report.explorerUrl })
-      return { ok: true, report }
-    } catch (error) {
-      return { ok: false, error: error instanceof Error ? error.message : String(error) }
-    }
+    const ready = await requireUnlockedDappWallet(this.unlockedMnemonic)
+    if (!ready.ok) return ready
+    return quickShieldFlow(ready, this.runShield, asset, amountStroops, timeoutMs)
   }
 
-  private async confidential(op: ConfidentialOpKind, amount?: string, to?: string): Promise<ConfidentialResponse> {
-    const ready = await this.requireUnlockedWallet()
-    if (!ready.ok) {
-      return ready
-    }
-    if (!this.runConfidential) {
-      return { ok: false, error: 'Extension offscreen confidential runner is unavailable.' }
-    }
-    try {
-      // mnemonic is injected from the unlocked vault — never supplied by the panel.
-      return { ok: true, report: await this.runConfidential({ mnemonic: ready.mnemonic, network: ready.network, op, amount, to }) }
-    } catch (error) {
-      return { ok: false, error: error instanceof Error ? error.message : String(error) }
-    }
-  }
-
-  private async requireUnlockedWallet(): Promise<
-    | { readonly ok: true; readonly mnemonic: string; readonly network: NetworkKey }
-    | { readonly ok: false; readonly error: string }
-  > {
-    const state = await readStoredDappWallet()
-    const identity = identityForMnemonic(this.unlockedMnemonic, state)
-    const seedWords = this.unlockedMnemonic
-
-    if (!state.vault) {
-      return { ok: false, error: 'Import a seed-backed vault before shielding.' }
-    }
-
-    if (!identity || !seedWords) {
-      return { ok: false, error: 'Unlock ZK Fighter before shielding.' }
-    }
-    return { ok: true, mnemonic: seedWords, network: state.network }
-  }
-
-  private async quickBridge(sourceChainKey: CctpSourceKey, resumeBurnHash?: string): Promise<QuickBridgeResponse> {
-    const ready = await this.requireUnlockedWallet()
-    if (!ready.ok) {
-      return ready
-    }
-
-    if (!this.runBridge) {
-      return { ok: false, error: 'Extension native bridge runner is unavailable.' }
-    }
-
-    try {
-      return {
-        ok: true,
-        report: await this.runBridge({
-          mnemonic: ready.mnemonic,
-          network: ready.network,
-          sourceChainKey,
-          resumeBurnHash,
-        }),
-      }
-    } catch (error) {
-      return { ok: false, error: error instanceof Error ? error.message : String(error) }
-    }
-  }
-
-  /**
-   * Real balances with stale-while-revalidate. A cached scan is returned instantly
-   * (durable across browser restarts) while a background refresh runs if it is
-   * stale; a cold cache scans synchronously so the first open still shows real
-   * numbers — never a fabricated value.
-   */
   private async balances(): Promise<DappBalancesResponse> {
-    const ready = await this.requireUnlockedWallet()
-    if (!ready.ok) {
-      return { ok: false, syncing: false, error: ready.error }
-    }
-    if (!this.runBalances) {
-      return { ok: false, syncing: false, error: 'Extension balance runner is unavailable.' }
-    }
-
-    const state = await readStoredDappWallet()
-    const identity = identityForMnemonic(this.unlockedMnemonic, state)
-    if (!identity) {
-      return { ok: false, syncing: false, error: 'Unlock ZK Fighter to view balances.' }
-    }
-    const key = balanceCacheKey(ready.network, identity.stellarPublicKey)
-
-    const cached = await readBalanceCache(key)
-    if (cached) {
-      if (isBalanceStale(cached)) {
-        void this.refreshBalances(key, ready.mnemonic, ready.network)
-      }
-      return { ok: true, balances: cached, syncing: this.refreshingBalances.has(key) }
-    }
-
-    try {
-      const fresh = await this.runBalances({ mnemonic: ready.mnemonic, network: ready.network })
-      await writeBalanceCache(key, fresh)
-      return { ok: true, balances: fresh, syncing: false }
-    } catch (error) {
-      return { ok: false, syncing: false, error: error instanceof Error ? error.message : String(error) }
-    }
+    const ready = await requireUnlockedDappWallet(this.unlockedMnemonic)
+    if (!ready.ok) return { ok: false, syncing: false, error: ready.error }
+    return balancesFlow(ready, this.runBalances, () => this.unlockedMnemonic, this.refreshingBalances)
   }
 
-  private async refreshBalances(key: string, mnemonic: string, network: NetworkKey): Promise<void> {
-    if (this.refreshingBalances.has(key) || !this.runBalances) return
-    this.refreshingBalances.add(key)
-    try {
-      const fresh = await this.runBalances({ mnemonic, network })
-      // Don't re-populate the at-rest cache if the wallet locked mid-refresh.
-      if (this.unlockedMnemonic === mnemonic) {
-        await writeBalanceCache(key, fresh)
-      }
-    } catch (error) {
-      console.warn('[ExtensionDappRuntime] balance refresh failed', error)
-    } finally {
-      this.refreshingBalances.delete(key)
-    }
-  }
-
-  private async privateTransfer(asset: AssetCode, amountStroops: string, receiveCode: string): Promise<PrivateActionResponse> {
-    const ready = await this.requireUnlockedWallet()
+  private async demoFundingStatus(): Promise<DemoFundingResponse> {
+    const ready = await requireUnlockedDappWallet(this.unlockedMnemonic)
     if (!ready.ok) return { ok: false, error: ready.error }
-    if (!this.runPrivateTransfer) return { ok: false, error: 'Extension private transfer runner is unavailable.' }
-    try {
-      const report = await this.runPrivateTransfer({ mnemonic: ready.mnemonic, network: ready.network, asset, amountStroops, receiveCode })
-      void this.record('send', 'shielded', toActivityStatus(report.status), { asset, amountStroops, txHash: report.txHashes[0], explorerUrl: report.explorerUrls[0] })
-      void clearAllBalanceCache() // a spend changes the balance — drop the stale cache
-      return { ok: true, report }
-    } catch (error) {
-      return { ok: false, error: error instanceof Error ? error.message : String(error) }
-    }
+    return demoFundingStatusFlow(ready)
   }
 
-  private async unshield(asset: AssetCode, amountStroops: string, recipientAddress: string): Promise<PrivateActionResponse> {
-    const ready = await this.requireUnlockedWallet()
+  private async demoFundingRequest(): Promise<DemoFundingResponse> {
+    const ready = await requireUnlockedDappWallet(this.unlockedMnemonic)
     if (!ready.ok) return { ok: false, error: ready.error }
-    if (!this.runUnshield) return { ok: false, error: 'Extension unshield runner is unavailable.' }
-    try {
-      const report = await this.runUnshield({ mnemonic: ready.mnemonic, network: ready.network, asset, amountStroops, recipientAddress })
-      void this.record('unshield', 'public', toActivityStatus(report.status), { asset, amountStroops, txHash: report.txHashes[0], explorerUrl: report.explorerUrls[0] })
-      void clearAllBalanceCache()
-      return { ok: true, report }
-    } catch (error) {
-      return { ok: false, error: error instanceof Error ? error.message : String(error) }
-    }
+    return demoFundingRequestFlow(ready)
+  }
+
+  private async privateTransfer(asset: AssetCode, amountStroops: string, receiveCode: string, timeoutMs?: number): Promise<PrivateActionResponse> {
+    const ready = await requireUnlockedDappWallet(this.unlockedMnemonic)
+    if (!ready.ok) return { ok: false, error: ready.error }
+    return privateTransferFlow(ready, this.runPrivateTransfer, asset, amountStroops, receiveCode, timeoutMs)
+  }
+
+  private async unshield(asset: AssetCode, amountStroops: string, recipientAddress: string, timeoutMs?: number): Promise<PrivateActionResponse> {
+    const ready = await requireUnlockedDappWallet(this.unlockedMnemonic)
+    if (!ready.ok) return { ok: false, error: ready.error }
+    return unshieldFlow(ready, this.runUnshield, asset, amountStroops, recipientAddress, timeoutMs)
   }
 
   private async discover(ownerAddress: string): Promise<DiscoverLookupResponse> {
-    const ready = await this.requireUnlockedWallet()
+    const ready = await requireUnlockedDappWallet(this.unlockedMnemonic)
     if (!ready.ok) return { ok: false, error: ready.error }
-    if (!this.runDiscover) return { ok: false, error: 'Extension discovery runner is unavailable.' }
-    try {
-      // Public lookup — no mnemonic needed; the network comes from the unlocked vault.
-      return { ok: true, report: await this.runDiscover({ network: ready.network, ownerAddress }) }
-    } catch (error) {
-      return { ok: false, error: error instanceof Error ? error.message : String(error) }
-    }
+    return discoverFlow(ready, this.runDiscover, ownerAddress)
   }
 
-  private async disclosure(asset: AssetCode, authority: string, purpose: string): Promise<DisclosureResponse> {
-    const ready = await this.requireUnlockedWallet()
+  private async discoverPublish(): Promise<DiscoverPublishResponse> {
+    const ready = await requireUnlockedDappWallet(this.unlockedMnemonic)
     if (!ready.ok) return { ok: false, error: ready.error }
-    if (!this.runDisclosure) return { ok: false, error: 'Extension disclosure runner is unavailable.' }
-    try {
-      return { ok: true, report: await this.runDisclosure({ mnemonic: ready.mnemonic, network: ready.network, asset, authority, purpose }) }
-    } catch (error) {
-      return { ok: false, error: error instanceof Error ? error.message : String(error) }
-    }
+    return discoverPublishFlow(ready, this.runDiscoverPublish)
   }
 
-  private async activity(): Promise<ActivityResponse> {
-    return { ok: true, records: await readActivity() }
+  private async discoverStatus(): Promise<DiscoverStatusResponse> {
+    const ready = await requireUnlockedDappWallet(this.unlockedMnemonic)
+    if (!ready.ok) return { ok: false, discoverable: false, error: ready.error }
+    return discoverStatusFlow(ready, this.runDiscover)
   }
 
-  /** Append a real op to the persisted activity history (best-effort, never fatal). */
-  private async record(kind: ActivityKind, boundary: ActivityBoundary, status: ActivityStatus, fields: { asset?: string; amountStroops?: string; txHash?: string; explorerUrl?: string }): Promise<void> {
-    try {
-      await recordActivity({ id: crypto.randomUUID(), kind, boundary, status, ts: Date.now(), ...fields })
-    } catch (error) {
-      console.warn('[ExtensionDappRuntime] activity record failed', error)
-    }
+  private async bridgeSourceBalances(sourceChainKey: Extract<DappRuntimeMessage, { readonly type: typeof dappMessageTypes.bridgeSourceBalances }>['sourceChainKey']): Promise<BridgeSourceBalancesResponse> {
+    const ready = await requireUnlockedDappWallet(this.unlockedMnemonic)
+    if (!ready.ok) return { ok: false, error: ready.error }
+    return bridgeSourceBalancesFlow(ready, sourceChainKey)
   }
-}
 
-function toActivityStatus(status: string): ActivityStatus {
-  return status === 'submitted' ? 'submitted' : status === 'blocked' ? 'blocked' : 'failed'
-}
-
-function receiveCodeForIdentity(identity: NonNullable<ReturnType<typeof identityForMnemonic>>, network: NetworkKey): string {
-  return encodeReceiveCode({
-    version: 1,
-    network,
-    notePublicKey: identity.privateReceive.notePublicKey,
-    encryptionPublicKey: identity.privateReceive.encryptionPublicKey,
-  })
+  private async unlockWithPasskey(material: Extract<DappRuntimeMessage, { readonly type: typeof dappMessageTypes.passkeyUnlock }>['material'], sender?: MessageSender): Promise<DappWalletStatus> {
+    const result = await passkeyUnlockFlow(material, sender)
+    if (!result.ok) return this.status(result.error)
+    this.unlockedMnemonic = result.mnemonic
+    return this.status()
+  }
 }

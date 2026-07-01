@@ -28,7 +28,7 @@ describe('NETWORKS', () => {
     expect(isShieldedAssetEnabled('testnet', 'XLM')).toBe(true)
     expect(isShieldedAssetEnabled('testnet', 'USDC')).toBe(true)
     expect(NETWORKS.testnet.assets.USDC.poolId).toBe(
-      'CCY6R2BJQ2LAYINOZZLDLHJCWRRPVQNRTWEWCWO7FIDD3BRDQJCAOHKY',
+      'CDKOY3DXCCS3KHBDAE7G2E735YRPDGGAWRKSN25V4VFVKZOMKWXKTCNK',
     )
     expect(isShieldedAssetEnabled('mainnet', 'XLM')).toBe(true)
     expect(isShieldedAssetEnabled('mainnet', 'USDC')).toBe(true)

@@ -2180,3 +2180,104 @@ These are upload/install estimates only. They do not include contract-instance d
 - Recommended first mainnet bridge route remains Base mainnet because source-chain fees are lower than Ethereum L1.
 - To run the mainnet bridge, fund `0xA7FCf3F915947E7014d794f5494BBa60c28EF98E` on Base with source-chain gas and native USDC. Current preflight minimum is `0.00005 ETH` and `1.0005 USDC`; use a buffer before live execution.
 - Mainnet CCTP execution remains hard-gated by `ZKF_CCTP_MAINNET_APPROVED=1` for the exact approved route and funding source.
+
+## 2026-06-30 21:10 UTC - Extension confidential offscreen register smoke
+
+- **Phase:** Web + extension friction reset.
+- **Kind:** Real WXT MV3 extension offscreen confidential-token register proof and submit smoke.
+- **Network:** Stellar testnet.
+- **Extension ID:** `ieibjeodkebelbkkdgnmbalcpmphcfkh`.
+- **User address:** `GCRHPKLZCMJB4RPEYSZXO36JEYQ6CHITPZOKTJVRSOKVGHUU5YYNME26`.
+- **Contract ID:** `CBNL4THDSDDZ5OWPVLJPDBQGQ4FDH6LHBBFUBPRDNLUCIV2LKCHEVJ4F`.
+- **Secret posture:** test mnemonic/private keys stayed in local smoke-script/runtime storage; no secrets were written to this repo.
+- **Command:** `CI=true node scripts/check-extension-confidential.mjs`.
+
+### Transactions
+
+| Step | Transaction | Result |
+|---|---|---|
+| Testnet account funding | `3b8f2fba6d4dc0093a0bf0c41ec9e872b23d4792d8fad7a51e76d13befbe7a49` | accepted |
+| Confidential register | `db86b8d65a05ab8bc1be62e4f5271306f3909914cbf963245432ef9a7ac006d1` | submitted; [stellar.expert](https://stellar.expert/explorer/testnet/tx/db86b8d65a05ab8bc1be62e4f5271306f3909914cbf963245432ef9a7ac006d1) |
+
+### Runtime result
+
+- `provedInOffscreen: true`.
+- `registerStatus: submitted`.
+- Stages reached: `readiness`, `simulate`, `submit`, `confirm`.
+- Blockers: none.
+
+### Re-run after post-review fixes
+
+- **Command:** `CI=true node scripts/check-extension-confidential.mjs`.
+- **User address:** `GCKDVD2ETCPMTQCXEBR2ETG6J37I5LGIPW6GALNJI4X5AQRMWYBA6ESN`.
+- **Funding transaction:** `cde808bde2184e0495d70a8fcf32a5b9853403752dea9f0bbf22c868312b05d7`.
+- **Confidential register transaction:** `cd1055f4dcf162a59fe1357df0684977677a5760cf27a6880417f3ea5203ed43`; [stellar.expert](https://stellar.expert/explorer/testnet/tx/cd1055f4dcf162a59fe1357df0684977677a5760cf27a6880417f3ea5203ed43).
+- `provedInOffscreen: true`, `registerStatus: submitted`, blockers: none.
+
+## 2026-06-30 22:25 UTC - Fresh testnet privacy pools for RPC retention recovery
+
+- **Phase:** Web + extension friction reset.
+- **Kind:** Fresh Stellar testnet privacy-pool deployment to recover from public RPC event retention drift. This is the demo recovery path; durable production restore still requires a bootnode/archive indexer or archive-capable RPC.
+- **Network:** Stellar testnet.
+- **Observed public RPC health:** `https://soroban-testnet.stellar.org/` returned `status: healthy`, `latestLedger: 3368735`, `oldestLedger: 3247776`, `ledgerRetentionWindow: 120960`.
+- **Reason:** previous testnet pools deployed at ledgers `3241020` and `3241021`, now older than `oldestLedger`, causing `RPC_SYNC_GAP` during shielded balance scans.
+- **Fresh deployer/admin:** `GAVLPDUFRIAREMGX4DACLT3QW7A44HAD5YK5HJYQNTXT465SG5KQA3RO` (`zkf-testnet-pool-20260630`, local throwaway testnet identity).
+- **Secret posture:** deployer secret stayed in local Stellar CLI config only; no secret key or seed phrase was recorded. After deployment and permissionless ASP setup, `stellar keys rm zkf-testnet-pool-20260630 --force` removed the local throwaway identity.
+
+### Fresh contracts
+
+| Contract | ID |
+|---|---|
+| ASP membership | `CCXIGPJJY6UHIETXFCIV77HFVJSFS6HAVRSMHJFV6UVENXPJOC2WA3Y2` |
+| ASP non-membership | `CBWQ6VUH37U65RDV2FYJFP5CC4MYKRYSPXAROK55RE7WQZG4EMKGSA3F` |
+| Groth16 verifier | `CATCUE7DEB72SXACTSFHZF5ITJLKQH6GWI47UPM6SV6LYHFPXASDNLFN` |
+| XLM pool | `CCCHESF5HNGMCP5ZLGFBKBTW23YXNAJ6LTGSK7CO3FKFIVEHFE3CD4LZ` |
+| USDC pool | `CDKOY3DXCCS3KHBDAE7G2E735YRPDGGAWRKSN25V4VFVKZOMKWXKTCNK` |
+
+### Pool metadata
+
+| Asset | Token/SAC | Deployment ledger | RPC event check |
+|---|---|---:|---|
+| XLM | `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC` | `3368685` | `getEvents` from ledger `3368685` accepted |
+| USDC | `CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA` | `3368690` | `getEvents` from ledger `3368690` accepted |
+
+### Post-deploy configuration
+
+- ASP `set_admin_insert_only(false)` transaction: `0570c8b99b07f5e5f8c6aeae5a7a58a51e067666b86b5ab2693f47b342c40e14`; [stellar.expert](https://stellar.expert/explorer/testnet/tx/0570c8b99b07f5e5f8c6aeae5a7a58a51e067666b86b5ab2693f47b342c40e14).
+- Result: permissionless `insert_leaf` restored for normal wallet onboarding/shield flows.
+
+### Code/runtime updates
+
+- `packages/core/src/networks.ts` now points testnet XLM and USDC to the fresh pool IDs above.
+- Core tests that assert configured pool IDs were updated.
+- `reference/stellar-private-payments/deployments/testnet/deployments.json` was updated with the fresh contracts and corrected canonical USDC issuer metadata.
+- Nethermind browser runtime assets were rebuilt with Homebrew LLVM (`CC=/opt/homebrew/opt/llvm/bin/clang`) after Apple clang failed to compile `sqlite-wasm-rs` for `wasm32-unknown-unknown`.
+- Rebuilt Nethermind assets were staged into `apps/web/public`; `apps/web/public/js/web_bg.wasm` now embeds the fresh testnet deployment ledgers `3368685` and `3368690`.
+
+### Remaining product requirement
+
+- Fresh pools are not a durable production restore strategy. Once the public testnet RPC retention window moves past these deployment ledgers, a wallet without local index state will hit the same class of failure again.
+- Production-quality shielded balances need a hosted bootnode/archive indexer or an archive-capable RPC for historical `getEvents` back to pool deployment ledgers.
+
+### Runtime smoke after asset-filter fix
+
+- **Command:** `CI=true pnpm extension:quickshield`.
+- **Extension ID:** `ieibjeodkebelbkkdgnmbalcpmphcfkh`.
+- **User address:** `GCZ2KVQC2VZUI6RKMDBZG3W4B5B5O2KE3RS6KHKROIXTG4PBIP35IK25`.
+- **Funding transaction:** `0ac8f94aff594b99d0d1defe98390732b1eddd12b2bbf282391e0af8689d7467`.
+- **ASP insert transaction:** `6d10ed6e19f8314310a2671cded1d8c8773a9fdb9aead96b3733826c24ea5289`; [stellar.expert](https://stellar.expert/explorer/testnet/tx/6d10ed6e19f8314310a2671cded1d8c8773a9fdb9aead96b3733826c24ea5289).
+- **XLM shield transaction:** `885362d7f0aab49b9bd35b477122497537d12653a3ae41fbc399cb56d1d43d92`; [stellar.expert](https://stellar.expert/explorer/testnet/tx/885362d7f0aab49b9bd35b477122497537d12653a3ae41fbc399cb56d1d43d92).
+- **Result:** `proofGenerated: true`, `transactionSubmitted: true`, `durationMs: 13135`, attempts `1`.
+- **Balance scan result:** `shieldedXlmStroops: 1000000`, `shieldedUsdcStroops: 0`, `noteCount: 1`, `shieldedOk: true`, blockers `[]`.
+
+- **Command:** `CI=true pnpm extension:quickshield:usdc`.
+- **Extension ID:** `ieibjeodkebelbkkdgnmbalcpmphcfkh`.
+- **User address:** `GBCIIMFQEHOXR4OIO4NUW2X37JAI7RL5UZKWOKRJTP7PAIZPYJJYIECA`.
+- **Funding transaction:** `019b44eb61d58c0a2a78f9e5e0723ffeb0b1ec5e5059e884a52e7ec2dca2aac6`.
+- **USDC trustline transaction:** `51c52fd102e4e101e83cbb93b1da100795587dafaa1d964baf36c9225fd930f9`; [stellar.expert](https://stellar.expert/explorer/testnet/tx/51c52fd102e4e101e83cbb93b1da100795587dafaa1d964baf36c9225fd930f9).
+- **Local USDC funder transaction:** `007c01b0d4390b9e3bb006e50dea7f823e54b9b1b55c592941d12d42f0df5e31`; [stellar.expert](https://stellar.expert/explorer/testnet/tx/007c01b0d4390b9e3bb006e50dea7f823e54b9b1b55c592941d12d42f0df5e31).
+- **ASP insert transaction:** `490fa4ac680e0e9ad839d619dfbf2061763cc5a1cb99a111394cbb3a3254b980`; [stellar.expert](https://stellar.expert/explorer/testnet/tx/490fa4ac680e0e9ad839d619dfbf2061763cc5a1cb99a111394cbb3a3254b980).
+- **USDC shield transaction:** `632596979d4207c70da0ceb2422ce97bc6d1244b9062d64a30feab066a7fffa9`; [stellar.expert](https://stellar.expert/explorer/testnet/tx/632596979d4207c70da0ceb2422ce97bc6d1244b9062d64a30feab066a7fffa9).
+- **Result:** `proofGenerated: true`, `transactionSubmitted: true`, `durationMs: 15904`, attempts `1`.
+- **Balance scan result:** `shieldedXlmStroops: 0`, `shieldedUsdcStroops: 10000000`, `noteCount: 1`, `shieldedOk: true`, blockers `[]`.
+- **Fix verified:** extension balance reads now use the Nethermind runtime's pool-filtered `getUnspentUserNotes(poolContractId, address)` path. The smoke script fails if the submitted asset leaks into the other shielded asset balance.

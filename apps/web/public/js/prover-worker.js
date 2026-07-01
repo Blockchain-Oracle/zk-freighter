@@ -315,6 +315,19 @@ export class WebClient {
         return takeObject(ret);
     }
     /**
+     * @param {string} pool_contract_id
+     * @param {string} address
+     * @returns {Promise<any>}
+     */
+    getUnspentUserNotes(pool_contract_id, address) {
+        const ptr0 = passStringToWasm0(pool_contract_id, wasm.__wbindgen_export, wasm.__wbindgen_export2);
+        const len0 = WASM_VECTOR_LEN;
+        const ptr1 = passStringToWasm0(address, wasm.__wbindgen_export, wasm.__wbindgen_export2);
+        const len1 = WASM_VECTOR_LEN;
+        const ret = wasm.webclient_getUnspentUserNotes(this.__wbg_ptr, ptr0, len0, ptr1, len1);
+        return takeObject(ret);
+    }
+    /**
      * @param {string} address
      * @returns {Promise<any>}
      */

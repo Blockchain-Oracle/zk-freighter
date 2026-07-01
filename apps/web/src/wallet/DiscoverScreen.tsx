@@ -1,5 +1,6 @@
-import { useState, type CSSProperties } from 'react'
+import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import {
+  encodeReceiveCode,
   lookupPublishedReceiveCode,
   publishPrivateReceiveDiscovery,
   type NetworkKey,
@@ -11,6 +12,7 @@ import { BoundaryBadge, Button, Callout, truncateMiddle } from '@zk-fighter/ui'
 import type { WalletScreen } from './screens'
 
 const STELLAR_ADDRESS = /^G[A-Z2-7]{55}$/
+const STORAGE_PREFIX = 'zk-fighter:discover-publish:v1'
 
 const fieldStyle: CSSProperties = {
   width: '100%', boxSizing: 'border-box', padding: '11px 13px', borderRadius: 11,
@@ -35,17 +37,44 @@ interface DiscoverScreenProps {
 
 export function DiscoverScreen({ identity, network, onNav }: DiscoverScreenProps) {
   const [publishing, setPublishing] = useState(false)
-  const [publishReport, setPublishReport] = useState<PublicDiscoveryPublishReport | null>(null)
+  const [publishReport, setPublishReport] = useState<PublicDiscoveryPublishReport | null>(() => readStoredPublish(network, identity.stellarPublicKey))
+  const [selfLookup, setSelfLookup] = useState<PublicDiscoveryLookupReport | null>(null)
   const [lookupAddress, setLookupAddress] = useState('')
   const [looking, setLooking] = useState(false)
   const [lookupReport, setLookupReport] = useState<PublicDiscoveryLookupReport | null>(null)
   const [copied, setCopied] = useState(false)
+  const receiveCode = useMemo(() => encodeReceiveCode({
+    version: 1,
+    network,
+    notePublicKey: identity.privateReceive.notePublicKey,
+    encryptionPublicKey: identity.privateReceive.encryptionPublicKey,
+  }), [identity.privateReceive.encryptionPublicKey, identity.privateReceive.notePublicKey, network])
+  const storedDiscoverable = publishReport?.status === 'submitted' || publishReport?.status === 'partial'
+  const discoverable = selfLookup?.status === 'found' || (selfLookup === null && storedDiscoverable)
+
+  useEffect(() => {
+    let cancelled = false
+    queueMicrotask(() => {
+      if (!cancelled) {
+        setPublishReport(readStoredPublish(network, identity.stellarPublicKey))
+        setSelfLookup(null)
+      }
+    })
+    void lookupPublishedReceiveCode({ ownerAddress: identity.stellarPublicKey, network })
+      .then((report) => { if (!cancelled) setSelfLookup(report) })
+      .catch((cause) => {
+        if (!cancelled) setSelfLookup({ status: 'failed', network, ownerAddress: identity.stellarPublicKey, blockers: [cause instanceof Error ? cause.message : 'Lookup failed.'] })
+      })
+    return () => { cancelled = true }
+  }, [identity.stellarPublicKey, network])
 
   async function publish() {
     setPublishing(true)
     setPublishReport(null)
     try {
-      setPublishReport(await publishPrivateReceiveDiscovery({ identity, network }))
+      const report = await publishPrivateReceiveDiscovery({ identity, network })
+      setPublishReport(report)
+      if (report.status === 'submitted' || report.status === 'partial') writeStoredPublish(report)
     } catch (cause) {
       console.error('[DiscoverScreen] publish rejection', cause)
       setPublishReport({ status: 'failed', network, userAddress: identity.stellarPublicKey, notePublicKeyHex: '', encryptionPublicKeyHex: '', pools: [], blockers: [cause instanceof Error ? cause.message : 'Publish failed.'] })
@@ -92,11 +121,19 @@ export function DiscoverScreen({ identity, network, onNav }: DiscoverScreenProps
 
       <div style={{ display: 'flex', gap: 26, alignItems: 'flex-start', flexWrap: 'wrap' }}>
         <div style={panel}>
-          <div style={{ fontWeight: 700, fontSize: 15 }}>Make my code discoverable</div>
+          <div style={{ fontWeight: 700, fontSize: 15 }}>{discoverable ? 'Your code is discoverable' : 'Make my code discoverable'}</div>
           <div style={{ fontSize: 12.5, color: 'var(--tx2)', lineHeight: 1.55 }}>Links this public address to your private receive keys on-chain, so others can find your <span style={{ fontFamily: 'var(--fm)' }}>zkf1…</span> code.</div>
           <div style={{ ...fieldStyle, color: 'var(--tx2)', cursor: 'default' }}>{truncateMiddle(identity.stellarPublicKey, 6, 6)} <span style={{ color: 'var(--tx3)' }}>(your public account)</span></div>
           <OnChainNote>Visible on-chain · never exposes your seed or any power to spend.</OnChainNote>
-          <Button fullWidth loading={publishing} onClick={publish}>Make discoverable</Button>
+          {discoverable ? (
+            <div style={{ padding: 14, border: '1px solid rgba(53,199,123,.42)', borderRadius: 12, background: 'rgba(53,199,123,.08)' }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--pos)' }}>Ready to receive through Discover</div>
+              <div style={{ font: '600 10px/1.4 var(--fm)', color: 'var(--tx3)', marginTop: 6 }}>{truncateMiddle(selfLookup?.receiveCode ?? receiveCode, 10, 6)}</div>
+              <Button variant="secondary" fullWidth onClick={() => copyCode(selfLookup?.receiveCode ?? receiveCode)} style={{ marginTop: 10 }}>{copied ? 'Copied' : 'Copy code'}</Button>
+            </div>
+          ) : (
+            <Button fullWidth loading={publishing} onClick={publish}>Make discoverable</Button>
+          )}
           {publishReport ? (
             <Callout tone={publishReport.status === 'submitted' ? 'info' : 'warn'} title={publishReport.status === 'submitted' ? 'Published.' : publishReport.status === 'partial' ? 'Partly published.' : 'Not published.'}>
               {publishReport.status === 'submitted' ? 'Your private code is now discoverable by your public address.' : publishReport.blockers[0] ?? 'Some pools could not be registered.'}
@@ -125,4 +162,23 @@ export function DiscoverScreen({ identity, network, onNav }: DiscoverScreenProps
       </div>
     </section>
   )
+}
+
+function storageKey(network: NetworkKey, publicKey: string): string {
+  return `${STORAGE_PREFIX}:${network}:${publicKey}`
+}
+
+function readStoredPublish(network: NetworkKey, publicKey: string): PublicDiscoveryPublishReport | null {
+  try {
+    const value = window.localStorage.getItem(storageKey(network, publicKey))
+    if (!value) return null
+    const parsed = JSON.parse(value) as PublicDiscoveryPublishReport
+    return parsed.status === 'submitted' || parsed.status === 'partial' ? parsed : null
+  } catch {
+    return null
+  }
+}
+
+function writeStoredPublish(report: PublicDiscoveryPublishReport): void {
+  window.localStorage.setItem(storageKey(report.network, report.userAddress), JSON.stringify(report))
 }

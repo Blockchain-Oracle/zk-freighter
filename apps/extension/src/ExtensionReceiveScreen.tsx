@@ -1,0 +1,83 @@
+import { useState } from 'react'
+import { QRCodeSVG } from 'qrcode.react'
+import { Button } from '@zk-fighter/ui'
+
+import type { DappWalletStatus } from './dappMessages'
+import { shorten } from './extension-format'
+import type { ExtensionNavigate } from './extension-routes'
+import { Badge, Caption, GhostButton, Panel, SectionHeader } from './extension-ui'
+
+type ReceiveTab = 'qr' | 'code' | 'public'
+
+interface ReceiveScreenProps {
+  readonly status: DappWalletStatus
+  readonly navigate: ExtensionNavigate
+}
+
+export function ExtensionReceiveScreen({ status, navigate }: ReceiveScreenProps) {
+  const [tab, setTab] = useState<ReceiveTab>('qr')
+
+  async function copy(value: string) {
+    await navigator.clipboard.writeText(value)
+  }
+
+  return (
+    <Panel label="Receive">
+      <SectionHeader title="Receive" right={<Badge tone="ready">{status.network}</Badge>} />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 7 }}>
+        {(['qr', 'code', 'public'] as const).map((key) => (
+          <button
+            key={key}
+            type="button"
+            data-zkf-action={`receive-tab-${key}`}
+            onClick={() => setTab(key)}
+            style={{
+              border: `1px solid ${tab === key ? 'var(--ac2)' : 'var(--bd)'}`,
+              background: tab === key ? 'rgba(94,124,250,.12)' : 'var(--card)',
+              color: tab === key ? 'var(--tx)' : 'var(--tx3)',
+              borderRadius: 10,
+              padding: '9px 6px',
+              font: '700 9px/1 var(--fm)',
+              letterSpacing: '.08em',
+              textTransform: 'uppercase',
+              cursor: 'pointer',
+            }}
+          >
+            {key}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'qr' ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center' }}>
+          <Caption>PRIVATE RECEIVE CODE</Caption>
+          <div style={{ background: '#fff', padding: 12, borderRadius: 14 }}>
+            <QRCodeSVG value={status.privateReceiveCode} size={166} level="M" marginSize={2} />
+          </div>
+          <GhostButton onClick={() => void copy(status.privateReceiveCode)}>{shorten(status.privateReceiveCode, 12, 8)} · copy</GhostButton>
+        </div>
+      ) : null}
+
+      {tab === 'code' ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <Caption>RAW ZKF CODE</Caption>
+          <div style={{ border: '1px solid var(--bd)', borderRadius: 12, background: 'var(--card)', padding: 12, font: '600 11px/1.45 var(--fm)', overflowWrap: 'anywhere' }}>{status.privateReceiveCode}</div>
+          <Button fullWidth onClick={() => void copy(status.privateReceiveCode)}>Copy private code</Button>
+        </div>
+      ) : null}
+
+      {tab === 'public' ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center' }}>
+          <Caption>PUBLIC STELLAR ADDRESS</Caption>
+          <div style={{ background: '#fff', padding: 12, borderRadius: 14 }}>
+            <QRCodeSVG value={status.publicKey} size={150} level="M" marginSize={2} />
+          </div>
+          <div style={{ border: '1px solid var(--warn)', borderRadius: 12, background: 'rgba(255,183,77,.08)', padding: 12, font: '600 11px/1.45 var(--fm)', overflowWrap: 'anywhere' }}>{status.publicKey}</div>
+          <Button fullWidth variant="secondary" onClick={() => void copy(status.publicKey)}>Copy public address</Button>
+        </div>
+      ) : null}
+
+      <Button fullWidth onClick={() => navigate('discover')}>Make my code discoverable</Button>
+    </Panel>
+  )
+}

@@ -8,7 +8,6 @@ import {
   type FreighterBridgeResponse,
   type NetworkKey,
 } from '@zk-fighter/core'
-import { browser } from 'wxt/browser'
 
 export const externalDappUnsupportedMessage =
   'ZK Fighter external dApp access and signing are disabled; use QuickShield and bridge inside ZK Fighter.'
@@ -61,22 +60,4 @@ export function withError(
 ): FreighterBridgeResponse {
   const apiError = { code: -1, message } as const satisfies FreighterApiError
   return { ...base, ...extra, apiError, error: message }
-}
-
-export async function openExtensionSidePanel(windowId: number | undefined): Promise<void> {
-  const sidePanel = (browser as typeof browser & {
-    readonly sidePanel?: {
-      readonly open?: (options: { windowId: number }) => Promise<void>
-    }
-  }).sidePanel
-
-  if (windowId === undefined || sidePanel?.open === undefined) {
-    return
-  }
-
-  try {
-    await sidePanel.open({ windowId })
-  } catch {
-    return
-  }
 }

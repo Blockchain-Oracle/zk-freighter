@@ -42,10 +42,19 @@ const fieldStyle: CSSProperties = {
 }
 
 function fmtUsdc(atomic: bigint): string {
-  return (Number(atomic) / 1e6).toLocaleString(undefined, { maximumFractionDigits: 2 })
+  return formatAtomicUnits(atomic, 6, 2)
 }
 function fmtEth(wei: bigint): string {
-  return (Number(wei) / 1e18).toLocaleString(undefined, { maximumFractionDigits: 4 })
+  return formatAtomicUnits(wei, 18, 4)
+}
+
+function formatAtomicUnits(raw: bigint, decimals: number, displayDecimals: number): string {
+  const negative = raw < 0n
+  const abs = negative ? -raw : raw
+  const divisor = 10n ** BigInt(decimals)
+  const whole = abs / divisor
+  const fraction = (abs % divisor).toString().padStart(decimals, '0').slice(0, displayDecimals)
+  return `${negative ? '-' : ''}${whole.toLocaleString('en-US')}${displayDecimals > 0 ? `.${fraction}` : ''}`
 }
 /** Parse a USDC amount string to atomic units (6dp on EVM, 7dp/stroops on Stellar). */
 function usdcToAtomic(value: string, decimals: number): bigint | null {

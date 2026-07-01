@@ -14,7 +14,7 @@ import {
 import type { XlmShieldedNote } from './xlm-private-types'
 
 const mnemonic = 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about'
-const xlmPoolId = 'CBQ46IL6HQA2VTPERULO7DBAKHMJ7ZCNVOSDIIX3HLC5T7MSPB6Z5SMY'
+const xlmPoolId = 'CCCHESF5HNGMCP5ZLGFBKBTW23YXNAJ6LTGSK7CO3FKFIVEHFE3CD4LZ'
 const mainnetXlmPoolId = 'CCE3VBWTMGS7TZBOMBXVMPZFD4RUWAJDQHV7L2FT5BHMZKHLQUJKHECE'
 const note: XlmShieldedNote = {
   id: '0x' + '11'.repeat(32),

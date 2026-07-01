@@ -2,6 +2,7 @@ import {
   deriveWalletIdentity,
   type EncryptedVault,
   type NetworkKey,
+  type PasskeyEnvelope,
   type WalletIdentity,
 } from '@zk-fighter/core'
 import { browser } from 'wxt/browser'
@@ -11,6 +12,8 @@ const storageKey = 'zkf.extension.dappWallet'
 export interface StoredDappWallet {
   readonly vault?: EncryptedVault
   readonly network: NetworkKey
+  readonly walletPublicKey?: string
+  readonly passkeyEnvelope?: PasskeyEnvelope
 }
 
 const defaultStoredWallet: StoredDappWallet = {
@@ -26,6 +29,8 @@ export async function readStoredDappWallet(): Promise<StoredDappWallet> {
   return {
     vault: value.vault,
     network: value.network,
+    walletPublicKey: typeof value.walletPublicKey === 'string' ? value.walletPublicKey : undefined,
+    passkeyEnvelope: value.passkeyEnvelope,
   }
 }
 
@@ -38,6 +43,18 @@ export function identityForMnemonic(
   state: StoredDappWallet,
 ): WalletIdentity | null {
   return mnemonic === null ? null : deriveWalletIdentity(mnemonic, state.network)
+}
+
+export type UnlockedDappWallet =
+  | { readonly ok: true; readonly mnemonic: string; readonly network: NetworkKey }
+  | { readonly ok: false; readonly error: string }
+
+export async function requireUnlockedDappWallet(unlockedMnemonic: string | null): Promise<UnlockedDappWallet> {
+  const state = await readStoredDappWallet()
+  const identity = identityForMnemonic(unlockedMnemonic, state)
+  if (!state.vault) return { ok: false, error: 'Import a seed-backed vault before shielding.' }
+  if (!identity || !unlockedMnemonic) return { ok: false, error: 'Unlock ZK Fighter before shielding.' }
+  return { ok: true, ['mnemonic']: unlockedMnemonic, network: state.network }
 }
 
 function isStoredDappWallet(value: unknown): value is StoredDappWallet {

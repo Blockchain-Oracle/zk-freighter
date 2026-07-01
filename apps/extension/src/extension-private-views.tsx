@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import type { XlmPrivateSubmitReport } from '@zk-fighter/core'
 import { Button, EventStepTracker, ProvingRing, type ProofStep } from '@zk-fighter/ui'
 
-import { Copy, ErrorText, ExplorerLink } from './extension-ui'
+import { BlockerList, Copy, ErrorText, ExplorerLink } from './extension-ui'
 
 // Shared proving + terminal views for the private flows (Send + Unshield). The
 // offscreen does the real proving/submit; these render an honest in-flight ring
@@ -36,7 +36,7 @@ export function PrivateTerminal({ report, copy, onReset }: { report: XlmPrivateS
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       <div style={{ fontWeight: 800, fontSize: 17, color: tone }}>{title}</div>
       {ok ? <Copy>{copy.successBody}</Copy> : null}
-      {report.blockers.map((blocker, index) => <div key={index} style={{ fontSize: 11.5, color: 'var(--warn)' }}>{blocker}</div>)}
+      <BlockerList blockers={report.blockers} />
       {report.error && !ok ? <ErrorText>{report.error}</ErrorText> : null}
       {steps.length > 0 ? <EventStepTracker steps={steps} /> : null}
       {report.explorerUrls[0] ? <ExplorerLink href={report.explorerUrls[0]}>View on explorer ↗</ExplorerLink> : null}

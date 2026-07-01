@@ -1,4 +1,11 @@
-import { lookupPublishedReceiveCode, type NetworkKey, type PublicDiscoveryLookupReport } from '@zk-fighter/core'
+import {
+  deriveWalletIdentity,
+  lookupPublishedReceiveCode,
+  publishPrivateReceiveDiscovery,
+  type NetworkKey,
+  type PublicDiscoveryLookupReport,
+  type PublicDiscoveryPublishReport,
+} from '@zk-fighter/core'
 
 // Discover lookup runs in the offscreen because it uses the Nethermind WASM client
 // (getRecentPublicKeys). It is a PUBLIC query — no mnemonic, no proving — just a
@@ -7,6 +14,13 @@ export async function runDiscoverLookup(payload: { readonly [key: string]: unkno
   const network = asNetworkKey(payload['network'])
   const ownerAddress = String(payload['ownerAddress'] ?? '').trim()
   return lookupPublishedReceiveCode({ ownerAddress, network })
+}
+
+export async function runDiscoverPublish(payload: { readonly [key: string]: unknown }): Promise<PublicDiscoveryPublishReport> {
+  const network = asNetworkKey(payload['network'])
+  const mnemonic = String(payload['mnemonic'] ?? '').trim()
+  const identity = deriveWalletIdentity(mnemonic, network)
+  return publishPrivateReceiveDiscovery({ identity, network })
 }
 
 function asNetworkKey(value: unknown): NetworkKey {

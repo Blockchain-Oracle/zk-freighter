@@ -37,7 +37,7 @@ async function main() {
     await cdp.open()
 
     const extensionId = await findExtensionId(cdp, profileDir, stderr)
-    const extensionUrl = `chrome-extension://${extensionId}/sidepanel.html`
+    const extensionUrl = `chrome-extension://${extensionId}/popup.html`
     const pageUrl = `http://127.0.0.1:${localPort}/`
     const connection = await evaluateOnPage(cdp, pageUrl, freighterProbe('REQUEST_CONNECTION_STATUS'))
     const network = await evaluateOnPage(cdp, pageUrl, freighterProbe('REQUEST_NETWORK_DETAILS'))

@@ -41,26 +41,34 @@ function importer(client: Record<string, unknown>) {
 
 describe('XLM private actions', () => {
   it('loads typed shielded notes from the Nethermind client', async () => {
+    let poolId = ''
+    let userAddress = ''
     const report = await loadXlmShieldedNotes({
       identity,
       network: 'testnet',
       now: () => 10,
       importWebModule: importer({
         deriveAndSaveUserKeys: async () => undefined,
-        getUserNotes: async () => [
-          {
-            id: '0xabc',
-            amount: '1000000',
-            spent: false,
-            leafIndex: 12,
-            createdAtLedger: 3238230,
-          },
-        ],
+        getUnspentUserNotes: async (nextPoolId: string, nextUserAddress: string) => {
+          poolId = nextPoolId
+          userAddress = nextUserAddress
+          return [
+            {
+              id: '0xabc',
+              amount: '1000000',
+              spent: false,
+              leafIndex: 12,
+              createdAtLedger: 3238230,
+            },
+          ]
+        },
       }),
     })
 
     expect(report.status).toBe('loaded')
     expect(report.asset).toBe('XLM')
+    expect(poolId).toBe('CCCHESF5HNGMCP5ZLGFBKBTW23YXNAJ6LTGSK7CO3FKFIVEHFE3CD4LZ')
+    expect(userAddress).toBe(identity.stellarPublicKey)
     expect(report.notes).toEqual([
       {
         id: '0xabc',
@@ -82,7 +90,7 @@ describe('XLM private actions', () => {
         syncPoolEvents: async () => {
           calls.push('sync')
         },
-        getUserNotes: async () => {
+        getUnspentUserNotes: async () => {
           calls.push('notes')
           return []
         },
@@ -90,6 +98,21 @@ describe('XLM private actions', () => {
     })
 
     expect(calls).toEqual(['sync', 'notes'])
+  })
+
+  it('fails closed when the runtime cannot load notes by pool', async () => {
+    const report = await loadXlmShieldedNotes({
+      asset: 'USDC',
+      identity,
+      network: 'testnet',
+      importWebModule: importer({
+        deriveAndSaveUserKeys: async () => undefined,
+        getUserNotes: async () => [],
+      }),
+    })
+
+    expect(report.status).toBe('failed')
+    expect(report.blockers[0]).toContain('pool-filtered note loading')
   })
 
   it('fails closed when a receive code targets another network', async () => {
@@ -136,7 +159,7 @@ describe('XLM private actions', () => {
 
     expect(noteKey).toMatch(/^0x/)
     expect(encryptionKey).toMatch(/^0x/)
-    expect(poolId).toBe('CCY6R2BJQ2LAYINOZZLDLHJCWRRPVQNRTWEWCWO7FIDD3BRDQJCAOHKY')
+    expect(poolId).toBe('CDKOY3DXCCS3KHBDAE7G2E735YRPDGGAWRKSN25V4VFVKZOMKWXKTCNK')
     expect(report.asset).toBe('USDC')
     expect(report.status).toBe('submitted')
     expect(report.txHashes).toEqual(['hash-a', 'hash-b'])

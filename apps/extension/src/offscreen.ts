@@ -1,9 +1,10 @@
+import './runtime-env'
 import {
   deriveWalletIdentity,
   extensionReadinessDigest,
   generateSeedPhrase,
-  importNethermindWebModule,
   ensureStellarUsdcTrustline,
+  initializeNethermindWebModule,
   insertAspMembershipLeaf,
   phase11ExtensionReadiness,
   runNethermindDryDepositProofAttempt,
@@ -16,7 +17,7 @@ import { browser } from 'wxt/browser'
 import { runPrivateTransfer, runUnshieldWithdrawal } from './offscreen-private-actions'
 import { runConfidentialOp } from './offscreen-confidential-actions'
 import { runLoadBalances } from './offscreen-balance-actions'
-import { runDiscoverLookup } from './offscreen-discover-actions'
+import { runDiscoverLookup, runDiscoverPublish } from './offscreen-discover-actions'
 import { runDisclosure } from './offscreen-disclosure-actions'
 
 const offscreenStatusMessageType = 'zkf.offscreen.status'
@@ -32,6 +33,7 @@ const unshieldWithdrawalMessageType = 'zkf.offscreen.unshieldWithdrawal'
 const confidentialMessageType = 'zkf.offscreen.confidential'
 const loadBalancesMessageType = 'zkf.offscreen.loadBalances'
 const discoverLookupMessageType = 'zkf.offscreen.discoverLookup'
+const discoverPublishMessageType = 'zkf.offscreen.discoverPublish'
 const disclosureMessageType = 'zkf.offscreen.disclosure'
 const extensionProofAttemptTimeoutMs = 18_000
 const deepProofAttemptTimeoutMs = 180_000
@@ -94,8 +96,6 @@ browser.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) 
     }
 
     if (payload.type === confidentialMessageType) {
-      // All confidential ops (register/deposit/merge/withdraw/transfer/scan).
-      // bb.js UltraHonk proving runs here in the MV3 offscreen (verified).
       void runConfidentialOp(payload).then(sendResponse, (error: unknown) => {
         sendResponse({ ok: false, error: error instanceof Error ? error.message : String(error) })
       })
@@ -113,6 +113,13 @@ browser.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) 
     if (payload.type === discoverLookupMessageType) {
       // Public discovery lookup (getRecentPublicKeys) — no proving, no secret.
       void runDiscoverLookup(payload).then(sendResponse, (error: unknown) => {
+        sendResponse({ ok: false, error: error instanceof Error ? error.message : String(error) })
+      })
+      return true
+    }
+
+    if (payload.type === discoverPublishMessageType) {
+      void runDiscoverPublish(payload).then(sendResponse, (error: unknown) => {
         sendResponse({ ok: false, error: error instanceof Error ? error.message : String(error) })
       })
       return true
@@ -146,8 +153,7 @@ browser.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) 
 async function probeNethermindModule(): Promise<unknown> {
   const started = performance.now()
   try {
-    const mod = await importNethermindWebModule()
-    await mod.default()
+    const mod = await initializeNethermindWebModule()
     return {
       ok: true,
       runtime: 'nethermind-browser-wasm',

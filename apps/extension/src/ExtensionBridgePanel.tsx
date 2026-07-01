@@ -1,11 +1,12 @@
 import { ArrowLeftRight } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
-import { getDefaultCctpSource, getEnabledCctpSources, type CctpSourceKey } from '@zk-fighter/core'
+import { bridgeAmountDisplay, getDefaultCctpSource, getEnabledCctpSources, parseEvmUsdcAmountToAtomic, type CctpSourceKey } from '@zk-fighter/core'
 import { Button } from '@zk-fighter/ui'
 
-import { dappMessageTypes, type DappWalletStatus, type QuickBridgeResponse } from './dappMessages'
-import { shorten } from './extension-format'
-import { Caption, Copy, ExplorerLink, MetaRow, Panel, SectionHeader, fieldStyle } from './extension-ui'
+import { ChainMark } from './asset-marks'
+import { dappMessageTypes, type BridgeSourceBalancesResponse, type DappBalances, type DappBalancesResponse, type DappWalletStatus, type QuickBridgeResponse } from './dappMessages'
+import { amountLabel, atomicToAmountInput, formatAtomic, shorten } from './extension-format'
+import { Caption, Copy, ErrorText, ExplorerLink, MetaRow, Panel, SectionHeader, fieldStyle } from './extension-ui'
 
 interface ExtensionBridgePanelProps {
   readonly status: DappWalletStatus | null
@@ -16,12 +17,23 @@ export function ExtensionBridgePanel({ status, sendRuntimeMessage }: ExtensionBr
   const network = status?.network ?? 'testnet'
   const sources = useMemo(() => getEnabledCctpSources(network), [network])
   const [sourceChainKey, setSourceChainKey] = useState<CctpSourceKey>(() => getDefaultCctpSource('testnet')?.key ?? 'base')
+  const [amount, setAmount] = useState('1')
   const [resumeBurnHash, setResumeBurnHash] = useState('')
+  const [balances, setBalances] = useState<DappBalances | null>(null)
+  const [sourceBalances, setSourceBalances] = useState<BridgeSourceBalancesResponse | null>(null)
+  const [sourceLoading, setSourceLoading] = useState(false)
   const [result, setResult] = useState<QuickBridgeResponse | null>(null)
+  const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const disabledReason = status?.unlocked ? '' : 'Unlock the extension vault first.'
   const selectedSource = sources.find((source) => source.key === sourceChainKey) ?? getDefaultCctpSource(network)
   const evmAddress = status?.evmAddress ?? ''
+  const resumeMode = Boolean(resumeBurnHash.trim())
+  const parsedAmount = parseEvmUsdcAmountToAtomic(amount)
+  const destinationUsdc = balances?.publicOk ? amountLabel(balances.publicUsdcStroops, 'USDC') : '—'
+  const sourceUsdcAtomic = sourceBalances?.ok && sourceBalances.usdcAtomic ? BigInt(sourceBalances.usdcAtomic) : null
+  const sourceNativeWei = sourceBalances?.ok && sourceBalances.nativeWei ? BigInt(sourceBalances.nativeWei) : null
+  const overSourceBalance = !resumeMode && parsedAmount.ok && sourceUsdcAtomic !== null && parsedAmount.atomic > sourceUsdcAtomic
 
   useEffect(() => {
     const defaultSource = getDefaultCctpSource(network)
@@ -30,10 +42,50 @@ export function ExtensionBridgePanel({ status, sendRuntimeMessage }: ExtensionBr
     }
   }, [network, sourceChainKey, sources])
 
+  useEffect(() => {
+    let cancelled = false
+    void (async () => {
+      const response = (await sendRuntimeMessage({ type: dappMessageTypes.balances })) as DappBalancesResponse
+      if (!cancelled && response.ok && response.balances) setBalances(response.balances)
+    })()
+    return () => { cancelled = true }
+  }, [sendRuntimeMessage])
+
+  useEffect(() => {
+    if (!selectedSource) return
+    let cancelled = false
+    setSourceLoading(true)
+    setSourceBalances(null)
+    void (async () => {
+      try {
+        const response = (await sendRuntimeMessage({ type: dappMessageTypes.bridgeSourceBalances, sourceChainKey: selectedSource.key })) as BridgeSourceBalancesResponse
+        if (!cancelled) setSourceBalances(response)
+      } finally {
+        if (!cancelled) setSourceLoading(false)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [selectedSource, sendRuntimeMessage])
+
   async function startBridge() {
+    if (!selectedSource) {
+      setError('Choose a source chain.')
+      return
+    }
+    const nextAmount = resumeMode ? null : parseEvmUsdcAmountToAtomic(amount)
+    if (nextAmount && !nextAmount.ok) {
+      setError(nextAmount.error)
+      return
+    }
+    if (overSourceBalance) {
+      setError('Amount exceeds the USDC funded on this source-chain address.')
+      return
+    }
     setBusy(true)
+    setError('')
     try {
-      const response = (await sendRuntimeMessage({ type: dappMessageTypes.quickBridge, sourceChainKey: selectedSource?.key, resumeBurnHash })) as QuickBridgeResponse
+      const amountAtomic = nextAmount?.ok ? nextAmount.atomic.toString() : undefined
+      const response = (await sendRuntimeMessage({ type: dappMessageTypes.quickBridge, sourceChainKey: selectedSource.key, amountAtomic, resumeBurnHash })) as QuickBridgeResponse
       setResult(response)
     } finally {
       setBusy(false)
@@ -43,9 +95,13 @@ export function ExtensionBridgePanel({ status, sendRuntimeMessage }: ExtensionBr
   return (
     <Panel label="Bridge then shield">
       <SectionHeader title="Bridge then shield" right={<span style={{ font: '600 9px/1 var(--fm)', letterSpacing: '.1em', color: 'var(--tx3)', padding: '5px 9px', border: '1px solid var(--bd)', borderRadius: 999 }}>NATIVE</span>} />
-      <Copy>Bring USDC from another chain into your public Stellar balance via Circle CCTP. ZK Fighter signs the burn with its own seed-derived EVM key — no MetaMask, no web handoff.</Copy>
+      <Copy>Bring USDC from another chain into your public Stellar balance via Circle CCTP. ZK Fighter signs the burn with its own seed-derived EVM key inside the extension.</Copy>
       <MetaRow label="FUND THIS EVM ADDRESS">{evmAddress ? shorten(evmAddress, 10, 8) : 'Unlock first'}</MetaRow>
-      <MetaRow label="SOURCE">{selectedSource ? `${selectedSource.label} · ${selectedSource.gasToken} gas` : 'Unavailable'}</MetaRow>
+      <MetaRow label="PUBLIC STELLAR USDC">{destinationUsdc}</MetaRow>
+      <MetaRow label="SOURCE USDC">{sourceLoading ? 'Loading…' : sourceUsdcAtomic === null ? '—' : `${formatAtomic(sourceUsdcAtomic, 6, 2)} USDC`}</MetaRow>
+      <MetaRow label="SOURCE GAS">{sourceLoading ? 'Loading…' : sourceNativeWei === null ? '—' : `${formatAtomic(sourceNativeWei, 18, 4)} ${sourceBalances?.gasToken ?? selectedSource?.gasToken ?? 'gas'}`}</MetaRow>
+      <MetaRow label="SOURCE">{selectedSource ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}><ChainMark chain={selectedSource.key} size={21} />{selectedSource.label}</span> : 'Unavailable'}</MetaRow>
+      <MetaRow label="AMOUNT">{resumeMode ? 'Resolved from burn attestation' : parsedAmount.ok ? bridgeAmountDisplay(parsedAmount.atomic) : '— USDC'}</MetaRow>
       <div>
         <Caption style={{ display: 'block', marginBottom: 6 }}>SOURCE CHAIN</Caption>
         <select value={selectedSource?.key ?? sourceChainKey} onChange={(event) => setSourceChainKey(event.target.value as CctpSourceKey)} style={fieldStyle}>
@@ -55,13 +111,23 @@ export function ExtensionBridgePanel({ status, sendRuntimeMessage }: ExtensionBr
         </select>
       </div>
       <div>
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 6 }}>
+          <Caption>AMOUNT</Caption>
+          <button type="button" onClick={() => setAmount(sourceUsdcAtomic && sourceUsdcAtomic > 0n ? atomicToAmountInput(sourceUsdcAtomic, 6) : '')} disabled={!sourceUsdcAtomic || sourceUsdcAtomic <= 0n} style={{ marginLeft: 'auto', border: 0, background: 'transparent', color: sourceUsdcAtomic && sourceUsdcAtomic > 0n ? 'var(--ac2)' : 'var(--tx3)', fontSize: 10.5, fontWeight: 800, cursor: sourceUsdcAtomic && sourceUsdcAtomic > 0n ? 'pointer' : 'default' }}>Max</button>
+        </div>
+        <input data-zkf-action="bridge-amount" value={amount} onChange={(event) => setAmount(event.target.value)} inputMode="decimal" placeholder={sourceUsdcAtomic && sourceUsdcAtomic > 0n ? atomicToAmountInput(sourceUsdcAtomic, 6) : '1.00'} style={fieldStyle} />
+      </div>
+      <div>
         <Caption style={{ display: 'block', marginBottom: 6 }}>RESUME BURN HASH</Caption>
         <input value={resumeBurnHash} onChange={(event) => setResumeBurnHash(event.target.value)} placeholder="0x… (optional)" style={fieldStyle} />
       </div>
-      <Button fullWidth loading={busy} disabled={Boolean(disabledReason) || busy} onClick={() => void startBridge()}>
+      <Copy>{disabledReason || bridgeResultText(result)}</Copy>
+      {error ? <ErrorText>{error}</ErrorText> : null}
+      {sourceBalances && !sourceBalances.ok ? <ErrorText>{sourceBalances.error ?? 'Could not load source-chain balances.'}</ErrorText> : null}
+      {overSourceBalance ? <ErrorText>Amount exceeds the funded source-chain USDC balance.</ErrorText> : null}
+      <Button fullWidth loading={busy} disabled={Boolean(disabledReason) || overSourceBalance || busy} onClick={() => void startBridge()}>
         <ArrowLeftRight size={15} aria-hidden="true" /> {busy ? 'Bridging…' : 'Start bridge'}
       </Button>
-      <Copy>{disabledReason || bridgeResultText(result)}</Copy>
       {result?.report?.stellarMintExplorerUrl ? <ExplorerLink href={result.report.stellarMintExplorerUrl}>View Stellar mint ↗</ExplorerLink> : null}
     </Panel>
   )
@@ -69,7 +135,7 @@ export function ExtensionBridgePanel({ status, sendRuntimeMessage }: ExtensionBr
 
 function bridgeResultText(result: QuickBridgeResponse | null): string {
   if (!result) {
-    return 'Fund the EVM address with USDC (and a little gas), then bridge natively — no web handoff.'
+    return 'Fund the EVM address with USDC and gas, then bridge natively inside the extension.'
   }
   if (!result.ok) {
     return result.error ?? 'Bridge failed.'

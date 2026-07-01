@@ -1,7 +1,8 @@
 import type { CSSProperties, ReactNode } from 'react'
+import { describeBalanceIssue, uniqueBlockers } from './balance-issue'
 
 // Themed extension primitives (token-based) that replace the old ExtensionApp.css
-// classes, so popup + side panel share the same visual language as the web app.
+// classes, so popup routes share the same visual language as the web app.
 
 export const fieldStyle: CSSProperties = {
   width: '100%',
@@ -82,11 +83,16 @@ export function ExplorerLink({ href, children }: { href: string; children: React
 
 export function BlockerList({ blockers }: { blockers: readonly string[] }) {
   if (blockers.length === 0) return null
+  const shown = uniqueBlockers(blockers)
   return (
     <ul style={{ margin: 0, paddingLeft: 16, display: 'flex', flexDirection: 'column', gap: 4 }}>
-      {blockers.map((blocker, index) => (
-        <li key={index} style={{ fontSize: 11, color: 'var(--warn)', lineHeight: 1.45 }}>{blocker}</li>
-      ))}
+      {shown.map((blocker, index) => <li key={index} style={{ fontSize: 11, color: 'var(--warn)', lineHeight: 1.45 }}>{formatBlocker(blocker)}</li>)}
     </ul>
   )
+}
+
+function formatBlocker(blocker: string): ReactNode {
+  const issue = describeBalanceIssue([blocker])
+  if (issue && issue.title !== 'Balance unavailable.') return <><strong>{issue.title}</strong> {issue.body}</>
+  return blocker
 }

@@ -8,7 +8,6 @@ import {
 import {
   blockersForNullResult,
   buildNethermindEvent,
-  defaultNoteLimit,
   defaultNow,
   defaultPrivateActionTimeoutMs,
   explorerUrl,
@@ -45,15 +44,12 @@ export async function loadXlmShieldedNotes(
 
   try {
     const client = await prepareClient(options)
-    if (!client.getUserNotes) {
-      throw new Error('Nethermind WebClient does not expose getUserNotes')
+    if (!client.getUnspentUserNotes) {
+      throw new Error('Nethermind WebClient does not expose pool-filtered note loading')
     }
 
     await client.syncPoolEvents?.()
-    const raw = await client.getUserNotes(
-      options.identity.stellarPublicKey,
-      options.limit ?? defaultNoteLimit,
-    )
+    const raw = await client.getUnspentUserNotes(poolContractId, options.identity.stellarPublicKey)
     const notes = Array.isArray(raw) ? raw.map(parseNote).filter((note) => note !== undefined) : []
 
     return {

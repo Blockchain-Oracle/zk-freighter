@@ -68,7 +68,7 @@ async function main() {
   try {
     const cdp = await connect(profileDir)
     const extensionId = await findExtensionId(cdp, profileDir, stderr)
-    const pageUrl = `chrome-extension://${extensionId}/sidepanel.html`
+    const pageUrl = `chrome-extension://${extensionId}/popup.html`
     const recoveryPhrase = generateMnemonic(wordlist, 128)
 
     const imported = await runtimeMessage(cdp, pageUrl, { type: 'zkf.extension.dapp.importVault', mnemonic: recoveryPhrase, password, network })

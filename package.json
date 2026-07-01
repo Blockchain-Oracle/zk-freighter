@@ -6,7 +6,27 @@
   "packageManager": "pnpm@10.33.0",
   "scripts": {
     "preinstall": "node scripts/enforce-pnpm.mjs",
+    "start": "pnpm web:start",
     "dev": "pnpm --filter @zk-fighter/web dev",
+    "web:dev": "pnpm --filter @zk-fighter/web dev",
+    "web:build": "pnpm --filter @zk-fighter/web build",
+    "web:start": "pnpm --filter @zk-fighter/web start",
+    "landing:dev": "pnpm --filter @zk-fighter/landing dev",
+    "landing:build": "pnpm --filter @zk-fighter/landing build",
+    "landing:start": "pnpm --filter @zk-fighter/landing start",
+    "funding-api:dev": "pnpm --filter @zk-fighter/funding-api dev",
+    "funding-api:build": "pnpm --filter @zk-fighter/funding-api build",
+    "funding-api:start": "pnpm --filter @zk-fighter/funding-api start",
+    "bootnode:dev": "pnpm --filter @zk-fighter/bootnode dev",
+    "bootnode:dev:mainnet": "pnpm --filter @zk-fighter/bootnode dev:mainnet",
+    "bootnode:build": "pnpm --filter @zk-fighter/bootnode build",
+    "bootnode:start": "pnpm --filter @zk-fighter/bootnode start",
+    "bootnode:start:mainnet": "pnpm --filter @zk-fighter/bootnode start:mainnet",
+    "extension:dev": "pnpm --filter @zk-fighter/extension dev",
+    "extension:dev:local": "pnpm --filter @zk-fighter/extension dev:local",
+    "extension:build": "pnpm --filter @zk-fighter/extension build",
+    "extension:build:local": "pnpm --filter @zk-fighter/extension build:local",
+    "extension:zip": "pnpm --filter @zk-fighter/extension zip",
     "build": "pnpm -r run build",
     "lint": "pnpm -r run lint && pnpm docs:check && pnpm files:check && pnpm secrets:check",
     "typecheck": "pnpm -r run typecheck",
@@ -33,5 +53,8 @@
     "typescript": "~6.0.2",
     "viem": "2.53.1",
     "vitest": "^4.0.16"
+  },
+  "dependencies": {
+    "@stellar/stellar-sdk": "16.0.1"
   }
 }

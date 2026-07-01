@@ -1,5 +1,11 @@
 # Wiki Log
 
+## 2026-07-01
+
+- Added `product-win-definition.md` as the persistent acceptance rubric for future ZK Fighter planning and implementation.
+- Rule: judge can try it in 30 seconds; Stellar/ZK tools are obviously necessary; the product looks and behaves like a real wallet, not a demo.
+- Source basis: hackathon brief, product spec/stories, privacy wallet UX research, fresh-pool retention evidence, and current funding/runtime code inspection.
+
 ## 2026-06-25
 
 - Added `wallet-design-references.md` from wallet UX research for ZK Fighter web, extension, and possible mobile design handoff.

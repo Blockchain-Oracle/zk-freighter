@@ -3,6 +3,7 @@ import { Segmented } from '@zk-fighter/ui'
 
 import type { ActivityRecord } from './activity-store'
 import { dappMessageTypes, type ActivityResponse } from './dappMessages'
+import { formatStroops } from './extension-format'
 import { Copy, ExplorerLink } from './extension-ui'
 
 // Activity: real persisted op history (from the runtime store), with the same
@@ -16,13 +17,22 @@ const FILTERS: ReadonlyArray<{ value: Filter; label: string }> = [
   { value: 'public', label: 'Public' },
   { value: 'pending', label: 'Pending' },
 ]
-const KIND_LABEL: Record<ActivityRecord['kind'], string> = { send: 'Sent privately', unshield: 'Unshielded', shield: 'Shielded', bridge: 'Bridged', confidential: 'Confidential' }
+const KIND_LABEL: Record<ActivityRecord['kind'], string> = {
+  send: 'Sent privately',
+  unshield: 'Unshielded',
+  shield: 'Shielded',
+  bridge: 'Bridged',
+  confidential: 'Confidential',
+  confidentialSetup: 'Confidential setup',
+  discover: 'Discoverable',
+  fund: 'Demo funded',
+}
 const STATUS_COLOR: Record<ActivityRecord['status'], string> = { submitted: 'var(--pos)', failed: 'var(--dng)', blocked: 'var(--warn)', pending: 'var(--warn)' }
 
 function fmtStroops(stroops?: string): string {
   if (!stroops) return ''
   try {
-    return (Number(BigInt(stroops)) / 1e7).toLocaleString(undefined, { maximumFractionDigits: 7 })
+    return formatStroops(stroops, 7)
   } catch {
     return ''
   }

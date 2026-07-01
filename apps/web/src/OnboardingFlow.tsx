@@ -13,13 +13,14 @@ interface OnboardingFlowProps {
   busy: boolean
   onChangeNetwork: (network: NetworkKey) => void
   onCreate: (seedPhrase: string, password: string) => Promise<{ ok: boolean; error?: string }>
+  onDemoFunding: (seedPhrase: string) => Promise<{ ok: boolean; message: string }>
   onEnter: (seedPhrase: string) => void
 }
 
 const labelStyle = { font: '600 9px/1 var(--fm)', letterSpacing: '.1em', color: 'var(--tx3)', marginBottom: 8 } as const
 const backArrow = { fontSize: 15, color: 'var(--tx2)', cursor: 'pointer', background: 'none', border: 'none' } as const
 
-export function OnboardingFlow({ network, networks, busy, onChangeNetwork, onCreate, onEnter }: OnboardingFlowProps) {
+export function OnboardingFlow({ network, networks, busy, onChangeNetwork, onCreate, onDemoFunding, onEnter }: OnboardingFlowProps) {
   const [step, setStep] = useState<Step>('welcome')
   const [mode, setMode] = useState<Mode>('create')
   const [mnemonic, setMnemonic] = useState('')
@@ -29,8 +30,11 @@ export function OnboardingFlow({ network, networks, busy, onChangeNetwork, onCre
   const [ack, setAck] = useState(false)
   const [copied, setCopied] = useState(false)
   const [error, setError] = useState('')
+  const [fundingMessage, setFundingMessage] = useState('')
+  const [fundingReady, setFundingReady] = useState(false)
 
-  const seed = (mode === 'create' ? mnemonic : importPhrase).trim()
+  const seedSource = mode === 'create' ? mnemonic : importPhrase
+  const seed = seedSource.trim()
   const words = seed ? seed.split(/\s+/) : []
   const passwordsMatch = password.length >= passwordMinLength && password === confirm
 
@@ -59,6 +63,14 @@ export function OnboardingFlow({ network, networks, busy, onChangeNetwork, onCre
     const result = await onCreate(seed, password)
     if (result.ok) setStep('ready')
     else setError(result.error ?? 'Could not create the vault.')
+  }
+
+  async function addDemoFunds() {
+    setFundingMessage('')
+    setFundingReady(false)
+    const result = await onDemoFunding(seed)
+    setFundingMessage(result.message)
+    setFundingReady(result.ok)
   }
 
   const testnet = <TestnetPill network={network} />
@@ -166,6 +178,17 @@ export function OnboardingFlow({ network, networks, busy, onChangeNetwork, onCre
         <div style={{ width: '100%', border: '1px dashed rgba(229,180,92,.4)', borderRadius: 12, background: 'rgba(229,180,92,.05)', padding: '12px 14px', fontSize: 11, color: 'var(--warn)', lineHeight: 1.5 }}>
           {network === 'testnet' ? 'Testnet · hackathon build — don’t use real funds yet.' : 'Mainnet — verify everything before moving real funds.'}
         </div>
+        {network === 'testnet' ? (
+          <div style={{ width: '100%', border: '1px solid rgba(94,124,250,.34)', borderRadius: 14, background: 'rgba(94,124,250,.07)', padding: '13px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ width: 27, height: 27, borderRadius: 9, background: 'rgba(94,124,250,.16)', color: 'var(--ac2)', display: 'grid', placeItems: 'center', fontSize: 14 }}>+</span>
+              <span style={{ fontSize: 12.5, color: 'var(--tx)', fontWeight: 800 }}>Add testnet funds</span>
+            </div>
+            <div style={{ fontSize: 11.5, color: 'var(--tx2)', lineHeight: 1.45 }}>Funds XLM and USDC for this wallet so you can shield without hunting for faucets.</div>
+            {fundingMessage ? <div style={{ fontSize: 11, color: fundingReady ? 'var(--pos)' : 'var(--warn)', lineHeight: 1.45 }}>{fundingMessage}</div> : null}
+            <Button variant={fundingReady ? 'secondary' : 'primary'} fullWidth loading={busy} onClick={() => void addDemoFunds()}>{fundingReady ? 'Funding ready' : 'Add demo funds'}</Button>
+          </div>
+        ) : null}
         <Button fullWidth onClick={() => onEnter(seed)}>Go to wallet</Button>
       </CardBody>
     </OnboardCard>

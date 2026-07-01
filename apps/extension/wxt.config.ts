@@ -9,11 +9,23 @@ export default defineConfig({
   vite: () => ({ plugins: [tailwindcss()] }),
   manifest: {
     name: 'ZK Fighter',
-    description: 'Shielded Stellar payments wallet surface. Extension runtime proof is in progress.',
+    description: 'Compact wallet for shielded Stellar payments.',
+    icons: {
+      16: 'extension-icons/zkf-icon-16.png',
+      32: 'extension-icons/zkf-icon-32.png',
+      48: 'extension-icons/zkf-icon-48.png',
+      128: 'extension-icons/zkf-icon-128.png',
+    },
     action: {
       default_title: 'ZK Fighter',
+      default_icon: {
+        16: 'extension-icons/zkf-icon-16.png',
+        32: 'extension-icons/zkf-icon-32.png',
+        48: 'extension-icons/zkf-icon-48.png',
+        128: 'extension-icons/zkf-icon-128.png',
+      },
     },
-    permissions: ['storage', 'sidePanel', 'offscreen'],
+    permissions: ['storage', 'offscreen'],
     content_security_policy: {
       extension_pages: "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';",
     },

@@ -5,6 +5,12 @@ import {
   unlockPasskeyEnvelope,
   type WebAuthnPrfClient,
 } from './passkey'
+import {
+  createPasskeyEnvelopeFromMaterial,
+  createPasskeyMaterial,
+  getPasskeyUnlockMaterial,
+  unlockPasskeyEnvelopeFromMaterial,
+} from './passkey-material'
 
 const mnemonic = 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about'
 const userName = 'GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF'
@@ -117,5 +123,25 @@ describe('passkey envelope', () => {
 
   it('rejects corrupt serialized passkey envelopes', () => {
     expect(parsePasskeyEnvelope('{')).toEqual({ ok: false, error: 'corrupt-passkey' })
+  })
+
+  it('keeps seed encryption/decryption outside the WebAuthn material ceremony', async () => {
+    const setupClient = client(prfA)
+    const material = await createPasskeyMaterial({ userName, client: setupClient })
+    expect(material.ok).toBe(true)
+    if (!material.ok) return
+    expect(JSON.stringify(material.value)).not.toContain('abandon')
+
+    const envelope = await createPasskeyEnvelopeFromMaterial({ mnemonic, material: material.value })
+    expect(envelope.ok).toBe(true)
+    if (!envelope.ok) return
+
+    const unlockMaterial = await getPasskeyUnlockMaterial({ envelope: envelope.value, client: client(prfA) })
+    expect(unlockMaterial.ok).toBe(true)
+    if (!unlockMaterial.ok) return
+    await expect(unlockPasskeyEnvelopeFromMaterial({ envelope: envelope.value, material: unlockMaterial.value })).resolves.toEqual({
+      ok: true,
+      value: mnemonic,
+    })
   })
 })

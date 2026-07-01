@@ -26,6 +26,23 @@
 
 Always inspect the actual filesystem before acting. Current files beat stale memory.
 
+## Active Redesign Build (Tailwind v4) — CURRENT FOCUS
+
+Reimplementing the UI to the designer's **v2 high-fidelity prototype** across **web → extension → mobile**, in the existing React stack. The HTML prototype is *reference only* (never copied); only presentation changes — **all `packages/core` logic is preserved** (UI is a pure consumer of the `submit*/load*/scan*/derive*/getNetworkConfig` report objects). Approved plan: `~/.claude/plans/use-the-claude-design-mcp-ticklish-stream.md`.
+
+- **Design source (v2):** `/Users/abu/Downloads/GitHub repository link(2)/` (quote the path in shell). Canonical tokens = its `Design System.dc.html`.
+- **Grounding docs (read these):** `docs/redesign/DESIGN-MAP.md` (screen → `.dc.html`), `docs/redesign/COMPONENTS.md` (the one-of-each reusable catalog), `docs/redesign/<chunk>.md` (per-chunk build-specs).
+
+**Non-negotiables:**
+- **Stack:** Tailwind v4.3 (`@tailwindcss/vite`, no `tailwind.config.js`); map tokens with `@theme inline { --color-x: var(--x) }` (the `inline` keyword is required). Light/dark stay driven by the `ThemeProvider` div — no `dark:` variants.
+- **Reuse, don't re-code:** one shared `packages/ui` component per pattern — never build a card/badge/pill/ring inline in a screen.
+- **Full wallet on every surface.** Extension heavy flows (Send/Unshield/Activity/Disclosure/Discover) live in the 400px **side panel**; popup = fast glance. "Fails closed" applies ONLY to acting as an external-dApp signer (presentational), never to the wallet's own features.
+- **Non-blocking + persistent Activity.** Submitting never locks the UI. Every op persists `{status,txHash}` + reconciles against the chain on app open — no Resume button. Never fake proof/balance/tx state.
+- **Mobile:** Android-first; iOS + marketing landing deferred.
+- Keep files **< 300 lines**; delete old implementation as each flow is migrated (no two versions).
+
+**Per-chunk execution protocol (every chunk):** open the chunk's `.dc.html` (per DESIGN-MAP) → build with shared `packages/ui` components → `pnpm lint && typecheck && test && build` + screenshot-vs-design → commit. Run `pr-review-toolkit` sub-agents every ~2–3 chunks; security review on key/mnemonic/proof paths.
+
 ## Required Read Order
 
 Before implementation, read:

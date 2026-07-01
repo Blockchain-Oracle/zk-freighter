@@ -1,7 +1,7 @@
 import { useState, type CSSProperties } from 'react'
 import { generateSeedPhrase } from '@zk-fighter/core'
 import { Button, Logo } from '@zk-fighter/ui'
-import type { DappWalletStatus } from './dappMessages'
+import { type DappWalletStatus } from './dappMessages'
 
 // The popup's locked surfaces: Import (no vault) and Unlock (vault, locked).
 // Mirrors the web access cards + the v2 Extension Popup design, driven by the

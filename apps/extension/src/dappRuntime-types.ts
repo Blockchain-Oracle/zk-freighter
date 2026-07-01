@@ -5,6 +5,7 @@ import type {
   CctpSourceKey,
   GenerateDisclosureReport,
   NetworkKey,
+  PublicDiscoveryPublishReport,
   PublicDiscoveryLookupReport,
   StellarUsdcTrustlineReport,
   XlmPrivateSubmitReport,
@@ -28,6 +29,7 @@ export interface ExtensionAspInsertRequest { readonly mnemonic: string; readonly
 export interface ExtensionUsdcTrustlineRequest { readonly mnemonic: string; readonly network: NetworkKey }
 export interface ExtensionBalancesRequest { readonly mnemonic: string; readonly network: NetworkKey }
 export interface ExtensionDiscoverRequest { readonly network: NetworkKey; readonly ownerAddress: string }
+export interface ExtensionDiscoverPublishRequest { readonly mnemonic: string; readonly network: NetworkKey }
 
 export interface ExtensionPrivateTransferRequest {
   readonly mnemonic: string
@@ -35,6 +37,7 @@ export interface ExtensionPrivateTransferRequest {
   readonly asset: AssetCode
   readonly amountStroops: string
   readonly receiveCode: string
+  readonly timeoutMs?: number
 }
 
 export interface ExtensionUnshieldRequest {
@@ -43,6 +46,7 @@ export interface ExtensionUnshieldRequest {
   readonly asset: AssetCode
   readonly amountStroops: string
   readonly recipientAddress: string
+  readonly timeoutMs?: number
 }
 
 export interface ExtensionDisclosureRequest {
@@ -57,6 +61,7 @@ export interface ExtensionBridgeRequest {
   readonly mnemonic: string
   readonly network: NetworkKey
   readonly sourceChainKey: CctpSourceKey
+  readonly amountAtomic?: string
   readonly resumeBurnHash?: string
 }
 
@@ -77,4 +82,5 @@ export type ExtensionBalancesRunner = (request: ExtensionBalancesRequest) => Pro
 export type ExtensionPrivateTransferRunner = (request: ExtensionPrivateTransferRequest) => Promise<XlmPrivateSubmitReport>
 export type ExtensionUnshieldRunner = (request: ExtensionUnshieldRequest) => Promise<XlmPrivateSubmitReport>
 export type ExtensionDiscoverRunner = (request: ExtensionDiscoverRequest) => Promise<PublicDiscoveryLookupReport>
+export type ExtensionDiscoverPublishRunner = (request: ExtensionDiscoverPublishRequest) => Promise<PublicDiscoveryPublishReport>
 export type ExtensionDisclosureRunner = (request: ExtensionDisclosureRequest) => Promise<GenerateDisclosureReport>

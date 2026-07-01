@@ -47,6 +47,22 @@ export function bridgeAmountDisplay(amountAtomic: bigint): string {
   return `${whole.toString()}${fraction ? `.${fraction}` : ''} USDC`
 }
 
+export type ParseEvmUsdcAmountResult =
+  | { readonly ok: true; readonly atomic: bigint }
+  | { readonly ok: false; readonly error: string }
+
+export function parseEvmUsdcAmountToAtomic(input: string): ParseEvmUsdcAmountResult {
+  const trimmed = input.trim()
+  if (!trimmed) return { ok: false, error: 'Enter a bridge amount.' }
+  if (!/^\d+(\.\d{1,6})?$/.test(trimmed)) {
+    return { ok: false, error: 'Enter a USDC amount with up to 6 decimal places.' }
+  }
+  const [whole, fraction = ''] = trimmed.split('.')
+  const atomic = BigInt(`${whole}${fraction.padEnd(evmUsdcDecimals, '0')}`)
+  if (atomic <= 0n) return { ok: false, error: 'Bridge amount must be greater than zero.' }
+  return { ok: true, atomic }
+}
+
 export function stellarContractStrkeyToBytes32(strkey: string): Hex {
   if (!StrKey.isValidContract(strkey)) {
     throw new Error(`Invalid Stellar contract strkey: ${strkey}`)

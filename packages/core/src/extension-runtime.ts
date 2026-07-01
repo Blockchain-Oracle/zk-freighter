@@ -11,7 +11,7 @@ export interface ExtensionCapability {
 export interface ExtensionReadiness {
   readonly phase: 'Phase 11'
   readonly surface: 'WXT MV3 extension'
-  readonly judgedSurface: 'web app'
+  readonly judgedSurface: 'web + extension popup'
   readonly status: 'in-progress'
   readonly summary: string
   readonly capabilities: readonly ExtensionCapability[]
@@ -20,10 +20,10 @@ export interface ExtensionReadiness {
 export const phase11ExtensionReadiness = {
   phase: 'Phase 11',
   surface: 'WXT MV3 extension',
-  judgedSurface: 'web app',
+  judgedSurface: 'web + extension popup',
   status: 'in-progress',
   summary:
-    'The extension shell reuses ZK Fighter core and has Chrome runtime evidence for prover packaging, XLM and USDC QuickShield, and bridge handoff. It is a ZK companion, not a general public dApp signing wallet.',
+    'The extension popup reuses ZK Fighter core and has Chrome runtime evidence for prover packaging, XLM and USDC QuickShield, and the native bridge route. It is a compact wallet surface, not a general public dApp signing wallet.',
   capabilities: [
     {
       id: 'shared-core',
@@ -36,7 +36,7 @@ export const phase11ExtensionReadiness = {
       id: 'wxt-build',
       label: 'WXT MV3 packaging',
       status: 'ready',
-      evidence: 'WXT chrome-mv3 production build passes and emits popup, side panel, background, content script, and offscreen page.',
+      evidence: 'WXT chrome-mv3 production build passes and emits popup, background, content script, and offscreen page.',
       caveat: 'Packaging readiness does not prove extension proof generation.',
     },
     {
@@ -44,7 +44,7 @@ export const phase11ExtensionReadiness = {
       label: 'Chrome runtime smoke',
       status: 'ready',
       evidence:
-        'Chrome for Testing 150 loaded the unpacked extension; popup and side panel rendered; background/offscreen messaging passed.',
+        'Chrome for Testing 150 loaded the unpacked extension; popup mobile routes rendered; background/offscreen messaging passed.',
       caveat: 'This used a temporary Chrome-for-Testing profile, not a Chrome Web Store install.',
     },
     {
@@ -60,7 +60,7 @@ export const phase11ExtensionReadiness = {
       label: 'Passkey ceremony',
       status: 'deferred',
       evidence: 'Phone/browser PRF support is not claimed for extension yet.',
-      caveat: 'Run in a tab or side panel, not a popup, before making a support claim.',
+      caveat: 'Run in a full extension page/tab, not a transient popup, before making a support claim.',
     },
     {
       id: 'dapp-profile',
@@ -83,7 +83,7 @@ export const phase11ExtensionReadiness = {
       label: 'QuickShield and bridge companion',
       status: 'ready',
       evidence:
-        'Chrome-for-Testing harnesses submitted real XLM and USDC QuickShield deposits and verified bridge handoff opens the web bridge route with network, destination, and resume context.',
+        'Chrome-for-Testing harnesses submitted real XLM and USDC QuickShield deposits and verified the extension-native bridge route renders funding, destination, and resume controls.',
       caveat:
         'The extension USDC path uses a reusable local testnet funder in the harness; extension-native Ethereum provider access and full bridge execution remain deferred.',
     },

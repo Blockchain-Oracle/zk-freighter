@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "wxt",
+    "dev:local": "VITE_ZKF_TESTNET_FUNDING_API_URL=http://127.0.0.1:8787 VITE_ZKF_TESTNET_BOOTNODE_URL=http://127.0.0.1:8788/rpc wxt",
     "build": "wxt build",
+    "build:local": "VITE_ZKF_TESTNET_FUNDING_API_URL=http://127.0.0.1:8787 VITE_ZKF_TESTNET_BOOTNODE_URL=http://127.0.0.1:8788/rpc wxt build",
     "zip": "wxt zip",
     "postinstall": "wxt prepare",
     "lint": "wxt prepare && tsc --noEmit",
