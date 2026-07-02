@@ -15,13 +15,26 @@
   position: relative;
   display: block;
   height: 415px;
-  padding: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.flip-toggle {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 9px;
+  padding: 2px 6px;
   border: none;
+  border-radius: 8px;
   background: none;
   font-family: inherit;
   color: inherit;
   cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
+}
+
+.flip-toggle:focus-visible {
+  outline: 2px solid var(--ac);
+  outline-offset: 3px;
 }
 
 /* the web app is the composed focal card; the portrait shots subordinate */
@@ -55,16 +68,11 @@
       0 60px 120px -50px #000;
   }
 
-  .flip-card:not(.is-flipped):hover .flip-caption strong {
+  .flip-card:not(.is-flipped):hover .flip-toggle strong {
     color: var(--ac2);
   }
 }
 
-.flip-card:focus-visible {
-  outline: 2px solid var(--ac);
-  outline-offset: 6px;
-  border-radius: 20px;
-}
 
 .flip-face {
   position: absolute;
@@ -129,26 +137,34 @@
 }
 
 .flip-hint {
+  padding: 4px 8px;
+  border: none;
+  border-radius: 8px;
+  background: none;
   color: var(--tx3);
   font: 700 10px/1 var(--font-mono);
   letter-spacing: 0.1em;
   text-transform: uppercase;
+  cursor: pointer;
+}
+
+.flip-hint:focus-visible {
+  outline: 2px solid var(--ac);
+  outline-offset: 3px;
 }
 
 .flip-caption {
   display: flex;
-  align-items: baseline;
   justify-content: center;
-  gap: 9px;
 }
 
-.flip-caption strong {
+.flip-toggle strong {
   font-size: 14px;
   font-weight: 850;
   transition: color 0.18s ease;
 }
 
-.flip-caption span {
+.flip-toggle > span {
   color: var(--tx3);
   font: 700 10px/1 var(--font-mono);
   letter-spacing: 0.08em;

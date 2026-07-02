@@ -18,43 +18,54 @@ export interface DeviceFlipCardProps {
 
 /**
  * A device preview that lifts on hover and flips (3D) on click/tap to reveal
- * its call-to-action face. The whole card is a button; the CTA on the back is
- * a real link — clicking it navigates instead of flipping back.
+ * its call-to-action face. Mouse users can click anywhere on the card;
+ * keyboard/AT users get a real toggle button, and the hidden face is `inert`
+ * so its controls never become phantom tab stops.
  */
 export function DeviceFlipCard({ variant, title, meta, shot, shotAlt, backLine, ctaLabel, ctaHref, flipped, onFlip }: DeviceFlipCardProps) {
   return (
-    <button
-      type="button"
-      className={`flip-card flip-${variant}${flipped ? ' is-flipped' : ''}`}
-      aria-pressed={flipped}
-      aria-label={flipped ? `${title} — showing actions, activate to flip back` : `${title} — activate to see actions`}
-      onClick={onFlip}
-    >
+    <article className={`flip-card flip-${variant}${flipped ? ' is-flipped' : ''}`} onClick={onFlip}>
       <span className="flip-inner">
-        <span className="flip-face flip-front">
+        <span className="flip-face flip-front" inert={flipped || undefined}>
           <DeviceFrame variant={variant}>
             <img src={shot} alt={shotAlt} loading="lazy" />
           </DeviceFrame>
           <span className="flip-caption">
-            <strong>{title}</strong>
-            <span>{meta}</span>
+            <button
+              type="button"
+              className="flip-toggle"
+              aria-pressed={flipped}
+              aria-label={`${title} — show actions`}
+              onClick={(event) => {
+                event.stopPropagation()
+                onFlip()
+              }}
+            >
+              <strong>{title}</strong>
+              <span>{meta}</span>
+            </button>
           </span>
         </span>
-        <span className="flip-face flip-back">
+        <span className="flip-face flip-back" inert={!flipped || undefined}>
           <Logo size={40} glow />
           <strong>{title}</strong>
           <span className="flip-back-line">{backLine}</span>
-          <a
-            className="flip-cta"
-            href={ctaHref}
-            onClick={(event) => event.stopPropagation()}
-          >
+          <a className="flip-cta" href={ctaHref} onClick={(event) => event.stopPropagation()}>
             {ctaLabel} <ArrowRight size={16} />
           </a>
-          <span className="flip-hint">tap card to flip back</span>
+          <button
+            type="button"
+            className="flip-hint"
+            onClick={(event) => {
+              event.stopPropagation()
+              onFlip()
+            }}
+          >
+            tap to flip back
+          </button>
         </span>
       </span>
-    </button>
+    </article>
   )
 }
 

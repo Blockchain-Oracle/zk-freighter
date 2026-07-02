@@ -7,7 +7,7 @@
     "dev": "react-router dev",
     "build": "react-router build && node scripts/build-llms.mjs",
     "start": "react-router-serve ./build/server/index.js",
-    "lint": "tsc --noEmit",
+    "lint": "react-router typegen && tsc --noEmit",
     "typecheck": "react-router typegen && tsc --noEmit",
     "test": "vitest run --passWithNoTests"
   },
