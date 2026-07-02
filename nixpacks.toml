@@ -35,7 +35,6 @@ cmds = [
 ]
 cacheDirectories = [".pnpm-store"]
 onlyIncludeFiles = [
-  ".npmrc",
   "package.json",
   "pnpm-lock.yaml",
   "pnpm-workspace.yaml",
