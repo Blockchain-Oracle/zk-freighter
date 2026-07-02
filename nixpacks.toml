@@ -38,6 +38,7 @@ onlyIncludeFiles = [
   "package.json",
   "pnpm-lock.yaml",
   "pnpm-workspace.yaml",
+  "scripts/enforce-pnpm.mjs",
   "apps/bootnode/package.json",
   "apps/docs/package.json",
   "apps/extension/package.json",
