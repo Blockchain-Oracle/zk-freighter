@@ -288,3 +288,42 @@ button { -webkit-tap-highlight-color: transparent; cursor: pointer; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes zkRise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 @media (max-width: 430px) { .phone-shell, .access-card { max-width: none; } }
+
+/* ── Premium motion: pull-to-refresh + route transitions ── */
+
+.pull-indicator {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  flex: none;
+  height: 0;
+  overflow: hidden;
+  color: var(--ac2);
+  transition: height 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pull-indicator.on {
+  padding-bottom: 9px;
+}
+
+.pull-indicator svg {
+  transition: transform 0.05s linear;
+}
+
+.pull-spin {
+  animation: zkSpin 0.9s linear infinite;
+}
+
+.route-enter {
+  animation: zkRouteIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes zkRouteIn {
+  from { transform: translateY(9px); opacity: 0.35; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .route-enter { animation: none; }
+  .pull-indicator { transition: none; }
+}

@@ -23,6 +23,8 @@
   "dependencies": {
     "@capacitor/app": "8.1.0",
     "@capacitor/core": "8.4.1",
+    "@capacitor/haptics": "^8.0.2",
+    "@capacitor/splash-screen": "^8.0.1",
     "@zk-freighter/core": "workspace:*",
     "@zk-freighter/ui": "workspace:*",
     "lucide-react": "1.21.0",

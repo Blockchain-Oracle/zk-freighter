@@ -1,6 +1,7 @@
 import { MobileBridge, MobileSend, MobileShield } from './MobileFlows'
 import { MoreSheet } from './MobileChrome'
 import type { FlowProps, MobileRouteParams } from './MobileFlowPrimitives'
+import { useSheetDrag } from './mobile-gestures'
 import type { MobileRoute } from './mobile-storage'
 
 export function MobileSheetOverlay({
@@ -18,6 +19,7 @@ export function MobileSheetOverlay({
   readonly onClose: () => void
   readonly onLock: () => void
 }) {
+  const drag = useSheetDrag(onClose)
   const content = route === 'more'
     ? <MoreSheet address={address} onRoute={flowProps.onRoute} onLock={onLock} onClose={onClose} />
     : route === 'send'
@@ -27,7 +29,12 @@ export function MobileSheetOverlay({
         : <MobileBridge {...flowProps} />
   return (
     <div className="mobile-modal-layer" onClick={onClose}>
-      <section className={`mobile-bottom-sheet ${route === 'more' ? 'sheet-tall' : ''}`} onClick={(event) => event.stopPropagation()}>
+      <section
+        className={`mobile-bottom-sheet ${route === 'more' ? 'sheet-tall' : ''}`}
+        style={drag.sheetStyle}
+        onClick={(event) => event.stopPropagation()}
+        {...drag.handlers}
+      >
         <div className="sheet-grabber" />
         {content}
       </section>

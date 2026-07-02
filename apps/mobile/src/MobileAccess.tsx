@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { generateSeedPhrase, validateSeedPhrase, type NetworkKey } from '@zk-freighter/core'
 import { Button, Logo } from '@zk-freighter/ui'
+import { hapticAction } from './mobile-haptics'
 
 const passwordMinLength = 8
 
@@ -93,7 +94,7 @@ export function MobileAccess({ network, hasVault, busy, error, onUnlock, onCreat
             <p>Unlock to open your shielded wallet.</p>
             <PasswordField value={password} onChange={setPassword} onEnter={() => onUnlock(password)} />
             {error ? <div className="error-line">{error}</div> : null}
-            <Button fullWidth loading={busy} disabled={!password} onClick={() => onUnlock(password)}>Unlock</Button>
+            <Button fullWidth loading={busy} disabled={!password} onClick={() => { hapticAction(); onUnlock(password) }}>Unlock</Button>
             <Button fullWidth variant="ghost" onClick={() => setStep('welcome')}>Create or import instead</Button>
             <p className="access-footnote">Your recovery phrase is the only way back in. This password unlocks the vault on this device.</p>
           </div>
@@ -146,8 +147,8 @@ export function MobileAccess({ network, hasVault, busy, error, onUnlock, onCreat
                 : 'Mainnet — verify everything before moving real funds.'}
             </div>
             <div className="access-actions">
-              {network === 'testnet' ? <Button fullWidth onClick={() => onUnlock(password)}>Add funds</Button> : null}
-              <Button fullWidth variant="secondary" onClick={() => onUnlock(password)}>Go to wallet</Button>
+              {network === 'testnet' ? <Button fullWidth onClick={() => { hapticAction(); onUnlock(password) }}>Add funds</Button> : null}
+              <Button fullWidth variant="secondary" onClick={() => { hapticAction(); onUnlock(password) }}>Go to wallet</Button>
             </div>
           </div>
         ) : null}

@@ -1,6 +1,9 @@
-import { Activity, ArrowDown, Camera, Home, MoreHorizontal, Settings, Shield, WalletCards } from 'lucide-react'
+import { Activity, ArrowDown, Camera, Home, Loader2, MoreHorizontal, Settings, Shield, WalletCards } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Logo } from '@zk-freighter/ui'
+import { usePullToRefresh } from './mobile-gestures'
+import { hapticTap } from './mobile-haptics'
+import { isSheetRoute } from './mobile-routing'
 import type { MobileRoute } from './mobile-storage'
 import { truncateMiddle } from './mobile-format'
 
@@ -13,6 +16,8 @@ interface ChromeProps {
   readonly overlay?: ReactNode
   readonly onRoute: (route: MobileRoute) => void
   readonly onLock: () => void
+  /** When set, pulling the content pane down past the threshold triggers it. */
+  readonly onRefresh?: () => Promise<unknown> | void
 }
 
 const tabs: readonly { route: MobileRoute; label: string; icon: ReactNode }[] = [
@@ -22,8 +27,11 @@ const tabs: readonly { route: MobileRoute; label: string; icon: ReactNode }[] = 
   { route: 'more', label: 'More', icon: <MoreHorizontal size={18} /> },
 ]
 
-export function MobileChrome({ route, address, receiveCode, network, children, overlay, onRoute }: ChromeProps) {
+export function MobileChrome({ route, address, receiveCode, network, children, overlay, onRoute, onRefresh }: ChromeProps) {
   const accountId = receiveCode ? truncateMiddle(receiveCode, 8, 4) : truncateMiddle(address, 5, 5)
+  const refresh = usePullToRefresh(onRefresh ?? (() => undefined))
+  const pullHandlers = onRefresh ? refresh.handlers : {}
+  const pullActive = refresh.pull > 0 || refresh.refreshing
 
   return (
     <main className="phone-shell">
@@ -35,10 +43,28 @@ export function MobileChrome({ route, address, receiveCode, network, children, o
         <button className="network-chip" onClick={() => onRoute('settings')}>{network}</button>
         <button className="icon-button" aria-label="Settings" onClick={() => onRoute('settings')}><Settings size={18} /></button>
       </header>
-      <section className="phone-content">{children}</section>
+      {onRefresh ? (
+        <div className={`pull-indicator${pullActive ? ' on' : ''}`} style={{ height: refresh.refreshing ? 42 : Math.round(refresh.pull * 0.55) }} aria-hidden>
+          <Loader2 size={17} className={refresh.refreshing ? 'pull-spin' : ''} style={{ transform: refresh.refreshing ? undefined : `rotate(${refresh.pull * 2.4}deg)` }} />
+        </div>
+      ) : null}
+      <section
+        key={isSheetRoute(route) ? 'home' : route}
+        className="phone-content route-enter"
+        {...pullHandlers}
+      >
+        {children}
+      </section>
       <nav className="bottom-tabs">
         {tabs.map((tab) => (
-          <button key={tab.route} className={isActive(route, tab.route) ? 'active' : ''} onClick={() => onRoute(tab.route)}>
+          <button
+            key={tab.route}
+            className={isActive(route, tab.route) ? 'active' : ''}
+            onClick={() => {
+              hapticTap()
+              onRoute(tab.route)
+            }}
+          >
             {tab.icon}<span>{tab.label}</span>
           </button>
         ))}

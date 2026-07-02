@@ -263,6 +263,9 @@ export function MobileApp() {
 
   const unlockedIdentity = identity
   const contentRoute = isSheetRoute(route) ? 'home' : route
+  const refreshBothWorlds = async () => {
+    await Promise.all([loadPublicStellarBalances({ address: unlockedIdentity.stellarPublicKey, network }).then(setPublicBalances), syncPrivate()])
+  }
   const flowProps = {
     network,
     identity: unlockedIdentity,
@@ -280,7 +283,7 @@ export function MobileApp() {
 
   return (
     <ThemeProvider initialTheme={theme} onThemeChange={onThemeChange}>
-      <MobileChrome route={route} address={unlockedIdentity.stellarPublicKey} receiveCode={receiveCode} network={network} overlay={sheetOverlay} onRoute={navigate} onLock={() => setIdentity(null)}>
+      <MobileChrome route={route} address={unlockedIdentity.stellarPublicKey} receiveCode={receiveCode} network={network} overlay={sheetOverlay} onRoute={navigate} onLock={() => setIdentity(null)} onRefresh={contentRoute === 'home' || contentRoute === 'activity' ? refreshBothWorlds : undefined}>
         {contentRoute === 'home' ? <MobileHome network={network} address={unlockedIdentity.stellarPublicKey} publicBalances={publicBalances} publicLoading={publicLoading} shieldedCache={shieldedCache} records={records} syncStatus={syncStatus} onRoute={navigate} onSync={syncPrivate} onFunding={requestFunds} /> : null}
         {contentRoute === 'receive' ? <MobileReceive network={network} identity={unlockedIdentity} receiveCode={receiveCode} onRoute={navigate} /> : null}
         {contentRoute === 'activity' ? <MobileActivity records={records} network={network} /> : null}
