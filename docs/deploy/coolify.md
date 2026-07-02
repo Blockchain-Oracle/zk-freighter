@@ -15,6 +15,11 @@ For **every** service: **Build Pack = Nixpacks**, **Base Directory = `/`**,
 **Branch = `main`** (or your deploy branch), and set `APP_NAME` in the service's
 environment. Ports below go in **Ports Exposes**.
 
+Set each service's **Domain** as `https://<domain>:<port>` — https (Cloudflare
+fronts the server) and the port suffix binds the domain to the container port,
+e.g. `https://app.zkfreighter.app:4173`. Domain changes take effect on the next
+deploy.
+
 ### 1. Landing — `zkfreighter.app`
 - `APP_NAME` = *(unset, landing is the default)* or `@zk-freighter/landing`
 - Port: **4174**

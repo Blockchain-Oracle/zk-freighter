@@ -8,6 +8,19 @@ Hold it. Send it. Nobody sees it. Zero-knowledge proofs are generated on your ow
 
 This is not a general public-purpose wallet, not an "anonymous" or "untraceable" system, and not a mixer. It is a shielded-transfer wallet with honest boundaries and user-held compliance disclosure.
 
+## Live deployments
+
+| Surface | URL |
+|---|---|
+| Product site | <https://zkfreighter.app> |
+| Web wallet | <https://app.zkfreighter.app> |
+| Documentation | <https://docs.zkfreighter.app> |
+| Funding API — testnet faucet | <https://api.zkfreighter.app> (`GET /v1/funding/status`) |
+| Bootnode — testnet event index | <https://bootnode.zkfreighter.app> (RPC at `/rpc`, `GET /health`) |
+| Bootnode — mainnet event index | <https://mainnet-bootnode.zkfreighter.app> (RPC at `/rpc`, `GET /health`) |
+
+The hosted web wallet is built against these endpoints (`VITE_ZKF_TESTNET_FUNDING_API_URL`, `VITE_ZKF_TESTNET_BOOTNODE_URL`, `VITE_ZKF_MAINNET_BOOTNODE_URL`). Local builds fall back to public Stellar RPC and localhost services, so nothing below requires the hosted stack.
+
 ## Quickstart
 
 Prerequisites: **Node 22+** and **pnpm 10** (`corepack enable` or `npm i -g pnpm`). The repo enforces pnpm.

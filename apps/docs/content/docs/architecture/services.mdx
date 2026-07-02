@@ -6,6 +6,18 @@ description: The bootnode event index and the hosted testnet faucet.
 The wallet works against public Stellar infrastructure alone. Two small self-hosted services
 make it resilient and friction-free:
 
+## Official hosted endpoints
+
+| Service | URL |
+|---|---|
+| Bootnode (testnet) | `https://bootnode.zkfreighter.app` — RPC at `/rpc`, health at `/health` |
+| Bootnode (mainnet) | `https://mainnet-bootnode.zkfreighter.app` — RPC at `/rpc`, health at `/health` |
+| Funding API (testnet faucet) | `https://api.zkfreighter.app` — `GET /v1/funding/status`, `POST /v1/funding/request` |
+
+The hosted web wallet at [app.zkfreighter.app](https://app.zkfreighter.app) is built against
+these endpoints. Self-hosted builds can point `VITE_ZKF_*` at their own instances or omit them
+entirely and rely on public Stellar RPC.
+
 ## Bootnode — warmed event index
 
 Stellar's public RPC only retains recent events. Shielded wallets need the pool's **full**

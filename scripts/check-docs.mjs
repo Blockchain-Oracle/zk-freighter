@@ -11,7 +11,9 @@ const files = [
 ]
 
 const stalePatterns = [
-  /zkFreighter/i,
+  // Case-sensitive: catches the stale camelCase brand without flagging the
+  // all-lowercase domain zkfreighter.app.
+  /zkFreighter/,
   /product name:\s*TBD/i,
   /brand pending/i,
   /brand TBD/i,
