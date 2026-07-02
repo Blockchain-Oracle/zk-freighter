@@ -46,13 +46,21 @@ export function MobileAccess({ network, hasVault, busy, error, onUnlock, onCreat
   }
 
   function copySeed() {
-    void navigator.clipboard.writeText(mnemonic).then(() => {
-      setCopied(true)
-      window.setTimeout(() => {
-        setCopied(false)
-        void navigator.clipboard.writeText('')
-      }, 30_000)
-    })
+    // Never affirm "Copied" unless the write succeeded — a silently failed copy during
+    // seed backup is dangerous. Clipboard can be denied or absent on phone browsers.
+    Promise.resolve()
+      .then(() => navigator.clipboard.writeText(mnemonic))
+      .then(() => {
+        setCopied(true)
+        setLocalError('')
+        window.setTimeout(() => {
+          setCopied(false)
+          navigator.clipboard.writeText('').catch(() => undefined)
+        }, 30_000)
+      })
+      .catch(() => {
+        setLocalError('Copy failed on this browser — write the 12 words down instead.')
+      })
   }
 
   return (
@@ -96,6 +104,7 @@ export function MobileAccess({ network, hasVault, busy, error, onUnlock, onCreat
             <div className="warning-card"><span>!</span><p>Write these 12 words down in order. They're the <b>only</b> way back in — no support backdoor, no reset.</p></div>
             <div className="seed-grid">{mnemonic.split(' ').map((word, index) => <span key={word + index}><b>{index + 1}</b>{word}</span>)}</div>
             <div className="seed-actions"><button onClick={copySeed}>{copied ? 'Copied · clears in 30s' : 'Copy'}</button><button onClick={() => setAck(true)}>I wrote it down</button></div>
+            {localError ? <div className="error-line">{localError}</div> : null}
             <label className="ack-row"><input type="checkbox" checked={ack} onChange={(event) => setAck(event.target.checked)} /> I saved my recovery phrase offline.</label>
             <Button fullWidth disabled={!ack} onClick={() => setStep('password')}>Continue</Button>
           </div>

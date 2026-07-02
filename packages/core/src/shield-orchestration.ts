@@ -66,7 +66,9 @@ export async function submitShieldWithPrerequisites(
     leafHex: aspLeaf.membershipLeafHex,
   }
 
+  let lastStage: ShieldPrerequisiteEvent['stage'] = 'balance'
   const emit = (stage: ShieldPrerequisiteEvent['stage'], message: string) => {
+    lastStage = stage
     const event = { elapsedMs: Math.round(now() - started), stage, message }
     events.push(event)
     options.onPrerequisiteStatus?.(event)
@@ -96,8 +98,18 @@ export async function submitShieldWithPrerequisites(
         emit('asp', 'Shield access indexed')
         return true
       }
-      if (poll + 1 >= maxPolls || aspAccessNow() >= deadline) return false
-      emit('asp', 'Shield access is still confirming — waiting for the next ledgers')
+      if (aspIndex?.status === 'unavailable') {
+        // Deterministic (config/environment) failure — polling can never resolve it.
+        emit('asp', aspIndex.blocker ?? 'Shield access indexing is unavailable.')
+        return false
+      }
+      if (poll + 1 >= maxPolls || aspAccessNow() >= deadline) {
+        emit('asp', aspIndex?.blocker ?? confirmingShieldAccessBlocker(record))
+        return false
+      }
+      emit('asp', aspIndex?.status === 'failed'
+        ? `Could not reach the shield access index — retrying. ${aspIndex.blocker ?? ''}`.trim()
+        : 'Shield access is still confirming — waiting for the next ledgers')
       await sleep(pollIntervalMs)
     }
   }
@@ -174,8 +186,9 @@ export async function submitShieldWithPrerequisites(
     }
     return withPrerequisites(report)
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Shield prerequisite flow failed.'
-    return withPrerequisites(blockedReport(options, message))
+    console.error('[shield-orchestration] prerequisite flow failed', error)
+    const detail = error instanceof Error ? error.message : 'Shield prerequisite flow failed.'
+    return withPrerequisites(blockedReport(options, `Shield ${lastStage} step failed: ${detail}`))
   }
 
   function withPrerequisites(report: XlmShieldSubmitReport): ShieldWithPrerequisitesReport {

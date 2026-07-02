@@ -114,8 +114,9 @@ function AssetIcon({ asset }: { readonly asset: AssetCode }) {
   return <img src={`/asset-icons/${asset === 'USDC' ? 'usdc' : 'xlm'}.svg`} alt="" style={{ width: 22, height: 22, display: 'block' }} />
 }
 
-function PublicFace({ identity, balances, loading, onShield }: { identity: WalletIdentity; balances: PublicBalancesReport | null; loading: boolean; onShield: () => void }) {
+function PublicFace({ identity, balances, loading, onShield, onRetry }: { identity: WalletIdentity; balances: PublicBalancesReport | null; loading: boolean; onShield: () => void; onRetry: () => void }) {
   const known = balances?.status === 'loaded' || balances?.status === 'unfunded'
+  const failed = balances?.status === 'failed'
   return (
     <div style={{ position: 'absolute', inset: 0, padding: '22px 22px', display: 'flex', flexDirection: 'column' }}>
       <span style={{ alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: 7, padding: '4px 9px', border: '1px solid rgba(229,180,92,.4)', background: 'rgba(229,180,92,.08)', borderRadius: 999, fontSize: 8.5, fontFamily: 'var(--fm)', letterSpacing: '.12em', color: 'var(--warn)' }}>PUBLIC · STELLAR</span>
@@ -128,7 +129,14 @@ function PublicFace({ identity, balances, loading, onShield }: { identity: Walle
           </div>
         ))}
       </div>
-      <div style={{ marginTop: 10, fontSize: 11, color: 'var(--tx3)', lineHeight: 1.5 }}>Visible on-chain until you shield it.</div>
+      {failed ? (
+        <div style={{ marginTop: 10, fontSize: 11, color: 'var(--warn)', lineHeight: 1.5 }}>
+          Couldn’t load public balances.{' '}
+          <button onClick={onRetry} style={{ background: 'none', border: 'none', padding: 0, color: 'var(--ac2)', fontSize: 11, cursor: 'pointer', textDecoration: 'underline', fontFamily: 'inherit' }}>Retry</button>
+        </div>
+      ) : (
+        <div style={{ marginTop: 10, fontSize: 11, color: 'var(--tx3)', lineHeight: 1.5 }}>Visible on-chain until you shield it.</div>
+      )}
       <div style={{ marginTop: 6, fontSize: 10.5, color: 'var(--tx3)', fontFamily: 'var(--fm)' }}>{truncateMiddle(identity.stellarPublicKey, 6, 4)}</div>
       <button onClick={onShield} style={{ marginTop: 14, alignSelf: 'flex-start', padding: '9px 16px', border: 'none', borderRadius: 10, background: 'var(--ac)', color: '#fff', fontSize: 12, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', boxShadow: 'var(--shadow-glow)' }}>Shield now</button>
     </div>
@@ -141,6 +149,7 @@ export function HomeScreen({ identity, network, balance, onNav }: HomeScreenProp
   const [publicState, setPublicState] = useState<{ key: string; report: PublicBalancesReport } | null>(null)
   const publicBalances = publicState?.key === publicKey ? publicState.report : null
   const publicLoading = publicBalances === null
+  const [publicRetryToken, setPublicRetryToken] = useState(0)
   const [activity, setActivity] = useState<readonly WebActivityRecord[]>(() => readWebActivity(network).slice(0, 3))
   const usdcShown = spendable(usdc, 2)
   const xlmShown = spendable(xlm, 3)
@@ -151,11 +160,21 @@ export function HomeScreen({ identity, network, balance, onNav }: HomeScreenProp
 
   useEffect(() => {
     let cancelled = false
+    const key = `${network}:${identity.stellarPublicKey}`
     void loadPublicStellarBalances({ address: identity.stellarPublicKey, network })
-      .then((report) => { if (!cancelled) setPublicState({ key: `${network}:${identity.stellarPublicKey}`, report }) })
-      .catch(() => undefined)
+      .then((report) => { if (!cancelled) setPublicState({ key, report }) })
+      .catch((error: unknown) => {
+        // loadPublicStellarBalances reports failures as status:'failed'; this guards a contract regression
+        // so a rejection can never strand the card in a permanent loading state.
+        if (!cancelled) {
+          setPublicState({
+            key,
+            report: { status: 'failed', network, userAddress: identity.stellarPublicKey, balances: { XLM: 0n, USDC: 0n }, error: String(error) },
+          })
+        }
+      })
     return () => { cancelled = true }
-  }, [identity.stellarPublicKey, network])
+  }, [identity.stellarPublicKey, network, publicRetryToken])
 
   useEffect(() => {
     const load = () => setActivity(readWebActivity(network).slice(0, 3))
@@ -187,7 +206,7 @@ export function HomeScreen({ identity, network, balance, onNav }: HomeScreenProp
           </ShieldedCard>
           <CrossingStrip onNav={onNav} />
           <PublicCard style={{ flex: 1, border: 'none', borderRadius: 0 }}>
-            <PublicFace identity={identity} balances={publicBalances} loading={publicLoading} onShield={() => onNav('shield')} />
+            <PublicFace identity={identity} balances={publicBalances} loading={publicLoading} onShield={() => onNav('shield')} onRetry={() => { setPublicState(null); setPublicRetryToken((token) => token + 1) }} />
           </PublicCard>
         </div>
       </div>
