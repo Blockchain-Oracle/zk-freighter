@@ -20,8 +20,12 @@
 # full per-service env matrix.
 
 [phases.setup]
-nixPkgs = ["nodejs_22"]
-nixpkgsArchive = "nixos-24.05"
+# nodejs_24 (current LTS). nixos-24.05's nodejs_22 was 22.10.0, which fails the
+# engines range of rolldown's native bindings (^20.19.0 || >=22.12.0) — pnpm
+# silently SKIPS optional deps with unsatisfied engines, so vite/rolldown then
+# crashed with "Cannot find module '@rolldown/binding-linux-x64-gnu'".
+nixPkgs = ["nodejs_24"]
+nixpkgsArchive = "nixos-25.11"
 
 [phases.install]
 # Dev deps (vite / tsc / esbuild) are needed to BUILD, so install with
