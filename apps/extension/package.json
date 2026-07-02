@@ -9,7 +9,7 @@
     "build": "wxt build",
     "build:local": "VITE_ZKF_TESTNET_FUNDING_API_URL=http://127.0.0.1:8787 VITE_ZKF_TESTNET_BOOTNODE_URL=http://127.0.0.1:8788/rpc VITE_ZKF_MAINNET_BOOTNODE_URL=http://127.0.0.1:8789/rpc wxt build",
     "zip": "wxt zip",
-    "postinstall": "wxt prepare",
+    "postinstall": "wxt prepare || true",
     "lint": "wxt prepare && tsc --noEmit",
     "typecheck": "wxt prepare && tsc --noEmit",
     "test": "vitest run --passWithNoTests"
