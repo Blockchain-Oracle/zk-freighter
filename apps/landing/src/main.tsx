@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { App } from './App'
 import './styles.css'
+import './flip-cards.css'
 import './sections.css'
 import './responsive.css'
 

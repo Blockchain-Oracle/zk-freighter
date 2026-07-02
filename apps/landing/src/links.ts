@@ -1,0 +1,5 @@
+export const appUrl = import.meta.env.VITE_ZKF_APP_URL ?? 'https://app.zkfighter.dev'
+export const docsUrl = import.meta.env.VITE_ZKF_DOCS_URL ?? 'https://docs.zkfighter.dev'
+export const extensionUrl = import.meta.env.VITE_ZKF_EXTENSION_URL ?? '/extension'
+export const mobileUrl = import.meta.env.VITE_ZKF_MOBILE_URL ?? 'https://github.com/Blockchain-Oracle/zk-fighter'
+export const sourceUrl = 'https://github.com/Blockchain-Oracle/zk-fighter'
