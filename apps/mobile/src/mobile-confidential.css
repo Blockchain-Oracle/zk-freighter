@@ -1,0 +1,28 @@
+.confidential-card {
+  overflow: hidden;
+  background:
+    linear-gradient(115deg, rgba(255,255,255,.08), transparent 40%),
+    repeating-linear-gradient(125deg, transparent 0 10px, rgba(255,255,255,.04) 10px 11px),
+    rgba(229,180,92,.08);
+}
+.confidential-card span {
+  color: var(--warn);
+  font-family: var(--fm);
+  font-size: 8px;
+  letter-spacing: .1em;
+}
+.confidential-card strong {
+  display: block;
+  margin-top: 12px;
+  color: var(--tx);
+  font-family: var(--fm);
+  font-size: 30px;
+}
+.confidential-card em {
+  display: block;
+  margin-top: 8px;
+  color: var(--tx2);
+  font-size: 11px;
+  font-style: normal;
+  line-height: 1.5;
+}

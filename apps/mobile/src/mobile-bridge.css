@@ -1,0 +1,44 @@
+.flow-panel {
+  display: grid;
+  gap: 10px;
+  border: 1px solid var(--bd);
+  border-radius: 16px;
+  background: var(--panel);
+  padding: 13px;
+}
+.micro-label {
+  color: var(--tx3);
+  font-family: var(--fm);
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.flow-panel code {
+  word-break: break-all;
+  color: var(--tx2);
+  font-family: var(--fm);
+  font-size: 10px;
+}
+.balance-line {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  color: var(--tx2);
+  font-family: var(--fm);
+  font-size: 10px;
+}
+.mobile-log {
+  display: grid;
+  gap: 7px;
+  max-height: 106px;
+  overflow: auto;
+  border: 1px solid var(--bd);
+  border-radius: 14px;
+  background: var(--card);
+  padding: 10px;
+  color: var(--tx3);
+  font-family: var(--fm);
+  font-size: 9px;
+}
+.mobile-log:empty { display: none; }

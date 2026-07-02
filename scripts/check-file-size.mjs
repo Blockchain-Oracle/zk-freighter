@@ -10,6 +10,7 @@ const ignoredDirs = new Set([
   '.tmp',
   '.wxt',
   '.output',
+  'build',
   'coverage',
 ])
 const checkedExtensions = new Set(['.cjs', '.js', '.jsx', '.mjs', '.ts', '.tsx'])

@@ -1,0 +1,48 @@
+{
+  "name": "@zk-fighter/mobile",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0 --port 4183",
+    "dev:https": "ZKF_MOBILE_HTTPS=1 vite --host 0.0.0.0 --port 4183",
+    "dev:phone": "VITE_ZKF_TESTNET_FUNDING_API_URL=/zkf-funding VITE_ZKF_TESTNET_BOOTNODE_URL=/zkf-bootnode-testnet/rpc VITE_ZKF_MAINNET_BOOTNODE_URL=/zkf-bootnode-mainnet/rpc vite --host 0.0.0.0 --port 4183",
+    "tunnel": "cloudflared tunnel --url http://127.0.0.1:4183",
+    "build": "tsc -b && vite build",
+    "start": "vite preview --host 0.0.0.0 --port 4183",
+    "sync": "pnpm build && cap sync",
+    "android": "pnpm sync && cap open android",
+    "ios": "pnpm sync && cap open ios",
+    "android:build": "pnpm sync && cd android && JAVA_HOME=${JAVA_HOME:-/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home} ANDROID_HOME=${ANDROID_HOME:-/opt/homebrew/share/android-commandlinetools} ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT:-/opt/homebrew/share/android-commandlinetools} ./gradlew :app:assembleDebug",
+    "android:install": "pnpm android:build && adb install -r android/app/build/outputs/apk/debug/app-debug.apk",
+    "ios:open": "pnpm sync && cap open ios",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@capacitor/app": "8.1.0",
+    "@capacitor/core": "8.4.1",
+    "@zk-fighter/core": "workspace:*",
+    "@zk-fighter/ui": "workspace:*",
+    "lucide-react": "1.21.0",
+    "qrcode.react": "4.2.0",
+    "react": "19.2.6",
+    "react-dom": "19.2.6"
+  },
+  "devDependencies": {
+    "@capacitor/android": "8.4.1",
+    "@capacitor/cli": "8.4.1",
+    "@capacitor/ios": "8.4.1",
+    "@tailwindcss/vite": "4.3.2",
+    "@types/node": "^24.12.3",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-basic-ssl": "2.3.0",
+    "@vitejs/plugin-react": "^6.0.1",
+    "tailwindcss": "4.3.2",
+    "typescript": "~6.0.2",
+    "vite": "^8.0.12",
+    "vitest": "^4.0.16"
+  }
+}
