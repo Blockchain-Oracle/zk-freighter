@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { NETWORKS, getCctpSource, getEnabledCctpSources, getNetworkConfig, isShieldedAssetEnabled } from './networks'
+import { NETWORKS, getCctpSource, getEnabledCctpSources, getNetworkConfig, isShieldedAssetEnabled, maxShieldDepositStroops } from './networks'
 import { privateEventContractIds } from './privacy-contracts'
 
 describe('NETWORKS', () => {
@@ -52,6 +52,13 @@ describe('NETWORKS', () => {
       NETWORKS.mainnet.assets.USDC.poolId,
       'CCYY3LLTVD2UW3Z4QD76PICZNIUH3PXKWJSKJVAENBIYON7QVAQIW5PP',
     ])
+  })
+
+  it('records the deployed pool per-deposit limits', () => {
+    expect(maxShieldDepositStroops('testnet', 'XLM')).toBe(1_000_000_000n)
+    expect(maxShieldDepositStroops('testnet', 'USDC')).toBe(1_000_000_000n)
+    expect(maxShieldDepositStroops('mainnet', 'XLM')).toBe(1_000_000_000n)
+    expect(maxShieldDepositStroops('mainnet', 'USDC')).toBe(1_000_000_000n)
   })
 
   it('records current Stellar CCTP V2 config', () => {

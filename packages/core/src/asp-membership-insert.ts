@@ -29,6 +29,7 @@ export interface AspMembershipInsertReport {
   readonly leaf: AspMembershipLeaf
   readonly contractId?: string
   readonly txHash?: string
+  readonly ledger?: number
   readonly explorerUrl?: string
   readonly statusEvents: readonly AspMembershipInsertEvent[]
   readonly blockers: readonly string[]
@@ -39,7 +40,7 @@ interface AspSorobanServer {
   getAccount(publicKey: string): Promise<ConstructorParameters<typeof TransactionBuilder>[0]>
   simulateTransaction(transaction: Transaction): Promise<unknown>
   sendTransaction(transaction: Transaction): Promise<{ status?: string; hash?: string; errorResultXdr?: unknown }>
-  getTransaction(hash: string): Promise<{ status?: string; resultXdr?: unknown }>
+  getTransaction(hash: string): Promise<{ status?: string; resultXdr?: unknown; ledger?: number; latestLedger?: number }>
 }
 
 export interface AspMembershipInsertOptions extends AspMembershipPreflightOptions {
@@ -59,6 +60,7 @@ export async function insertAspMembershipLeaf(
   const statusEvents: AspMembershipInsertEvent[] = []
   const leaf = deriveAspMembershipLeaf(options.identity)
   let txHash: string | undefined
+  let ledger: number | undefined
   const emit = (stage: AspMembershipInsertEvent['stage'], message: string) => {
     statusEvents.push({ elapsedMs: Math.round(now() - started), stage, message })
   }
@@ -114,7 +116,8 @@ export async function insertAspMembershipLeaf(
 
     txHash = send.hash
     const result = await confirmTransaction(server, txHash, options, emit)
-    return result === 'SUCCESS'
+    ledger = result.ledger
+    return result.status === 'SUCCESS'
       ? report('submitted', [], contractId)
       : report('failed', [`ASP insert_leaf confirmation did not succeed (${txHash}).`], contractId)
   } catch (error) {
@@ -135,6 +138,7 @@ export async function insertAspMembershipLeaf(
       leaf,
       contractId,
       txHash,
+      ledger,
       explorerUrl: txHash ? `${network.explorerTxUrl}/${txHash}` : undefined,
       statusEvents,
       blockers,
@@ -148,7 +152,7 @@ async function confirmTransaction(
   txHash: string,
   options: AspMembershipInsertOptions,
   emit: (stage: AspMembershipInsertEvent['stage'], message: string) => void,
-): Promise<string> {
+): Promise<{ readonly status: string; readonly ledger?: number }> {
   const sleep = options.sleep ?? defaultSleep
   const polls = options.confirmationPolls ?? defaultConfirmationPolls
   const pollIntervalMs = options.pollIntervalMs ?? defaultPollIntervalMs
@@ -158,10 +162,15 @@ async function confirmTransaction(
     const result = await server.getTransaction(txHash)
     if (result.status === 'SUCCESS' || result.status === 'FAILED') {
       emit('confirm', result.status === 'SUCCESS' ? 'ASP insert_leaf confirmed' : 'ASP insert_leaf failed')
-      return result.status
+      return { status: result.status, ledger: numericLedger(result) }
     }
   }
-  return 'TIMEOUT'
+  return { status: 'TIMEOUT' }
+}
+
+function numericLedger(result: { readonly ledger?: number; readonly latestLedger?: number }): number | undefined {
+  const value = result.ledger ?? result.latestLedger
+  return Number.isFinite(value) ? value : undefined
 }
 
 function defaultServerFactory(rpcUrl: string): AspSorobanServer {

@@ -25,4 +25,16 @@ describe('private runtime errors', () => {
     expect(issue.kind).toBe('stalled')
     expect(issue.title).toContain('ZK engine')
   })
+
+  it('classifies pending indexed shield access separately from network errors', () => {
+    const issue = classifyPrivateRuntimeIssue('Shield access setup is confirmed, but its ASP leaf is not indexed by the bootnode yet.')
+    expect(issue.kind).toBe('asp-indexing')
+    expect(issue.body).toContain('No deposit was submitted')
+  })
+
+  it('classifies contract simulation failures without dumping raw diagnostics', () => {
+    const issue = classifyPrivateRuntimeIssue('transaction simulation failed: HostError: Error(Contract, #6)')
+    expect(issue.kind).toBe('simulation')
+    expect(issue.retryable).toBe(true)
+  })
 })

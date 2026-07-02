@@ -7,7 +7,7 @@
 // stored state + both auditor keys, so the witness must use the sender's exact
 // tracked (v, r) and the recipient's on-chain PVK_B.
 
-import { Address, Contract, xdr } from '@stellar/stellar-sdk'
+import { Address, Contract } from '@stellar/stellar-sdk'
 import { BN254_SCALAR_MODULUS } from '../bytes'
 import { getConfidentialConfig } from './../networks'
 import {
@@ -16,6 +16,7 @@ import {
   saveConfidentialBalance,
   type ConfidentialBalance,
 } from './balance-state'
+import { encodeTransferPayload } from './contract-data'
 import { asScvBytes, fieldTo32BE, pointFrom64BE, pointTo64BE, randomGrumpkinScalar, randomSigma } from './encoding'
 import { encryptAmount, encryptBalance } from './encrypt'
 import { CONFIDENTIAL_DOMAIN } from './poseidon2'
@@ -151,7 +152,6 @@ export async function submitConfidentialTransfer(
     readonly amount: bigint
     readonly to: string
     readonly circuit: CompiledCircuit
-    readonly auditorId?: number
   },
 ): Promise<ConfidentialSubmitReport> {
   const confidential = getConfidentialConfig(options.network)
@@ -163,15 +163,21 @@ export async function submitConfidentialTransfer(
   if (options.amount <= 0n || balance.spendable.v < options.amount) {
     return blocked(options, ['Amount exceeds your spendable confidential balance. Merge received funds first.'])
   }
+  if (options.to === account) {
+    return blocked(options, ['Confidential self-transfer is disabled until local receive openings are persisted.'])
+  }
 
+  const sender = await readConfidentialAccount({ ...options, account })
   const recipient = await readConfidentialAccount({ ...options, account: options.to })
+  if (!sender) {
+    return blocked(options, ['This wallet is not registered for confidential tokens.'])
+  }
   if (!recipient) {
     return blocked(options, ['Recipient is not registered for confidential tokens.'])
   }
-  const senderAuditorId = options.auditorId ?? 0
   const [kAudR, kAudS] = await Promise.all([
     readAuditorKey({ ...options, auditorId: recipient.auditorId }),
-    readAuditorKey({ ...options, auditorId: senderAuditorId }),
+    readAuditorKey({ ...options, auditorId: sender.auditorId }),
   ])
   if (!kAudR || !kAudS) {
     return blocked(options, ['Could not read an auditor key from the registry.'])
@@ -188,44 +194,50 @@ export async function submitConfidentialTransfer(
     circuit: options.circuit,
   })
 
-  // Soroban encodes a #[contracttype] struct as a map with symbol keys in
-  // lexicographic order. Build each field, then sort by name.
-  const fields: Record<string, Uint8Array> = {
-    b_aud_s: out.bAudS,
-    b_tilde: out.bTilde,
-    c_spend_new: out.cSpendNew,
-    c_tx: out.cTx,
-    r_aud_r: out.rAudR,
-    r_e: out.rE,
-    sigma: out.sigma,
-    v_aud_r: out.vAudR,
-    v_aud_s: out.vAudS,
-    v_tilde: out.vTilde,
-  }
-  const payload = xdr.ScVal.scvMap(
-    Object.keys(fields)
-      .sort()
-      .map((name) => new xdr.ScMapEntry({ key: xdr.ScVal.scvSymbol(name), val: asScvBytes(fields[name]) })),
-  )
-
   const report = await runConfidentialInvocation(options, 'transfer', (id) =>
-    new Contract(id).call(
-      'transfer',
-      Address.fromString(account).toScVal(),
-      Address.fromString(options.to).toScVal(),
-      payload,
-    ),
+    buildConfidentialTransferCall(id, account, options.to, out),
   )
 
   if (report.status === 'submitted') {
-    saveConfidentialBalance(
-      options.network,
-      confidential.tokenId,
-      account,
-      afterSpend(balance, options.amount, out.newR),
-    )
+    try {
+      saveConfidentialBalance(
+        options.network,
+        confidential.tokenId,
+        account,
+        afterSpend(balance, options.amount, out.newR),
+      )
+    } catch (error) {
+      return withLocalPersistenceWarning(report, error)
+    }
   }
   return report
+}
+
+export function buildConfidentialTransferCall(
+  contractId: string,
+  account: string,
+  to: string,
+  out: TransferProofResult,
+): ReturnType<Contract['call']> {
+  const payload = encodeTransferPayload({
+    bAudS: out.bAudS,
+    bTilde: out.bTilde,
+    cSpendNew: out.cSpendNew,
+    cTx: out.cTx,
+    rAudR: out.rAudR,
+    rE: out.rE,
+    sigma: out.sigma,
+    vAudR: out.vAudR,
+    vAudS: out.vAudS,
+    vTilde: out.vTilde,
+  })
+  return new Contract(contractId).call(
+    'transfer',
+    Address.fromString(account).toScVal(),
+    Address.fromString(to).toScVal(),
+    payload,
+    asScvBytes(out.proof),
+  )
 }
 
 function blocked(options: ConfidentialSubmitOptions, blockers: readonly string[]): ConfidentialSubmitReport {
@@ -236,5 +248,17 @@ function blocked(options: ConfidentialSubmitOptions, blockers: readonly string[]
     contractId: getConfidentialConfig(options.network)?.tokenId,
     statusEvents: [],
     blockers,
+  }
+}
+
+function withLocalPersistenceWarning(
+  report: ConfidentialSubmitReport,
+  error: unknown,
+): ConfidentialSubmitReport {
+  const message = error instanceof Error ? error.message : String(error)
+  return {
+    ...report,
+    blockers: [...report.blockers, `Transaction confirmed, but local confidential balance was not saved: ${message}`],
+    error: report.error ?? message,
   }
 }

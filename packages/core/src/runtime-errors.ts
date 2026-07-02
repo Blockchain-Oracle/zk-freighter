@@ -1,4 +1,4 @@
-export type PrivateRuntimeIssueKind = 'busy' | 'rpc-sync-gap' | 'syncing' | 'stalled' | 'network' | 'unknown'
+export type PrivateRuntimeIssueKind = 'busy' | 'rpc-sync-gap' | 'asp-indexing' | 'syncing' | 'stalled' | 'simulation' | 'network' | 'unknown'
 
 export interface PrivateRuntimeIssue {
   readonly kind: PrivateRuntimeIssueKind
@@ -32,11 +32,31 @@ export function classifyPrivateRuntimeIssue(error: unknown): PrivateRuntimeIssue
     }
   }
 
+  if (/Shield access setup is confirmed|ASP leaf is not indexed|Shield access is confirming|Confirming shield access/i.test(message)) {
+    return {
+      kind: 'asp-indexing',
+      title: 'Confirming shield access.',
+      body: 'Your setup transaction is confirmed; ZK Fighter is waiting for the ASP leaf to be indexed before proving. No deposit was submitted yet.',
+      retryable: true,
+      raw: message,
+    }
+  }
+
   if (/sync \d+ ledger|ASP membership|indexer precondition/i.test(message)) {
     return {
       kind: 'syncing',
       title: 'Pool is still syncing.',
       body: 'The shielded pool indexer is catching up. Try again after a few ledgers.',
+      retryable: true,
+      raw: message,
+    }
+  }
+
+  if (/transaction simulation failed|HostError|Error\(Contract, #\d+\)|stale.*root/i.test(message)) {
+    return {
+      kind: 'simulation',
+      title: 'Transaction simulation failed.',
+      body: 'Stellar rejected the prepared transaction before submit. Check the amount and sync state, then retry.',
       retryable: true,
       raw: message,
     }

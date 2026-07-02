@@ -4,6 +4,9 @@ type RuntimeEnv = Record<string, string | undefined>
 type RuntimeGlobal = typeof globalThis & {
   __ZKF_CONFIG__?: RuntimeEnv
 }
+type RuntimeImportMeta = ImportMeta & {
+  readonly env?: RuntimeEnv
+}
 
 declare const process: { env?: RuntimeEnv } | undefined
 
@@ -21,6 +24,7 @@ export function resolveRuntimeEndpoints(network: NetworkKey, env: RuntimeEnv = r
 
 export function readRuntimeEnv(): RuntimeEnv {
   return {
+    ...((import.meta as RuntimeImportMeta).env ?? {}),
     ...(typeof process !== 'undefined' ? process.env : undefined),
     ...(globalThis as RuntimeGlobal).__ZKF_CONFIG__,
   }
@@ -35,9 +39,10 @@ function endpointFor(network: NetworkKey, env: RuntimeEnv, key: string): string 
     env[`ZKF_${key}`]
 
   if (explicit) return trimTrailingSlash(explicit)
-  if (key === 'FUNDING_API_URL' && network === 'testnet' && isLocalDevelopment()) return 'http://127.0.0.1:8787'
-  if (key === 'BOOTNODE_URL' && network === 'testnet' && isLocalDevelopment()) return 'http://127.0.0.1:8788/rpc'
-  if (key === 'BOOTNODE_URL' && network === 'mainnet' && isLocalDevelopment()) return 'http://127.0.0.1:8789/rpc'
+  const localHost = localServiceHost()
+  if (key === 'FUNDING_API_URL' && network === 'testnet' && localHost) return `http://${localHost}:8787`
+  if (key === 'BOOTNODE_URL' && network === 'testnet' && localHost) return `http://${localHost}:8788/rpc`
+  if (key === 'BOOTNODE_URL' && network === 'mainnet' && localHost) return `http://${localHost}:8789/rpc`
   return undefined
 }
 
@@ -45,7 +50,15 @@ function trimTrailingSlash(value: string): string {
   return value.replace(/\/+$/u, '')
 }
 
-function isLocalDevelopment(): boolean {
+function localServiceHost(): string | undefined {
   const host = globalThis.location?.hostname
-  return host === 'localhost' || host === '127.0.0.1' || host?.startsWith('192.168.') === true
+  if (host === 'localhost' || host === '127.0.0.1') return '127.0.0.1'
+  if (isPrivateLanHost(host)) return host
+  return undefined
+}
+
+function isPrivateLanHost(host: string | undefined): host is string {
+  return host?.startsWith('192.168.') === true ||
+    host?.startsWith('10.') === true ||
+    /^172\.(1[6-9]|2[0-9]|3[0-1])\./u.test(host ?? '')
 }

@@ -16,6 +16,15 @@ describe('resolveRuntimeEndpoints', () => {
     })
   })
 
+  it('uses the browser LAN host for local phone previews', () => {
+    vi.stubGlobal('location', { hostname: '192.168.18.4' })
+
+    expect(resolveRuntimeEndpoints('testnet', {})).toEqual({
+      fundingApiUrl: 'http://192.168.18.4:8787',
+      bootnodeUrl: 'http://192.168.18.4:8788/rpc',
+    })
+  })
+
   it('trims configured endpoint URLs', () => {
     expect(resolveRuntimeEndpoints('testnet', {
       VITE_ZKF_TESTNET_FUNDING_API_URL: 'https://api.example.test/',

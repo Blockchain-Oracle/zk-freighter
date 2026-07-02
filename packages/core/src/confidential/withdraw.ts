@@ -21,7 +21,7 @@ import { GRUMPKIN_GENERATORS, grumpkinCommit, grumpkinEcdhSharedX, grumpkinScala
 import { deriveConfidentialSpendingKey, viewingKeyFromSpendingKey } from './keys'
 import { executeConfidentialCircuit, generateConfidentialProof, type CompiledCircuit } from './prover'
 import { deriveSpendR, encryptAuditorSenderBalance } from './spend-primitives'
-import { readAuditorKey } from './reads'
+import { readAuditorKey, readConfidentialAccount } from './reads'
 import {
   runConfidentialInvocation,
   type ConfidentialSubmitOptions,
@@ -116,7 +116,6 @@ export async function submitConfidentialWithdraw(
     readonly amount: bigint
     readonly to: string
     readonly circuit: CompiledCircuit
-    readonly auditorId?: number
   },
 ): Promise<ConfidentialSubmitReport> {
   const confidential = getConfidentialConfig(options.network)
@@ -129,8 +128,11 @@ export async function submitConfidentialWithdraw(
     return blocked(options, 'withdraw', ['Amount exceeds your spendable confidential balance. Merge received funds first.'])
   }
 
-  const auditorId = options.auditorId ?? 0
-  const kAudKey = await readAuditorKey({ ...options, auditorId })
+  const sender = await readConfidentialAccount({ ...options, account })
+  if (!sender) {
+    return blocked(options, 'withdraw', ['This wallet is not registered for confidential tokens.'])
+  }
+  const kAudKey = await readAuditorKey({ ...options, auditorId: sender.auditorId })
   if (!kAudKey) {
     return blocked(options, 'withdraw', ['Could not read the auditor key from the registry.'])
   }
@@ -145,28 +147,43 @@ export async function submitConfidentialWithdraw(
   })
 
   const report = await runConfidentialInvocation(options, 'withdraw', (id) =>
-    new Contract(id).call(
-      'withdraw',
-      Address.fromString(account).toScVal(),
-      Address.fromString(options.to).toScVal(),
-      nativeToScVal(options.amount, { type: 'i128' }),
-      asScvBytes(out.cSpendNew),
-      asScvBytes(out.sigma),
-      asScvBytes(out.bTilde),
-      asScvBytes(out.rE),
-      asScvBytes(out.bAudS),
-    ),
+    buildConfidentialWithdrawCall(id, account, options.to, options.amount, out),
   )
 
   if (report.status === 'submitted') {
-    saveConfidentialBalance(
-      options.network,
-      confidential.tokenId,
-      account,
-      afterSpend(balance, options.amount, out.newR),
-    )
+    try {
+      saveConfidentialBalance(
+        options.network,
+        confidential.tokenId,
+        account,
+        afterSpend(balance, options.amount, out.newR),
+      )
+    } catch (error) {
+      return withLocalPersistenceWarning(report, error)
+    }
   }
   return report
+}
+
+export function buildConfidentialWithdrawCall(
+  contractId: string,
+  account: string,
+  to: string,
+  amount: bigint,
+  out: WithdrawProofResult,
+): ReturnType<Contract['call']> {
+  return new Contract(contractId).call(
+    'withdraw',
+    Address.fromString(account).toScVal(),
+    Address.fromString(to).toScVal(),
+    nativeToScVal(amount, { type: 'i128' }),
+    asScvBytes(out.cSpendNew),
+    asScvBytes(out.sigma),
+    asScvBytes(out.bTilde),
+    asScvBytes(out.rE),
+    asScvBytes(out.bAudS),
+    asScvBytes(out.proof),
+  )
 }
 
 // A blocked report without touching the network, consistent with the runner's shape.
@@ -182,5 +199,17 @@ function blocked(
     contractId: getConfidentialConfig(options.network)?.tokenId,
     statusEvents: [],
     blockers,
+  }
+}
+
+function withLocalPersistenceWarning(
+  report: ConfidentialSubmitReport,
+  error: unknown,
+): ConfidentialSubmitReport {
+  const message = error instanceof Error ? error.message : String(error)
+  return {
+    ...report,
+    blockers: [...report.blockers, `Transaction confirmed, but local confidential balance was not saved: ${message}`],
+    error: report.error ?? message,
   }
 }

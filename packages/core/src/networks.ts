@@ -24,6 +24,7 @@ export interface NetworkAssetConfig {
   readonly issuer?: string
   readonly sacId: string
   readonly poolId?: string
+  readonly maxDepositStroops?: string
   readonly shieldedPool: FeatureGate
 }
 
@@ -37,23 +38,13 @@ export interface CctpConfig {
   readonly evmSources: Record<CctpSourceKey, EvmCctpSourceConfig>
 }
 
-/// Deployed confidential-token (Track B) wiring. Testnet-only by product rule:
-/// the UltraHonk verifier backend is an unaudited dev preview, so `mainnet`
-/// intentionally omits this block and the feature is gated off there.
 export interface ConfidentialConfig {
-  /// Our authored confidential-token contract (register/deposit/merge/withdraw/transfer).
   readonly tokenId: string
-  /// UltraHonk verifier registry the token contract gates every proof through.
   readonly verifierId: string
-  /// Auditor registry resolving auditor_id → Grumpkin viewing key.
   readonly auditorId: string
-  /// SAC of the public underlying asset deposits are pulled from / withdrawals paid in.
   readonly underlyingSacId: string
   readonly underlyingCode: AssetCode
   readonly underlyingDecimals: number
-  /// The contract's bound `addr_f` (addressToField(tokenId)) as 64-char hex — the
-  /// per-instance proof-replay binding. Stored so the register proof uses the exact
-  /// value bound on-chain via set_contract_field (no recompute drift).
   readonly addrFHex: string
 }
 
@@ -84,6 +75,7 @@ export const NETWORKS = {
         code: 'XLM',
         sacId: 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC',
         poolId: 'CCCHESF5HNGMCP5ZLGFBKBTW23YXNAJ6LTGSK7CO3FKFIVEHFE3CD4LZ',
+        maxDepositStroops: '1000000000',
         shieldedPool: 'enabled',
       },
       USDC: {
@@ -91,13 +83,11 @@ export const NETWORKS = {
         issuer: 'GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5',
         sacId: 'CBIELTK6YBZJU5UP2WWQEUCYKLPU6AUNZ2BQ4WWFEIE3USCIHMXQDAMA',
         poolId: 'CDKOY3DXCCS3KHBDAE7G2E735YRPDGGAWRKSN25V4VFVKZOMKWXKTCNK',
+        maxDepositStroops: '1000000000',
         shieldedPool: 'enabled',
       },
     },
     confidential: {
-      // Hardened token; transfer now emits the recipient-channel ciphertext
-      // (r_e, v_tilde, sigma) so recipients can scan + decrypt incoming funds.
-      // Supersedes CDKQ7UR7… (no event) and the placeholder-addr_f CDNN7XDL….
       tokenId: 'CBNL4THDSDDZ5OWPVLJPDBQGQ4FDH6LHBBFUBPRDNLUCIV2LKCHEVJ4F',
       verifierId: 'CD5DMFWTPW6SLA5TAUNU2TLAZ2ZFXCKGR2PBS4KHQ4P56EOIASRSTUGG',
       auditorId: 'CAMO6HGCK3EGQX7IEOAO555MPXNQ6UVFI46Y34CYQRWS4HLXOAQ5SDGO',
@@ -177,6 +167,7 @@ export const NETWORKS = {
         code: 'XLM',
         sacId: 'CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA',
         poolId: 'CCE3VBWTMGS7TZBOMBXVMPZFD4RUWAJDQHV7L2FT5BHMZKHLQUJKHECE',
+        maxDepositStroops: '1000000000',
         shieldedPool: 'enabled',
       },
       USDC: {
@@ -184,6 +175,7 @@ export const NETWORKS = {
         issuer: 'GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN',
         sacId: 'CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI75',
         poolId: 'CDV45TTXDDUKBMK2IWPJRUYQSRVEWHTRPKCN2VZ7GEV2HVMRPBOD2KR7',
+        maxDepositStroops: '1000000000',
         shieldedPool: 'enabled',
       },
     },
@@ -284,13 +276,15 @@ export function isShieldedAssetEnabled(network: NetworkKey, asset: AssetCode): b
   return NETWORKS[network].assets[asset].shieldedPool === 'enabled'
 }
 
-/// Confidential-token mode is available only where a `confidential` block is
-/// configured — testnet today, never mainnet (unaudited verifier preview).
+export function maxShieldDepositStroops(network: NetworkKey, asset: AssetCode): bigint | null {
+  const value = NETWORKS[network].assets[asset].maxDepositStroops
+  return value ? BigInt(value) : null
+}
+
 export function isConfidentialEnabled(network: NetworkKey): boolean {
   return getNetworkConfig(network).confidential !== undefined
 }
 
-/// Returns the confidential wiring for a network, or `undefined` when gated off.
 export function getConfidentialConfig(network: NetworkKey): ConfidentialConfig | undefined {
   return getNetworkConfig(network).confidential
 }

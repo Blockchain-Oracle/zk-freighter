@@ -1,6 +1,6 @@
 import type { NetworkKey } from './networks'
 
-export type AspAccessStatus = 'submitted' | 'ready'
+export type AspAccessStatus = 'submitted' | 'indexed' | 'ready'
 
 export interface AspAccessKey {
   readonly network: NetworkKey
@@ -13,7 +13,12 @@ export interface AspAccessRecord extends AspAccessKey {
   readonly status: AspAccessStatus
   readonly txHash?: string
   readonly explorerUrl?: string
+  readonly submittedLedger?: number
+  readonly indexedLedger?: number
+  readonly leafIndex?: string
+  readonly root?: string
   readonly submittedAt: number
+  readonly indexedAt?: number
   readonly updatedAt: number
 }
 
@@ -106,7 +111,7 @@ function parseRecord(value: string): AspAccessRecord | null {
   try {
     const parsed = JSON.parse(value) as Partial<AspAccessRecord>
     if (
-      (parsed.status !== 'submitted' && parsed.status !== 'ready') ||
+      (parsed.status !== 'submitted' && parsed.status !== 'indexed' && parsed.status !== 'ready') ||
       typeof parsed.network !== 'string' ||
       typeof parsed.userAddress !== 'string' ||
       typeof parsed.leafHex !== 'string' ||
