@@ -169,6 +169,18 @@
   line-height: 1.6;
 }
 
+.platform-spec {
+  display: inline-flex;
+  margin-top: 18px;
+  border: 1px solid var(--bd);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.025);
+  padding: 6px 10px;
+  color: var(--tx3);
+  font: 700 9.5px/1 var(--font-mono);
+  letter-spacing: 0.11em;
+}
+
 /* ── Privacy model ── */
 
 .privacy-grid {

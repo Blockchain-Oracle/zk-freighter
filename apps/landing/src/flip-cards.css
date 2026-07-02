@@ -14,7 +14,7 @@
 .flip-card {
   position: relative;
   display: block;
-  height: 430px;
+  height: 415px;
   padding: 0;
   border: none;
   background: none;
@@ -22,6 +22,11 @@
   color: inherit;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* the web app is the composed focal card; the portrait shots subordinate */
+.flip-web {
+  height: 460px;
 }
 
 .flip-inner {

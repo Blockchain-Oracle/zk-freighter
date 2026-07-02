@@ -24,9 +24,9 @@ export function BuiltOnStrip() {
 }
 
 const platforms = [
-  { title: 'Web app', meta: 'desktop dashboard', body: 'Full power: send, shield, bridge, selective disclosure, confidential tokens.' },
-  { title: 'Mobile app', meta: 'Android & iOS', body: 'Thumb-first: swipeable cards, bottom-sheet flows, proving in-sheet.' },
-  { title: 'Extension', meta: 'quick companion', body: 'Glance, QuickShield, receive & bridge. Heavy proving promotes to the side panel.' },
+  { title: 'Web app', meta: 'desktop dashboard', spec: 'REACT · WASM PROVER · OPFS', body: 'Full power: send, shield, bridge, selective disclosure, confidential tokens.' },
+  { title: 'Mobile app', meta: 'Android & iOS', spec: 'CAPACITOR · NATIVE SHELL', body: 'Thumb-first: swipeable cards, bottom-sheet flows, proving in-sheet.' },
+  { title: 'Extension', meta: 'quick companion', spec: 'MV3 · OFFSCREEN PROVING', body: 'Glance, QuickShield, receive & bridge. Heavy proving promotes to the side panel.' },
 ]
 
 export function Platforms() {
@@ -44,6 +44,7 @@ export function Platforms() {
             <span className="platform-meta">{platform.meta}</span>
             <h3>{platform.title}</h3>
             <p>{platform.body}</p>
+            <span className="platform-spec">{platform.spec}</span>
           </article>
         ))}
       </div>
