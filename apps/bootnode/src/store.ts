@@ -104,7 +104,11 @@ class PostgresBootnodeStore implements BootnodeStore {
   constructor(databaseUrl: string) {
     this.pool = new Pool({
       connectionString: databaseUrl,
-      ssl: databaseUrl.includes('localhost') || databaseUrl.includes('127.0.0.1') ? undefined : { rejectUnauthorized: false },
+      // Enable SSL only when the connection string asks for it. Coolify's
+      // internal Postgres doesn't offer SSL, so forcing it crashes the client
+      // ("server does not support SSL connections"). Managed cloud Postgres
+      // that requires SSL should carry ?sslmode=require in the URL.
+      ssl: /[?&]sslmode=(require|verify-ca|verify-full)/u.test(databaseUrl) ? { rejectUnauthorized: false } : undefined,
     })
   }
 

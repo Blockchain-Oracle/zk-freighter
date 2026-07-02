@@ -48,7 +48,9 @@ class PostgresFundingStore implements FundingStore {
   constructor(databaseUrl: string) {
     this.pool = new Pool({
       connectionString: databaseUrl,
-      ssl: databaseUrl.includes('localhost') || databaseUrl.includes('127.0.0.1') ? undefined : { rejectUnauthorized: false },
+      // SSL only when the URL requests it — Coolify's internal Postgres has no
+      // SSL, and forcing it crashes the client. See bootnode store for detail.
+      ssl: /[?&]sslmode=(require|verify-ca|verify-full)/u.test(databaseUrl) ? { rejectUnauthorized: false } : undefined,
     })
   }
 
