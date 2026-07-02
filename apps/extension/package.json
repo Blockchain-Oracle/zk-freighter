@@ -1,5 +1,5 @@
 {
-  "name": "@zk-fighter/extension",
+  "name": "@zk-freighter/extension",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -15,8 +15,8 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@zk-fighter/core": "workspace:*",
-    "@zk-fighter/ui": "workspace:*",
+    "@zk-freighter/core": "workspace:*",
+    "@zk-freighter/ui": "workspace:*",
     "lucide-react": "1.21.0",
     "qrcode.react": "4.2.0",
     "react": "19.2.6",

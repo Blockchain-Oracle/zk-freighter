@@ -1,14 +1,14 @@
-# ZK Fighter Mobile
+# ZK Freighter Mobile
 
-Capacitor mobile shell for ZK Fighter on Android and iOS.
+Capacitor mobile shell for ZK Freighter on Android and iOS.
 
-This app is not a hosted web URL wrapper. It builds the React/Vite mobile surface into `dist`, then Capacitor syncs those assets into native Android and iOS projects. Wallet logic must stay in shared packages such as `@zk-fighter/core` and `@zk-fighter/ui`.
+This app is not a hosted web URL wrapper. It builds the React/Vite mobile surface into `dist`, then Capacitor syncs those assets into native Android and iOS projects. Wallet logic must stay in shared packages such as `@zk-freighter/core` and `@zk-freighter/ui`.
 
 ## Current Checkpoint
 
 The current checkpoint is the real mobile shell plus runtime viability:
 
-- Encrypted vault create/import/unlock using `@zk-fighter/core`.
+- Encrypted vault create/import/unlock using `@zk-freighter/core`.
 - Home, Receive, Activity, More, Settings, network switching, and Sync now.
 - Public balances are read from Horizon; Activity records are real local records only.
 - Shielded balances load only through explicit Sync now to avoid background OPFS pressure.
@@ -42,10 +42,10 @@ same-origin API proxying:
 
 ```bash
 # terminal 1 — funding + bootnode services must already be running locally
-pnpm --filter @zk-fighter/mobile dev:phone   # serves 4183 with /zkf-* proxies to local services
+pnpm --filter @zk-freighter/mobile dev:phone   # serves 4183 with /zkf-* proxies to local services
 
 # terminal 2
-pnpm --filter @zk-fighter/mobile tunnel      # prints https://<random>.trycloudflare.com
+pnpm --filter @zk-freighter/mobile tunnel      # prints https://<random>.trycloudflare.com
 ```
 
 Open the printed `https://….trycloudflare.com` URL on the phone. The page is a

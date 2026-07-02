@@ -106,7 +106,7 @@ Also ruled out (all taken in crypto): Umbra, Penumbra, Cloak, Vanta, Nocturne, C
 1. **SOTTO** — from Italian "sotto voce" (in a hushed voice); short, brandable, on-theme. Search surfaced only unrelated SATU/SATO/SotaTek (distinct strings). **RECOMMENDED.**
 2. **LULL** — "a temporary quiet/calm"; very short, soft, ownable. No crypto project found. **RECOMMENDED backup.**
 
-> Product name is now **ZK Fighter**. A quick 2026-06-22 web search did not show a direct crypto-wallet collision, but this is not legal/trademark clearance; run a final trademark, domain, GitHub, app-store, and social-handle check before public launch. ("DeepBookie" in the host repo CLAUDE.md is a different monorepo project, irrelevant here.)
+> Product name is now **ZK Freighter**. A quick 2026-06-22 web search did not show a direct crypto-wallet collision, but this is not legal/trademark clearance; run a final trademark, domain, GitHub, app-store, and social-handle check before public launch. ("DeepBookie" in the host repo CLAUDE.md is a different monorepo project, irrelevant here.)
 
 ---
 

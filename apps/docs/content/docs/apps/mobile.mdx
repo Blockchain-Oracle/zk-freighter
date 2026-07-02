@@ -21,8 +21,8 @@ A phone can't use `http://<lan-ip>` (no secure context → no Web Crypto) and re
 HTTPS. The repo ships a tunnel workflow that solves both:
 
 ```bash
-pnpm --filter @zk-fighter/mobile dev:phone   # dev server with same-origin /zkf-* API proxies
-pnpm --filter @zk-fighter/mobile tunnel      # prints a trusted https://….trycloudflare.com URL
+pnpm --filter @zk-freighter/mobile dev:phone   # dev server with same-origin /zkf-* API proxies
+pnpm --filter @zk-freighter/mobile tunnel      # prints a trusted https://….trycloudflare.com URL
 ```
 
 Open the printed URL on the phone — trusted HTTPS, no mixed content, full functionality.

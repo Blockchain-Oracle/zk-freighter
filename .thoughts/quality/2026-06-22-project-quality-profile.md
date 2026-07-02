@@ -1,4 +1,4 @@
-# Project Quality Profile: ZK Fighter
+# Project Quality Profile: ZK Freighter
 
 ## Detected Stack
 
@@ -47,7 +47,7 @@ Verified local tools from prior research:
 
 Reference-only commands:
 
-- `reference/stellar-private-payments` has its own build/test commands. Use them for study and benchmark spikes, but do not treat their green status as ZK Fighter CI.
+- `reference/stellar-private-payments` has its own build/test commands. Use them for study and benchmark spikes, but do not treat their green status as ZK Freighter CI.
 
 The foundation created project-owned commands before feature work proceeded.
 
@@ -222,7 +222,7 @@ When initialized:
 
 - Make a clean baseline commit after docs/spec/quality artifacts are accepted.
 - Use conventional, boring commit messages when practical:
-  - `docs: add ZK Fighter quality profile`
+  - `docs: add ZK Freighter quality profile`
   - `feat: add seed wallet derivation`
   - `test: cover receive code parsing`
   - `chore: configure CI`
@@ -236,10 +236,10 @@ When initialized:
 - Keep using Context7 for current docs when asking about SDK/API/CLI/framework usage.
 - For implementation, future agents should read in this order:
   1. `README.md`
-  2. `.thoughts/specs/2026-06-22-zk-fighter-product-spec.md`
-  3. `.thoughts/stories/2026-06-22-zk-fighter-mvp-stories.md`
+  2. `.thoughts/specs/2026-06-22-zk-freighter-product-spec.md`
+  3. `.thoughts/stories/2026-06-22-zk-freighter-mvp-stories.md`
   4. `.thoughts/quality/2026-06-22-project-quality-profile.md`
-  5. `.thoughts/plans/2026-06-22-zk-fighter-implementation-plan.md`
+  5. `.thoughts/plans/2026-06-22-zk-freighter-implementation-plan.md`
   6. relevant research/design docs for the active phase.
 
 ## Open Questions

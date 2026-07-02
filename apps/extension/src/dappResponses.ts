@@ -16,7 +16,7 @@ import type {
   XlmPrivateSubmitReport,
   XlmShieldSubmitReport,
   VerifyDisclosureReport,
-} from '@zk-fighter/core'
+} from '@zk-freighter/core'
 
 import type { ActivityRecord } from './activity-store'
 

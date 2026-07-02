@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { decodeReceiveCode, type AssetCode, type NetworkKey, type PublicStellarPaymentReport, type XlmPrivateSubmitReport } from '@zk-fighter/core'
-import { Button, Segmented } from '@zk-fighter/ui'
+import { decodeReceiveCode, type AssetCode, type NetworkKey, type PublicStellarPaymentReport, type XlmPrivateSubmitReport } from '@zk-freighter/core'
+import { Button, Segmented } from '@zk-freighter/ui'
 
 import { dappMessageTypes, type DappWalletStatus, type PrivateActionResponse, type PublicActionResponse } from './dappMessages'
 import { PrivateTerminal, ProvingView } from './extension-private-views'

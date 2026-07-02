@@ -1,6 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import '@zk-fighter/ui/theme.css'
+import '@zk-freighter/ui/theme.css'
 import './mobile.css'
 import './mobile-access.css'
 import './mobile-receive-tools.css'

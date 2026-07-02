@@ -4,7 +4,7 @@ import {
   type CctpSourceKey,
   type NetworkKey,
   type XlmShieldSubmitReport,
-} from '@zk-fighter/core'
+} from '@zk-freighter/core'
 import { truncateMiddle } from './app-helpers'
 import { bridgeResumeBurnHashFromUrl, bridgeSourceChainFromUrl } from './bridge-handoff'
 import { loadBridgeResumeBurnHash, loadBridgeResumeSourceChain } from './bridge-storage'

@@ -1,8 +1,8 @@
-# Stories: ZK Fighter product MVP
+# Stories: ZK Freighter product MVP
 
 ## Traceability
 
-Source spec: `.thoughts/specs/2026-06-22-zk-fighter-product-spec.md`.
+Source spec: `.thoughts/specs/2026-06-22-zk-freighter-product-spec.md`.
 
 | Story | Spec Requirements | Acceptance Criteria |
 |---|---|---|
@@ -26,7 +26,7 @@ Source spec: `.thoughts/specs/2026-06-22-zk-fighter-product-spec.md`.
 
 ## Story 1: Create or import seed-backed wallet
 
-As a new ZK Fighter user,
+As a new ZK Freighter user,
 I want to create or import a seed-backed wallet,
 so that my private receive identity and spend authority are recoverable from the seed phrase.
 
@@ -92,7 +92,7 @@ And the app does not show fake balances or fake transaction links
 
 As a recipient,
 I want to copy or show a private receive code,
-so that another ZK Fighter user can send to me privately without me publishing anything on-chain.
+so that another ZK Freighter user can send to me privately without me publishing anything on-chain.
 
 ### Acceptance Criteria
 
@@ -230,7 +230,7 @@ And the app shows that this boundary action is public
 
 ## Story 8: Configure and prove USDC pool
 
-As the builder of ZK Fighter,
+As the builder of ZK Freighter,
 I want USDC to use its own real privacy pool,
 so that USDC shielding is not a UI-only copy of the XLM path.
 
@@ -344,7 +344,7 @@ so that I can prove selected activity to an auditor without granting spend autho
 
 - The user controls when disclosure is generated/exported.
 - The artifact is read-only and cannot spend funds.
-- The app does not imply ZK Fighter can disclose on the user's behalf.
+- The app does not imply ZK Freighter can disclose on the user's behalf.
 - A reviewer can use the artifact to inspect relevant activity.
 - Full viewing-key export, if present, has blunt irreversible warnings and is demoted below scoped disclosure.
 
@@ -480,7 +480,7 @@ And the app does not imply mainnet USDC privacy is live
 
 ## Story 17: Prove extension feasibility before claiming it
 
-As a ZK Fighter user,
+As a ZK Freighter user,
 I want any extension version to use the same real wallet core,
 so that the extension is not a separate fragile demo.
 

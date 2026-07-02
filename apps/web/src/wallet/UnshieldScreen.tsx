@@ -1,4 +1,4 @@
-import type { NetworkKey, WalletIdentity } from '@zk-fighter/core'
+import type { NetworkKey, WalletIdentity } from '@zk-freighter/core'
 import type { ShieldedBalanceState } from './useShieldedBalance'
 import { ShieldScreen } from './ShieldScreen'
 import type { WalletScreen } from './screens'

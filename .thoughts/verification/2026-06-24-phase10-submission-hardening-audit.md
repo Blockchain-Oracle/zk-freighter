@@ -13,10 +13,10 @@ Remaining submission work is external/product-final rather than hidden implement
 - `README.md`
 - `docs/SUBMISSION-PACKAGE.md`
 - `AGENTS.md`
-- `.thoughts/specs/2026-06-22-zk-fighter-product-spec.md`
-- `.thoughts/stories/2026-06-22-zk-fighter-mvp-stories.md`
+- `.thoughts/specs/2026-06-22-zk-freighter-product-spec.md`
+- `.thoughts/stories/2026-06-22-zk-freighter-mvp-stories.md`
 - `.thoughts/quality/2026-06-22-project-quality-profile.md`
-- `.thoughts/plans/2026-06-22-zk-fighter-implementation-plan.md`
+- `.thoughts/plans/2026-06-22-zk-freighter-implementation-plan.md`
 - `.thoughts/research/spikes-log.md`
 - `.thoughts/research/2026-06-24-phase9-atomic-bridge-shield-decision.md`
 - `packages/core/src/networks.ts`

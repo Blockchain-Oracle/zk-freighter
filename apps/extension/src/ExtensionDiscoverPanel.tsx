@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import type { PublicDiscoveryLookupReport, PublicDiscoveryPublishReport } from '@zk-fighter/core'
-import { Button, Callout } from '@zk-fighter/ui'
+import type { PublicDiscoveryLookupReport, PublicDiscoveryPublishReport } from '@zk-freighter/core'
+import { Button, Callout } from '@zk-freighter/ui'
 
 import { dappMessageTypes, type DappWalletStatus, type DiscoverLookupResponse, type DiscoverPublishResponse, type DiscoverStatusResponse } from './dappMessages'
 import { shorten } from './extension-format'

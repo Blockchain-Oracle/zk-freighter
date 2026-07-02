@@ -3,10 +3,10 @@ import { readFileSync } from 'node:fs'
 const files = [
   'AGENTS.md',
   'README.md',
-  '.thoughts/specs/2026-06-22-zk-fighter-product-spec.md',
-  '.thoughts/stories/2026-06-22-zk-fighter-mvp-stories.md',
+  '.thoughts/specs/2026-06-22-zk-freighter-product-spec.md',
+  '.thoughts/stories/2026-06-22-zk-freighter-mvp-stories.md',
   '.thoughts/quality/2026-06-22-project-quality-profile.md',
-  '.thoughts/plans/2026-06-22-zk-fighter-implementation-plan.md',
+  '.thoughts/plans/2026-06-22-zk-freighter-implementation-plan.md',
   '.thoughts/handoffs/2026-06-22-codex-build-prompts.md',
 ]
 

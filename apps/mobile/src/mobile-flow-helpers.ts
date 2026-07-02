@@ -8,7 +8,7 @@ import {
   type XlmPrivateSubmitReport,
   type XlmShieldedNote,
   type XlmShieldSubmitReport,
-} from '@zk-fighter/core'
+} from '@zk-freighter/core'
 import type { MobileActivityStatus } from './mobile-storage'
 import { formatAssetAmount, noteBalance, summarizeError, truncateMiddle } from './mobile-format'
 

@@ -16,8 +16,8 @@ import {
   type NetworkKey,
   type WalletIdentity,
   type XlmShieldSubmitReport,
-} from '@zk-fighter/core'
-import { BoundaryBadge, Button, Callout, Chip, EventStepTracker, type ProofStep } from '@zk-fighter/ui'
+} from '@zk-freighter/core'
+import { BoundaryBadge, Button, Callout, Chip, EventStepTracker, type ProofStep } from '@zk-freighter/ui'
 import type { ShieldedBalanceState } from './useShieldedBalance'
 import { runBridgeAfterDestinationSetup } from '../bridgePanelActions'
 import { loadCompletedBridgeResumeReport, saveBridgeResumeReport } from '../bridge-storage'

@@ -13,8 +13,8 @@ import {
   type XlmNotesReport,
   type XlmPrivateSubmitReport,
   type XlmShieldSubmitReport,
-} from '@zk-fighter/core'
-import { AmountInput, BoundaryBadge, Button, Callout, ReviewCard, Segmented, truncateMiddle } from '@zk-fighter/ui'
+} from '@zk-freighter/core'
+import { AmountInput, BoundaryBadge, Button, Callout, ReviewCard, Segmented, truncateMiddle } from '@zk-freighter/ui'
 import type { ShieldedBalanceState } from './useShieldedBalance'
 import { formatStroops, stroopsToAmountInput, sumSpendableStroops } from './format'
 import { proofFlowModel, type ProofFlowEvent } from './proofFlow'
@@ -243,7 +243,7 @@ export function ShieldScreen({ identity, network, balance, initialTab = 'shield'
           </div>
         ) : (
           <Callout tone="public" title="Setup runs automatically.">
-            ZK Fighter checks your public balance, prepares USDC receiving when needed, prepares shield access, then runs the real shield deposit.
+            ZK Freighter checks your public balance, prepares USDC receiving when needed, prepares shield access, then runs the real shield deposit.
           </Callout>
         )}
         <Segmented options={ASSET_OPTIONS} value={asset} onChange={(value) => setAsset(value as AssetCode)} size="sm" />

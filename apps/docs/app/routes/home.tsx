@@ -5,8 +5,8 @@ import { baseOptions } from '@/lib/layout.shared'
 
 export function meta(_args: Route.MetaArgs) {
   return [
-    { title: 'ZK Fighter Docs — shielded payments on Stellar' },
-    { name: 'description', content: 'How ZK Fighter works: shielded transfers, the privacy model, architecture, and app guides.' },
+    { title: 'ZK Freighter Docs — shielded payments on Stellar' },
+    { name: 'description', content: 'How ZK Freighter works: shielded transfers, the privacy model, architecture, and app guides.' },
   ]
 }
 
@@ -25,7 +25,7 @@ export default function Home() {
           Shielded payments on Stellar
         </span>
         <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4 max-w-xl">
-          The ZK Fighter documentation
+          The ZK Freighter documentation
         </h1>
         <p className="text-fd-muted-foreground mb-8 max-w-lg">
           A self-custody wallet for shielded XLM and USDC transfers — proofs on your device,

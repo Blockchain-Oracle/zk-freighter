@@ -25,7 +25,7 @@ const cftPath = path.resolve(
 const chromePath = process.env.ZKF_CHROME_PATH ?? (existsSync(cftPath) ? cftPath : '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome')
 const extensionDir = path.resolve('apps/extension/.output/chrome-mv3')
 const walletPath = process.env.ZKF_CCTP_DESTINATION_WALLET_PATH ??
-  path.join(os.homedir(), '.config', 'zk-fighter', 'cctp-bridge-destination.json')
+  path.join(os.homedir(), '.config', 'zk-freighter', 'cctp-bridge-destination.json')
 const password = 'zkf-cctp-arrival-shield'
 const network = process.env.ZKF_NETWORK === 'mainnet' ? 'mainnet' : 'testnet'
 const cctpAmountAtomic = BigInt(process.env.ZKF_CCTP_AMOUNT_ATOMIC ?? '1000000')

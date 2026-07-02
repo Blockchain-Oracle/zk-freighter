@@ -1,5 +1,5 @@
 {
-  "name": "@zk-fighter/bootnode",
+  "name": "@zk-freighter/bootnode",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -14,7 +14,7 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@zk-fighter/core": "workspace:*",
+    "@zk-freighter/core": "workspace:*",
     "pg": "8.16.3"
   },
   "devDependencies": {

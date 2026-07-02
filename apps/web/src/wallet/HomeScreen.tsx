@@ -1,6 +1,6 @@
-import { loadPublicStellarBalances, type AssetCode, type NetworkKey, type PublicBalancesReport, type WalletIdentity, type XlmNotesReport } from '@zk-fighter/core'
+import { loadPublicStellarBalances, type AssetCode, type NetworkKey, type PublicBalancesReport, type WalletIdentity, type XlmNotesReport } from '@zk-freighter/core'
 import { useEffect, useState } from 'react'
-import { Button, Callout, PublicCard, ShieldedCard, Pill, truncateMiddle } from '@zk-fighter/ui'
+import { Button, Callout, PublicCard, ShieldedCard, Pill, truncateMiddle } from '@zk-freighter/ui'
 import type { ShieldedBalanceState } from './useShieldedBalance'
 import { formatStroops, sumSpendableStroops } from './format'
 import { describeNotesIssue } from './balanceIssue'

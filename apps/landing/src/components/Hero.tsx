@@ -4,7 +4,7 @@ import { DeviceShowcase } from './DeviceShowcase'
 
 export function Hero() {
   return (
-    <section className="hero" aria-label="ZK Fighter — shielded payments on Stellar">
+    <section className="hero" aria-label="ZK Freighter — shielded payments on Stellar">
       <div className="hero-copy">
         <span className="hero-eyebrow">Shielded payments on Stellar</span>
         <h1>
@@ -18,7 +18,7 @@ export function Hero() {
         </p>
         <div className="hero-actions">
           <a className="cta cta-sheen" href={extensionUrl}>
-            <ArrowDown size={17} /> Download ZK Fighter
+            <ArrowDown size={17} /> Download ZK Freighter
           </a>
           <a className="secondary" href="#privacy">See how it works</a>
         </div>

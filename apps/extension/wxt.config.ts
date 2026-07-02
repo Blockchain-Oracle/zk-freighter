@@ -8,7 +8,7 @@ export default defineConfig({
   // static CSS, so the `script-src 'self' 'wasm-unsafe-eval'` CSP stays clean.
   vite: () => ({ resolve: { dedupe: ['react', 'react-dom'] }, plugins: [tailwindcss()] }),
   manifest: {
-    name: 'ZK Fighter',
+    name: 'ZK Freighter',
     description: 'Compact wallet for shielded Stellar payments.',
     icons: {
       16: 'extension-icons/zkf-icon-16.png',
@@ -17,7 +17,7 @@ export default defineConfig({
       128: 'extension-icons/zkf-icon-128.png',
     },
     action: {
-      default_title: 'ZK Fighter',
+      default_title: 'ZK Freighter',
       default_icon: {
         16: 'extension-icons/zkf-icon-16.png',
         32: 'extension-icons/zkf-icon-32.png',

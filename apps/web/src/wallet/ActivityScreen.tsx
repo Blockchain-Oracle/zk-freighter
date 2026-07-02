@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { getNetworkConfig, type AssetCode, type NetworkKey, type XlmNotesReport, type XlmShieldedNote } from '@zk-fighter/core'
-import { Callout, Chip, Pill, StatusPill, truncateMiddle } from '@zk-fighter/ui'
+import { getNetworkConfig, type AssetCode, type NetworkKey, type XlmNotesReport, type XlmShieldedNote } from '@zk-freighter/core'
+import { Callout, Chip, Pill, StatusPill, truncateMiddle } from '@zk-freighter/ui'
 import type { ShieldedBalanceState } from './useShieldedBalance'
 import { formatStroops } from './format'
 import { describeNotesIssue } from './balanceIssue'

@@ -1,8 +1,8 @@
-# ZK Fighter Submission Package
+# ZK Freighter Submission Package
 
 ## Copy Block
 
-**Project name:** ZK Fighter
+**Project name:** ZK Freighter
 
 **Short description:** A privacy-by-default, self-custody ZK wallet for shielded XLM and USDC transfers on Stellar, with a safe CCTP bridge-then-shield path and an evidence-backed WXT QuickShield extension companion.
 
@@ -14,14 +14,14 @@
 
 ## What We Built
 
-ZK Fighter gives users a seed-backed wallet, encrypted local vault, deterministic private receive code, and shielded transfer UX around the Nethermind Stellar privacy-pool engine. Users can shield public XLM or USDC into a privacy pool, send shielded value, unshield back to a public Stellar address, and export disclosure evidence for compliance.
+ZK Freighter gives users a seed-backed wallet, encrypted local vault, deterministic private receive code, and shielded transfer UX around the Nethermind Stellar privacy-pool engine. Users can shield public XLM or USDC into a privacy pool, send shielded value, unshield back to a public Stellar address, and export disclosure evidence for compliance.
 
 The bridge flow uses the safe two-step path:
 
 1. Public CCTP bridge from a supported source-chain USDC balance to Stellar USDC.
 2. Separate Stellar USDC shield/deposit into the privacy pool.
 
-The browser extension is a ZK companion. It can unlock the ZK Fighter wallet, show receive/deposit plumbing, run QuickShield for XLM and USDC with real Chrome runtime evidence, and render the native bridge route. It intentionally does not expose arbitrary public dApp signing.
+The browser extension is a ZK companion. It can unlock the ZK Freighter wallet, show receive/deposit plumbing, run QuickShield for XLM and USDC with real Chrome runtime evidence, and render the native bridge route. It intentionally does not expose arbitrary public dApp signing.
 
 ## Load-Bearing ZK
 

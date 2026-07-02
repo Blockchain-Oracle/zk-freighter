@@ -1,19 +1,19 @@
 # Prompt For Designer / Design Agent
 
-You are designing **ZK Fighter**, a privacy-by-default Stellar wallet for shielded XLM and USDC payments.
+You are designing **ZK Freighter**, a privacy-by-default Stellar wallet for shielded XLM and USDC payments.
 
 ## Source Of Truth
 
 Use the GitHub repository as the source of truth:
 
-- Repo: `https://github.com/Blockchain-Oracle/zk-fighter`
+- Repo: `https://github.com/Blockchain-Oracle/zk-freighter`
 - Branch: `main`
 
 Before doing design work, inspect the repo through the GitHub connector. If your environment allows cloning, clone it locally and inspect it directly:
 
 ```bash
-git clone https://github.com/Blockchain-Oracle/zk-fighter.git
-cd zk-fighter
+git clone https://github.com/Blockchain-Oracle/zk-freighter.git
+cd zk-freighter
 git checkout main
 ```
 
@@ -23,7 +23,7 @@ Do not rely on memory, screenshots, or a stale pasted summary. Check the GitHub 
 
 ## Important Warning About Current UI
 
-Do **not** take visual inspiration from the current ZK Fighter UI.
+Do **not** take visual inspiration from the current ZK Freighter UI.
 
 The current web app and extension UI are functional proof/evidence scaffolds. They prove flows, evidence, and integration boundaries, but they are not the desired visual direction. You may inspect the current UI source only to understand product flows, states, and data requirements.
 
@@ -40,8 +40,8 @@ Start with these if they exist in GitHub:
 5. `.thoughts/wiki/wallet-design-references.md`
 6. `.thoughts/research/2026-06-25-wallet-ux-reference-research.md`
 7. `.thoughts/raw/2026-06-25-wallet-design-research-sources.md`
-8. `.thoughts/specs/2026-06-22-zk-fighter-product-spec.md`
-9. `.thoughts/stories/2026-06-22-zk-fighter-mvp-stories.md`
+8. `.thoughts/specs/2026-06-22-zk-freighter-product-spec.md`
+9. `.thoughts/stories/2026-06-22-zk-freighter-mvp-stories.md`
 10. `.thoughts/research/2026-06-25-mainnet-readiness.md`
 11. `.thoughts/verification/2026-06-24-phase11-wxt-extension-audit.md`
 
@@ -134,7 +134,7 @@ Do not design active Freighter-compatible public signing, external public-key ac
 Bridge is a safe two-step flow:
 
 1. Public CCTP bridge arrival.
-2. Separate shield/deposit into ZK Fighter.
+2. Separate shield/deposit into ZK Freighter.
 
 Atomic bridge-and-shield is deferred and must not be designed as a normal MVP mode.
 
@@ -160,7 +160,7 @@ Use the reference wiki and source index for exact links. Prioritize:
 - Mobile scanner and confirmation patterns: Rainbow, Phantom, Coinbase/Base, Cake, Zodl/Zashi, Daimo.
 - Bridge status references: LI.FI, Relay, Bungee, MetaMask bridge, Rainbow/Uniswap bridge surfaces.
 
-If possible, inspect open-source wallet repos through GitHub too. The goal is wallet UI synthesis from strong references, not copying ZK Fighter's current UI.
+If possible, inspect open-source wallet repos through GitHub too. The goal is wallet UI synthesis from strong references, not copying ZK Freighter's current UI.
 
 ## Creative Direction
 

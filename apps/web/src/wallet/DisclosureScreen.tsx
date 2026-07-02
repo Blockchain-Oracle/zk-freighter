@@ -11,8 +11,8 @@ import {
   type WalletIdentity,
   type XlmNotesReport,
   type XlmShieldedNote,
-} from '@zk-fighter/core'
-import { BoundaryBadge, Button, Callout, Segmented, Spinner } from '@zk-fighter/ui'
+} from '@zk-freighter/core'
+import { BoundaryBadge, Button, Callout, Segmented, Spinner } from '@zk-freighter/ui'
 import type { ShieldedBalanceState } from './useShieldedBalance'
 import { formatStroops } from './format'
 import type { WalletScreen } from './screens'
@@ -107,7 +107,7 @@ export function DisclosureScreen({ identity, network, balance }: DisclosureScree
     const url = URL.createObjectURL(new Blob([genReport.artifactJson], { type: 'application/json' }))
     const a = document.createElement('a')
     a.href = url
-    a.download = 'zk-fighter-disclosure.json'
+    a.download = 'zk-freighter-disclosure.json'
     a.click()
     URL.revokeObjectURL(url)
   }

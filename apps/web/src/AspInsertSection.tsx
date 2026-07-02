@@ -5,7 +5,7 @@ import {
   type AspMembershipInsertReport,
   type NetworkKey,
   type WalletIdentity,
-} from '@zk-fighter/core'
+} from '@zk-freighter/core'
 import { truncateMiddle } from './app-helpers'
 
 const latestStatusEventCount = 6

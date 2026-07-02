@@ -2,7 +2,7 @@
 
 ## Scope
 
-Current-reality checkpoint for the local Stellar CLI/toolchain setup and canonical Stellar Asset Contract IDs needed before writing ZK Fighter specs.
+Current-reality checkpoint for the local Stellar CLI/toolchain setup and canonical Stellar Asset Contract IDs needed before writing ZK Freighter specs.
 
 This is tooling and read-only network verification. It does not deploy contracts, submit transactions, fund accounts, or prove the privacy flow.
 

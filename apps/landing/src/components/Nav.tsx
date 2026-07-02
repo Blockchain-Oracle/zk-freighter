@@ -1,12 +1,12 @@
-import { Logo } from '@zk-fighter/ui'
+import { Logo } from '@zk-freighter/ui'
 import { appUrl, docsUrl, extensionUrl } from '../links'
 
 export function Nav() {
   return (
     <header className="nav-pill">
-      <a href="#top" className="brand" aria-label="ZK Fighter home">
+      <a href="#top" className="brand" aria-label="ZK Freighter home">
         <Logo size={32} glow />
-        <span>ZK Fighter</span>
+        <span>ZK Freighter</span>
       </a>
       <nav aria-label="Primary navigation">
         <a href="#everywhere">How it works</a>

@@ -1,10 +1,10 @@
 #![no_std]
-//! Confidential Token (ZK Fighter, Track B).
+//! Confidential Token (ZK Freighter, Track B).
 //!
 //! A SEP-41-shaped wrapper whose amounts and balances are confidential: per-account
 //! state is stored as Pedersen commitments, and every state-changing op is gated by
 //! an UltraHonk proof verified through a separate verifier-registry contract. This
-//! contract is authored by ZK Fighter from the OpenZeppelin/SDF Confidential Tokens
+//! contract is authored by ZK Freighter from the OpenZeppelin/SDF Confidential Tokens
 //! design (no upstream token example exists); the `CircuitType` ordinals and the
 //! verifier's VK layout are the cross-language contract with the circuits.
 //!

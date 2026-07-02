@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { generateSeedPhrase, validateSeedPhrase, type NetworkKey } from '@zk-fighter/core'
-import { Button, Logo } from '@zk-fighter/ui'
+import { generateSeedPhrase, validateSeedPhrase, type NetworkKey } from '@zk-freighter/core'
+import { Button, Logo } from '@zk-freighter/ui'
 
 const passwordMinLength = 8
 
@@ -68,14 +68,14 @@ export function MobileAccess({ network, hasVault, busy, error, onUnlock, onCreat
       <section className="access-card">
         <div className="access-top">
           <Logo size={28} glow />
-          <strong>ZK Fighter</strong>
+          <strong>ZK Freighter</strong>
           <NetworkSwitch network={network} onNetwork={onNetwork} />
         </div>
         {step === 'welcome' ? (
           <div className="access-body center">
             <Logo size={74} glow />
             <div className="access-hero-copy">
-              <h1>ZK Fighter</h1>
+              <h1>ZK Freighter</h1>
               <p>Shielded payments on Stellar.<br />You hold the keys.</p>
             </div>
             <div className="access-meta"><span>XLM · USDC</span><span>● SELF-CUSTODY</span></div>

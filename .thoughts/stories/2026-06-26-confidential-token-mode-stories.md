@@ -1,4 +1,4 @@
-# Stories: Confidential Token Mode (ZK Fighter Track B)
+# Stories: Confidential Token Mode (ZK Freighter Track B)
 
 Status: B-T story gate. Traces to `.thoughts/specs/2026-06-26-confidential-token-mode-spec.md`. Behavior-facing slices only; no architecture (B-P). Chain-touching acceptance gates on **real recorded testnet evidence**.
 

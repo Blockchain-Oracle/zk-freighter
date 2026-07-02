@@ -27,7 +27,7 @@ importers:
 
   apps/bootnode:
     dependencies:
-      '@zk-fighter/core':
+      '@zk-freighter/core':
         specifier: workspace:*
         version: link:../../packages/core
       pg:
@@ -116,10 +116,10 @@ importers:
 
   apps/extension:
     dependencies:
-      '@zk-fighter/core':
+      '@zk-freighter/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@zk-fighter/ui':
+      '@zk-freighter/ui':
         specifier: workspace:*
         version: link:../../packages/ui
       lucide-react:
@@ -168,7 +168,7 @@ importers:
       '@stellar/stellar-sdk':
         specifier: 16.0.1
         version: 16.0.1
-      '@zk-fighter/core':
+      '@zk-freighter/core':
         specifier: workspace:*
         version: link:../../packages/core
       pg:
@@ -193,7 +193,7 @@ importers:
 
   apps/landing:
     dependencies:
-      '@zk-fighter/ui':
+      '@zk-freighter/ui':
         specifier: workspace:*
         version: link:../../packages/ui
       lucide-react:
@@ -260,10 +260,10 @@ importers:
       '@capacitor/core':
         specifier: 8.4.1
         version: 8.4.1
-      '@zk-fighter/core':
+      '@zk-freighter/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@zk-fighter/ui':
+      '@zk-freighter/ui':
         specifier: workspace:*
         version: link:../../packages/ui
       lucide-react:
@@ -321,10 +321,10 @@ importers:
 
   apps/web:
     dependencies:
-      '@zk-fighter/core':
+      '@zk-freighter/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@zk-fighter/ui':
+      '@zk-freighter/ui':
         specifier: workspace:*
         version: link:../../packages/ui
       lucide-react:

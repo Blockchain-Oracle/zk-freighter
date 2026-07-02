@@ -1,6 +1,6 @@
-# ZK Fighter — Product Spec (for the redesign)
+# ZK Freighter — Product Spec (for the redesign)
 
-> **Who this is for:** the designer redesigning ZK Fighter from scratch (landing page, web app, mobile app, browser extension). It describes **what actually exists today**, in plain language, so the new designs stay true to the product.
+> **Who this is for:** the designer redesigning ZK Freighter from scratch (landing page, web app, mobile app, browser extension). It describes **what actually exists today**, in plain language, so the new designs stay true to the product.
 >
 > **Accuracy promise:** this doc favors *accurate over aspirational*. Where something is planned-but-not-built, it says so. Where the older docs (README/AGENTS.md) lag the code, it flags the difference. It was written by reading the real source — file paths are given so you can dig in.
 >
@@ -12,9 +12,9 @@
 
 ## 1. What the product is
 
-**Elevator pitch.** ZK Fighter is a **privacy-by-default, self-custody wallet for shielded payments on Stellar**. You hold your own keys; you move XLM and USDC; and the sensitive details of in-pool payments are hidden by **real zero-knowledge cryptography** — not by trusting a middleman. The only public moments are the edges: putting money *in* (shield/deposit) and taking it *out* (unshield/withdraw). Everything you do with the funds in between can stay private.
+**Elevator pitch.** ZK Freighter is a **privacy-by-default, self-custody wallet for shielded payments on Stellar**. You hold your own keys; you move XLM and USDC; and the sensitive details of in-pool payments are hidden by **real zero-knowledge cryptography** — not by trusting a middleman. The only public moments are the edges: putting money *in* (shield/deposit) and taking it *out* (unshield/withdraw). Everything you do with the funds in between can stay private.
 
-**The problem it solves, and for whom.** Stellar is a *public* blockchain — by its own documentation, every transaction is recorded and visible to anyone. So a normal Stellar wallet leaks who paid whom, how much, and when. ZK Fighter is for people who want to **send money privately on Stellar** — individuals who don't want their balances and counterparties public, and who still need to *prove* their funds to an auditor or regulator when they choose to. It is **not** a general-purpose public wallet; it builds the privacy layer only and does not try to replace Freighter for everyday public dApp signing.
+**The problem it solves, and for whom.** Stellar is a *public* blockchain — by its own documentation, every transaction is recorded and visible to anyone. So a normal Stellar wallet leaks who paid whom, how much, and when. ZK Freighter is for people who want to **send money privately on Stellar** — individuals who don't want their balances and counterparties public, and who still need to *prove* their funds to an auditor or regulator when they choose to. It is **not** a general-purpose public wallet; it builds the privacy layer only and does not try to replace Freighter for everyday public dApp signing.
 
 **Why "private by default."** It's a posture, not a literal promise. The wallet defaults the user *into* the private path (shielded balances, private receive codes) instead of treating privacy as a buried toggle. But the team is deliberately honest about the limits — see the brand rules in §6. The phrase users should internalize is **"shielded transfers,"** Stellar's own term, not "fully private."
 
@@ -27,7 +27,7 @@
 
 ## 2. The privacy / ZK model
 
-ZK Fighter ships **two independent privacy systems**. A designer needs to understand both, because they appear as different screens with different rules.
+ZK Freighter ships **two independent privacy systems**. A designer needs to understand both, because they appear as different screens with different rules.
 
 ### Mode A — Shielded Pools (XLM **and** USDC) — *the primary, flagship mode*
 
@@ -36,7 +36,7 @@ Think of a **shared frosted-glass pot** that many people pay into and out of.
 | User action | What it means | On-chain visibility |
 |---|---|---|
 | **Shield (deposit)** | Move public XLM/USDC *into* the pool | **Public** — "this address put X in" |
-| **Shielded send (private transfer)** | Pay another ZK Fighter user *inside* the pool | **Hidden** — amount + counterparty private |
+| **Shielded send (private transfer)** | Pay another ZK Freighter user *inside* the pool | **Hidden** — amount + counterparty private |
 | **Shielded receive** | Get paid privately via your `zkf1…` receive code | **Hidden** |
 | **Unshield (withdraw)** | Move funds *out* of the pool to a public Stellar address | **Public** — "this address took Y out" |
 
@@ -56,7 +56,7 @@ A subtlety worth designing around: a deposit (or an incoming transfer) lands in 
 ### Proving — where it runs and how long
 
 - **All proving happens on the user's own device, in the browser** (lazy-loaded WebAssembly, off the main thread for the pool path). **Nothing is uploaded** — no server sees your secrets.
-- Mode A uses the **Nethermind privacy-pool prover** (Noir/Barretenberg, BN254 curve). Mode B uses **UltraHonk via `bb.js`** (Noir, Grumpkin keys). For Mode B, the **Noir circuits are vendored** from the OpenZeppelin / Stellar Development Foundation Confidential Tokens preview, but the **Soroban contract itself (`contracts/confidential-token/`) is original ZK Fighter work** — a SEP-41-shaped wrapper that gates every state change through the on-chain UltraHonk verifier. Each account's storage **auto-extends ~30 days on every read/write**, so an in-use confidential balance can't be archived out from under its owner.
+- Mode A uses the **Nethermind privacy-pool prover** (Noir/Barretenberg, BN254 curve). Mode B uses **UltraHonk via `bb.js`** (Noir, Grumpkin keys). For Mode B, the **Noir circuits are vendored** from the OpenZeppelin / Stellar Development Foundation Confidential Tokens preview, but the **Soroban contract itself (`contracts/confidential-token/`) is original ZK Freighter work** — a SEP-41-shaped wrapper that gates every state change through the on-chain UltraHonk verifier. Each account's storage **auto-extends ~30 days on every read/write**, so an in-use confidential balance can't be archived out from under its owner.
 - **Timing:** a few seconds to tens of seconds, **hardware-dependent**. The recorded evidence for a dry XLM deposit proof is **~5.5 seconds** (`~5,477 ms`, plus ~0.8s browser warm-up). Treat proving as a **first-class, blocking UI moment** — the user must keep the tab open while it runs.
 - **What a proof actually proves:** for a spend, *"I own a note worth at least this amount, it's really in the pool, and I haven't spent it"* — without revealing the note, its value, or the key. For a disclosure, *"I own this specific note"* — read-only, no spend power, no amount leaked.
 
@@ -89,8 +89,8 @@ No other tokens, no NFTs, no swaps. (See non-goals, §4.)
 - **Stellar Testnet** and **Stellar Mainnet** — switchable as a **config toggle** (no code change). The active network is always shown as a visible badge.
 - **EVM chains appear only for the bridge** (see below): Ethereum, Base, Arbitrum, Optimism — on their testnets (Sepolia/Base Sepolia/Arbitrum Sepolia/OP Sepolia) and mainnets.
 
-**Bridging — from where to where, and the UX.** ZK Fighter uses **Circle CCTP** (the official USDC bridge) to bring **real USDC from an EVM chain onto Stellar**, then optionally shield it. It is a **two-step, both-ends-public** flow:
-1. **Fund** a ZK Fighter–derived EVM address (the wallet signs the burn itself with a **seed-derived EVM key — no MetaMask, no WalletConnect**).
+**Bridging — from where to where, and the UX.** ZK Freighter uses **Circle CCTP** (the official USDC bridge) to bring **real USDC from an EVM chain onto Stellar**, then optionally shield it. It is a **two-step, both-ends-public** flow:
+1. **Fund** a ZK Freighter–derived EVM address (the wallet signs the burn itself with a **seed-derived EVM key — no MetaMask, no WalletConnect**).
 2. **Burn** USDC on the source chain → **wait for Circle's attestation** (~1 minute) → **mint** native USDC on the user's public Stellar account.
 3. The user then **shields** the arrived USDC as a separate step.
 
@@ -178,7 +178,7 @@ Has **every** feature in §4. Today it's a fixed sidebar (~236px) + a centered c
 
 ### Browser extension (WXT, Manifest V3) — *a focused companion, not a full wallet*
 - **What it does:** wallet import/unlock/lock, public address + `zkf1…` receive code (QR + copy), **QuickShield** (one-tap shield of XLM/USDC with sensible defaults), and a **native CCTP bridge** (the extension signs the EVM burn itself with the seed-derived key — badge **"native"**). Surfaces: a **popup** ("Runtime checkpoint") and a **side panel** ("Extension workspace," stays open across tabs).
-- **What it intentionally does NOT do:** it is **not** a Freighter-style public signing wallet. External dApp **public-key access and transaction signing fail closed by design** — the message is *"ZK Fighter external dApp access and signing are disabled; use QuickShield and bridge inside ZK Fighter."*
+- **What it intentionally does NOT do:** it is **not** a Freighter-style public signing wallet. External dApp **public-key access and transaction signing fail closed by design** — the message is *"ZK Freighter external dApp access and signing are disabled; use QuickShield and bridge inside ZK Freighter."*
 - **Not exposed in the extension UI today:** private transfer and unshield have backend support but **no popup UI** — so the extension can shield and bridge, but full private-send/withdraw live on the web app.
 - **Constraints:** MV3 service-worker + an **offscreen document** does the WASM proving (timeouts ~18s dry / ~180s deep); narrow popup (~360px min) means heavy proof/confirm UI wants the **side panel**; the background bundle is sizeable (~0.7 MB) because it carries the prover.
 
@@ -247,7 +247,7 @@ Track C. Navigation and flows are intended to mirror the web app on a phone canv
 - `docs/START-HERE-concept.md` — plain-English privacy model
 - `docs/GLOSSARY.md` — every term in plain English
 - `docs/VERIFIED-FACTS.md` — anti-hallucination record of claims
-- `.thoughts/specs/2026-06-22-zk-fighter-product-spec.md` — locked product spec, non-goals
+- `.thoughts/specs/2026-06-22-zk-freighter-product-spec.md` — locked product spec, non-goals
 - `.thoughts/design/2026-06-25-designer-brief-v2.md` + `.thoughts/design/screens/` — prior design brief & per-screen specs
 
 **Design system (the visual primitives that exist today):**
@@ -274,7 +274,7 @@ Track C. Navigation and flows are intended to mirror the web app on a phone canv
 - `packages/core/src/confidential/*` — Mode B (confidential tokens): `keys.ts`, `register.ts`, `withdraw.ts`, `transfer.ts`, `receive.ts`, `balance-state.ts`, `prover.ts`, `grumpkin.ts`, `poseidon2.ts` (note its reserved `DELEGATION_VIEWING_KEY` / `ENCRYPTED_ALLOWANCE` domains — the unbuilt spender feature)
 - `packages/core/src/cctp-bridge.ts` — the bridge
 - `circuits/` — the Noir circuits: `register`, `withdraw`, `transfer` (built + used) and `set_spender`, `spender_transfer`, `revoke_spender` (built, **not yet wired**); compiled VKs in `circuits/vks/`; provenance in `circuits/ATTRIBUTION.md` (vendored from OpenZeppelin/SDF, `nargo 1.0.0-beta.11` / `bb 0.87.0`)
-- `contracts/confidential-token/src/lib.rs` — the Soroban contract (ZK Fighter–authored). Read it to see exactly which ops exist: `register`, `deposit`, `merge`, `withdraw`, `transfer` (+ admin `set_contract_field`, views `config`/`is_registered`/`account`). The `CircuitType` enum reserves `SpenderTransfer`/`SetSpender`/`RevokeSpender` but **no methods implement them**.
+- `contracts/confidential-token/src/lib.rs` — the Soroban contract (ZK Freighter–authored). Read it to see exactly which ops exist: `register`, `deposit`, `merge`, `withdraw`, `transfer` (+ admin `set_contract_field`, views `config`/`is_registered`/`account`). The `CircuitType` enum reserves `SpenderTransfer`/`SetSpender`/`RevokeSpender` but **no methods implement them**.
 - `scripts/` — the real evidence/CI harness (not product UI): `check-extension-quickshield.mjs`, `check-mainnet-private-loop.mjs`, `cctp-bridge-source-flow.ts`, `secret-scan.mjs`, `check-file-size.mjs`, etc. — proof that the flows actually run on-chain.
 
 **Real on-chain evidence (proof these flows actually run):**

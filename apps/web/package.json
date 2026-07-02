@@ -1,5 +1,5 @@
 {
-  "name": "@zk-fighter/web",
+  "name": "@zk-freighter/web",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -13,8 +13,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@zk-fighter/core": "workspace:*",
-    "@zk-fighter/ui": "workspace:*",
+    "@zk-freighter/core": "workspace:*",
+    "@zk-freighter/ui": "workspace:*",
     "lucide-react": "1.21.0",
     "qrcode.react": "4.2.0",
     "react": "19.2.6",

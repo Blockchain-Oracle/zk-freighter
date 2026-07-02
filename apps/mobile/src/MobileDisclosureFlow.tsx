@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { Button, Callout } from '@zk-fighter/ui'
-import type { AssetCode, GenerateDisclosureReport, VerifyDisclosureReport } from '@zk-fighter/core'
+import { Button, Callout } from '@zk-freighter/ui'
+import type { AssetCode, GenerateDisclosureReport, VerifyDisclosureReport } from '@zk-freighter/core'
 import { AmountBox, Field, FlowScreen, ResultCard, Segment, type FlowProps } from './MobileFlowPrimitives'
 import { runMobileDisclosureGenerate, runMobileDisclosureVerify } from './mobile-runtime'
 import { authorityPayloadHex, firstUnspentNote, reportStatus } from './mobile-flow-helpers'

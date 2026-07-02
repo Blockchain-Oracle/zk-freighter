@@ -2,7 +2,7 @@
 
 ## Scope
 
-Reality check for whether ZK Fighter can offer a one-click CCTP bridge where USDC arrives on Stellar and is shielded into the Nethermind privacy pool atomically.
+Reality check for whether ZK Freighter can offer a one-click CCTP bridge where USDC arrives on Stellar and is shielded into the Nethermind privacy pool atomically.
 
 Locked product decision from founder: safe MVP bridge scope is **two-step bridge then shield**. This brief only evaluates whether an atomic option is real enough to research/spike later.
 

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { CctpBridgeReport } from '@zk-fighter/core'
+import type { CctpBridgeReport } from '@zk-freighter/core'
 import {
   bridgeResumeStorageKey,
   loadBridgeResumeBurnHash,

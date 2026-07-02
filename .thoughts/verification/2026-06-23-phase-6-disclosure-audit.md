@@ -9,9 +9,9 @@ Phase 6 implements a scoped, user-held disclosure artifact using Nethermind's di
 ## Artifacts Checked
 
 - `.thoughts/handoffs/2026-06-22-codex-build-prompts.md` Prompt 7.
-- `.thoughts/plans/2026-06-22-zk-fighter-implementation-plan.md` Phase 6.
-- `.thoughts/specs/2026-06-22-zk-fighter-product-spec.md` disclosure requirements.
-- `.thoughts/stories/2026-06-22-zk-fighter-mvp-stories.md` Story 12.
+- `.thoughts/plans/2026-06-22-zk-freighter-implementation-plan.md` Phase 6.
+- `.thoughts/specs/2026-06-22-zk-freighter-product-spec.md` disclosure requirements.
+- `.thoughts/stories/2026-06-22-zk-freighter-mvp-stories.md` Story 12.
 - `.thoughts/design/screens/2026-06-21-compliance.md`.
 - `reference/stellar-private-payments/docs/src/disclosure.md`.
 - `packages/core/src/disclosure.ts`.
@@ -27,7 +27,7 @@ Phase 6 implements a scoped, user-held disclosure artifact using Nethermind's di
 - Scoped disclosure preferred over full viewing key: implemented through Nethermind `generateSelectiveDisclosure`; full viewing-key export is intentionally disabled in the UI.
 - Artifact must be read-only and not grant spend authority: verifier rejects secret/spend-shaped fields and reports a read-only check.
 - Reviewer/auditor verification flow: implemented as paste-and-verify UI backed by `verifySelectiveDisclosure`.
-- ZK Fighter cannot disclose on the user's behalf: visible UI copy states this boundary.
+- ZK Freighter cannot disclose on the user's behalf: visible UI copy states this boundary.
 - No fake auditor verification: browser evidence used a generated real artifact and real Nethermind verifier checks.
 
 ## Acceptance Criteria Coverage
@@ -55,7 +55,7 @@ Phase 6 implements a scoped, user-held disclosure artifact using Nethermind's di
 ## Gaps And Risks
 
 - `selectiveDisclosure_1` key provenance is local/testnet/off-chain only, not a trusted mainnet ceremony.
-- Activity summary fields in the ZK Fighter wrapper are owner-supplied context; the cryptographic verifier proves receipt proof/context/root freshness and note ownership, not independent business semantics of every label.
+- Activity summary fields in the ZK Freighter wrapper are owner-supplied context; the cryptographic verifier proves receipt proof/context/root freshness and note ownership, not independent business semantics of every label.
 - UI does not yet provide download/QR/share-link history for disclosure artifacts.
 
 ## Follow-ups

@@ -1,5 +1,5 @@
-import { NETWORKS, type NetworkKey, type PasskeyEnvelope, type WalletIdentity } from '@zk-fighter/core'
-import { BoundaryBadge, Segmented, truncateMiddle, useTheme } from '@zk-fighter/ui'
+import { NETWORKS, type NetworkKey, type PasskeyEnvelope, type WalletIdentity } from '@zk-freighter/core'
+import { BoundaryBadge, Segmented, truncateMiddle, useTheme } from '@zk-freighter/ui'
 import { requestPrivateEngineStorageReset } from '../privateEngineStorage'
 import type { WalletScreen } from './screens'
 import type { CSSProperties, ReactNode } from 'react'

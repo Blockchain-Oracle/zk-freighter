@@ -5,8 +5,8 @@ import {
   type PasskeyEnvelope,
   type PasskeySupportReport,
   type WalletIdentity,
-} from '@zk-fighter/core'
-import { Button, Callout } from '@zk-fighter/ui'
+} from '@zk-freighter/core'
+import { Button, Callout } from '@zk-freighter/ui'
 import { passkeyErrorText } from '../app-helpers'
 
 interface PasskeySettingsProps {
@@ -43,7 +43,7 @@ export function PasskeySettings({ identity, passkeyEnvelope, onPasskeyEnvelopeCh
       // Computed key keeps the secret-scanner happy (no literal `mnemonic:` assignment).
       ['mnemonic']: identity.mnemonic,
       userName: identity.stellarPublicKey,
-      displayName: 'ZK Fighter seed wallet',
+      displayName: 'ZK Freighter seed wallet',
     })
     if (!envelope.ok) {
       setStatus({ tone: 'warn', text: passkeyErrorText(envelope.error) })

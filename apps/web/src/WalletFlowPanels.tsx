@@ -1,4 +1,4 @@
-import type { NetworkKey, WalletIdentity } from '@zk-fighter/core'
+import type { NetworkKey, WalletIdentity } from '@zk-freighter/core'
 import { DemoEvidencePanel } from './DemoEvidencePanel'
 import { ProofStatusPanel } from './ProofStatusPanel'
 import { TamperedProofPanel } from './TamperedProofPanel'

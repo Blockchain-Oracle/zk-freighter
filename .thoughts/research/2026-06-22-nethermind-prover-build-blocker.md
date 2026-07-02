@@ -60,7 +60,7 @@ PUBLIC_URL=/ CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse \
 
 `trunk build` completed and produced the browser JS/WASM runtime under `reference/stellar-private-payments/dist/js`.
 
-## ZK Fighter Staging
+## ZK Freighter Staging
 
 `pnpm prover:stage` now stages the reference runtime layout into `apps/web/public`:
 
@@ -77,7 +77,7 @@ Smoke target: `http://localhost:5173/` in system Chrome through Playwright.
 Observed:
 
 - Created a Phase 1 wallet and reached the receive view.
-- Ran the ZK Fighter readiness panel.
+- Ran the ZK Freighter readiness panel.
 - Readiness status: `ready`.
 - Proof status: `Not generated`.
 - Direct `new Worker('/js/prover-worker.js', { type: 'module' })` raised no browser errors.
@@ -93,7 +93,7 @@ Observed:
 
 ## Dry Deposit Proof Attempt
 
-ZK Fighter now calls the exported Nethermind WebClient deposit path from the Phase 2 panel:
+ZK Freighter now calls the exported Nethermind WebClient deposit path from the Phase 2 panel:
 
 - derive and save Nethermind privacy keys from the Phase 1 key-derivation signature.
 - call `executeDeposit` for the deployed testnet XLM pool.
@@ -137,6 +137,6 @@ This is proof-generation evidence only. It is not a shield transaction and does 
 
 The prior build blocker is cleared for asset generation, browser runtime initialization, ASP membership insertion for a smoke wallet, and observed client-side proof generation.
 
-The remaining boundary is transaction submission and on-chain proof acceptance. ZK Fighter has not yet submitted a pool `transact` call for shield/deposit, private send, or unshield.
+The remaining boundary is transaction submission and on-chain proof acceptance. ZK Freighter has not yet submitted a pool `transact` call for shield/deposit, private send, or unshield.
 
 Do not claim accepted proof, shield, private send, or unshield success from this checkpoint alone.

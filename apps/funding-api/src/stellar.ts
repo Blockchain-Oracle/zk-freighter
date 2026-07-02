@@ -1,6 +1,6 @@
 import { Asset, Horizon, Keypair, Operation, TransactionBuilder } from '@stellar/stellar-sdk'
 
-import { getNetworkConfig, type AssetCode, type FundingAssetReport, type NetworkKey } from '@zk-fighter/core'
+import { getNetworkConfig, type AssetCode, type FundingAssetReport, type NetworkKey } from '@zk-freighter/core'
 import type { FundingConfig } from './config.js'
 
 const txTimeoutSeconds = 30

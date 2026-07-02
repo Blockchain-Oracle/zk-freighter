@@ -1,7 +1,7 @@
 import React from 'react'
 import { createRoot } from 'react-dom/client'
 import '../../src/runtime-env'
-import '@zk-fighter/ui/theme.css'
+import '@zk-freighter/ui/theme.css'
 
 import { ExtensionApp } from '../../src/ExtensionApp'
 

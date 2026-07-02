@@ -1,4 +1,4 @@
-import type { ProofStep, ProofStepState, RingState } from '@zk-fighter/ui'
+import type { ProofStep, ProofStepState, RingState } from '@zk-freighter/ui'
 
 // Maps the real prover + submit heartbeat onto a fixed, honest set of UI phases,
 // shared by every proving flow (shield / send / unshield). Progress only advances

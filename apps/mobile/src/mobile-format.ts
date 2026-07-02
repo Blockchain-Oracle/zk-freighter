@@ -1,4 +1,4 @@
-import type { AssetCode } from '@zk-fighter/core'
+import type { AssetCode } from '@zk-freighter/core'
 
 const stroopsPerUnit = 10_000_000n
 

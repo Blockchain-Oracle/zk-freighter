@@ -9,9 +9,9 @@ The implementation matches the intended architecture: optional passkey unlock wr
 ## Artifacts Checked
 
 - `.thoughts/handoffs/2026-06-22-codex-build-prompts.md` Prompt 8.
-- `.thoughts/plans/2026-06-22-zk-fighter-implementation-plan.md` Phase 7.
-- `.thoughts/specs/2026-06-22-zk-fighter-product-spec.md` R2 / A7.
-- `.thoughts/stories/2026-06-22-zk-fighter-mvp-stories.md` S13.
+- `.thoughts/plans/2026-06-22-zk-freighter-implementation-plan.md` Phase 7.
+- `.thoughts/specs/2026-06-22-zk-freighter-product-spec.md` R2 / A7.
+- `.thoughts/stories/2026-06-22-zk-freighter-mvp-stories.md` S13.
 - `.thoughts/research/2026-06-21-pov-passkey-determinism-truth.md`.
 - `.thoughts/research/2026-06-21-passkey-prf.md`.
 - `.thoughts/research/2026-06-21-stellar-passkey-accounts.md`.

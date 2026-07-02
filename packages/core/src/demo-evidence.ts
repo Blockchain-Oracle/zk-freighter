@@ -123,7 +123,7 @@ export const phase8CctpBridgeEvidence = {
   poolContractId: 'CCY6R2BJQ2LAYINOZZLDLHJCWRRPVQNRTWEWCWO7FIDD3BRDQJCAOHKY',
   boundaryCopy: [
     'The CCTP bridge leg is public: approval, burn, attestation, and Stellar mint are visible.',
-    'Privacy starts after the separate ZK Fighter USDC shield/deposit transaction lands.',
+    'Privacy starts after the separate ZK Freighter USDC shield/deposit transaction lands.',
     'Atomic bridge-and-shield is deferred until a custom adapter passes real tests.',
   ],
   transactions: [
@@ -172,7 +172,7 @@ export const phase8CctpBridgeEvidence = {
       ledger: 0,
       createdAtUtc: '2026-06-23T22:57:00Z',
       amount: 'ASP leaf',
-      sourceAccount: 'ZK Fighter testnet account',
+      sourceAccount: 'ZK Freighter testnet account',
       feeChargedStroops: 'recorded in explorer',
     },
     {
@@ -206,7 +206,7 @@ export const phase8CctpBridgeEvidence = {
 
 export function phase4UsdcDemoDigest(evidence: DemoEvidenceFlow = phase4UsdcDemoEvidence): string {
   return [
-    `ZK Fighter ${evidence.asset} evidence (${evidence.network}, ${evidence.recordedAtUtc})`,
+    `ZK Freighter ${evidence.asset} evidence (${evidence.network}, ${evidence.recordedAtUtc})`,
     `Pool: ${evidence.poolContractId}`,
     `ASP: ${evidence.aspMembershipContractId}`,
     ...evidence.transactions.map(
@@ -218,7 +218,7 @@ export function phase4UsdcDemoDigest(evidence: DemoEvidenceFlow = phase4UsdcDemo
 
 export function phase8BridgeDemoDigest(evidence: BridgeEvidenceFlow = phase8CctpBridgeEvidence): string {
   return [
-    `ZK Fighter CCTP evidence (${evidence.sourceNetwork} -> ${evidence.destinationNetwork}, ${evidence.recordedAtUtc})`,
+    `ZK Freighter CCTP evidence (${evidence.sourceNetwork} -> ${evidence.destinationNetwork}, ${evidence.recordedAtUtc})`,
     `Destination: ${evidence.destinationAccount}`,
     `USDC pool: ${evidence.poolContractId}`,
     ...evidence.transactions.map((tx) => `${tx.title}: ${tx.amount}, tx ${tx.txHash}, ${tx.explorerUrl}`),

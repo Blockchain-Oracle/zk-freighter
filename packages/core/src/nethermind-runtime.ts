@@ -269,7 +269,7 @@ async function acquireRuntimeLock(key: string): Promise<RuntimeLock> {
 
   const lock = await acquired
   if (!lock) {
-    throw new Error('ZKF_RUNTIME_BUSY: another ZK Fighter window is using the local private database.')
+    throw new Error('ZKF_RUNTIME_BUSY: another ZK Freighter window is using the local private database.')
   }
   return lock
 }

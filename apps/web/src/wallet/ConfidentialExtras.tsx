@@ -7,8 +7,8 @@ import {
   type AddressBookEntry,
   type IncomingHistoryEntry,
   type NetworkKey,
-} from '@zk-fighter/core'
-import { truncateMiddle } from '@zk-fighter/ui'
+} from '@zk-freighter/core'
+import { truncateMiddle } from '@zk-freighter/ui'
 
 function formatUnits(value: bigint, decimals: number): string {
   const base = 10n ** BigInt(decimals)

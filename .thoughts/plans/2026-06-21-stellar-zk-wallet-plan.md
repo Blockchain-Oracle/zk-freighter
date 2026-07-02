@@ -1,8 +1,8 @@
-# Plan: ZK Fighter privacy-by-default ZK wallet for Stellar
+# Plan: ZK Freighter privacy-by-default ZK wallet for Stellar
 
 > **Superseded active-build note, 2026-06-24:** keep this older v3 plan as historical context only. The current extension direction is QuickShield + bridge companion, not a Freighter/Wallets Kit signing wallet.
 
-> One line (honest framing): **ZK Fighter** is a **privacy-by-default**, self-custody wallet for **shielded** payments on Stellar — your identity is your private keys; the only public moments are putting money in (shield) and taking it out (unshield). We build the privacy layer, NOT a duplicate general-purpose public wallet. Built for "Stellar Hacks: Real-World ZK" (deadline 2026-06-29 19:00 UTC).
+> One line (honest framing): **ZK Freighter** is a **privacy-by-default**, self-custody wallet for **shielded** payments on Stellar — your identity is your private keys; the only public moments are putting money in (shield) and taking it out (unshield). We build the privacy layer, NOT a duplicate general-purpose public wallet. Built for "Stellar Hacks: Real-World ZK" (deadline 2026-06-29 19:00 UTC).
 >
 > v3 — corrected to the founder's point of view: privacy-by-default (no dual public wallet), seed-phrase onboarding is the DEFAULT with passkey OPTIONAL, NO recovery secrets, mainnet-capable with network-as-config, and NO assumed positioning/headline (that is the founder's to set).
 
@@ -17,7 +17,7 @@ All verified in prior research (see `.thoughts/research/` + `docs/VERIFIED-FACTS
 1. **Privacy-by-default.** We build the privacy layer only. We do NOT rebuild general public-wallet functionality (users have Freighter etc. for that). The unavoidable public edges are shield-in / unshield-out.
 2. Real ZK — reuse the Nethermind pool; our novelty = the privacy wallet experience + compliance + CCTP-to-shield flow.
 3. Shield **both USDC and XLM** (one pool per asset).
-4. **Brand/product name:** ZK Fighter.
+4. **Brand/product name:** ZK Freighter.
 5. **Seed phrase is the DEFAULT onboarding** (create new / import). **Passkey is OPTIONAL** (deterministic key derivation via WebAuthn PRF; the same wallet returns only when the passkey credential is *synced* within one ecosystem). **NO recovery secrets** — lose your phrase, it's gone.
 6. **Web app first, browser extension second** (extension is the riskier surface for in-browser proving + passkey).
 7. **Build mainnet-capable.** Network (testnet ↔ mainnet) is a pure **config toggle** (RPC, network passphrase, per-network contract IDs) — no code change. **Aim to demo on mainnet.** Testnet stays available for dev.

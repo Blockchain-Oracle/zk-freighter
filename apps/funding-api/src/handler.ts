@@ -1,6 +1,6 @@
 import { Keypair, StrKey } from '@stellar/stellar-sdk'
 
-import type { AssetCode, FundingApiReport, FundingAssetReport, NetworkKey } from '@zk-fighter/core'
+import type { AssetCode, FundingApiReport, FundingAssetReport, NetworkKey } from '@zk-freighter/core'
 import type { FundingConfig } from './config.js'
 import { fundAddress, fundingStatus } from './stellar.js'
 import type { FundingStore } from './store.js'

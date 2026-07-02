@@ -1,9 +1,9 @@
-# Plan: ZK Fighter implementation
+# Plan: ZK Freighter implementation
 
 ## Inputs
 
-- Spec: `.thoughts/specs/2026-06-22-zk-fighter-product-spec.md`
-- Stories: `.thoughts/stories/2026-06-22-zk-fighter-mvp-stories.md`
+- Spec: `.thoughts/specs/2026-06-22-zk-freighter-product-spec.md`
+- Stories: `.thoughts/stories/2026-06-22-zk-freighter-mvp-stories.md`
 - Quality profile: `.thoughts/quality/2026-06-22-project-quality-profile.md`
 - Research index: `.thoughts/research/2026-06-21-00-INDEX-build-readiness.md`
 - Validation gates: `.thoughts/research/2026-06-22-pre-spec-validation-gates.md`
@@ -37,7 +37,7 @@ Current repo reality after Phase 0:
 - Use the Nethermind privacy-pool engine and committed proving keys. Do not write new circuits for MVP.
 - Testnet is the first working network.
 - Mainnet is config-gated from the start but not used for irreversible deploy/spend without explicit founder approval.
-- Bridge scope is the safe two-step flow: public CCTP bridge, then separate ZK Fighter shield.
+- Bridge scope is the safe two-step flow: public CCTP bridge, then separate ZK Freighter shield.
 - Atomic bridge-and-shield is an experimental spike only until a custom adapter passes real tests.
 - Local fixtures are allowed in unit tests. The judged path must never use mocked proofs, balances, bridge state, or transaction hashes.
 
@@ -276,7 +276,7 @@ No fake hashes, balances, proof success, or note discovery. Local tests may use 
 
 - unit tests for amount/asset routing and error mapping.
 - valid proof accepted by testnet contract.
-- private transfer between two ZK Fighter identities.
+- private transfer between two ZK Freighter identities.
 - unshield to public address.
 - tampered proof rejection or faithful rejection simulation.
 - evidence log with hashes/explorer links/balances.
@@ -392,14 +392,14 @@ A user can receive directly without publishing and can separately opt into publi
 
 ### Goal
 
-Give the user a credible read-only disclosure path without turning ZK Fighter into a custodian or monitor.
+Give the user a credible read-only disclosure path without turning ZK Freighter into a custodian or monitor.
 
 ### Work
 
 - Implement scoped disclosure artifact if supported by the reused engine path.
 - If scoped disclosure cannot be completed, implement demoted full viewing-key export with blunt warnings only if research confirms the semantics.
 - Add reviewer/auditor verification flow.
-- Add copy stating ZK Fighter cannot disclose on the user's behalf.
+- Add copy stating ZK Freighter cannot disclose on the user's behalf.
 
 Files or areas likely affected:
 
@@ -490,7 +490,7 @@ Add cross-chain USDC inflow through the safe two-step bridge flow.
 - Submit Stellar mint/forward step.
 - Show public bridge progress with explorer links.
 - Auto-prompt user to shield newly arrived public Stellar USDC.
-- Execute separate USDC shield transaction through ZK Fighter.
+- Execute separate USDC shield transaction through ZK Freighter.
 
 Files or areas likely affected:
 
@@ -636,7 +636,7 @@ Ship or prove the browser extension without creating a second wallet implementat
 - Run prover in extension page/offscreen document plus dedicated worker.
 - Keep MV3 service worker as coordinator only.
 - Run passkey ceremonies in tab/side panel, not action popup.
-- Build the extension as a ZK Fighter companion for receive, QuickShield, and bridge handoff.
+- Build the extension as a ZK Freighter companion for receive, QuickShield, and bridge handoff.
 - Keep Freighter-style external public-key access and signing disabled unless Abu explicitly reopens public dApp wallet scope.
 
 Files or areas likely affected:

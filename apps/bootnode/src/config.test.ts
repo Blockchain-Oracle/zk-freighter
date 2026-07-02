@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { NETWORKS, privateAspMembershipContractId } from '@zk-fighter/core'
+import { NETWORKS, privateAspMembershipContractId } from '@zk-freighter/core'
 import { readConfig } from './config.js'
 
 describe('bootnode config', () => {

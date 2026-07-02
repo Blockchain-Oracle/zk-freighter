@@ -13,7 +13,7 @@ import {
 
 const horizonUrl = 'https://horizon-testnet.stellar.org'
 const friendbotUrl = 'https://friendbot.stellar.org'
-const defaultFunderPath = join(homedir(), '.config', 'zk-fighter', 'testnet-usdc-funder.json')
+const defaultFunderPath = join(homedir(), '.config', 'zk-freighter', 'testnet-usdc-funder.json')
 const waitMsDefault = 24 * 60 * 1000
 const pollIntervalMsDefault = 30_000
 const txTimeoutSeconds = 30

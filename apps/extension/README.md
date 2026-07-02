@@ -1,6 +1,6 @@
-# ZK Fighter Extension
+# ZK Freighter Extension
 
-WXT browser extension companion for ZK Fighter.
+WXT browser extension companion for ZK Freighter.
 
 The extension is a portable popup wallet surface with local wallet runtime access. It is not a general public dApp signing wallet; external signing and public-key access fail closed unless that product decision changes later.
 

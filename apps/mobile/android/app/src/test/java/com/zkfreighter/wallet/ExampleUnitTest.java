@@ -1,4 +1,4 @@
-package com.zkfighter.wallet;
+package com.zkfreighter.wallet;
 
 import static org.junit.Assert.*;
 

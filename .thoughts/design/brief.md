@@ -1,4 +1,4 @@
-# Designer Start Here: ZK Fighter
+# Designer Start Here: ZK Freighter
 
 This is the handoff file to give a designer or design agent first. It links to the detailed brief, research synthesis, wallet reference wiki, raw source index, and local reference material.
 
@@ -9,10 +9,10 @@ This is the handoff file to give a designer or design agent first. It links to t
    - Covers web, extension, possible mobile app, wallet flows, address formats, public/private boundaries, bridge states, proof states, activity/history, extension scope, mobile scanner/confirmation opportunities, non-goals, and open questions.
 2. `.thoughts/design/designer-agent-prompt.md`
    - Copy-ready prompt for a designer or design agent that must work from the GitHub repo.
-   - Tells the agent to inspect `https://github.com/Blockchain-Oracle/zk-fighter`, clone if possible, and avoid taking visual inspiration from the current UI.
+   - Tells the agent to inspect `https://github.com/Blockchain-Oracle/zk-freighter`, clone if possible, and avoid taking visual inspiration from the current UI.
 3. `.thoughts/wiki/wallet-design-references.md`
    - The design reference wiki.
-   - Maps each ZK Fighter screen or flow to source-inspectable wallets, visual references, and screenshot resources.
+   - Maps each ZK Freighter screen or flow to source-inspectable wallets, visual references, and screenshot resources.
 4. `.thoughts/research/2026-06-25-wallet-ux-reference-research.md`
    - The research synthesis.
    - Separates verified project facts, verified external wallet facts, inferences, unknowns, and things not included.
@@ -22,7 +22,7 @@ This is the handoff file to give a designer or design agent first. It links to t
 
 ## What To Design
 
-Design ZK Fighter as a real wallet product, not a landing page first.
+Design ZK Freighter as a real wallet product, not a landing page first.
 
 Primary surfaces:
 
@@ -46,7 +46,7 @@ Core flows:
 
 ## Reference Paths
 
-Current ZK Fighter UI source to inspect:
+Current ZK Freighter UI source to inspect:
 
 - `apps/web/src/App.tsx`
 - `apps/web/src/WalletFlowPanels.tsx`

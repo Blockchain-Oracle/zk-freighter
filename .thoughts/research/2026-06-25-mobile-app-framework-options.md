@@ -1,8 +1,8 @@
-# Reality Research: ZK Fighter Mobile App Framework Options
+# Reality Research: ZK Freighter Mobile App Framework Options
 
 ## Scope
 
-Research the best path for a real Android and iOS ZK Fighter app without starting implementation. This research is grounded in the current repo and focuses on framework/runtime fit, ZK prover compatibility, secure storage, bridge constraints, passkeys, install/distribution without stores, and what must be proven before we commit to a mobile build lane.
+Research the best path for a real Android and iOS ZK Freighter app without starting implementation. This research is grounded in the current repo and focuses on framework/runtime fit, ZK prover compatibility, secure storage, bridge constraints, passkeys, install/distribution without stores, and what must be proven before we commit to a mobile build lane.
 
 This does not replace the current web app or WXT extension track. It evaluates the mobile track as a future product surface.
 
@@ -12,8 +12,8 @@ This does not replace the current web app or WXT extension track. It evaluates t
 
 - `README.md`
 - `AGENTS.md`
-- `.thoughts/specs/2026-06-22-zk-fighter-product-spec.md`
-- `.thoughts/stories/2026-06-22-zk-fighter-mvp-stories.md`
+- `.thoughts/specs/2026-06-22-zk-freighter-product-spec.md`
+- `.thoughts/stories/2026-06-22-zk-freighter-mvp-stories.md`
 - `.thoughts/quality/2026-06-22-project-quality-profile.md`
 - `.thoughts/research/2026-06-25-mainnet-readiness.md`
 - `.thoughts/research/2026-06-25-multichain-cctp-bridge.md`
@@ -48,7 +48,7 @@ This does not replace the current web app or WXT extension track. It evaluates t
 
 ## Verified Facts
 
-### Current ZK Fighter architecture
+### Current ZK Freighter architecture
 
 - The product is already a React/Vite web app plus a WXT MV3 extension, sharing wallet and proof logic through `packages/core`.
 - `packages/core` depends on browser-style primitives:
@@ -62,7 +62,7 @@ This does not replace the current web app or WXT extension track. It evaluates t
 - Product decisions remain:
   - seed phrase is the default recovery path.
   - passkey is optional only.
-  - `zkf1...` private receive code stays internal to ZK Fighter.
+  - `zkf1...` private receive code stays internal to ZK Freighter.
   - shield/deposit, unshield/withdraw, and bridge arrival are public boundaries.
   - extension is a ZK companion, not a general public dApp signing wallet.
   - no fake proof, balance, bridge, or transaction claims.
@@ -89,18 +89,18 @@ This does not replace the current web app or WXT extension track. It evaluates t
 
 - Tauri 2.0 supports mobile targets for iOS and Android.
 - Tauri uses a web frontend with a Rust-native core and OS WebViews.
-- This can be attractive if ZK Fighter later wants Rust-native cryptography/prover integration, but it introduces a new Rust/mobile runtime track beyond the current React/Vite/pnpm app architecture.
+- This can be attractive if ZK Freighter later wants Rust-native cryptography/prover integration, but it introduces a new Rust/mobile runtime track beyond the current React/Vite/pnpm app architecture.
 
 ### Bridge and wallet-connectivity facts
 
-- The current ZK Fighter CCTP route has proven web browser wallet behavior. Mobile app runtimes should not assume injected EVM providers.
+- The current ZK Freighter CCTP route has proven web browser wallet behavior. Mobile app runtimes should not assume injected EVM providers.
 - MetaMask Connect supports React Native multichain flows with EVM and Solana support, but it needs React Native-specific setup and polyfills.
-- Circle Bridge Kit abstracts CCTP bridge operations across adapters such as Viem, Ethers, Solana, and Circle Wallets. It is a candidate for future mobile bridge integration, not proof that ZK Fighter mobile bridge already works.
-- WalletConnect has React Native wallet SDK resources, but the exact ZK Fighter bridge UX and external wallet handoff still need a runtime spike.
+- Circle Bridge Kit abstracts CCTP bridge operations across adapters such as Viem, Ethers, Solana, and Circle Wallets. It is a candidate for future mobile bridge integration, not proof that ZK Freighter mobile bridge already works.
+- WalletConnect has React Native wallet SDK resources, but the exact ZK Freighter bridge UX and external wallet handoff still need a runtime spike.
 
 ### Passkey facts
 
-- The existing ZK Fighter passkey code uses browser WebAuthn PRF APIs.
+- The existing ZK Freighter passkey code uses browser WebAuthn PRF APIs.
 - WebAuthn PRF support in a native mobile shell is not proven by the current repo.
 - Passkey must remain optional on mobile until PRF behavior is proven on physical iOS and Android devices or replaced with a native module strategy that has equivalent tested behavior.
 
@@ -120,7 +120,7 @@ This does not replace the current web app or WXT extension track. It evaluates t
 
 ### Recommended first path: Capacitor mobile shell
 
-Capacitor is the strongest first mobile path because ZK Fighter is already browser-prover heavy. The biggest technical risk is not UI; it is whether the Nethermind browser/WASM runtime, workers, proof assets, Web Crypto, and memory profile behave correctly on real iOS and Android WebViews. Capacitor gives us the closest runtime to the already-working web app while still producing installable Android and iOS apps.
+Capacitor is the strongest first mobile path because ZK Freighter is already browser-prover heavy. The biggest technical risk is not UI; it is whether the Nethermind browser/WASM runtime, workers, proof assets, Web Crypto, and memory profile behave correctly on real iOS and Android WebViews. Capacitor gives us the closest runtime to the already-working web app while still producing installable Android and iOS apps.
 
 The right first mobile milestone is not a redesigned native app. It is a proof-bearing shell:
 
@@ -177,7 +177,7 @@ These are research/verification spikes, not product claims.
 ### Spike 1: Capacitor shell viability
 
 - Add a temporary Capacitor app wrapper around the existing web build.
-- Load the current ZK Fighter UI on Android and iOS.
+- Load the current ZK Freighter UI on Android and iOS.
 - Confirm static prover assets resolve from the app runtime.
 - Confirm `fetch`, `crypto.subtle`, `crypto.getRandomValues`, `btoa`, `atob`, workers, and dynamic `/js/web.js` loading.
 - Record device/OS/build evidence.
@@ -250,4 +250,4 @@ Pass condition: optional passkey wrapper works on physical iOS and Android witho
 
 ## Bottom Line
 
-The first mobile research-backed move should be **Capacitor proof-of-viability**, not a full native rewrite. ZK Fighter's hard constraint is the browser/WASM proving stack, not generic mobile UI. Capacitor gives the highest reuse and the shortest path to honest device evidence. Expo/React Native remains a serious later option if we decide native polish is worth the adapter and prover-runtime work.
+The first mobile research-backed move should be **Capacitor proof-of-viability**, not a full native rewrite. ZK Freighter's hard constraint is the browser/WASM proving stack, not generic mobile UI. Capacitor gives the highest reuse and the shortest path to honest device evidence. Expo/React Native remains a serious later option if we decide native polish is worth the adapter and prover-runtime work.

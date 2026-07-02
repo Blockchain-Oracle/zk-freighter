@@ -2,16 +2,16 @@
 
 ## Scope
 
-Decide whether ZK Fighter can expose atomic bridge-and-shield as an MVP or experimental user mode after the real Phase 8 CCTP bridge-then-shield acceptance run.
+Decide whether ZK Freighter can expose atomic bridge-and-shield as an MVP or experimental user mode after the real Phase 8 CCTP bridge-then-shield acceptance run.
 
-This checks current Circle CCTP docs, Stellar/Soroban ZK/auth docs, local Circle CCTP source, local Nethermind privacy-pool source, and prior ZK Fighter research. It does not implement a contract adapter.
+This checks current Circle CCTP docs, Stellar/Soroban ZK/auth docs, local Circle CCTP source, local Nethermind privacy-pool source, and prior ZK Freighter research. It does not implement a contract adapter.
 
 ## Sources Checked
 
 - Project scope:
   - `README.md`
-  - `.thoughts/specs/2026-06-22-zk-fighter-product-spec.md`
-  - `.thoughts/plans/2026-06-22-zk-fighter-implementation-plan.md`
+  - `.thoughts/specs/2026-06-22-zk-freighter-product-spec.md`
+  - `.thoughts/plans/2026-06-22-zk-freighter-implementation-plan.md`
   - `.thoughts/handoffs/2026-06-22-codex-build-prompts.md`
 - Prior research:
   - `.thoughts/research/2026-06-22-atomic-bridge-shield-reality.md`
@@ -50,7 +50,7 @@ This checks current Circle CCTP docs, Stellar/Soroban ZK/auth docs, local Circle
 ### Phase 8 safe bridge is already proven
 
 - Phase 8 recorded a real Sepolia USDC approval, CCTP burn, Iris attestation, Stellar testnet `mint_and_forward`, public USDC balance, ASP insertion, and separate USDC shield/deposit in `.thoughts/research/spikes-log.md`.
-- The current safe MVP bridge is therefore not speculative: it is public CCTP bridge arrival followed by a separate ZK Fighter USDC shield/deposit.
+- The current safe MVP bridge is therefore not speculative: it is public CCTP bridge arrival followed by a separate ZK Freighter USDC shield/deposit.
 
 ### Stock Circle `CctpForwarder` still only forwards tokens
 
@@ -83,7 +83,7 @@ This checks current Circle CCTP docs, Stellar/Soroban ZK/auth docs, local Circle
 - In the current EVM -> Stellar token flow, the message recipient is `TokenMessengerMinter`; the burn body contains `mint_recipient`.
 - A forwarder-style custom adapter could plausibly replace Circle's stock forwarder as the `mint_recipient` and `destination_caller`, call `MessageTransmitter.receive_message`, receive minted USDC, then call the privacy pool `transact` with itself as `sender`.
 - Stellar's authorization docs describe contract-invoker authorization and authorized sub-contract calls, so a contract that directly invokes the pool may be able to satisfy `sender.require_auth()` for itself and allow the downstream token transfer.
-- That authorization path still needs a local adapter test because ZK Fighter has no contract proving adapter -> pool auth today.
+- That authorization path still needs a local adapter test because ZK Freighter has no contract proving adapter -> pool auth today.
 
 ### Atomic means one destination-chain transaction, not one cross-chain transaction
 
@@ -96,7 +96,7 @@ This checks current Circle CCTP docs, Stellar/Soroban ZK/auth docs, local Circle
 
 - The OpenZeppelin/SDF Confidential Tokens preview is relevant future wallet surface area, but it is testnet-only, unaudited, and distinct from the Nethermind privacy pool.
 - Confidential Tokens hide balances and amounts while keeping account addresses visible.
-- ZK Fighter's Phase 9 question is specifically CCTP arrival into the existing privacy-pool shield path. Confidential Tokens are not a drop-in atomic bridge-and-shield solution for the current MVP.
+- ZK Freighter's Phase 9 question is specifically CCTP arrival into the existing privacy-pool shield path. Confidential Tokens are not a drop-in atomic bridge-and-shield solution for the current MVP.
 
 ## Inferences
 
@@ -148,7 +148,7 @@ Atomic mode needs all of these before it can move beyond hidden/deferred:
 
 Atomic bridge-and-shield is **deferred**.
 
-Do not expose atomic bridge-and-shield as a normal MVP mode. Do not claim the bridge itself is private. Do not claim the stock Circle forwarder shields into ZK Fighter.
+Do not expose atomic bridge-and-shield as a normal MVP mode. Do not claim the bridge itself is private. Do not claim the stock Circle forwarder shields into ZK Freighter.
 
 The accepted Phase 9 outcome is: keep the proven safe MVP flow, document the custom adapter proof gates, and move to Phase 10 submission hardening unless Abu explicitly chooses to fund and time-box a separate adapter spike.
 

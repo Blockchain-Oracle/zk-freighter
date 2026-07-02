@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { ArrowDownToLine, RefreshCw, Send, Shield, WalletCards } from 'lucide-react'
-import type { AssetCode } from '@zk-fighter/core'
-import { Callout, PublicCard, ShieldedCard } from '@zk-fighter/ui'
+import type { AssetCode } from '@zk-freighter/core'
+import { Callout, PublicCard, ShieldedCard } from '@zk-freighter/ui'
 
 import type { ActivityRecord } from './activity-store'
 import { AssetMark } from './asset-marks'

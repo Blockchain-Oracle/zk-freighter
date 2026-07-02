@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { Copy } from 'lucide-react'
-import { BoundaryBadge } from '@zk-fighter/ui'
-import type { AssetCode, NetworkKey, PublicBalancesReport, WalletIdentity } from '@zk-fighter/core'
+import { BoundaryBadge } from '@zk-freighter/ui'
+import type { AssetCode, NetworkKey, PublicBalancesReport, WalletIdentity } from '@zk-freighter/core'
 import type { MobileRoute, MobileShieldedBalanceCache } from './mobile-storage'
 import { formatAssetAmount, truncateMiddle } from './mobile-format'
 

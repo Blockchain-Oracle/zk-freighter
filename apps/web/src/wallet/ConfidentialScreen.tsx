@@ -11,8 +11,8 @@ import {
   type ConfidentialSubmitReport,
   type NetworkKey,
   type WalletIdentity,
-} from '@zk-fighter/core'
-import { AmountInput, BoundaryBadge, Button, Callout, ProvingRing, Segmented, truncateMiddle } from '@zk-fighter/ui'
+} from '@zk-freighter/core'
+import { AmountInput, BoundaryBadge, Button, Callout, ProvingRing, Segmented, truncateMiddle } from '@zk-freighter/ui'
 import { AddressBookPicker, IncomingHistory } from './ConfidentialExtras'
 import type { WalletScreen } from './screens'
 
@@ -155,23 +155,23 @@ export function ConfidentialScreen({ identity, network }: ConfidentialScreenProp
   async function dispatch(kind: RunKind): Promise<ConfidentialSubmitReport | null> {
     if (kind === 'merge') return submitConfidentialMerge({ identity, network })
     if (kind === 'register') {
-      const [{ submitConfidentialRegister }, circuit] = await Promise.all([import('@zk-fighter/core/confidential/register'), loadCircuit('circuit_register')])
+      const [{ submitConfidentialRegister }, circuit] = await Promise.all([import('@zk-freighter/core/confidential/register'), loadCircuit('circuit_register')])
       return submitConfidentialRegister({ identity, network, circuit: circuit as never })
     }
     if (!parsed.ok) return null
     if (kind === 'deposit') return submitConfidentialDeposit({ identity, network, amount: parsed.value })
     if (kind === 'withdraw') {
-      const [{ submitConfidentialWithdraw }, circuit] = await Promise.all([import('@zk-fighter/core/confidential/withdraw'), loadCircuit('circuit_withdraw')])
+      const [{ submitConfidentialWithdraw }, circuit] = await Promise.all([import('@zk-freighter/core/confidential/withdraw'), loadCircuit('circuit_withdraw')])
       return submitConfidentialWithdraw({ identity, network, amount: parsed.value, to: recipient.trim(), circuit: circuit as never })
     }
-    const [{ submitConfidentialTransfer }, circuit] = await Promise.all([import('@zk-fighter/core/confidential/transfer'), loadCircuit('circuit_transfer')])
+    const [{ submitConfidentialTransfer }, circuit] = await Promise.all([import('@zk-freighter/core/confidential/transfer'), loadCircuit('circuit_transfer')])
     return submitConfidentialTransfer({ identity, network, amount: parsed.value, to: recipient.trim(), circuit: circuit as never })
   }
 
   async function checkIncoming() {
     setScan({ status: 'scanning', credited: 0n, count: 0 })
     try {
-      const { scanConfidentialIncoming } = await import('@zk-fighter/core/confidential/receive')
+      const { scanConfidentialIncoming } = await import('@zk-freighter/core/confidential/receive')
       const result = await scanConfidentialIncoming({ identity, network })
       setScan({ status: 'done', credited: result.creditedTotal, count: result.receipts.length })
       if (result.receipts.length > 0) setTick((value) => value + 1)

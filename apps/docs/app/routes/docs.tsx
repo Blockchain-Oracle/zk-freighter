@@ -23,7 +23,7 @@ const clientLoader = browserCollections.docs.createClientLoader({
   component({ toc, frontmatter, default: Mdx }) {
     return (
       <DocsPage toc={toc}>
-        <title>{`${frontmatter.title} — ZK Fighter Docs`}</title>
+        <title>{`${frontmatter.title} — ZK Freighter Docs`}</title>
         <meta name="description" content={frontmatter.description} />
         <DocsTitle>{frontmatter.title}</DocsTitle>
         <DocsDescription>{frontmatter.description}</DocsDescription>

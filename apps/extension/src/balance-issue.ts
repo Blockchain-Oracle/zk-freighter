@@ -1,4 +1,4 @@
-import { classifyPrivateRuntimeIssue } from '@zk-fighter/core'
+import { classifyPrivateRuntimeIssue } from '@zk-freighter/core'
 
 export interface BalanceIssue {
   readonly title: string

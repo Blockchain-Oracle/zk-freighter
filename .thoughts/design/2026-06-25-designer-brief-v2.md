@@ -1,8 +1,8 @@
-# Designer Brief: ZK Fighter Web, Extension, And Mobile Direction
+# Designer Brief: ZK Freighter Web, Extension, And Mobile Direction
 
 ## Purpose
 
-ZK Fighter is a self-custody wallet for shielded XLM and USDC payments on Stellar. The product should make shielded transfers feel understandable and trustworthy without pretending that every blockchain action is hidden.
+ZK Freighter is a self-custody wallet for shielded XLM and USDC payments on Stellar. The product should make shielded transfers feel understandable and trustworthy without pretending that every blockchain action is hidden.
 
 The designer's job is to redesign the current rough web and extension UI into a high-fidelity product experience, and to map a mobile app direction if time allows. The design should be creative and premium, but it must preserve the product's honesty: shield/deposit, unshield/withdraw, and bridge arrival are public boundaries; shielded transfers happen inside the pool.
 
@@ -20,7 +20,7 @@ The prototype may simulate balances, proofs, bridge progress, QR scans, and tran
 
 ## Product Context
 
-ZK Fighter already has:
+ZK Freighter already has:
 
 - `apps/web`: React/Vite web app.
 - `apps/extension`: WXT MV3 extension scaffold.
@@ -77,7 +77,7 @@ Hackathon judge:
 
 ### One wallet, two receive targets
 
-ZK Fighter has two user-facing receive targets:
+ZK Freighter has two user-facing receive targets:
 
 - Private receive code: raw `zkf1...` Bech32m string. This bundles public note key and public encryption key. It is copied and QR encoded as the raw string, not as a Stellar URI. It lets someone pay the user privately inside the pool.
 - Public Stellar address: normal `G...` address. This is for public deposits, fees, bridge arrival, and unshield/withdraw destinations.
@@ -127,7 +127,7 @@ Unshield/withdraw:
 Bridge:
 
 - Public: Ethereum burn, Circle attestation, Stellar mint/forward, public Stellar USDC arrival.
-- Separate shield step: public shield/deposit into ZK Fighter's USDC pool.
+- Separate shield step: public shield/deposit into ZK Freighter's USDC pool.
 
 ### Recovery and auth
 
@@ -390,7 +390,7 @@ Do not design these as MVP product features:
 - Custom gas/fee editor.
 - Arbitrary multi-chain network management.
 - In-wallet dApp browser.
-- Public dApp connect/sign flow for the ZK Fighter extension.
+- Public dApp connect/sign flow for the ZK Freighter extension.
 - Hardware wallet support.
 - Import private key/secret key as a main path.
 - Staking, earn, price charts, or portfolio analytics.

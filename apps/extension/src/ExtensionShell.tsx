@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { ArrowLeft, CircleEllipsis, Home, List, Network, QrCode } from 'lucide-react'
-import { Logo } from '@zk-fighter/ui'
+import { Logo } from '@zk-freighter/ui'
 
 import type { DappWalletStatus } from './dappMessages'
 import { shorten } from './extension-format'

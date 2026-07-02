@@ -1,4 +1,4 @@
-import type { AssetCode, NetworkKey, XlmPrivateSubmitReport } from '@zk-fighter/core'
+import type { AssetCode, NetworkKey, XlmPrivateSubmitReport } from '@zk-freighter/core'
 import { recordWebActivity, type WebActivityBoundary, type WebActivityIntent, type WebActivityRecord } from './webActivityStore'
 
 interface FlowActivityArgs {

@@ -10,7 +10,7 @@ import {
   type ProverArtifactCheck,
   type ProverBenchmarkReport,
   type WalletIdentity,
-} from '@zk-fighter/core'
+} from '@zk-freighter/core'
 import { truncateMiddle } from './app-helpers'
 import { AspInsertSection } from './AspInsertSection'
 import './ProofStatusPanel.css'

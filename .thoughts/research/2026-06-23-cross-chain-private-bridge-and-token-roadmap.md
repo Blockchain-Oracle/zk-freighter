@@ -7,7 +7,7 @@ Capture Abu's 2026-06-23 product idea so future planning does not lose it:
 - A real **cross-chain private bridge** using Stellar's BN254 compatibility to verify proofs that originate in another ecosystem.
 - Future **Confidential Token wallet mode**, where users can add/wrap private token contracts, transfer them, and possibly move between public, confidential, and shielded states.
 
-This was not Phase 8 scope. Phase 8 has since proven the public CCTP bridge, then separate ZK Fighter shield on Stellar. Phase 9 deferred atomic bridge-and-shield until a custom adapter passes real tests.
+This was not Phase 8 scope. Phase 8 has since proven the public CCTP bridge, then separate ZK Freighter shield on Stellar. Phase 9 deferred atomic bridge-and-shield until a custom adapter passes real tests.
 
 Follow-up plan:
 
@@ -15,12 +15,12 @@ Follow-up plan:
 
 ## Why The Current Bridge Is Not A Fully ZK Private Bridge
 
-The current ZK Fighter bridge path is useful and honest, but it is not fully private end-to-end:
+The current ZK Freighter bridge path is useful and honest, but it is not fully private end-to-end:
 
 1. USDC burns publicly on Ethereum Sepolia through Circle CCTP.
 2. Circle Iris attests publicly to the burn.
 3. USDC mints/forwards publicly on Stellar testnet.
-4. ZK Fighter then submits a separate shield transaction into the Stellar privacy pool.
+4. ZK Freighter then submits a separate shield transaction into the Stellar privacy pool.
 
 Privacy starts after the Stellar shield transaction. The bridge leg is public.
 
@@ -58,7 +58,7 @@ This is the current MVP path.
 
 - Value movement: Circle CCTP.
 - Privacy: Stellar privacy pool after arrival.
-- Risk: low, because ZK Fighter does not build bridge security.
+- Risk: low, because ZK Freighter does not build bridge security.
 - Status: accepted on testnet/Sepolia with real approval, burn, Iris, Stellar mint, ASP insertion, and separate USDC shield evidence recorded in `.thoughts/research/spikes-log.md`.
 
 This is not "fully private bridge," but it is a strong real-world flow.
@@ -106,7 +106,7 @@ Confidential Tokens add a second wallet privacy mode:
 - auditor/disclosure/compliance flows are first-class.
 - token state is account-based, not note/pool-based.
 
-Possible future ZK Fighter modes:
+Possible future ZK Freighter modes:
 
 1. **Public wallet plumbing**
    - normal Stellar address.
@@ -136,11 +136,11 @@ Possible future ZK Fighter modes:
 
 After submission hardening, revisit:
 
-- Should ZK Fighter expose both "Confidential Token" and "Shielded Pool" as separate privacy modes?
+- Should ZK Freighter expose both "Confidential Token" and "Shielded Pool" as separate privacy modes?
 - Does "Add token" mean add:
   - a normal SEP-41/SAC token,
   - an OpenZeppelin Confidential Token wrapper,
-  - a ZK Fighter pool asset,
+  - a ZK Freighter pool asset,
   - or all three with clear labels?
 - Can USDC bridge arrival go to:
   - public Stellar USDC only,

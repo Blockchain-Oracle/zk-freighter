@@ -6,8 +6,8 @@ import {
   type PublicDiscoveryLookupReport,
   type PublicDiscoveryPublishReport,
   type XlmNotesReport,
-} from '@zk-fighter/core'
-import type { ThemeName } from '@zk-fighter/ui'
+} from '@zk-freighter/core'
+import type { ThemeName } from '@zk-freighter/ui'
 
 export type MobileRoute =
   | 'home'
@@ -50,14 +50,14 @@ export interface MobileShieldedBalanceCache {
   readonly usdc: XlmNotesReport | null
 }
 
-export const vaultStorageKey = 'zk-fighter:mobile:vault:v1'
-export const walletPublicKeyStorageKey = 'zk-fighter:mobile:wallet-public-key:v1'
-export const networkStorageKey = 'zk-fighter:mobile:network:v1'
-const activityStorageKey = 'zk-fighter:mobile:activity:v1'
-const balanceCachePrefix = 'zk-fighter:mobile:shielded-balance:'
-const discoverStoragePrefix = 'zk-fighter:mobile:discover:v1:'
-const bridgeResumeStoragePrefix = 'zk-fighter:mobile:bridge-resume:v1:'
-export const themeStorageKey = 'zk-fighter:mobile:theme:v1'
+export const vaultStorageKey = 'zk-freighter:mobile:vault:v1'
+export const walletPublicKeyStorageKey = 'zk-freighter:mobile:wallet-public-key:v1'
+export const networkStorageKey = 'zk-freighter:mobile:network:v1'
+const activityStorageKey = 'zk-freighter:mobile:activity:v1'
+const balanceCachePrefix = 'zk-freighter:mobile:shielded-balance:'
+const discoverStoragePrefix = 'zk-freighter:mobile:discover:v1:'
+const bridgeResumeStoragePrefix = 'zk-freighter:mobile:bridge-resume:v1:'
+export const themeStorageKey = 'zk-freighter:mobile:theme:v1'
 const maxRecords = 120
 
 export function getStoredNetwork(): NetworkKey {

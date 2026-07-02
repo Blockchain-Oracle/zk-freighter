@@ -1,4 +1,4 @@
-# Plan: Confidential Token Mode (ZK Fighter Track B / B-P)
+# Plan: Confidential Token Mode (ZK Freighter Track B / B-P)
 
 Architecture-decision gate. The single architecture-blocking unknown is **resolved** (B1 PASSED: our `nargo 1.0.0-beta.11`+`bb 0.87.0` reproduce the on-chain VK byte-for-byte; `noir_js`+`bb.js@0.87.0` prove/verify; bb.js VK == on-chain VK). This plan decides how to build; it does not begin implementation.
 

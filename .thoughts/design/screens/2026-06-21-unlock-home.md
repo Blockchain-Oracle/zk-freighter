@@ -1,6 +1,6 @@
 # Screen cluster spec — Unlock + Home/Portfolio
 
-> Product: **ZK Fighter** (brand locked). Privacy-by-default, self-custody zero-knowledge wallet for **shielded payments on Stellar**. Browser web app first.
+> Product: **ZK Freighter** (brand locked). Privacy-by-default, self-custody zero-knowledge wallet for **shielded payments on Stellar**. Browser web app first.
 >
 > This cluster is the **emotional and conceptual anchor** of the product. The Home screen is where the privacy model gets taught every time the user opens the app — shielded balance is the hero, public balance is the small on-ramp, and the Pending-vs-Spendable split is how we make multi-second ZK proving feel honest instead of broken. Unlock is the daily gate.
 >

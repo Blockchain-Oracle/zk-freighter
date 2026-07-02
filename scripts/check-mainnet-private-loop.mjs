@@ -23,7 +23,7 @@ const cftPath = path.resolve(
 const chromePath = process.env.ZKF_CHROME_PATH ?? (existsSync(cftPath) ? cftPath : '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome')
 const extensionDir = path.resolve('apps/extension/.output/chrome-mv3')
 const walletPath =
-  process.env.ZKF_MAINNET_SMOKE_WALLET_PATH ?? path.join(os.homedir(), '.config', 'zk-fighter', 'mainnet-quickshield-smoke.json')
+  process.env.ZKF_MAINNET_SMOKE_WALLET_PATH ?? path.join(os.homedir(), '.config', 'zk-freighter', 'mainnet-quickshield-smoke.json')
 const password = 'zkf-mainnet-private-loop-test'
 const network = 'mainnet'
 const asset = process.env.ZKF_PRIVATE_LOOP_ASSET === 'USDC' ? 'USDC' : 'XLM'

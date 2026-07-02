@@ -1,6 +1,6 @@
 import { useState, type CSSProperties } from 'react'
-import { generateSeedPhrase } from '@zk-fighter/core'
-import { Button, Logo } from '@zk-fighter/ui'
+import { generateSeedPhrase } from '@zk-freighter/core'
+import { Button, Logo } from '@zk-freighter/ui'
 import { type DappWalletStatus } from './dappMessages'
 
 // The popup's locked surfaces: Import (no vault) and Unlock (vault, locked).
@@ -35,7 +35,7 @@ function Header({ network }: { network: string }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', borderBottom: '1px solid var(--bd)' }}>
       <Logo size={22} />
-      <span style={{ fontWeight: 700, fontSize: 13 }}>ZK Fighter</span>
+      <span style={{ fontWeight: 700, fontSize: 13 }}>ZK Freighter</span>
       <span style={{ marginLeft: 'auto' }}><Pill network={network} /></span>
     </div>
   )

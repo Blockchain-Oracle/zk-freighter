@@ -9,9 +9,9 @@ import {
   type PublicBalancesReport,
   type PublicStellarPaymentReport,
   type WalletIdentity,
-} from '@zk-fighter/core'
+} from '@zk-freighter/core'
 import { useEffect, useState } from 'react'
-import { BoundaryBadge, Button, Segmented, truncateMiddle } from '@zk-fighter/ui'
+import { BoundaryBadge, Button, Segmented, truncateMiddle } from '@zk-freighter/ui'
 import type { ShieldedBalanceState } from './useShieldedBalance'
 import { PrivateFlowScreen, type PrivateFlowConfig } from './PrivateFlowScreen'
 import { formatStroops, stroopsToAmountInput } from './format'

@@ -1,4 +1,4 @@
-import type { DemoFundingRequestReport, DemoFundingStatusReport, PublicBalancesReport } from '@zk-fighter/core'
+import type { DemoFundingRequestReport, DemoFundingStatusReport, PublicBalancesReport } from '@zk-freighter/core'
 import type { ExtensionDemoFundingRequestReport, ExtensionDemoFundingStatusReport, SerializablePublicBalancesReport } from './dappResponses'
 
 export function serializeDemoFundingStatusReport(report: DemoFundingStatusReport): ExtensionDemoFundingStatusReport {

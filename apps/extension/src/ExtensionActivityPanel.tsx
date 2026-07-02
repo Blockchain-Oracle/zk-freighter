@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Segmented } from '@zk-fighter/ui'
-import type { NetworkKey } from '@zk-fighter/core'
+import { Segmented } from '@zk-freighter/ui'
+import type { NetworkKey } from '@zk-freighter/core'
 
 import type { ActivityRecord } from './activity-store'
 import { dappMessageTypes, type ActivityResponse } from './dappMessages'

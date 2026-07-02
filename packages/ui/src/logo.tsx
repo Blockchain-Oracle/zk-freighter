@@ -1,4 +1,4 @@
-/** The ZK Fighter coin: a circle split into a dark half and a hatched periwinkle half. */
+/** The ZK Freighter coin: a circle split into a dark half and a hatched periwinkle half. */
 export function Logo({ size = 30, glow = false }: { size?: number; glow?: boolean }) {
   return (
     <span

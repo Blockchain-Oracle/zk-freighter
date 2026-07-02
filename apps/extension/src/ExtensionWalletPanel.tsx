@@ -1,6 +1,6 @@
 import { LockKeyhole } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
-import { Button } from '@zk-fighter/ui'
+import { Button } from '@zk-freighter/ui'
 
 import type { DappWalletStatus } from './dappMessages'
 import { shorten } from './extension-format'

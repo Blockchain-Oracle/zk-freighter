@@ -7,10 +7,10 @@ import {
   type FreighterBridgeRequest,
   type FreighterBridgeResponse,
   type NetworkKey,
-} from '@zk-fighter/core'
+} from '@zk-freighter/core'
 
 export const externalDappUnsupportedMessage =
-  'ZK Fighter external dApp access and signing are disabled; use QuickShield and bridge inside ZK Fighter.'
+  'ZK Freighter external dApp access and signing are disabled; use QuickShield and bridge inside ZK Freighter.'
 
 const unsupportedSigningFields = { signedTransaction: '', signerAddress: '' } as const
 

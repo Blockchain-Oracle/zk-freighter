@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { generateSeedPhrase, validateSeedPhrase, type NetworkKey } from '@zk-fighter/core'
-import { Button, Logo, PasswordStrength, Segmented } from '@zk-fighter/ui'
+import { generateSeedPhrase, validateSeedPhrase, type NetworkKey } from '@zk-freighter/core'
+import { Button, Logo, PasswordStrength, Segmented } from '@zk-freighter/ui'
 import { CardBody, CardTop, OnboardCard, PasswordField, TestnetPill } from './AccessPanels'
 import { passwordMinLength } from './app-helpers'
 
@@ -52,7 +52,7 @@ export function OnboardingFlow({ network, networks, busy, onChangeNetwork, onCre
       const url = URL.createObjectURL(new Blob([seed], { type: 'text/plain' }))
       const a = document.createElement('a')
       a.href = url
-      a.download = 'zk-fighter-recovery-phrase.txt'
+      a.download = 'zk-freighter-recovery-phrase.txt'
       a.click()
       URL.revokeObjectURL(url)
     }
@@ -78,11 +78,11 @@ export function OnboardingFlow({ network, networks, busy, onChangeNetwork, onCre
   if (step === 'welcome') {
     return (
       <OnboardCard>
-        <CardTop left={<Logo size={24} />} title="ZK Fighter" right={testnet} />
+        <CardTop left={<Logo size={24} />} title="ZK Freighter" right={testnet} />
         <CardBody center>
           <Logo size={72} glow />
           <div>
-            <div style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-.03em' }}>ZK Fighter</div>
+            <div style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-.03em' }}>ZK Freighter</div>
             <div style={{ fontSize: 14, color: 'var(--tx2)', marginTop: 9, lineHeight: 1.55 }}>Shielded payments on Stellar.<br />You hold the keys.</div>
           </div>
           <div style={{ display: 'flex', gap: 18, font: '600 10px/1 var(--fm)', color: 'var(--tx3)', letterSpacing: '.06em' }}>
@@ -168,7 +168,7 @@ export function OnboardingFlow({ network, networks, busy, onChangeNetwork, onCre
 
   return (
     <OnboardCard>
-      <CardTop left={<Logo size={24} />} title="ZK Fighter" right={testnet} />
+      <CardTop left={<Logo size={24} />} title="ZK Freighter" right={testnet} />
       <CardBody center>
         <div style={{ width: 74, height: 74, borderRadius: '50%', background: 'radial-gradient(circle, rgba(53,199,123,.25), rgba(53,199,123,.06))', border: '1.5px solid rgba(53,199,123,.5)', display: 'grid', placeItems: 'center', fontSize: 34, color: 'var(--pos)' }}>✓</div>
         <div>

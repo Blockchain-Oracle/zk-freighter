@@ -1,7 +1,7 @@
 import { ArrowLeftRight } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
-import { bridgeAmountDisplay, getDefaultCctpSource, getEnabledCctpSources, parseEvmUsdcAmountToAtomic, type CctpSourceKey } from '@zk-fighter/core'
-import { Button } from '@zk-fighter/ui'
+import { bridgeAmountDisplay, getDefaultCctpSource, getEnabledCctpSources, parseEvmUsdcAmountToAtomic, type CctpSourceKey } from '@zk-freighter/core'
+import { Button } from '@zk-freighter/ui'
 
 import { ChainMark } from './asset-marks'
 import { dappMessageTypes, type BridgeSourceBalancesResponse, type DappBalances, type DappBalancesResponse, type DappWalletStatus, type QuickBridgeResponse } from './dappMessages'
@@ -95,7 +95,7 @@ export function ExtensionBridgePanel({ status, sendRuntimeMessage }: ExtensionBr
   return (
     <Panel label="Bridge then shield">
       <SectionHeader title="Bridge then shield" right={<span style={{ font: '600 9px/1 var(--fm)', letterSpacing: '.1em', color: 'var(--tx3)', padding: '5px 9px', border: '1px solid var(--bd)', borderRadius: 999 }}>NATIVE</span>} />
-      <Copy>Bring USDC from another chain into your public Stellar balance via Circle CCTP. ZK Fighter signs the burn with its own seed-derived EVM key inside the extension.</Copy>
+      <Copy>Bring USDC from another chain into your public Stellar balance via Circle CCTP. ZK Freighter signs the burn with its own seed-derived EVM key inside the extension.</Copy>
       <MetaRow label="FUND THIS EVM ADDRESS">{evmAddress ? shorten(evmAddress, 10, 8) : 'Unlock first'}</MetaRow>
       <MetaRow label="PUBLIC STELLAR USDC">{destinationUsdc}</MetaRow>
       <MetaRow label="SOURCE USDC">{sourceLoading ? 'Loading…' : sourceUsdcAtomic === null ? '—' : `${formatAtomic(sourceUsdcAtomic, 6, 2)} USDC`}</MetaRow>

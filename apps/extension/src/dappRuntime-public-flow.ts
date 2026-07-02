@@ -1,4 +1,4 @@
-import { deriveWalletIdentity, submitPublicStellarPayment, type AssetCode } from '@zk-fighter/core'
+import { deriveWalletIdentity, submitPublicStellarPayment, type AssetCode } from '@zk-freighter/core'
 
 import { clearAllBalanceCache } from './balance-cache'
 import type { PublicActionResponse } from './dappMessages'

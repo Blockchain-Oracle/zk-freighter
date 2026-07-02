@@ -5,14 +5,14 @@ import {
   freighterRequestSource,
   freighterResponseSource,
   freighterServiceTypes,
-  zkFighterRequestSource,
-  zkFighterResponseSource,
+  zkFreighterRequestSource,
+  zkFreighterResponseSource,
 } from './dapp-bridge'
 
 describe('dApp bridge constants', () => {
-  it('keeps ZK Fighter and Freighter message sources distinct', () => {
-    expect(zkFighterRequestSource).toBe('ZKFIGHTER_EXTENSION_REQUEST')
-    expect(zkFighterResponseSource).toBe('ZKFIGHTER_EXTENSION_RESPONSE')
+  it('keeps ZK Freighter and Freighter message sources distinct', () => {
+    expect(zkFreighterRequestSource).toBe('ZKFIGHTER_EXTENSION_REQUEST')
+    expect(zkFreighterResponseSource).toBe('ZKFIGHTER_EXTENSION_RESPONSE')
     expect(freighterRequestSource).toBe('FREIGHTER_EXTERNAL_MSG_REQUEST')
     expect(freighterResponseSource).toBe('FREIGHTER_EXTERNAL_MSG_RESPONSE')
   })

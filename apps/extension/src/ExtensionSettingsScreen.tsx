@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react'
-import type { NetworkKey } from '@zk-fighter/core'
-import { Button, useTheme } from '@zk-fighter/ui'
+import type { NetworkKey } from '@zk-freighter/core'
+import { Button, useTheme } from '@zk-freighter/ui'
 
 import { dappMessageTypes, type DappWalletStatus, type PrivateEngineResetResponse } from './dappMessages'
 import { shorten } from './extension-format'
@@ -62,7 +62,7 @@ export function ExtensionSettingsScreen({ status, sendRuntimeMessage, lockWallet
       </SettingBlock>
 
       <SettingBlock label="Recovery">
-        <Copy>Seed phrase recovery is the only recovery path. Keep it offline; ZK Fighter cannot recover it for you.</Copy>
+        <Copy>Seed phrase recovery is the only recovery path. Keep it offline; ZK Freighter cannot recover it for you.</Copy>
       </SettingBlock>
 
       <SettingBlock label="Private engine">

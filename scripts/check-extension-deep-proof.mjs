@@ -104,14 +104,14 @@ async function findExtensionId(cdp, profileDir, stderr) {
     if (profileId) return profileId
     await delay(waitStepMs)
   }
-  throw new Error(`No ZK Fighter extension appeared. Stderr: ${stderr.join('').slice(-2000)}`)
+  throw new Error(`No ZK Freighter extension appeared. Stderr: ${stderr.join('').slice(-2000)}`)
 }
 
 async function extensionIdFromProfile(profileDir) {
   try {
     const preferences = JSON.parse(await readFile(path.join(profileDir, 'Default', 'Preferences'), 'utf8'))
     for (const [id, setting] of Object.entries(preferences.extensions?.settings ?? {})) {
-      if (setting?.manifest?.name === 'ZK Fighter') return id
+      if (setting?.manifest?.name === 'ZK Freighter') return id
     }
   } catch {
     return undefined

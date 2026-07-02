@@ -1,8 +1,8 @@
-import type { AssetCode, XlmShieldSubmitReport } from '@zk-fighter/core'
-import { isShieldedAssetEnabled, maxShieldDepositStroops, parseAssetAmountToStroops } from '@zk-fighter/core'
+import type { AssetCode, XlmShieldSubmitReport } from '@zk-freighter/core'
+import { isShieldedAssetEnabled, maxShieldDepositStroops, parseAssetAmountToStroops } from '@zk-freighter/core'
 import { Shield } from 'lucide-react'
 import { useState } from 'react'
-import { Button, Callout, Segmented } from '@zk-fighter/ui'
+import { Button, Callout, Segmented } from '@zk-freighter/ui'
 
 import {
   dappMessageTypes,

@@ -138,7 +138,7 @@ describe('disclosure artifacts', () => {
   })
 
   it('rejects malformed artifacts before verifier work', () => {
-    expect(() => parseDisclosureArtifact('{"kind":"wrong"}')).toThrow('Invalid ZK Fighter disclosure artifact')
+    expect(() => parseDisclosureArtifact('{"kind":"wrong"}')).toThrow('Invalid ZK Freighter disclosure artifact')
   })
 
   it('fails closed when an artifact contains spend-authority-shaped fields', async () => {

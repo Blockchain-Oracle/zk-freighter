@@ -4,7 +4,7 @@
 
 Conditional pass for extension scaffold, build, Chrome runtime smoke, extension dry proof generation, Freighter-style detection/network details, explicit fail-closed behavior for external public-key access and signing, real XLM and USDC QuickShield submits, reusable local USDC funder automation, and bridge handoff. QuickShield and bridge handoff are the active extension direction. Passkey, Wallets Kit branding/detection, Soroban auth-entry signing, SEP-0053 message signing, extension-native Ethereum bridge, and Chrome Web Store packaging remain deferred.
 
-ZK Fighter now has an `apps/extension` WXT MV3 app that reuses `@zk-fighter/core`, builds a popup, side panel, background coordinator, content-script status probe, and offscreen document. The WXT production build includes the same browser prover assets used by the web app.
+ZK Freighter now has an `apps/extension` WXT MV3 app that reuses `@zk-freighter/core`, builds a popup, side panel, background coordinator, content-script status probe, and offscreen document. The WXT production build includes the same browser prover assets used by the web app.
 
 Chrome-for-Testing runtime smoke now passes: the unpacked extension loads in a temporary profile, popup/side-panel render, the background creates/queries the offscreen document, the content script answers a status probe, non-status signing requests are rejected, and the Nethermind browser/WASM module initializes in the offscreen context.
 
@@ -43,7 +43,7 @@ USDC QuickShield now has real Chrome-for-Testing runtime evidence: the harness u
 
 | Requirement | Evidence |
 |---|---|
-| Reuse shared core | Extension imports `@zk-fighter/core`; no separate wallet implementation was added. |
+| Reuse shared core | Extension imports `@zk-freighter/core`; no separate wallet implementation was added. |
 | Use WXT if packaging research remains valid | `apps/extension` uses `wxt@0.20.26` and `@wxt-dev/module-react`. |
 | Keep MV3 background as coordinator | `entrypoints/background.ts` handles install/status/side-panel messages only; no prover runs in background. |
 | Extension/offscreen prover-capable surface | `prover-offscreen.html` exists, build output includes prover assets, and the runtime harness initializes the Nethermind browser/WASM module in offscreen context. |
@@ -56,8 +56,8 @@ USDC QuickShield now has real Chrome-for-Testing runtime evidence: the harness u
 
 Commands run on 2026-06-24:
 
-- `pnpm --filter @zk-fighter/extension typecheck` passed.
-- `pnpm --filter @zk-fighter/extension build` passed.
+- `pnpm --filter @zk-freighter/extension typecheck` passed.
+- `pnpm --filter @zk-freighter/extension build` passed.
 - `pnpm extension:runtime` passed using Chrome for Testing `150.0.7871.24`.
 - `pnpm extension:dapp` passed using Chrome for Testing `150.0.7871.24`.
 - `pnpm extension:runtime:deep` passed using Chrome for Testing `150.0.7871.24`.
@@ -202,7 +202,7 @@ Still deferred:
 - Test WebAuthn PRF in a tab/side-panel surface on the target device/browser.
 - Test Wallets Kit detection/branding only if Abu reopens public dApp wallet scope.
 - Keep Soroban auth-entry signing and SEP-0053 message signing disabled unless the product direction changes.
-- Test coexistence behavior if Freighter and ZK Fighter are both installed.
+- Test coexistence behavior if Freighter and ZK Freighter are both installed.
 - Chrome Web Store packaging/review.
 
 ## Update: QuickShield Companion Lockdown

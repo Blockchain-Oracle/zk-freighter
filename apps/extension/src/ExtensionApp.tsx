@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
-import type { NetworkKey } from '@zk-fighter/core'
-import { Button, ThemeProvider, type ThemeName } from '@zk-fighter/ui'
+import type { NetworkKey } from '@zk-freighter/core'
+import { Button, ThemeProvider, type ThemeName } from '@zk-freighter/ui'
 import { browser } from 'wxt/browser'
 
 import { ExtensionAccess } from './ExtensionAccess'

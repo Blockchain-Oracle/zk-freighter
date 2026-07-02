@@ -1,6 +1,6 @@
 # Spikes Log
 
-Real milestone evidence for ZK Fighter. Secrets must be redacted. Do not record fake transaction hashes, fake balances, mocked proof success, or mocked bridge state as product evidence.
+Real milestone evidence for ZK Freighter. Secrets must be redacted. Do not record fake transaction hashes, fake balances, mocked proof success, or mocked bridge state as product evidence.
 
 ## 2026-06-22 — Phase 0 tooling and workspace foundation
 
@@ -52,7 +52,7 @@ Real milestone evidence for ZK Fighter. Secrets must be redacted. Do not record 
 - **Phase:** Phase 2 — Nethermind prover facade and XLM proof benchmark.
 - **Kind:** proof-runtime packaging.
 - **Network:** Stellar testnet runtime config; no transaction submitted.
-- **Summary:** Cleared the local Nethermind artifact build blocker, staged the real browser JS/WASM runtime and circuit artifacts into ZK Fighter, and verified the staged reference WebClient initializes in Chrome.
+- **Summary:** Cleared the local Nethermind artifact build blocker, staged the real browser JS/WASM runtime and circuit artifacts into ZK Freighter, and verified the staged reference WebClient initializes in Chrome.
 - **Commands / paths verified:**
   - `cargo --config /tmp/wasmer-patch-zkf.toml build -p circuits --release --offline`
   - `PUBLIC_URL=/ CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse trunk build --dist dist --release --public-url /`
@@ -64,7 +64,7 @@ Real milestone evidence for ZK Fighter. Secrets must be redacted. Do not record 
   - `selectiveDisclosure_1.wasm`: `f2468df7b9a28582e0e8f5301d483c3349574334b43ded5220084100e0c09aaf`
   - `selectiveDisclosure_1.r1cs`: `e83f0d99277e77283514e0690d94805ca6ffc65792c59e8f795be4ed31788667`
 - **Browser smoke results:**
-  - ZK Fighter readiness panel returned `ready`.
+  - ZK Freighter readiness panel returned `ready`.
   - Readiness duration was about `837.7 ms`.
   - Heap signal was about `46,253,332` bytes.
   - Proof status remained `Not generated`.
@@ -73,7 +73,7 @@ Real milestone evidence for ZK Fighter. Secrets must be redacted. Do not record 
   - Storage worker initialized and migrated local OPFS SQLite state.
   - Prover worker fetched the policy and selective-disclosure circuit files from `/circuits/...`.
 - **Dry deposit proof-attempt results:**
-  - ZK Fighter called Nethermind's exported WebClient `executeDeposit` path from the Phase 2 panel.
+  - ZK Freighter called Nethermind's exported WebClient `executeDeposit` path from the Phase 2 panel.
   - Test account: `GDOFWY6Z6O3BZDR5KSWTAQV7DH2544CNFCB7LWM2Q5AR7PVHTZXK4SWZ`.
   - Worker privacy keys and ASP secret were derived from the Phase 1 key-derivation signature and stored in Nethermind worker storage.
   - The submit callback was configured to reject if reached; it was not reached.
@@ -124,9 +124,9 @@ Real milestone evidence for ZK Fighter. Secrets must be redacted. Do not record 
 - **Secrets:** no seed phrase or secret key recorded. Local throwaway testnet identity was removed from Stellar CLI config after the transaction.
 - **Notes:**
   - This clears the prior fresh-identity ASP membership blocker for the held smoke wallet.
-  - This is the first observed real Nethermind proof-generation path in ZK Fighter.
+  - This is the first observed real Nethermind proof-generation path in ZK Freighter.
   - It does not prove on-chain proof acceptance, shield success, private send, or unshield.
-  - Next gate: use a funded ZK Fighter wallet account and controlled submit path to perform a real XLM shield transaction, then record the pool transaction hash and balance/event evidence.
+  - Next gate: use a funded ZK Freighter wallet account and controlled submit path to perform a real XLM shield transaction, then record the pool transaction hash and balance/event evidence.
 
 ## 2026-06-23 08:47 UTC — Phase 3 ASP readiness for user-reported test wallet
 
@@ -165,9 +165,9 @@ Real milestone evidence for ZK Fighter. Secrets must be redacted. Do not record 
 ## 2026-06-23 08:56 UTC — Phase 3 first real XLM shield smoke
 
 - **Phase:** Phase 3 — XLM shield, private send, and unshield on testnet.
-- **Kind:** real XLM shield submit from the ZK Fighter web UI.
+- **Kind:** real XLM shield submit from the ZK Freighter web UI.
 - **Network:** Stellar testnet.
-- **Throwaway ZK Fighter wallet public key:** `GBVJ27WUO3L6UKCPMIEZ6VVKJSBKYMCWXODPGEQAYGTCDMPGE6OYAZHH`.
+- **Throwaway ZK Freighter wallet public key:** `GBVJ27WUO3L6UKCPMIEZ6VVKJSBKYMCWXODPGEQAYGTCDMPGE6OYAZHH`.
 - **XLM pool contract:** `CDQRXOD6VHFR5W34HMDLQNROGXA64DPI6BCU6M5JVA2GARDVHAMS2PZF`.
 - **ASP membership contract:** `CBULZZIAHWL33XD5OBL2LBPYSFBYCNCOCIJITGJ74OSRRA7IZKIUBTKN`.
 - **ASP insert signer:** `GCSYR3IXR5IQJOGMOFBS2IZBVXYBX2A55TWYT7BO744LRNGERM4IBSUO` (`zkf-asp-smoke-202606230853`, local throwaway testnet identity).
@@ -193,13 +193,13 @@ Real milestone evidence for ZK Fighter. Secrets must be redacted. Do not record 
   - After shield: Horizon reported native XLM balance `9999.8854783`.
   - Difference matches public deposit amount plus Soroban fee.
 - **Browser UI evidence:**
-  - Chrome-controlled ZK Fighter app imported a throwaway seed-backed wallet.
+  - Chrome-controlled ZK Freighter app imported a throwaway seed-backed wallet.
   - Real shield panel displayed `Submitted`.
   - Proof status displayed `Generated`.
   - Transaction status displayed `Confirmed`.
   - Last observed UI stages included `Simulating transaction...`, `Submitting...`, `Signing transaction envelope`, `Submitting transaction`, and `Confirming transaction`.
 - **Commands / paths verified:**
-  - `pnpm dlx tsx ...` to generate a throwaway ZK Fighter seed wallet and derive its ASP leaf.
+  - `pnpm dlx tsx ...` to generate a throwaway ZK Freighter seed wallet and derive its ASP leaf.
   - Browser UI import/create vault path at `http://localhost:5173/`.
   - `stellar keys generate zkf-asp-smoke-202606230853 --network testnet --fund --overwrite`
   - `stellar contract invoke --id CBULZZIA...BTKN --source-account zkf-asp-smoke-202606230853 --network testnet --send=no -- insert_leaf --leaf 136804...45660`
@@ -215,9 +215,9 @@ Real milestone evidence for ZK Fighter. Secrets must be redacted. Do not record 
 ## 2026-06-23 10:19 UTC - Phase 3 complete XLM shield, private send, unshield, and tampered proof rejection
 
 - **Phase:** Phase 3 - XLM shield, private send, and unshield on testnet.
-- **Kind:** full real browser loop using the ZK Fighter web UI plus Horizon verification.
+- **Kind:** full real browser loop using the ZK Freighter web UI plus Horizon verification.
 - **Network:** Stellar testnet.
-- **Throwaway ZK Fighter wallet public key:** `GBN4NAZQ7VN3NBGFJ4R5J7ZUJSYW6LSQYS73SXJHKUVE45HUAOKGIWDY`.
+- **Throwaway ZK Freighter wallet public key:** `GBN4NAZQ7VN3NBGFJ4R5J7ZUJSYW6LSQYS73SXJHKUVE45HUAOKGIWDY`.
 - **XLM pool contract:** `CDQRXOD6VHFR5W34HMDLQNROGXA64DPI6BCU6M5JVA2GARDVHAMS2PZF`.
 - **ASP membership contract:** `CBULZZIAHWL33XD5OBL2LBPYSFBYCNCOCIJITGJ74OSRRA7IZKIUBTKN`.
 - **ASP insert signer alias:** `zkf-asp-phase3-202606231054` local throwaway testnet identity.
@@ -304,10 +304,10 @@ Real milestone evidence for ZK Fighter. Secrets must be redacted. Do not record 
 
 - **Browser UI evidence:**
   - Clean test origin used: `http://127.0.0.1:5174/`.
-  - ZK Fighter app imported a throwaway seed-backed wallet.
+  - ZK Freighter app imported a throwaway seed-backed wallet.
   - Real shield, private send, unshield, refresh-note-scan, and tampered-proof panels were exercised through Chrome-controlled UI.
 - **Commands / paths verified:**
-  - `pnpm --filter @zk-fighter/web dev --host 127.0.0.1 --port 5174`.
+  - `pnpm --filter @zk-freighter/web dev --host 127.0.0.1 --port 5174`.
   - Chrome-controlled browser smoke at `http://127.0.0.1:5174/`.
   - `stellar keys generate zkf-asp-phase3-202606231054 --network testnet --fund --overwrite`.
   - `stellar contract invoke --id CBULZZIA...BTKN --source-account zkf-asp-phase3-202606231054 --network testnet --send=yes -- insert_leaf --leaf 163563...72983`.
@@ -320,7 +320,7 @@ Real milestone evidence for ZK Fighter. Secrets must be redacted. Do not record 
 
 ## 2026-06-23 10:45 UTC - Phase 3 Alice-to-Bob XLM shielded transfer hardening
 
-- **Phase:** Phase 3 hardening - direct private receive-code transfer between two ZK Fighter identities.
+- **Phase:** Phase 3 hardening - direct private receive-code transfer between two ZK Freighter identities.
 - **Kind:** real browser transfer from Alice's existing shielded note to Bob's separate throwaway wallet.
 - **Network:** Stellar testnet.
 - **Alice public Stellar account:** `GBN4NAZQ7VN3NBGFJ4R5J7ZUJSYW6LSQYS73SXJHKUVE45HUAOKGIWDY`.
@@ -634,8 +634,8 @@ Real milestone evidence for ZK Fighter. Secrets must be redacted. Do not record 
   - Unlocked idle wallet: no event-fetch requests.
   - USDC `Refresh notes`: runtime started cleanly; Stellar RPC POSTs to `https://soroban-testnet.stellar.org/` returned `200`; CORS preflights returned `204`.
   - 35-second background watch after runtime start: repeated Stellar RPC POSTs returned `200`; no fresh `[EVENTS] round failed` logs.
-- **Root cause found:** Nethermind `mainThread()` always started a permanent background event listener. ZK Fighter also performs explicit app-managed sync through `syncPoolEvents()` before note reads, so the app had redundant event polling after a runtime action.
-- **Fix:** kept Nethermind's default behavior available, but added a `background_events` config flag and made ZK Fighter pass `false` from `loadNethermindWebClient`. ZK Fighter now uses explicit sync instead of a hidden permanent poller.
+- **Root cause found:** Nethermind `mainThread()` always started a permanent background event listener. ZK Freighter also performs explicit app-managed sync through `syncPoolEvents()` before note reads, so the app had redundant event polling after a runtime action.
+- **Fix:** kept Nethermind's default behavior available, but added a `background_events` config flag and made ZK Freighter pass `false` from `loadNethermindWebClient`. ZK Freighter now uses explicit sync instead of a hidden permanent poller.
 - **Regression coverage:** added a core test proving `loadNethermindWebClient('testnet')` constructs Nethermind config with `backgroundEvents: false`.
 - **Post-fix browser verification:**
   - Hard reloaded the app with cache disabled.
@@ -705,7 +705,7 @@ Real milestone evidence for ZK Fighter. Secrets must be redacted. Do not record 
 ## 2026-06-23 20:30 UTC - Phase 6 user-held disclosure artifact verified
 
 - **Phase:** Phase 6 - user-held disclosure artifact.
-- **Kind:** real browser-generated Nethermind selective-disclosure receipt, wrapped in a ZK Fighter artifact and verified through the Nethermind verifier path.
+- **Kind:** real browser-generated Nethermind selective-disclosure receipt, wrapped in a ZK Freighter artifact and verified through the Nethermind verifier path.
 - **Network:** Stellar testnet.
 - **Public account:** `GC2QXKJDIUNJMTTILUYVEPEXGWWCP4B36IHXQJFHIWVD7OBUAW6VRGTP`.
 - **XLM pool:** `CBQ46IL6HQA2VTPERULO7DBAKHMJ7ZCNVOSDIIX3HLC5T7MSPB6Z5SMY`.
@@ -741,7 +741,7 @@ Real milestone evidence for ZK Fighter. Secrets must be redacted. Do not record 
 ### Disclosure generation and verification
 
 - **Generated artifact:** browser UI reported `generated · 2,319 ms`.
-- **Artifact kind/version:** `zk-fighter-disclosure-artifact`, version `1`.
+- **Artifact kind/version:** `zk-freighter-disclosure-artifact`, version `1`.
 - **Artifact storage:** full artifact JSON intentionally not recorded in this log.
 - **Verifier result:** browser UI reported `Fully verified`.
 - **Verifier checks:**
@@ -749,7 +749,7 @@ Real milestone evidence for ZK Fighter. Secrets must be redacted. Do not record 
   - context: `pass`.
   - known root: `pass`.
   - read-only/no spend authority: `pass`.
-- **Reviewer copy:** UI states that ZK Fighter cannot disclose for the user, reviewers get read-only verification, and owner-supplied activity labels are distinct from proof/context/root verification.
+- **Reviewer copy:** UI states that ZK Freighter cannot disclose for the user, reviewers get read-only verification, and owner-supplied activity labels are distinct from proof/context/root verification.
 - **Viewing key:** full viewing-key export remains intentionally disabled; scoped receipts are the MVP path.
 
 ### Staged artifact hashes after sync fix
@@ -782,7 +782,7 @@ Real milestone evidence for ZK Fighter. Secrets must be redacted. Do not record 
 
 ### Implemented behavior
 
-- Added a separate `zk-fighter:passkey-envelope:v1` local-storage record.
+- Added a separate `zk-freighter:passkey-envelope:v1` local-storage record.
 - Passkey setup calls real WebAuthn `navigator.credentials.create()` with the `prf` extension.
 - If create-time PRF output is absent, setup attempts a follow-up `navigator.credentials.get()` with `prf.evalByCredential`.
 - PRF output is stretched with Web Crypto HKDF and used as an AES-GCM key to encrypt the seed phrase into the passkey envelope.
@@ -796,7 +796,7 @@ Real milestone evidence for ZK Fighter. Secrets must be redacted. Do not record 
 |---|---|---|---|
 | System Google Chrome via Playwright smoke | `http://localhost:5179/` | WebAuthn API available; platform authenticator reported available | Browser support panel rendered; no console errors or failed requests. This does not prove PRF until a real ceremony succeeds. |
 | System Google Chrome via Playwright smoke | `http://127.0.0.1:5179/` | WebAuthn create probe failed with `SecurityError: This is an invalid domain.` | Use `localhost` or HTTPS for passkey testing. Code maps this to a closed `webauthn-unavailable` error. |
-| Chrome DevTools virtual authenticator | `http://localhost:5179/` | Credential creation works, but PRF reports `enabled: false` | UI showed `This passkey does not expose the PRF needed for ZK Fighter unlock.` No passkey envelope was stored. |
+| Chrome DevTools virtual authenticator | `http://localhost:5179/` | Credential creation works, but PRF reports `enabled: false` | UI showed `This passkey does not expose the PRF needed for ZK Freighter unlock.` No passkey envelope was stored. |
 | Real platform passkey / phone | not run | Not claimed | Requires user-approved OS/browser passkey prompt. Do not claim phone/passkey support in demo until this row is completed. |
 
 ### Verification
@@ -814,7 +814,7 @@ Real milestone evidence for ZK Fighter. Secrets must be redacted. Do not record 
 
 - **Phase:** Phase 8 - CCTP bridge then shield.
 - **Kind:** implementation readiness and local browser smoke; no chain transaction submitted in this entry.
-- **Network posture:** testnet only for bridge-to-shield. Mainnet remains gated because no mainnet ZK Fighter USDC privacy pool is deployed.
+- **Network posture:** testnet only for bridge-to-shield. Mainnet remains gated because no mainnet ZK Freighter USDC privacy pool is deployed.
 - **Current CCTP config used by code:**
   - Stellar domain: `27`.
   - Ethereum Sepolia source domain: `0`.
@@ -838,7 +838,7 @@ Real milestone evidence for ZK Fighter. Secrets must be redacted. Do not record 
   - No Stellar mint/forward transaction hash.
   - No public USDC balance proof from a bridge arrival.
   - No separate post-bridge USDC shield transaction hash.
-- **Blocker for Phase 8 acceptance:** a real funded Ethereum Sepolia signing session is still required. The source wallet must have Sepolia ETH for gas and Sepolia USDC, and the ZK Fighter Stellar testnet account must be able to receive USDC before running the bridge.
+- **Blocker for Phase 8 acceptance:** a real funded Ethereum Sepolia signing session is still required. The source wallet must have Sepolia ETH for gas and Sepolia USDC, and the ZK Freighter Stellar testnet account must be able to receive USDC before running the bridge.
 
 ## 2026-06-23 21:42 UTC - Phase 8 CCTP bridge browser approval attempt
 
@@ -846,7 +846,7 @@ Real milestone evidence for ZK Fighter. Secrets must be redacted. Do not record 
 - **Kind:** real browser attempt against the local app; no chain transaction hash returned.
 - **App origin:** `http://localhost:5175/`.
 - **Observed path:**
-  - Local ZK Fighter wallet unlocked.
+  - Local ZK Freighter wallet unlocked.
   - Bridge panel rendered with Ethereum Sepolia -> Stellar Testnet, Iris sandbox, and the Stellar CCTP forwarder.
   - Starting the bridge opened a MetaMask notification page, confirming the app reached the injected Ethereum wallet path.
   - Browser automation policy blocked direct control of the `chrome-extension://...` MetaMask notification page.
@@ -854,8 +854,8 @@ Real milestone evidence for ZK Fighter. Secrets must be redacted. Do not record 
   - Watched for 60 seconds; no approval transaction hash, burn transaction hash, Iris attestation, or Stellar mint hash appeared.
 - **UI fix made from the attempt:** the bridge panel now surfaces wallet/approval progress instead of appearing frozen while waiting for Ethereum wallet action.
 - **Quality checks after the UI fix:**
-  - `pnpm --filter @zk-fighter/web lint` passed.
-  - `pnpm --filter @zk-fighter/web typecheck` passed.
+  - `pnpm --filter @zk-freighter/web lint` passed.
+  - `pnpm --filter @zk-freighter/web typecheck` passed.
 - **Current blocker:** a human must approve or reject the MetaMask Sepolia transaction prompt, or provide an alternate controlled Sepolia signer. Until an approval hash exists, Phase 8 acceptance remains open.
 - **Secrets:** no Ethereum private key, seed phrase, vault secret, or full receive code recorded.
 
@@ -908,9 +908,9 @@ Real milestone evidence for ZK Fighter. Secrets must be redacted. Do not record 
 ### Verification
 
 - Focused tests passed for CCTP resume, Stellar destination readiness, ASP insertion blockers, and network config.
-- `pnpm --filter @zk-fighter/core typecheck` passed.
-- `pnpm --filter @zk-fighter/web typecheck` passed.
-- `pnpm --filter @zk-fighter/web lint` passed.
+- `pnpm --filter @zk-freighter/core typecheck` passed.
+- `pnpm --filter @zk-freighter/web typecheck` passed.
+- `pnpm --filter @zk-freighter/web lint` passed.
 - `pnpm files:check` passed.
 - `pnpm docs:check` passed.
 - `pnpm secrets:check` passed.
@@ -969,8 +969,8 @@ Result:
 
 ### Verification
 
-- `pnpm --filter @zk-fighter/extension typecheck` passed.
-- `pnpm --filter @zk-fighter/extension build` passed.
+- `pnpm --filter @zk-freighter/extension typecheck` passed.
+- `pnpm --filter @zk-freighter/extension build` passed.
 - `pnpm extension:runtime` passed.
 - **Secrets:** no seed phrase, vault password, private key, receive code, proof witness, or browser profile data recorded.
 
@@ -1041,14 +1041,14 @@ Result:
 
 ### Verification
 
-- `pnpm --filter @zk-fighter/extension typecheck` passed.
-- `pnpm --filter @zk-fighter/extension build` passed.
+- `pnpm --filter @zk-freighter/extension typecheck` passed.
+- `pnpm --filter @zk-freighter/extension build` passed.
 - `pnpm extension:runtime:deep` passed.
 - **Secrets:** no seed phrase, vault password, private key, receive code, proof witness, or browser profile data recorded.
 
 ## 2026-06-24 12:44 UTC - Extension public dApp wallet signing acceptance
 
-> **Superseded product direction:** this entry remains local feasibility evidence only. Abu later chose not to make ZK Fighter a general public dApp signing wallet.
+> **Superseded product direction:** this entry remains local feasibility evidence only. Abu later chose not to make ZK Freighter a general public dApp signing wallet.
 
 - **Phase:** Phase 11 follow-up - Extension Public dApp Wallet Mode.
 - **Kind:** local Chrome-for-Testing runtime check; no chain transaction submitted.
@@ -1061,7 +1061,7 @@ Result:
 ### Commands
 
 - `pnpm typecheck` passed.
-- `pnpm --filter @zk-fighter/extension build` passed.
+- `pnpm --filter @zk-freighter/extension build` passed.
 - `pnpm extension:dapp` passed.
 - `pnpm extension:dapp:sign` passed.
 
@@ -1119,7 +1119,7 @@ Result:
 - **Phase:** Phase 11 follow-up - Extension QuickShield and bridge companion.
 - **Kind:** product posture correction and local runtime gate update.
 - **Network:** no new chain transaction submitted in this entry.
-- **Decision:** ZK Fighter extension is not a Freighter replacement. External public-key access and arbitrary dApp signing are disabled. Internal signing remains available only for ZK Fighter-owned shield, unshield, bridge, and pool actions.
+- **Decision:** ZK Freighter extension is not a Freighter replacement. External public-key access and arbitrary dApp signing are disabled. Internal signing remains available only for ZK Freighter-owned shield, unshield, bridge, and pool actions.
 
 ### Code posture
 
@@ -1495,7 +1495,7 @@ Result:
 - **Network:** Stellar testnet.
 - **Asset:** USDC.
 - **Reusable funder public account:** `GAH5VPZPGG5QCNTZEYFK6KHXTBELEQ3BYGZAIP4FRNKVZ7LIHY7S7UIJ`.
-- **Local wallet path:** `/Users/abu/.config/zk-fighter/testnet-usdc-funder.json`.
+- **Local wallet path:** `/Users/abu/.config/zk-freighter/testnet-usdc-funder.json`.
 - **Secret posture:** the Stellar testnet secret for this reusable funder is stored outside the repo with local file permissions; it is not printed and is not scanned into source control. Use it only for testnet funding automation.
 
 ### Runtime evidence
@@ -1533,7 +1533,7 @@ Result:
 - **Asset:** USDC.
 - **Reusable funder:** `GAH5VPZPGG5QCNTZEYFK6KHXTBELEQ3BYGZAIP4FRNKVZ7LIHY7S7UIJ`.
 - **Extension harness account:** `GBKZBDQE43NMIFDW4B7C4NQCN2JPXQEDM5XNBLL7UTSAZE5Q3ATE5SZV`.
-- **Secret posture:** the harness generated a throwaway extension seed phrase locally, imported it into an encrypted extension vault in a temporary browser profile, and did not print or store the seed phrase, secret key, vault password, proof witness, or browser profile data. The reusable funder secret remains outside the repo at `/Users/abu/.config/zk-fighter/testnet-usdc-funder.json`.
+- **Secret posture:** the harness generated a throwaway extension seed phrase locally, imported it into an encrypted extension vault in a temporary browser profile, and did not print or store the seed phrase, secret key, vault password, proof witness, or browser profile data. The reusable funder secret remains outside the repo at `/Users/abu/.config/zk-freighter/testnet-usdc-funder.json`.
 
 ### Runtime evidence
 
@@ -1588,7 +1588,7 @@ Result:
 
 ### Failure fixed during this run
 
-- An earlier funded run sent `1.0000000` USDC to temporary account `GCBEF26GYDS3QEDSCSQP5UAOWASWTQGQTF5CIH3IPM3DZL7A4TI6K4AX` with tx `09e9638c2e1ccb4835863a45c83963fee66e5b9bf8bb42ee7969eaf9077dc74e`, then failed with `Unlock ZK Fighter before shielding`.
+- An earlier funded run sent `1.0000000` USDC to temporary account `GCBEF26GYDS3QEDSCSQP5UAOWASWTQGQTF5CIH3IPM3DZL7A4TI6K4AX` with tx `09e9638c2e1ccb4835863a45c83963fee66e5b9bf8bb42ee7969eaf9077dc74e`, then failed with `Unlock ZK Freighter before shielding`.
 - Root cause: Chrome dropped the background runtime's in-memory unlocked mnemonic after the long funding wait.
 - Fix: `scripts/check-extension-quickshield.mjs` now explicitly unlocks the stored extension vault after funding waits and again before shield submission.
 
@@ -1635,7 +1635,7 @@ Result:
 
 ### What this proves
 
-- ZK Fighter's recorded mainnet USDC issuer/SAC facts are usable against a real funded mainnet account.
+- ZK Freighter's recorded mainnet USDC issuer/SAC facts are usable against a real funded mainnet account.
 - A mainnet account can be funded, configured with a USDC trustline, and receive real USDC via a public Stellar DEX path payment.
 - This is public mainnet plumbing only. It does not prove mainnet shielded-pool support, because no mainnet XLM/USDC privacy pool is deployed/configured yet.
 
@@ -1687,7 +1687,7 @@ These are upload/install estimates only. They do not include contract-instance d
 
 - Mainnet pool deployment is technically on the right path, but blocked by insufficient funded XLM.
 - No mainnet privacy-pool contract was uploaded, deployed, or configured.
-- At this timestamp, ZK Fighter had to keep mainnet shielded pools marked `pending-deployment` until funding was topped up, contracts were deployed, and a real mainnet shield test recorded accepted transaction hashes.
+- At this timestamp, ZK Freighter had to keep mainnet shielded pools marked `pending-deployment` until funding was topped up, contracts were deployed, and a real mainnet shield test recorded accepted transaction hashes.
 - Superseded by the later `2026-06-25 13:05 UTC` entry after Abu topped up the QA account and mainnet deployment/testing succeeded.
 
 ## 2026-06-25 13:05 UTC - Mainnet privacy-pool deployment and extension XLM QuickShield
@@ -1739,7 +1739,7 @@ These are upload/install estimates only. They do not include contract-instance d
 - **Harness:** `ZKF_QUICKSHIELD_NETWORK=mainnet ZKF_QUICKSHIELD_ASSET=XLM ZKF_QUICKSHIELD_AMOUNT_STROOPS=1000000 ZKF_MAINNET_FUND_STROOPS=50000000 pnpm extension:quickshield`.
 - **Extension runtime:** Chrome-for-Testing WXT MV3 extension with offscreen Nethermind browser/WASM prover.
 - **Persistent smoke wallet:** `GAWDQREHIKPLF6KR7XXNYNANXG7PW2IG5N4HWFB2H3M3J3OFC7SHWH32`.
-- **Persistent mnemonic storage:** outside repo at `/Users/abu/.config/zk-fighter/mainnet-quickshield-smoke.json`, file mode `0600`.
+- **Persistent mnemonic storage:** outside repo at `/Users/abu/.config/zk-freighter/mainnet-quickshield-smoke.json`, file mode `0600`.
 - **Funding top-up:** `55bd4b75681d09861108c7ced81cf6d7dfee21a45260f3c6188caa4c696b77ab`.
 - **ASP membership insert:** `8afa10dbcf6c82ba56f0f0abf96d00e5af55190f9a985aecc52147c34271c3ce`.
 - **XLM QuickShield shield/deposit:** `269f09422639580ff3b5642b03a02a24c9e20c63dae12507b005352ba4545179`.
@@ -1811,7 +1811,7 @@ These are upload/install estimates only. They do not include contract-instance d
 - **Kind:** Real mainnet shielded XLM transfer and public XLM unshield/withdraw through the Chrome-for-Testing extension offscreen prover.
 - **Network:** Stellar mainnet.
 - **Smoke wallet:** `GAWDQREHIKPLF6KR7XXNYNANXG7PW2IG5N4HWFB2H3M3J3OFC7SHWH32`.
-- **Secret posture:** smoke wallet recovery phrase remained outside the repo at `/Users/abu/.config/zk-fighter/mainnet-quickshield-smoke.json`.
+- **Secret posture:** smoke wallet recovery phrase remained outside the repo at `/Users/abu/.config/zk-freighter/mainnet-quickshield-smoke.json`.
 - **Harness:** `pnpm extension:private-loop:mainnet`.
 - **Pool:** `CCE3VBWTMGS7TZBOMBXVMPZFD4RUWAJDQHV7L2FT5BHMZKHLQUJKHECE`.
 
@@ -1851,7 +1851,7 @@ These are upload/install estimates only. They do not include contract-instance d
 - **Kind:** Real mainnet shielded USDC transfer and public USDC unshield/withdraw through the Chrome-for-Testing extension offscreen prover.
 - **Network:** Stellar mainnet.
 - **Smoke wallet:** `GAWDQREHIKPLF6KR7XXNYNANXG7PW2IG5N4HWFB2H3M3J3OFC7SHWH32`.
-- **Secret posture:** smoke wallet recovery phrase remained outside the repo at `/Users/abu/.config/zk-fighter/mainnet-quickshield-smoke.json`.
+- **Secret posture:** smoke wallet recovery phrase remained outside the repo at `/Users/abu/.config/zk-freighter/mainnet-quickshield-smoke.json`.
 - **Harness:** `ZKF_PRIVATE_LOOP_ASSET=USDC ZKF_PRIVATE_LOOP_TIMEOUT_MS=90000 ZKF_PRIVATE_LOOP_RUNTIME_TIMEOUT_MS=120000 pnpm extension:private-loop:mainnet`.
 - **Pool:** `CDV45TTXDDUKBMK2IWPJRUYQSRVEWHTRPKCN2VZ7GEV2HVMRPBOD2KR7`.
 
@@ -1951,7 +1951,7 @@ These are upload/install estimates only. They do not include contract-instance d
 - **Testnet EVM source wallet:** `0x368AbfE2B29ee5Bebf94E6296493DFc9eAe9B74c`.
 - **Mainnet Base EVM source wallet:** `0xA7FCf3F915947E7014d794f5494BBa60c28EF98E`.
 - **Bridge destination address:** `GD7RLJMFDBT6LCTT5P2QIPQKM2ODT2ZNFSF6XP2JVHAOQBAEXTEX2ILG`.
-- **Secret posture:** EVM private keys and the bridge destination mnemonic are stored outside the repo at `/Users/abu/.config/zk-fighter`.
+- **Secret posture:** EVM private keys and the bridge destination mnemonic are stored outside the repo at `/Users/abu/.config/zk-freighter`.
 - **Result:** blocked before submission because the EVM source wallets had `0` native gas and `0` USDC.
 - **Next real evidence requirement:** fund `0x368AbfE2B29ee5Bebf94E6296493DFc9eAe9B74c` on the selected testnet source with native gas plus Circle faucet USDC, then rerun the matching `pnpm cctp:bridge:testnet` command. The runner will then use the real core CCTP bridge, ASP insert, and USDC shield/deposit paths.
 
@@ -1962,7 +1962,7 @@ These are upload/install estimates only. They do not include contract-instance d
 - **Network:** Base Sepolia source, Stellar testnet destination.
 - **Source wallet:** `0x368AbfE2B29ee5Bebf94E6296493DFc9eAe9B74c`.
 - **Destination wallet:** `GD7RLJMFDBT6LCTT5P2QIPQKM2ODT2ZNFSF6XP2JVHAOQBAEXTEX2ILG`.
-- **Secret posture:** EVM private key and destination mnemonic remained outside the repo at `/Users/abu/.config/zk-fighter`.
+- **Secret posture:** EVM private key and destination mnemonic remained outside the repo at `/Users/abu/.config/zk-freighter`.
 - **Amount:** `1 USDC`.
 - **Max CCTP fee:** `0.000500 USDC`.
 - **Runner commands:**
@@ -1994,7 +1994,7 @@ These are upload/install estimates only. They do not include contract-instance d
 - **Command:** `pnpm cctp:shield:extension`, then `ZKF_CCTP_AMOUNT_ATOMIC=900000 pnpm cctp:shield:extension` after unit conversion correction.
 - **Destination wallet:** `GD7RLJMFDBT6LCTT5P2QIPQKM2ODT2ZNFSF6XP2JVHAOQBAEXTEX2ILG`.
 - **Source bridge leg:** Base Sepolia burn `0x88028771b02dac65423d638349024930087a7c371c77936b513ddca752f2cd63`, Stellar mint/forward `08df05fe661f35dcf42c5ab054ae2bd404ed31091a629d963647ca3d5b293e11`.
-- **Secret posture:** destination mnemonic remained outside the repo at `/Users/abu/.config/zk-fighter/cctp-bridge-destination.json`.
+- **Secret posture:** destination mnemonic remained outside the repo at `/Users/abu/.config/zk-freighter/cctp-bridge-destination.json`.
 - **Runtime:** Chrome-for-Testing WXT MV3 extension with offscreen Nethermind browser/WASM prover.
 - **ASP membership contract:** `CA33KAHNZ3QIG2PSSNUGMGM73CYQD7RLQPRBONOZEOIHIQENX2GNC5XP`.
 - **USDC pool:** `CCY6R2BJQ2LAYINOZZLDLHJCWRRPVQNRTWEWCWO7FIDD3BRDQJCAOHKY`.
@@ -2035,7 +2035,7 @@ These are upload/install estimates only. They do not include contract-instance d
 
 ### Claim allowed
 
-- Base Sepolia now has full safe-path evidence: public CCTP bridge arrival followed by separate USDC shield/deposit through ZK Fighter.
+- Base Sepolia now has full safe-path evidence: public CCTP bridge arrival followed by separate USDC shield/deposit through ZK Freighter.
 - This is not an atomic bridge-and-shield claim.
 
 ## 2026-06-25 17:36 UTC - Multichain CCTP read-only preflight
@@ -2044,7 +2044,7 @@ These are upload/install estimates only. They do not include contract-instance d
 - **Kind:** Read-only source-chain and Stellar destination readiness preflight. No approval, burn, mint, ASP insert, shield, or mainnet spend was submitted.
 - **Command shape:** `ZKF_CCTP_PREFLIGHT_ONLY=1 ZKF_CCTP_SOURCE=<source> pnpm cctp:bridge:<network>`.
 - **Destination wallet:** `GD7RLJMFDBT6LCTT5P2QIPQKM2ODT2ZNFSF6XP2JVHAOQBAEXTEX2ILG`.
-- **Secret posture:** local EVM keys and destination mnemonic stayed outside the repo under `/Users/abu/.config/zk-fighter`.
+- **Secret posture:** local EVM keys and destination mnemonic stayed outside the repo under `/Users/abu/.config/zk-freighter`.
 
 ### Results
 
@@ -2072,7 +2072,7 @@ These are upload/install estimates only. They do not include contract-instance d
 - **Network:** Arbitrum Sepolia source, Stellar testnet destination.
 - **Source wallet:** `0x368AbfE2B29ee5Bebf94E6296493DFc9eAe9B74c`.
 - **Destination wallet:** `GD7RLJMFDBT6LCTT5P2QIPQKM2ODT2ZNFSF6XP2JVHAOQBAEXTEX2ILG`.
-- **Secret posture:** EVM private key and destination mnemonic remained outside the repo at `/Users/abu/.config/zk-fighter`.
+- **Secret posture:** EVM private key and destination mnemonic remained outside the repo at `/Users/abu/.config/zk-freighter`.
 - **Amount:** `1 USDC`.
 - **Max CCTP fee:** `0.000500 USDC`.
 - **Commands:**
@@ -2099,7 +2099,7 @@ These are upload/install estimates only. They do not include contract-instance d
 
 ### Claim allowed
 
-- Arbitrum Sepolia now has full safe-path evidence: public CCTP bridge arrival followed by separate USDC shield/deposit through ZK Fighter.
+- Arbitrum Sepolia now has full safe-path evidence: public CCTP bridge arrival followed by separate USDC shield/deposit through ZK Freighter.
 - This is not an atomic bridge-and-shield claim.
 
 ## 2026-06-25 18:43 UTC - OP Sepolia CCTP bridge-to-shield evidence
@@ -2109,7 +2109,7 @@ These are upload/install estimates only. They do not include contract-instance d
 - **Network:** OP Sepolia source, Stellar testnet destination.
 - **Source wallet:** `0x368AbfE2B29ee5Bebf94E6296493DFc9eAe9B74c`.
 - **Destination wallet:** `GD7RLJMFDBT6LCTT5P2QIPQKM2ODT2ZNFSF6XP2JVHAOQBAEXTEX2ILG`.
-- **Secret posture:** EVM private key and destination mnemonic remained outside the repo at `/Users/abu/.config/zk-fighter`.
+- **Secret posture:** EVM private key and destination mnemonic remained outside the repo at `/Users/abu/.config/zk-freighter`.
 - **Amount:** `1 USDC`.
 - **Max CCTP fee:** `0.000500 USDC`.
 - **Commands:**
@@ -2144,7 +2144,7 @@ These are upload/install estimates only. They do not include contract-instance d
 
 ### Claim allowed
 
-- OP Sepolia now has full safe-path evidence: public CCTP bridge arrival followed by separate USDC shield/deposit through ZK Fighter.
+- OP Sepolia now has full safe-path evidence: public CCTP bridge arrival followed by separate USDC shield/deposit through ZK Freighter.
 - This is not an atomic bridge-and-shield claim.
 
 ## 2026-06-25 19:58 UTC - Mainnet CCTP destination readiness
@@ -2154,7 +2154,7 @@ These are upload/install estimates only. They do not include contract-instance d
 - **Network:** Stellar mainnet.
 - **Destination wallet:** `GD7RLJMFDBT6LCTT5P2QIPQKM2ODT2ZNFSF6XP2JVHAOQBAEXTEX2ILG`.
 - **Source funder:** local Stellar CLI identity `zkf-mainnet-qa`.
-- **Secret posture:** destination mnemonic stayed outside the repo at `/Users/abu/.config/zk-fighter/cctp-bridge-destination.json`; QA identity stayed outside the repo under the local Stellar CLI config.
+- **Secret posture:** destination mnemonic stayed outside the repo at `/Users/abu/.config/zk-freighter/cctp-bridge-destination.json`; QA identity stayed outside the repo under the local Stellar CLI config.
 
 ### Transactions
 
@@ -2290,8 +2290,8 @@ These are upload/install estimates only. They do not include contract-instance d
 - **Build:** rebuilt Nethermind browser assets with Homebrew LLVM (`CC_wasm32_unknown_unknown=/opt/homebrew/opt/llvm/bin/clang`, `CXX_wasm32_unknown_unknown=/opt/homebrew/opt/llvm/bin/clang++`, `AR_wasm32_unknown_unknown=/opt/homebrew/opt/llvm/bin/llvm-ar`, `make release`) and restaged with `pnpm prover:stage`.
 - **Verification:**
   - `cargo test -p state unsupported_raw_events_do_not_block_processing`
-  - `CI=true pnpm --filter @zk-fighter/web build`
-  - `CI=true pnpm --filter @zk-fighter/extension build:local`
+  - `CI=true pnpm --filter @zk-freighter/web build`
+  - `CI=true pnpm --filter @zk-freighter/extension build:local`
   - `node scripts/check-file-size.mjs`
 - **Local runtime:** restarted web dev server on `http://localhost:4173/`; funding API `8787`, testnet bootnode `8788`, and mainnet bootnode `8789` health checks returned `ok`.
 
@@ -2317,10 +2317,10 @@ These are upload/install estimates only. They do not include contract-instance d
 - **Fix:** kept the foreground raw-event sync path, but moved both `ProcessRawEvents` and `Transact` witness-input storage requests onto a shared 60s proving-step worker budget. Web shielded balance reads now call `syncBeforeRead` before reading XLM/USDC notes, and core note-set defaults were widened to a 90s runtime job timeout with a 60s pool-sync timeout.
 - **Build:** rebuilt Nethermind browser assets with Homebrew LLVM and restaged with `pnpm prover:stage`. Tracked reproducibility patch updated: `patches/nethermind/foreground-raw-sync.patch`.
 - **Verification:**
-  - `CI=true pnpm --filter @zk-fighter/web build`
-  - `CI=true pnpm --filter @zk-fighter/extension build:local`
+  - `CI=true pnpm --filter @zk-freighter/web build`
+  - `CI=true pnpm --filter @zk-freighter/extension build:local`
   - `node scripts/check-file-size.mjs`
-  - `CI=true pnpm --filter @zk-fighter/core test -- xlm-private xlm-private-timeout`
+  - `CI=true pnpm --filter @zk-freighter/core test -- xlm-private xlm-private-timeout`
   - `cargo test -p state unsupported_raw_events_do_not_block_processing`
 - **Runtime smoke:** `CI=true pnpm extension:quickshield`
   - User address: `GBNIA7KFYAZKLYMKBRVGCVOZLDHSW4I3X6VMKZA3IV26I3L7ZGYVJQOV`.
@@ -2337,15 +2337,15 @@ These are upload/install estimates only. They do not include contract-instance d
 - **Balance behavior:** web and extension Home/Activity balance loads now do passive note reads by default. Explicit user refreshes, post-submit refreshes, and smoke assertions can still request `syncBeforeRead: true`.
 - **Error copy:** `Storage Worker Communication Error: operation timed out after ... ms` is now classified as a stalled private engine, not a generic Stellar RPC/network failure.
 - **Verification:**
-  - `CI=true pnpm --filter @zk-fighter/core test`
-  - `CI=true pnpm --filter @zk-fighter/web typecheck`
-  - `CI=true pnpm --filter @zk-fighter/web build`
-  - `CI=true pnpm --filter @zk-fighter/extension typecheck`
-  - `CI=true pnpm --filter @zk-fighter/extension test`
-  - `CI=true pnpm --filter @zk-fighter/extension build`
-  - `CI=true pnpm --filter @zk-fighter/bootnode typecheck`
-  - `CI=true pnpm --filter @zk-fighter/bootnode build`
-  - `CI=true pnpm --filter @zk-fighter/bootnode test`
+  - `CI=true pnpm --filter @zk-freighter/core test`
+  - `CI=true pnpm --filter @zk-freighter/web typecheck`
+  - `CI=true pnpm --filter @zk-freighter/web build`
+  - `CI=true pnpm --filter @zk-freighter/extension typecheck`
+  - `CI=true pnpm --filter @zk-freighter/extension test`
+  - `CI=true pnpm --filter @zk-freighter/extension build`
+  - `CI=true pnpm --filter @zk-freighter/bootnode typecheck`
+  - `CI=true pnpm --filter @zk-freighter/bootnode build`
+  - `CI=true pnpm --filter @zk-freighter/bootnode test`
   - `node scripts/check-file-size.mjs`
 - **Runtime smoke:** `CI=true pnpm extension:quickshield`
   - User address: `GBHZM5ZMZ3F4PPU323DH3PJDTJFLXWEYESU23L3CW4LGNET3H7MI2VCP`.

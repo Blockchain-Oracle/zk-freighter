@@ -1,6 +1,6 @@
-# ZK Fighter Funding API
+# ZK Freighter Funding API
 
-Hosted testnet funding service for the ZK Fighter product surfaces.
+Hosted testnet funding service for the ZK Freighter product surfaces.
 
 It funds a Stellar testnet account with XLM and, when the destination trustline is ready, testnet USDC. It keeps a request ledger for cooldowns, rate limits, budget tracking, and activity evidence. Mainnet funding is intentionally unavailable.
 

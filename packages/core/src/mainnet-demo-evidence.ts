@@ -124,7 +124,7 @@ export const mainnetPrivateLoopEvidence = [
 
 export function mainnetPrivateLoopDigest(evidence: MainnetPrivateLoopEvidence): string {
   return [
-    `ZK Fighter ${evidence.asset} mainnet private-loop evidence (${evidence.recordedAtUtc})`,
+    `ZK Freighter ${evidence.asset} mainnet private-loop evidence (${evidence.recordedAtUtc})`,
     `Pool: ${evidence.poolContractId}`,
     `Public account: ${evidence.publicAccount}`,
     ...evidence.transactions.map(

@@ -19,7 +19,7 @@ index 484e991..5268ee8 100644
 +
  ## Assumptions
  
- - ZK Fighter's bridge remains an inbound bridge: source-chain USDC -> public Stellar USDC -> separate shield/deposit.
+ - ZK Freighter's bridge remains an inbound bridge: source-chain USDC -> public Stellar USDC -> separate shield/deposit.
 diff --git a/.thoughts/research/2026-06-25-multichain-cctp-bridge.md b/.thoughts/research/2026-06-25-multichain-cctp-bridge.md
 index 35643c2..fc137c3 100644
 --- a/.thoughts/research/2026-06-25-multichain-cctp-bridge.md
@@ -40,7 +40,7 @@ index 35643c2..fc137c3 100644
 +
 +2026-06-25:
 +
-+- ZK Fighter now has an EVM source-chain registry in `packages/core/src/networks.ts`.
++- ZK Freighter now has an EVM source-chain registry in `packages/core/src/networks.ts`.
 +- Configured active source chains are Ethereum, Base, Arbitrum, and OP for both testnet and mainnet.
 +- The bridge runner accepts a `sourceChainKey` and uses the selected source domain, chain ID, USDC contract, TokenMessenger, and explorer URL.
 +- Web bridge resume storage now records the selected source chain with the burn hash.
@@ -57,7 +57,7 @@ index 13133c0..7672927 100644
 -> **Status:** Phase 11 now has a WXT MV3 extension scaffold with a passing production build, Chrome-for-Testing runtime smoke, offscreen Nethermind browser/WASM module initialization, dry XLM deposit proof generation, real extension QuickShield XLM and USDC shield/deposit transactions on testnet and mainnet, bridge handoff runtime evidence, and Freighter-style detection/network responses that fail closed for external public-key access and signing. The extension is a QuickShield + bridge companion, not a general public dApp signing wallet. The web app remains the safest judged surface unless Abu chooses to include the extension in the final demo. The app includes seed-backed identity, encrypted local vault, deterministic `zkf1...` receive codes, real testnet shield/unshield/send/disclosure/passkey slices, and a CCTP bridge-then-shield flow with recorded approval, burn, Iris attestation, Stellar mint/forward, public USDC balance, ASP insertion, and separate USDC shield evidence. Atomic bridge-and-shield is deferred until a custom adapter passes real tests. See [`.thoughts/research/spikes-log.md`](.thoughts/research/spikes-log.md) for hashes and runtime evidence, [`.thoughts/research/2026-06-24-phase9-atomic-bridge-shield-decision.md`](.thoughts/research/2026-06-24-phase9-atomic-bridge-shield-decision.md) for the atomic decision, [`.thoughts/plans/2026-06-24-extension-quickshield-bridge-plan.md`](.thoughts/plans/2026-06-24-extension-quickshield-bridge-plan.md) for the extension follow-up, [`.thoughts/verification/2026-06-24-phase10-submission-hardening-audit.md`](.thoughts/verification/2026-06-24-phase10-submission-hardening-audit.md) for submission hardening, and [`.thoughts/verification/2026-06-24-phase11-wxt-extension-audit.md`](.thoughts/verification/2026-06-24-phase11-wxt-extension-audit.md) for the extension boundary.
 +> **Status:** Phase 11 now has a WXT MV3 extension scaffold with a passing production build, Chrome-for-Testing runtime smoke, offscreen Nethermind browser/WASM module initialization, dry XLM deposit proof generation, real extension QuickShield XLM and USDC shield/deposit transactions on testnet and mainnet, bridge handoff runtime evidence, and Freighter-style detection/network responses that fail closed for external public-key access and signing. The extension is a QuickShield + bridge companion, not a general public dApp signing wallet. The web app remains the safest judged surface unless Abu chooses to include the extension in the final demo. The app includes seed-backed identity, encrypted local vault, deterministic `zkf1...` receive codes, real testnet shield/unshield/send/disclosure/passkey slices, and a CCTP bridge-then-shield flow with recorded Ethereum Sepolia approval, burn, Iris attestation, Stellar mint/forward, public USDC balance, ASP insertion, and separate USDC shield evidence. The bridge code now has source-chain selection for Ethereum, Base, Arbitrum, and OP CCTP routes; Base/Arbitrum/OP still need their own accepted bridge hashes before being claimed as evidence-backed routes. Atomic bridge-and-shield is deferred until a custom adapter passes real tests. See [`.thoughts/research/spikes-log.md`](.thoughts/research/spikes-log.md) for hashes and runtime evidence, [`.thoughts/research/2026-06-24-phase9-atomic-bridge-shield-decision.md`](.thoughts/research/2026-06-24-phase9-atomic-bridge-shield-decision.md) for the atomic decision, [`.thoughts/plans/2026-06-25-multichain-cctp-bridge-plan.md`](.thoughts/plans/2026-06-25-multichain-cctp-bridge-plan.md) for the multichain bridge path, and [`.thoughts/verification/2026-06-24-phase11-wxt-extension-audit.md`](.thoughts/verification/2026-06-24-phase11-wxt-extension-audit.md) for the extension boundary.
  
- > **Mainnet note:** Mainnet XLM/USDC SACs, Circle CCTP contract IDs, public USDC plumbing, ZK Fighter XLM/USDC pool deployments, extension QuickShield XLM/USDC shield/deposits, and XLM/USDC shielded transfer + public unshield smokes are recorded. Mainnet bridge-to-shield still needs its own accepted hashes before being claimed. See [`.thoughts/research/2026-06-25-mainnet-readiness.md`](.thoughts/research/2026-06-25-mainnet-readiness.md) and [`.thoughts/research/spikes-log.md`](.thoughts/research/spikes-log.md).
+ > **Mainnet note:** Mainnet XLM/USDC SACs, Circle CCTP contract IDs, public USDC plumbing, ZK Freighter XLM/USDC pool deployments, extension QuickShield XLM/USDC shield/deposits, and XLM/USDC shielded transfer + public unshield smokes are recorded. Mainnet bridge-to-shield still needs its own accepted hashes before being claimed. See [`.thoughts/research/2026-06-25-mainnet-readiness.md`](.thoughts/research/2026-06-25-mainnet-readiness.md) and [`.thoughts/research/spikes-log.md`](.thoughts/research/spikes-log.md).
  
 @@ -53,7 +53,7 @@ Built for **Stellar Hacks: Real-World ZK** (DoraHacks, sponsored by the Stellar
  
@@ -91,7 +91,7 @@ index c225d26..7121a40 100644
  import { ArrowLeftRight, ExternalLink } from 'lucide-react'
 -import { useState } from 'react'
 +import { useEffect, useMemo, useState } from 'react'
-+import { getDefaultCctpSource, getEnabledCctpSources, type CctpSourceKey } from '@zk-fighter/core'
++import { getDefaultCctpSource, getEnabledCctpSources, type CctpSourceKey } from '@zk-freighter/core'
  
  import { dappMessageTypes, type BridgeHandoffResponse, type DappWalletStatus } from './dappMessages'
  import { shorten } from './extension-format'
@@ -129,7 +129,7 @@ index c225d26..7121a40 100644
        <p className="copy">
 -        Opens the web bridge flow so the Ethereum wallet can sign on a normal web page. The bridge leg stays public,
 +        Opens the web bridge flow so the source-chain wallet can sign on a normal web page. The bridge leg stays public,
-         then ZK Fighter shields USDC separately after arrival.
+         then ZK Freighter shields USDC separately after arrival.
        </p>
        <dl className="meta-list">
 @@ -42,9 +55,19 @@ export function ExtensionBridgePanel({ status, sendRuntimeMessage }: ExtensionBr
@@ -217,7 +217,7 @@ index 3c41cc5..a41982c 100644
      const state = await readStoredDappWallet()
      const identity = identityForMnemonic(this.unlockedMnemonic, state)
      if (!identity) {
-       return { ok: false, error: 'Unlock ZK Fighter before opening the bridge.' }
+       return { ok: false, error: 'Unlock ZK Freighter before opening the bridge.' }
      }
  
 -    const url = bridgeUrl(state.network, identity.stellarPublicKey, resumeBurnHash)
@@ -321,7 +321,7 @@ index 9138fbd..ff2acb2 100644
    type NetworkKey,
    type WalletIdentity,
    type XlmShieldSubmitReport,
- } from '@zk-fighter/core'
+ } from '@zk-freighter/core'
  import { truncateMiddle } from './app-helpers'
 -import { bridgeHandoffNotice, bridgeResumeBurnHashFromUrl } from './bridge-handoff'
 -import { loadBridgeResumeBurnHash, loadCompletedBridgeResumeReport, saveBridgeResumeReport } from './bridge-storage'
@@ -576,8 +576,8 @@ index b215fbb..e0d4d23 100644
 --- a/apps/web/src/bridge-handoff.ts
 +++ b/apps/web/src/bridge-handoff.ts
 @@ -1,4 +1,4 @@
--import type { NetworkKey } from '@zk-fighter/core'
-+import { getCctpSource, isCctpSourceKey, type CctpSourceKey, type NetworkKey } from '@zk-fighter/core'
+-import type { NetworkKey } from '@zk-freighter/core'
++import { getCctpSource, isCctpSourceKey, type CctpSourceKey, type NetworkKey } from '@zk-freighter/core'
  
  export function bridgeResumeBurnHashFromUrl(network: NetworkKey, publicKey: string): string | undefined {
    const params = bridgeParams()
@@ -613,7 +613,7 @@ diff --git a/apps/web/src/bridge-storage.test.ts b/apps/web/src/bridge-storage.t
 index 5a2b282..04a752c 100644
 --- a/apps/web/src/bridge-storage.test.ts
 +++ b/apps/web/src/bridge-storage.test.ts
-@@ -3,6 +3,7 @@ import type { CctpBridgeReport } from '@zk-fighter/core'
+@@ -3,6 +3,7 @@ import type { CctpBridgeReport } from '@zk-freighter/core'
  import {
    bridgeResumeStorageKey,
    loadBridgeResumeBurnHash,
@@ -682,7 +682,7 @@ index 989ae60..7f1383e 100644
 --- a/apps/web/src/bridge-storage.ts
 +++ b/apps/web/src/bridge-storage.ts
 @@ -1,7 +1,14 @@
--import { getNetworkConfig, type CctpBridgeReport, type NetworkKey } from '@zk-fighter/core'
+-import { getNetworkConfig, type CctpBridgeReport, type NetworkKey } from '@zk-freighter/core'
 +import {
 +  getCctpSource,
 +  getNetworkConfig,
@@ -690,12 +690,12 @@ index 989ae60..7f1383e 100644
 +  type CctpBridgeReport,
 +  type CctpSourceKey,
 +  type NetworkKey,
-+} from '@zk-fighter/core'
++} from '@zk-freighter/core'
  
 -const bridgeResumeStorageVersion = 1
--const bridgeResumeStoragePrefix = 'zk-fighter:cctp-bridge-resume:v1'
+-const bridgeResumeStoragePrefix = 'zk-freighter:cctp-bridge-resume:v1'
 +const bridgeResumeStorageVersion = 2
-+const bridgeResumeStoragePrefix = 'zk-fighter:cctp-bridge-resume:v2'
++const bridgeResumeStoragePrefix = 'zk-freighter:cctp-bridge-resume:v2'
  const txHashHexChars = 64
  const txHashPattern = new RegExp(`^0x[0-9a-fA-F]{${txHashHexChars}}$`)
  const stellarTxPattern = new RegExp(`^[0-9a-fA-F]{${txHashHexChars}}$`)
@@ -891,7 +891,7 @@ index 42f04c6..f00cdde 100644
  
  **Repository focus:** The web app is the safest judged surface. The extension is included as extra runtime evidence for QuickShield and bridge handoff, not as a general dApp signing wallet.
  
-@@ -18,7 +18,7 @@ ZK Fighter gives users a seed-backed wallet, encrypted local vault, deterministi
+@@ -18,7 +18,7 @@ ZK Freighter gives users a seed-backed wallet, encrypted local vault, deterministi
  
  The bridge flow uses the safe two-step path:
  
@@ -899,7 +899,7 @@ index 42f04c6..f00cdde 100644
 +1. Public CCTP bridge from a supported source-chain USDC balance to Stellar USDC.
  2. Separate Stellar USDC shield/deposit into the privacy pool.
  
- The browser extension is a ZK companion. It can unlock the ZK Fighter wallet, show receive/deposit plumbing, run QuickShield for XLM and USDC with real Chrome runtime evidence, and hand off to the web bridge route. It intentionally does not expose arbitrary public dApp signing.
+ The browser extension is a ZK companion. It can unlock the ZK Freighter wallet, show receive/deposit plumbing, run QuickShield for XLM and USDC with real Chrome runtime evidence, and hand off to the web bridge route. It intentionally does not expose arbitrary public dApp signing.
 @@ -67,13 +67,14 @@ Full evidence, explorer links, balance notes, and failure fixes are in `.thought
  3. Show the public boundary copy: shield/deposit and unshield/withdraw are public.
  4. Demonstrate or replay the USDC loop: shield, shielded transfer, unshield.

@@ -1,6 +1,6 @@
 import { Activity, ArrowDown, Camera, Home, MoreHorizontal, Settings, Shield, WalletCards } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { Logo } from '@zk-fighter/ui'
+import { Logo } from '@zk-freighter/ui'
 import type { MobileRoute } from './mobile-storage'
 import { truncateMiddle } from './mobile-format'
 

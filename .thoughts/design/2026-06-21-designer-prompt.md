@@ -1,4 +1,4 @@
-# Design Prompt — ZK Fighter privacy-by-default Stellar wallet
+# Design Prompt — ZK Freighter privacy-by-default Stellar wallet
 
 You are designing a **high-fidelity, clickable prototype with fully mocked data** for a privacy-focused crypto wallet. This prompt is the authoritative scope and stands on its own. You also have the **uploaded codebase**, which contains visual references, live competitor screenshots, and a deeper design brief — see **"Reference material in the repo"** at the end if you want to go deeper or find an image. Read this once, then design.
 
@@ -12,7 +12,7 @@ A **privacy-by-default, self-custody wallet for shielded payments on Stellar.** 
 
 The single most important rule: **never overclaim.** Do not write "fully private," "anonymous," or "untraceable" anywhere. Use **"shielded transfers."** Deposits and withdrawals ARE public and must be labeled as public. A wallet that says "anonymous" and then leaks information is worse than no privacy wallet — so the honesty is the brand.
 
-**Product name is locked: ZK Fighter.** Use the name consistently. Keep the wordmark restrained and avoid any Freighter-derivative identity.
+**Product name is locked: ZK Freighter.** Use the name consistently. Keep the wordmark restrained and avoid any Freighter-derivative identity.
 
 **Assets:** exactly **XLM and USDC**. Nothing else. No token import, no asset search.
 
@@ -57,7 +57,7 @@ Group logically; build in roughly this order. For each, design the full state se
 
 **Landing page (public marketing site — separate from the wallet app)**
 0. A single-scroll landing page. Visual language **inspired by Freighter** (live screenshots are in the repo at `reference/screenshots/freighter/` — borrow the *style*, not the features): dark theme, a deep purple/indigo gradient field, large rounded UI-mockup cards, clean minimal type, calm and premium. Sections:
-   - **Hero** — ZK Fighter wordmark + an honest one-line value prop (e.g. "Send money privately on Stellar — shielded by default, self-custody, no middleman"). Primary CTA **"Launch web app"**; secondary "How it works". A small badge **"Chrome extension — coming soon"** (we ship the web app first, the extension later). Floating wallet-UI mock cards (like Freighter's three-card hero) — but showing **our** screens (shielded balance, private send, a disclosure proof), never swap/NFT/trending.
+   - **Hero** — ZK Freighter wordmark + an honest one-line value prop (e.g. "Send money privately on Stellar — shielded by default, self-custody, no middleman"). Primary CTA **"Launch web app"**; secondary "How it works". A small badge **"Chrome extension — coming soon"** (we ship the web app first, the extension later). Floating wallet-UI mock cards (like Freighter's three-card hero) — but showing **our** screens (shielded balance, private send, a disclosure proof), never swap/NFT/trending.
    - **How privacy works** — the shield → private send → unshield story in 3 honest steps, the public/private boundary stated plainly.
    - **Why it's different** — real ZK, self-custody (no mandatory relayer), passkey-optional, user-held compliance/selective disclosure. Honest framing — never "anonymous."
    - **Trust & credits strip** — built on Stellar's ZK primitives; credits Nethermind + Circle; an "unaudited · testnet" disclaimer.

@@ -1,4 +1,4 @@
-import { ThemeProvider } from '@zk-fighter/ui'
+import { ThemeProvider } from '@zk-freighter/ui'
 import { Hero } from './components/Hero'
 import { Nav } from './components/Nav'
 import { BuiltOnStrip, FooterCta, Platforms, PrivacyModel } from './components/Sections'

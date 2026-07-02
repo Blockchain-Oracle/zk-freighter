@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Button, Callout } from '@zk-fighter/ui'
+import { Button, Callout } from '@zk-freighter/ui'
 import {
   getConfidentialConfig,
   loadConfidentialBalance,
@@ -9,7 +9,7 @@ import {
   submitConfidentialMerge,
   type ConfidentialRegistration,
   type ConfidentialSubmitReport,
-} from '@zk-fighter/core'
+} from '@zk-freighter/core'
 import { Field, FlowScreen, ResultCard, Segment, type FlowProps } from './MobileFlowPrimitives'
 import { loadCircuit, reportStatus, STELLAR_ADDRESS } from './mobile-flow-helpers'
 import { runMobilePrivateJob } from './mobile-runtime'
@@ -49,7 +49,7 @@ export function MobileConfidential({ network, identity, onRoute }: FlowProps) {
     setBusy('register'); setReport(null)
     const activity = recordMobileActivity({ network, ownerAddress: identity.stellarPublicKey, intent: 'confidentialSetup', boundary: 'public', status: 'pending' })
     try {
-      const [{ submitConfidentialRegister }, circuit] = await Promise.all([import('@zk-fighter/core/confidential/register'), loadCircuit('circuit_register')])
+      const [{ submitConfidentialRegister }, circuit] = await Promise.all([import('@zk-freighter/core/confidential/register'), loadCircuit('circuit_register')])
       const next = await runMobilePrivateJob(() => submitConfidentialRegister({ identity, network, circuit: circuit as never }))
       setReport(next)
       updateMobileActivity(activity.id, { status: reportStatus(next.status), txHash: next.txHash, explorerUrl: next.explorerUrl, error: next.error ?? next.blockers[0] })
@@ -80,17 +80,17 @@ export function MobileConfidential({ network, identity, onRoute }: FlowProps) {
   async function dispatch(kind: ConfidentialOp, value: bigint): Promise<ConfidentialSubmitReport> {
     if (kind === 'deposit') return submitConfidentialDeposit({ identity, network, amount: value })
     if (kind === 'withdraw') {
-      const [{ submitConfidentialWithdraw }, circuit] = await Promise.all([import('@zk-fighter/core/confidential/withdraw'), loadCircuit('circuit_withdraw')])
+      const [{ submitConfidentialWithdraw }, circuit] = await Promise.all([import('@zk-freighter/core/confidential/withdraw'), loadCircuit('circuit_withdraw')])
       return submitConfidentialWithdraw({ identity, network, amount: value, to: recipient.trim(), circuit: circuit as never })
     }
-    const [{ submitConfidentialTransfer }, circuit] = await Promise.all([import('@zk-fighter/core/confidential/transfer'), loadCircuit('circuit_transfer')])
+    const [{ submitConfidentialTransfer }, circuit] = await Promise.all([import('@zk-freighter/core/confidential/transfer'), loadCircuit('circuit_transfer')])
     return submitConfidentialTransfer({ identity, network, amount: value, to: recipient.trim(), circuit: circuit as never })
   }
 
   async function scanIncoming() {
     setBusy('scan'); setScanMessage('')
     try {
-      const { scanConfidentialIncoming } = await import('@zk-fighter/core/confidential/receive')
+      const { scanConfidentialIncoming } = await import('@zk-freighter/core/confidential/receive')
       const result = await runMobilePrivateJob(() => scanConfidentialIncoming({ identity, network }))
       setScanMessage(result.receipts.length > 0 ? `Found ${result.receipts.length} transfer(s), credited ${formatUnits(result.creditedTotal, decimals)} ${code}.` : 'No new incoming transfers found.')
       if (result.receipts.length > 0) setTick((value) => value + 1)

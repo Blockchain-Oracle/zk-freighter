@@ -1,5 +1,5 @@
 import { GitBranch } from 'lucide-react'
-import { Logo } from '@zk-fighter/ui'
+import { Logo } from '@zk-freighter/ui'
 import { docsUrl, sourceUrl } from '../links'
 
 export function SiteFooter() {
@@ -8,7 +8,7 @@ export function SiteFooter() {
       <div className="site-footer-brand">
         <Logo size={26} glow />
         <div>
-          <strong>ZK Fighter</strong>
+          <strong>ZK Freighter</strong>
           <span>Shielded payments on Stellar</span>
         </div>
       </div>

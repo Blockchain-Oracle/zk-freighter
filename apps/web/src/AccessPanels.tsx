@@ -1,6 +1,6 @@
 import { useState, type CSSProperties, type ReactNode } from 'react'
-import type { NetworkKey } from '@zk-fighter/core'
-import { Button, Logo } from '@zk-fighter/ui'
+import type { NetworkKey } from '@zk-freighter/core'
+import { Button, Logo } from '@zk-freighter/ui'
 
 export type WalletSetupMode = 'create' | 'import'
 
@@ -100,7 +100,7 @@ interface UnlockScreenProps {
 export function UnlockScreen({ network, busy, unlockPassword, error, onPassword, onPasswordUnlock }: UnlockScreenProps) {
   return (
     <OnboardCard>
-      <CardTop left={<Logo size={24} />} title="ZK Fighter" right={<TestnetPill network={network} />} />
+      <CardTop left={<Logo size={24} />} title="ZK Freighter" right={<TestnetPill network={network} />} />
       <CardBody>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, textAlign: 'center' }}>
           <Logo size={56} glow />
@@ -116,7 +116,7 @@ export function UnlockScreen({ network, busy, unlockPassword, error, onPassword,
         {error ? <div style={{ fontSize: 11.5, color: 'var(--dng)' }}>{error}</div> : null}
         <Button fullWidth loading={busy} disabled={!unlockPassword} onClick={onPasswordUnlock}>Unlock</Button>
         <div style={{ fontSize: 11, color: 'var(--tx3)', lineHeight: 1.5, textAlign: 'center', marginTop: 'auto' }}>
-          Your seed phrase is the only recovery path. ZK Fighter cannot recover it for you.
+          Your seed phrase is the only recovery path. ZK Freighter cannot recover it for you.
         </div>
       </CardBody>
     </OnboardCard>

@@ -4,7 +4,7 @@ import {
   type NetworkKey,
   type WalletIdentity,
   type XlmNotesReport,
-} from '@zk-fighter/core'
+} from '@zk-freighter/core'
 
 export interface ShieldedBalanceState {
   /** True while the current load is in flight (or stale after an identity/network change). */

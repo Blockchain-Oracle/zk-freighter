@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { CctpBridgeReport, CctpBridgeStage } from '@zk-fighter/core'
+import type { CctpBridgeReport, CctpBridgeStage } from '@zk-freighter/core'
 import { BRIDGE_STAGE_LABELS, bridgeStageModel } from './bridgeStages'
 
 function report(status: CctpBridgeReport['status'], stages: CctpBridgeStage[]): CctpBridgeReport {

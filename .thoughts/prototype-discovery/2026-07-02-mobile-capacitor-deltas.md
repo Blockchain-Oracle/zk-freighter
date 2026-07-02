@@ -2,8 +2,8 @@
 
 ## Prototype Inspected
 
-- `/Users/abu/Downloads/GitHub repository link(2)/ZK Fighter Mobile Home.dc.html`
-- `/Users/abu/Downloads/GitHub repository link(2)/ZK Fighter Mobile Flows.dc.html`
+- `/Users/abu/Downloads/GitHub repository link(2)/ZK Freighter Mobile Home.dc.html`
+- `/Users/abu/Downloads/GitHub repository link(2)/ZK Freighter Mobile Flows.dc.html`
 - Repo design map: `docs/redesign/DESIGN-MAP.md`
 - Repo component catalog: `docs/redesign/COMPONENTS.md`
 - Existing mobile framework research: `.thoughts/research/2026-06-25-mobile-app-framework-options.md`
@@ -33,9 +33,9 @@
 ## Target-stack Translation
 
 - First mobile implementation remains a Capacitor React/Vite app in `apps/mobile`.
-- Native app config: `appId=com.zkfighter.wallet`, `appName=ZK Fighter`, `webDir=dist`.
+- Native app config: `appId=com.zkfreighter.wallet`, `appName=ZK Freighter`, `webDir=dist`.
 - Runtime gate comes before wallet flows: static proof assets, workers, WebCrypto, `/js/web.js`, Nethermind module init, and prover readiness.
-- Later wallet screens should reuse `@zk-fighter/core` and `@zk-fighter/ui`, especially shared `Sheet`, `BoundaryBadge`, `QrCard`, `ProvingRing`, `ProofStepList`, `ActivityRow`, and formatting helpers.
+- Later wallet screens should reuse `@zk-freighter/core` and `@zk-freighter/ui`, especially shared `Sheet`, `BoundaryBadge`, `QrCard`, `ProvingRing`, `ProofStepList`, `ActivityRow`, and formatting helpers.
 
 ## Mocked Prototype Surfaces
 

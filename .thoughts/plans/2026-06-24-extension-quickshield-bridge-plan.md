@@ -2,14 +2,14 @@
 
 ## Inputs
 
-- Product decision from Abu on 2026-06-24: ZK Fighter should not become a general dApp signing wallet.
+- Product decision from Abu on 2026-06-24: ZK Freighter should not become a general dApp signing wallet.
 - Current web evidence: XLM/USDC shielded flows, disclosure, passkey wrapper, and safe CCTP bridge-then-shield.
 - Current extension evidence: WXT MV3 build, Chrome runtime smoke, offscreen Nethermind module load, and offscreen dry XLM proof generation.
 - Superseded plan: `.thoughts/plans/2026-06-24-extension-public-dapp-wallet-mode-plan.md`.
 
 ## Assumptions
 
-- Internal transaction signing remains required for ZK Fighter-owned actions such as shield, unshield, bridge mint/forward, and proof-backed pool calls.
+- Internal transaction signing remains required for ZK Freighter-owned actions such as shield, unshield, bridge mint/forward, and proof-backed pool calls.
 - External arbitrary dApp signing is deferred and disabled because it would shift the product toward a Freighter replacement.
 - Mobile is a later track. Extension work continues first because WXT/offscreen prover evidence already exists.
 - Extension-native Ethereum bridge is not claimed until a real Chrome runtime spike proves safe access to an Ethereum signer from the extension surface.
@@ -52,7 +52,7 @@ Keep Freighter-style detection/network responses for compatibility research whil
 
 ### Goal
 
-Turn the side panel into a ZK Fighter companion: vault, public deposit address, private receive code, and shield action.
+Turn the side panel into a ZK Freighter companion: vault, public deposit address, private receive code, and shield action.
 
 ### Work
 

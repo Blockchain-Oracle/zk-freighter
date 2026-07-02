@@ -2,7 +2,7 @@
 
 ## Project Snapshot
 
-ZK Fighter is a privacy-by-default Stellar wallet for shielded XLM and USDC payments. The repo contains:
+ZK Freighter is a privacy-by-default Stellar wallet for shielded XLM and USDC payments. The repo contains:
 
 - `apps/web` - React/Vite web app.
 - `apps/extension` - WXT MV3 browser extension.
@@ -11,7 +11,7 @@ ZK Fighter is a privacy-by-default Stellar wallet for shielded XLM and USDC paym
 
 Primary remote:
 
-- `https://github.com/Blockchain-Oracle/zk-fighter`
+- `https://github.com/Blockchain-Oracle/zk-freighter`
 - default branch: `main`
 
 Always read `AGENTS.md` first. It is the authoritative project instruction file.

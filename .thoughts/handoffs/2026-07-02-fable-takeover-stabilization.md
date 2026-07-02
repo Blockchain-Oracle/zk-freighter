@@ -48,7 +48,7 @@ docs site → premium intro/mobile motion → private↔public sends → EVM fau
 ## Not verified / open
 
 - **Native Capacitor** (Android/iOS on device): no device/AVD attached. Phone-browser path is
-  ready — run `pnpm --filter @zk-fighter/mobile dev:phone` + `tunnel`, open the URL on the phone.
+  ready — run `pnpm --filter @zk-freighter/mobile dev:phone` + `tunnel`, open the URL on the phone.
 - Bridge flow not re-verified this session (needs EVM funds; unchanged code).
 - Copy overclaims found and NOT yet fixed (Phase 2+ work): Send review says "Visibility: Fully
   shielded" and "Nothing about this payment touches the public chain" (false — the pool tx is

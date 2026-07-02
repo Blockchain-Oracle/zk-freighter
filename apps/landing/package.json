@@ -1,5 +1,5 @@
 {
-  "name": "@zk-fighter/landing",
+  "name": "@zk-freighter/landing",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -13,7 +13,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@zk-fighter/ui": "workspace:*",
+    "@zk-freighter/ui": "workspace:*",
     "lucide-react": "1.21.0",
     "react": "19.2.6",
     "react-dom": "19.2.6"

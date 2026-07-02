@@ -5,10 +5,10 @@ import {
   type CctpBridgeReport,
   type CctpSourceKey,
   type NetworkKey,
-} from '@zk-fighter/core'
+} from '@zk-freighter/core'
 
 const bridgeResumeStorageVersion = 2
-const bridgeResumeStoragePrefix = 'zk-fighter:cctp-bridge-resume:v2'
+const bridgeResumeStoragePrefix = 'zk-freighter:cctp-bridge-resume:v2'
 const txHashHexChars = 64
 const txHashPattern = new RegExp(`^0x[0-9a-fA-F]{${txHashHexChars}}$`)
 const stellarTxPattern = new RegExp(`^[0-9a-fA-F]{${txHashHexChars}}$`)

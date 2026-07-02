@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react'
-import { Button, Callout, ProofStepList, ProvingRing, truncateMiddle } from '@zk-fighter/ui'
+import { Button, Callout, ProofStepList, ProvingRing, truncateMiddle } from '@zk-freighter/ui'
 import type { ProofFlowModel } from './proofFlow'
 
 export interface ProofRunCopy {

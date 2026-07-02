@@ -1,27 +1,27 @@
-# ZK Fighter
+# ZK Freighter
 
 > A self-custody wallet for shielded XLM and USDC payments on Stellar. Zero-knowledge proofs on-device; shield, unshield, and bridge arrivals are public boundaries.
 
 ## Docs
 
-- [Confidential mode](https://docs.zkfighter.dev/docs/apps/confidential): The second privacy mode — hidden amounts between public addresses. Testnet preview.
-- [Browser extension](https://docs.zkfighter.dev/docs/apps/extension): The quick companion — glance, QuickShield, receive.
-- [Mobile app](https://docs.zkfighter.dev/docs/apps/mobile): The same wallet, thumb-first — Capacitor on Android and iOS.
-- [Web app](https://docs.zkfighter.dev/docs/apps/web): The full wallet in the browser.
-- [Extension internals](https://docs.zkfighter.dev/docs/architecture/extension): How heavy proving fits inside a Manifest V3 extension.
-- [Overview](https://docs.zkfighter.dev/docs/architecture/overview): One core engine, three thin surfaces, two supporting services.
-- [Proving on-device](https://docs.zkfighter.dev/docs/architecture/proving): The Groth16 pipeline that runs in your browser — and the second Noir stack.
-- [Services](https://docs.zkfighter.dev/docs/architecture/services): The bootnode event index and the hosted testnet faucet.
-- [Evidence & verification](https://docs.zkfighter.dev/docs/evidence): Every claim is backed by accepted on-chain transactions you can check yourself.
-- [Glossary](https://docs.zkfighter.dev/docs/glossary): Every term in plain English — assume smart, not cryptographer.
-- [Bridging USDC in](https://docs.zkfighter.dev/docs/how-it-works/bridge): Real Circle USDC from Ethereum, Base, Arbitrum, or Optimism — then shield it.
-- [Selective disclosure](https://docs.zkfighter.dev/docs/how-it-works/disclosure): Prove a specific note to an auditor — read-only, on your terms.
-- [Private receive codes](https://docs.zkfighter.dev/docs/how-it-works/receive-codes): The zkf1… code that lets anyone pay your shielded balance without knowing your address.
-- [Shielded transfers](https://docs.zkfighter.dev/docs/how-it-works/shielded-transfers): Notes, nullifiers, and on-device proofs — the full lifecycle of private money.
-- [What is ZK Fighter?](https://docs.zkfighter.dev/docs): A self-custody wallet for shielded XLM and USDC payments on Stellar.
-- [Privacy model](https://docs.zkfighter.dev/docs/privacy-model): Exactly what is hidden, what is public, and what we refuse to claim.
-- [Quickstart](https://docs.zkfighter.dev/docs/quickstart): Run the wallet, fund it on testnet, and make your first shielded transfer.
+- [Confidential mode](https://docs.zkfreighter.dev/docs/apps/confidential): The second privacy mode — hidden amounts between public addresses. Testnet preview.
+- [Browser extension](https://docs.zkfreighter.dev/docs/apps/extension): The quick companion — glance, QuickShield, receive.
+- [Mobile app](https://docs.zkfreighter.dev/docs/apps/mobile): The same wallet, thumb-first — Capacitor on Android and iOS.
+- [Web app](https://docs.zkfreighter.dev/docs/apps/web): The full wallet in the browser.
+- [Extension internals](https://docs.zkfreighter.dev/docs/architecture/extension): How heavy proving fits inside a Manifest V3 extension.
+- [Overview](https://docs.zkfreighter.dev/docs/architecture/overview): One core engine, three thin surfaces, two supporting services.
+- [Proving on-device](https://docs.zkfreighter.dev/docs/architecture/proving): The Groth16 pipeline that runs in your browser — and the second Noir stack.
+- [Services](https://docs.zkfreighter.dev/docs/architecture/services): The bootnode event index and the hosted testnet faucet.
+- [Evidence & verification](https://docs.zkfreighter.dev/docs/evidence): Every claim is backed by accepted on-chain transactions you can check yourself.
+- [Glossary](https://docs.zkfreighter.dev/docs/glossary): Every term in plain English — assume smart, not cryptographer.
+- [Bridging USDC in](https://docs.zkfreighter.dev/docs/how-it-works/bridge): Real Circle USDC from Ethereum, Base, Arbitrum, or Optimism — then shield it.
+- [Selective disclosure](https://docs.zkfreighter.dev/docs/how-it-works/disclosure): Prove a specific note to an auditor — read-only, on your terms.
+- [Private receive codes](https://docs.zkfreighter.dev/docs/how-it-works/receive-codes): The zkf1… code that lets anyone pay your shielded balance without knowing your address.
+- [Shielded transfers](https://docs.zkfreighter.dev/docs/how-it-works/shielded-transfers): Notes, nullifiers, and on-device proofs — the full lifecycle of private money.
+- [What is ZK Freighter?](https://docs.zkfreighter.dev/docs): A self-custody wallet for shielded XLM and USDC payments on Stellar.
+- [Privacy model](https://docs.zkfreighter.dev/docs/privacy-model): Exactly what is hidden, what is public, and what we refuse to claim.
+- [Quickstart](https://docs.zkfreighter.dev/docs/quickstart): Run the wallet, fund it on testnet, and make your first shielded transfer.
 
 ## Source
 
-- [GitHub repository](https://github.com/Blockchain-Oracle/zk-fighter): monorepo with apps, core engine, circuits, and contracts
+- [GitHub repository](https://github.com/Blockchain-Oracle/zk-freighter): monorepo with apps, core engine, circuits, and contracts

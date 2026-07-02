@@ -1,7 +1,7 @@
 import { getNetworkConfig, type NetworkKey } from './networks'
 
-export const zkFighterRequestSource = 'ZKFIGHTER_EXTENSION_REQUEST'
-export const zkFighterResponseSource = 'ZKFIGHTER_EXTENSION_RESPONSE'
+export const zkFreighterRequestSource = 'ZKFIGHTER_EXTENSION_REQUEST'
+export const zkFreighterResponseSource = 'ZKFIGHTER_EXTENSION_RESPONSE'
 
 export const freighterRequestSource = 'FREIGHTER_EXTERNAL_MSG_REQUEST'
 export const freighterResponseSource = 'FREIGHTER_EXTERNAL_MSG_RESPONSE'

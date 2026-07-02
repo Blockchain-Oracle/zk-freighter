@@ -1,9 +1,9 @@
-# Prototype Discovery: ZK Fighter (Onboarding · Wallet · Extension · Mobile)
+# Prototype Discovery: ZK Freighter (Onboarding · Wallet · Extension · Mobile)
 
 Prototype is **evidence, not source of truth**. Translate to our React stack (React 19 / Vite); never copy the `.dc.html`. Keep open as a living reference; flag designer omissions/mistakes.
 
 ## Prototype Inspected
-- `/Users/abu/Downloads/GitHub repository link/`: `ZK Fighter Onboarding.dc.html`, `ZK Fighter Wallet.dc.html`, `ZK Fighter Extension.dc.html`, `ZK Fighter Mobile.dc.html`, `support.js` (a generic "dc-runtime" — `<x-dc>` template + `DCLogic` React-ish component; not design content). An inner `.thoughts/` mirrors our older design docs.
+- `/Users/abu/Downloads/GitHub repository link/`: `ZK Freighter Onboarding.dc.html`, `ZK Freighter Wallet.dc.html`, `ZK Freighter Extension.dc.html`, `ZK Freighter Mobile.dc.html`, `support.js` (a generic "dc-runtime" — `<x-dc>` template + `DCLogic` React-ish component; not design content). An inner `.thoughts/` mirrors our older design docs.
 
 ## Design System (shared by all four)
 - Fonts: Hanken Grotesk (UI) + IBM Plex Mono (addresses/labels). Dark-first + light theme.

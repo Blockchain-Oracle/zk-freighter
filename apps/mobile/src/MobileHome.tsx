@@ -1,8 +1,8 @@
 import { useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { ArrowDown, RefreshCw, Send, Shield, Shuffle } from 'lucide-react'
-import { Button, StatusPill } from '@zk-fighter/ui'
-import type { AssetCode, NetworkKey, PublicBalancesReport } from '@zk-fighter/core'
+import { Button, StatusPill } from '@zk-freighter/ui'
+import type { AssetCode, NetworkKey, PublicBalancesReport } from '@zk-freighter/core'
 import type { MobileActivityRecord, MobileRoute, MobileShieldedBalanceCache } from './mobile-storage'
 import { formatAssetAmount, noteBalance, summarizeError, truncateMiddle } from './mobile-format'
 

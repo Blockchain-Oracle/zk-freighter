@@ -1,4 +1,4 @@
-import { Button } from '@zk-fighter/ui'
+import { Button } from '@zk-freighter/ui'
 
 import type { DappWalletStatus } from './dappMessages'
 import { shorten } from './extension-format'
@@ -23,7 +23,7 @@ export function ExtensionSigningDisabledScreen() {
   return (
     <Panel label="Signing disabled">
       <SectionHeader title="Signing disabled" right={<Badge tone="deferred">closed</Badge>} />
-      <Copy>ZK Fighter is a shielded wallet surface, not a general public dApp signer. External public-key access and signing requests fail closed.</Copy>
+      <Copy>ZK Freighter is a shielded wallet surface, not a general public dApp signer. External public-key access and signing requests fail closed.</Copy>
     </Panel>
   )
 }

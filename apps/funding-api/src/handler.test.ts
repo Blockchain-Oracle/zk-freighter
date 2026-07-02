@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import type { FundingConfig } from './config.js'
 import { createHandler } from './handler.js'
 import type { FundingStore, FundingRequestRecord } from './store.js'
-import type { AssetCode, FundingAssetReport, NetworkKey } from '@zk-fighter/core'
+import type { AssetCode, FundingAssetReport, NetworkKey } from '@zk-freighter/core'
 
 const config: FundingConfig = {
   port: 8787,

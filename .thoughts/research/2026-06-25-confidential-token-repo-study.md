@@ -41,15 +41,15 @@ A single deployment = **three contracts**: ConfidentialToken + ConfidentialAudit
 - **Range proofs**: values constrained to `[0, 2^127)` (matches SEP-41 `i128`), preventing fake-mint via modular wrap.
 - ~288 bytes on-chain storage per account.
 
-## Integration-critical blockers (the real gate for ZK Fighter)
+## Integration-critical blockers (the real gate for ZK Freighter)
 
-1. **No JS/TS SDK.** Repo find for `.ts`/client SDK returned nothing. DESIGN.md lists "SDK (to be added)", "User Flows Overview (to be added)", and "Indexing and Off-Chain State Recovery (to be added)" as **not-yet-written** documents. A ZK Fighter wallet would have to build its own browser proving + witness assembly around **Noir + Barretenberg (`bb.js` WASM, UltraHonk)** for all 6 circuits, using the committed VKs.
+1. **No JS/TS SDK.** Repo find for `.ts`/client SDK returned nothing. DESIGN.md lists "SDK (to be added)", "User Flows Overview (to be added)", and "Indexing and Off-Chain State Recovery (to be added)" as **not-yet-written** documents. A ZK Freighter wallet would have to build its own browser proving + witness assembly around **Noir + Barretenberg (`bb.js` WASM, UltraHonk)** for all 6 circuits, using the committed VKs.
 2. **Mandatory indexer / event archive.** Wallet correctness REQUIRES maintaining commitment openings `(v,r)` off-chain from events. Stellar RPC retains events only ~7 days; the protocol **assumes a durable event archive** (INDEXER.md, also "to be added"). Recovery after local-state loss needs checkpoint event `(b̃, σ)` + replay of post-checkpoint events. **Losing openings without an indexer = unable to spend.** This is a real fund-availability risk a wallet must own.
 3. **Not production-ready / unaudited.** Verifier backend (`rs-soroban-ultrahonk`, Nethermind/Oghma) is under development and unaudited. **Testnet only**, no mainnet until audits (~August per SDF). README carries an explicit "Not Production Ready" warning.
 4. **Underlying-token assumptions**: non-rebasing, no fee-on-transfer, deterministic revert; SAC clawback/freeze/deauthorize can break the accounting invariant. Wrapping CCTP-arrived USDC needs care (issuer/SAC auth).
 5. **Toolchain pins** (from earlier note + circuits): `nargo 1.0.0-beta.11`, `bb 0.87.0`; Rust confidential tests already pass locally (92 tests).
 
-## What ZK Fighter integration actually entails
+## What ZK Freighter integration actually entails
 
 This is a **second privacy mode**, complementary to the existing Nethermind Privacy Pools path:
 - Privacy Pools (current): hide address/history linkage inside a pool; public deposit/withdraw boundaries.
@@ -60,7 +60,7 @@ Net-new wallet responsibilities (not reused from the pool path): Grumpkin key hi
 
 ## OZ repo build conventions (from its own CLAUDE.md, for any contract work)
 
-`wasm32v1-none`, `no_std` libraries; `cargo +nightly fmt`, `cargo clippy -D warnings`, `cargo test`; new features need a discussed issue first; AI output treated as first draft. Do NOT import this into ZK Fighter production code (reference-only).
+`wasm32v1-none`, `no_std` libraries; `cargo +nightly fmt`, `cargo clippy -D warnings`, `cargo test`; new features need a discussed issue first; AI output treated as first draft. Do NOT import this into ZK Freighter production code (reference-only).
 
 ## Open questions to resolve before/within planning
 

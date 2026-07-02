@@ -4,22 +4,22 @@
 
 - Research brief: `.thoughts/research/2026-06-23-confidential-tokens-preview.md`.
 - Feature memory: `.thoughts/research/2026-06-23-cross-chain-private-bridge-and-token-roadmap.md`.
-- Product spec: `.thoughts/specs/2026-06-22-zk-fighter-product-spec.md`.
+- Product spec: `.thoughts/specs/2026-06-22-zk-freighter-product-spec.md`.
 - Quality profile: `.thoughts/quality/2026-06-22-project-quality-profile.md`.
 - OpenZeppelin reference clone: `reference/openzeppelin-stellar-contracts-confidential` at `539968f158e0`.
-- Current status: ZK Fighter already has the shielded pool MVP, CCTP bridge-then-shield evidence, and Phase 11 extension scaffold. Confidential Tokens are not in the judged path yet.
+- Current status: ZK Freighter already has the shielded pool MVP, CCTP bridge-then-shield evidence, and Phase 11 extension scaffold. Confidential Tokens are not in the judged path yet.
 
 ## Assumptions
 
 - Confidential Token mode is a separate privacy mode, not a replacement for `zkf1...` shielded pool transfers.
 - It provides private amounts and balances between public Stellar addresses. It does not hide sender/recipient addresses.
 - It must remain testnet-only and unaudited until OpenZeppelin/SDF publish audited mainnet-ready contracts.
-- ZK Fighter production code must not import from `reference/`; the reference clone is for study, vectors, and attribution.
+- ZK Freighter production code must not import from `reference/`; the reference clone is for study, vectors, and attribution.
 - This mode should be planned after public wallet signing foundations, because users need normal Stellar authorization plus proof-generation UX.
 
 ## Open Questions
 
-- Is there a maintained JS/TS SDK for browser witness/proof generation, or must ZK Fighter build a local wrapper around Noir/Barretenberg artifacts?
+- Is there a maintained JS/TS SDK for browser witness/proof generation, or must ZK Freighter build a local wrapper around Noir/Barretenberg artifacts?
 - How are commitment openings recovered after browser storage loss: deterministic derivation, event replay, indexer, encrypted backup, or user export?
 - Which assets are credible first: demo token, testnet USDC SAC wrapper, or XLM wrapper?
 - Can CCTP-arrived USDC be deposited into a confidential-token wrapper without issuer/SAC authorization surprises?
@@ -27,9 +27,9 @@
 
 ## Prototype Reintegration Gate
 
-No ZK Fighter Confidential Token prototype exists. The OpenZeppelin demo is a reference app, not a UI prototype for ZK Fighter.
+No ZK Freighter Confidential Token prototype exists. The OpenZeppelin demo is a reference app, not a UI prototype for ZK Freighter.
 
-No reference demo state, contract ID, proof result, or balance may be copied into ZK Fighter as product evidence unless ZK Fighter runs and records its own testnet proof.
+No reference demo state, contract ID, proof result, or balance may be copied into ZK Freighter as product evidence unless ZK Freighter runs and records its own testnet proof.
 
 ## Phase 1: Reality Spike
 
@@ -46,11 +46,11 @@ Prove the preview is usable from our environment before product work starts.
 
 ### Real Integration Path
 
-Use the OpenZeppelin branch and demo only as primary-source reference. Any testnet interaction must use ZK Fighter-owned accounts and recorded evidence.
+Use the OpenZeppelin branch and demo only as primary-source reference. Any testnet interaction must use ZK Freighter-owned accounts and recorded evidence.
 
 ### Mock/Simulation Policy
 
-Reference unit tests are evidence that the preview compiles; they are not evidence that ZK Fighter supports Confidential Tokens.
+Reference unit tests are evidence that the preview compiles; they are not evidence that ZK Freighter supports Confidential Tokens.
 
 ### Checks
 
@@ -98,7 +98,7 @@ Fixtures may model commitments/openings in unit tests. Product UI must not show 
 
 ### Stop Condition
 
-ZK Fighter can represent a confidential token account, wrapper, and local opening state without chain writes.
+ZK Freighter can represent a confidential token account, wrapper, and local opening state without chain writes.
 
 ## Phase 3: Add Token And Registration
 
@@ -166,7 +166,7 @@ No fake balances or proof success. Local fixtures are test-only.
 
 ### Stop Condition
 
-ZK Fighter can round-trip a small testnet amount through the wrapper.
+ZK Freighter can round-trip a small testnet amount through the wrapper.
 
 ## Phase 5: Confidential Transfer And Disclosure
 
@@ -183,7 +183,7 @@ Support private-amount transfers and selective disclosure.
 
 ### Real Integration Path
 
-Use two ZK Fighter-controlled testnet accounts. Verify recipient recovery and disclosure against chain events.
+Use two ZK Freighter-controlled testnet accounts. Verify recipient recovery and disclosure against chain events.
 
 ### Mock/Simulation Policy
 
@@ -213,7 +213,7 @@ Decide how public bridge arrivals connect to privacy modes.
 
 - Keep the proven path: CCTP arrives publicly, then user chooses a separate privacy action.
 - Offer choices only after they are proven:
-  - Shield into ZK Fighter privacy pool.
+  - Shield into ZK Freighter privacy pool.
   - Deposit into a Confidential Token wrapper.
   - Keep public USDC.
 - Do not claim atomic bridge-and-shield or atomic bridge-to-confidential-token unless a custom adapter passes real tests.

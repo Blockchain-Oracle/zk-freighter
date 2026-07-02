@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This page is the persistent wiki for ZK Fighter wallet design references. It tells a designer where to look for real wallet flows, source code, screenshots, and interaction patterns while preserving ZK Fighter's product boundaries.
+This page is the persistent wiki for ZK Freighter wallet design references. It tells a designer where to look for real wallet flows, source code, screenshots, and interaction patterns while preserving ZK Freighter's product boundaries.
 
 Sources:
 
@@ -10,9 +10,9 @@ Sources:
 - Research note: `.thoughts/research/2026-06-25-wallet-ux-reference-research.md`
 - Designer handoff: `.thoughts/design/2026-06-25-designer-brief-v2.md`
 
-## ZK Fighter Context To Preserve
+## ZK Freighter Context To Preserve
 
-- Product: ZK Fighter.
+- Product: ZK Freighter.
 - Network: Stellar testnet/mainnet via config.
 - Assets: XLM and USDC only.
 - Privacy language: use "shielded transfers".
@@ -23,14 +23,14 @@ Sources:
 - Web app exists now.
 - Extension exists now as a QuickShield + receive + bridge handoff companion.
 - Possible mobile app is future scope if time allows.
-- Do not turn ZK Fighter into a general public dApp signing wallet unless Abu reverses the product decision.
+- Do not turn ZK Freighter into a general public dApp signing wallet unless Abu reverses the product decision.
 
 ## Start-Here References
 
-1. Local ZK Fighter docs:
+1. Local ZK Freighter docs:
    - `README.md`
-   - `.thoughts/specs/2026-06-22-zk-fighter-product-spec.md`
-   - `.thoughts/stories/2026-06-22-zk-fighter-mvp-stories.md`
+   - `.thoughts/specs/2026-06-22-zk-freighter-product-spec.md`
+   - `.thoughts/stories/2026-06-22-zk-freighter-mvp-stories.md`
    - `.thoughts/research/2026-06-25-mainnet-readiness.md`
    - `.thoughts/verification/2026-06-24-phase11-wxt-extension-audit.md`
 2. Local current UI source:
@@ -92,21 +92,21 @@ These are useful for product feel, app-store screenshots, and interaction inspir
 
 Use this map when the designer asks "what should I inspect for this screen?"
 
-| ZK Fighter Screen Or Flow | Best References |
+| ZK Freighter Screen Or Flow | Best References |
 |---|---|
 | Seed onboarding and recovery phrase | Freighter, MetaMask, Coinbase Wallet extension docs, Prax guide |
-| Unlock and optional passkey | MetaMask mobile/extension, Zodl/Zashi, mobile OS wallet apps, ZK Fighter current passkey panel |
+| Unlock and optional passkey | MetaMask mobile/extension, Zodl/Zashi, mobile OS wallet apps, ZK Freighter current passkey panel |
 | Home / balance model | Zodl/Zashi shielded/transparent prompts, Railway private balances, Freighter account shell, Cake wallet home |
-| Receive private code | Zodl/Zashi receive, Railway 0zk receive, ZK Fighter `zkf1...` code rules, Phantom/Coinbase receive QR docs |
+| Receive private code | Zodl/Zashi receive, Railway 0zk receive, ZK Freighter `zkf1...` code rules, Phantom/Coinbase receive QR docs |
 | Receive public deposit | Freighter receive, xBull receive, Coinbase receive QR docs, LOBSTR wallet, Phantom network-selector receive |
 | Send privately | Railway, RAILGUN SDK vocabulary, Zodl/Zashi send, MetaMask/Rabby/Rainbow review screens |
-| Shield/deposit | Zodl one-click shielding, Railway shield, ZK Fighter QuickShield panels |
-| Unshield/withdraw | Zodl transparent/shielded boundary copy, Railway withdrawal patterns, ZK Fighter docs on public boundary |
-| Bridge tracking | Rainbow bridge, Uniswap wallet, MetaMask bridge, LI.FI/Relay status APIs, Coinbase/Base app bridge/onchain send surfaces, current ZK Fighter bridge panel |
+| Shield/deposit | Zodl one-click shielding, Railway shield, ZK Freighter QuickShield panels |
+| Unshield/withdraw | Zodl transparent/shielded boundary copy, Railway withdrawal patterns, ZK Freighter docs on public boundary |
+| Bridge tracking | Rainbow bridge, Uniswap wallet, MetaMask bridge, LI.FI/Relay status APIs, Coinbase/Base app bridge/onchain send surfaces, current ZK Freighter bridge panel |
 | Activity/history | Freighter history, MetaMask activity, Zodl transaction list, Safe transaction queue/status, Zerion cross-chain history, Phantom history docs |
-| Compliance/disclosure | Railway compliance copy, RAILGUN docs, ZK Fighter disclosure panel/spec |
+| Compliance/disclosure | Railway compliance copy, RAILGUN docs, ZK Freighter disclosure panel/spec |
 | Extension popup | Freighter popup views, LOBSTR Signer extension, xBull extension, MetaMask/Rabby confirmations, Taho provider bridge |
-| Extension side panel | Uniswap extension, Freighter side panel direction, Brave Wallet panel, current ZK Fighter extension side panel |
+| Extension side panel | Uniswap extension, Freighter side panel direction, Brave Wallet panel, current ZK Freighter extension side panel |
 | Mobile scanner | Cake Wallet, Zodl/Zashi, Phantom, Coinbase Wallet mobile, Zingo, LOBSTR mobile |
 | Mobile premium confirmation | Rainbow hold-to-send, Safe mobile, Coinbase/Base, Phantom, mobile banking patterns; use only for irreversible or public-boundary actions |
 
@@ -131,7 +131,7 @@ Web pages with inspectable screenshots:
 
 ## Design Guardrails From The Research
 
-- Do not design swaps, NFTs, staking, fiat buy/sell, token import, custom gas controls, dApp browser, or public dApp signing as core ZK Fighter features.
+- Do not design swaps, NFTs, staking, fiat buy/sell, token import, custom gas controls, dApp browser, or public dApp signing as core ZK Freighter features.
 - Do not hide public boundaries to make the app feel more private.
 - Do not show fake balances, hashes, bridge states, or proof success as if real.
 - Do not make passkey look like recovery.

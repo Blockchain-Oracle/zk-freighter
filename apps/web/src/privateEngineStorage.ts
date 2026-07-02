@@ -1,4 +1,4 @@
-const resetRequestKey = 'zk-fighter:private-engine-reset-request:v1'
+const resetRequestKey = 'zk-freighter:private-engine-reset-request:v1'
 
 type DirectoryEntry = readonly [string, unknown]
 

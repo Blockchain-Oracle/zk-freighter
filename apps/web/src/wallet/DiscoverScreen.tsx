@@ -7,8 +7,8 @@ import {
   type PublicDiscoveryLookupReport,
   type PublicDiscoveryPublishReport,
   type WalletIdentity,
-} from '@zk-fighter/core'
-import { BoundaryBadge, Button, Callout, truncateMiddle } from '@zk-fighter/ui'
+} from '@zk-freighter/core'
+import { BoundaryBadge, Button, Callout, truncateMiddle } from '@zk-freighter/ui'
 import type { WalletScreen } from './screens'
 import { readStoredPublish, writeStoredPublish } from './discoveryStorage'
 

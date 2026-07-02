@@ -5,7 +5,7 @@ import {
   type NetworkKey,
   type PublicDiscoveryLookupReport,
   type PublicDiscoveryPublishReport,
-} from '@zk-fighter/core'
+} from '@zk-freighter/core'
 
 // Discover lookup runs in the offscreen because it uses the Nethermind WASM client
 // (getRecentPublicKeys). It is a PUBLIC query — no mnemonic, no proving — just a

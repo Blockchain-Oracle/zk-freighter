@@ -63,7 +63,7 @@ and bound a properly-derived `addr_f`:
   - upload tx `85d1e77148ff01a4c56b7b918dadfa688af887f5546ab8a242b29c5135ed4ab6`
   - deploy tx `148c7ff416f4e6411d7aa1e9e93775de7d8c300719fb77ce3ae966006f23bc98`
 - `addr_f = addressToField(tokenId)` = `1d5fbd32cfcbc206121fda68f64527a8b8626d83ddbbcd623903a8c0b0743234`
-  computed by `@zk-fighter/core` (`Poseidon2(ADDRESS, lo, hi)` over the strkey's
+  computed by `@zk-freighter/core` (`Poseidon2(ADDRESS, lo, hi)` over the strkey's
   two 28-byte LE limbs), bound via `set_contract_field` — tx
   `bd3b8f5dc3f7d5965118b1bfa317ebe3b0f6a30238a586d278cdb8783d4cacf6`.
   Self-consistent: the same JS fn computes both the bound value and the proof's

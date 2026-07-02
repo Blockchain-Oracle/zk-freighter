@@ -1,4 +1,4 @@
-/* ZK Fighter shared design-system stylesheet — the single cross-surface entry.
+/* ZK Freighter shared design-system stylesheet — the single cross-surface entry.
  * Imported once per shell (web/extension/mobile). Tokens map to runtime CSS vars
  * set by <ThemeProvider>, so light/dark switches with no `dark:` variants. */
 @import 'tailwindcss';

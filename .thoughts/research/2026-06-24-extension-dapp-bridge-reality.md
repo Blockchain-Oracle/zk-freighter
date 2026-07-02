@@ -2,7 +2,7 @@
 
 ## Scope
 
-Check what ZK Fighter can truthfully claim about a Freighter-style dApp bridge in the WXT extension. This covers detection, network/profile responses, public-key access, and transaction signing boundaries.
+Check what ZK Freighter can truthfully claim about a Freighter-style dApp bridge in the WXT extension. This covers detection, network/profile responses, public-key access, and transaction signing boundaries.
 
 ## Sources Checked
 
@@ -14,7 +14,7 @@ Check what ZK Fighter can truthfully claim about a Freighter-style dApp bridge i
 - Local reference: `reference/freighter/@shared/constants/services.ts`.
 - Local reference: `reference/freighter/extension/src/contentScript/helpers/redirectMessagesToBackground.ts`.
 - Local reference: `reference/freighter/extension/src/background/messageListener/freighterApiMessageListener.ts`.
-- Current ZK Fighter source: `apps/extension/entrypoints/content.ts`, `packages/core/src/extension-runtime.ts`, `scripts/check-extension-runtime.mjs`.
+- Current ZK Freighter source: `apps/extension/entrypoints/content.ts`, `packages/core/src/extension-runtime.ts`, `scripts/check-extension-runtime.mjs`.
 
 ## Verified Facts
 
@@ -24,31 +24,31 @@ Check what ZK Fighter can truthfully claim about a Freighter-style dApp bridge i
 - Freighter external service type strings include `REQUEST_ACCESS`, `REQUEST_PUBLIC_KEY`, `SUBMIT_TRANSACTION`, `REQUEST_NETWORK`, `REQUEST_NETWORK_DETAILS`, `REQUEST_CONNECTION_STATUS`, `REQUEST_ALLOWED_STATUS`, and `SET_ALLOWED_STATUS`.
 - `getNetwork()` in `@stellar/freighter-api` calls the same network-details path and returns both `network` and `networkPassphrase`.
 - Freighter `requestAccess()` and `signTransaction()` are approval flows. In Freighter, background opens a grant/signing window and resolves from a queue after user action.
-- The current ZK Fighter extension content script only supports a custom `ZKFIGHTER_EXTENSION_REQUEST` status probe and rejects non-status requests.
+- The current ZK Freighter extension content script only supports a custom `ZKFIGHTER_EXTENSION_REQUEST` status probe and rejects non-status requests.
 - `@stellar/freighter-api` and Stellar Wallets Kit are not installed in this repo.
 
 ## Inferences
 
-- ZK Fighter can add a Freighter-style message profile for detection and network responses without claiming full Freighter compatibility.
+- ZK Freighter can add a Freighter-style message profile for detection and network responses without claiming full Freighter compatibility.
 - `REQUEST_PUBLIC_KEY` should return an empty public key until the extension has a tested unlock/access grant path.
 - `REQUEST_ACCESS`, `SET_ALLOWED_STATUS`, and `SUBMIT_TRANSACTION` should fail closed with explicit API errors until an extension vault, user approval surface, and signing test pass.
 - A Chrome runtime harness should test the exact message-source/service-type/`messagedId` contract because content-script presence alone is not wallet compatibility.
 
 ## Unknowns And Questions
 
-- Stellar Wallets Kit detection is not yet tested against ZK Fighter. This pass should not claim Wallets Kit support.
-- Coexistence behavior when Freighter and ZK Fighter are both installed needs a later browser test before public extension distribution.
+- Stellar Wallets Kit detection is not yet tested against ZK Freighter. This pass should not claim Wallets Kit support.
+- Coexistence behavior when Freighter and ZK Freighter are both installed needs a later browser test before public extension distribution.
 - Extension signing requires a separate design and security pass for vault unlock, origin allowlisting, user approval UI, network mismatch warnings, and transaction review.
 
 ## Not Included
 
 - No Wallets Kit compatibility claim.
 - No Chrome Web Store packaging claim.
-- No coexistence proof when Freighter and ZK Fighter both respond to Freighter-style page messages.
+- No coexistence proof when Freighter and ZK Freighter both respond to Freighter-style page messages.
 
 ## Update: QuickShield Companion Decision
 
-The read-only bridge profile was briefly extended on 2026-06-24 to prove public dApp signing feasibility. Abu then rejected making ZK Fighter a general public dApp signing wallet because it shifts the product toward Freighter replacement behavior.
+The read-only bridge profile was briefly extended on 2026-06-24 to prove public dApp signing feasibility. Abu then rejected making ZK Freighter a general public dApp signing wallet because it shifts the product toward Freighter replacement behavior.
 
 The active extension claim is now narrower:
 

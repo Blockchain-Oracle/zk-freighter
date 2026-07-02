@@ -10,11 +10,11 @@ import {
   submitConfidentialDeposit,
   submitConfidentialMerge,
   type NetworkKey,
-} from '@zk-fighter/core'
-import { scanConfidentialIncoming } from '@zk-fighter/core/confidential/receive'
-import { submitConfidentialRegister } from '@zk-fighter/core/confidential/register'
-import { submitConfidentialTransfer } from '@zk-fighter/core/confidential/transfer'
-import { submitConfidentialWithdraw } from '@zk-fighter/core/confidential/withdraw'
+} from '@zk-freighter/core'
+import { scanConfidentialIncoming } from '@zk-freighter/core/confidential/receive'
+import { submitConfidentialRegister } from '@zk-freighter/core/confidential/register'
+import { submitConfidentialTransfer } from '@zk-freighter/core/confidential/transfer'
+import { submitConfidentialWithdraw } from '@zk-freighter/core/confidential/withdraw'
 
 // The compiled circuit is just bytecode + abi JSON; keep a loose shape here so we
 // don't pull the heavy prover types into this light dispatch module.

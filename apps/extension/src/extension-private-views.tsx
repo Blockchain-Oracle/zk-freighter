@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
-import type { XlmPrivateSubmitReport } from '@zk-fighter/core'
-import { Button, EventStepTracker, ProvingRing, type ProofStep } from '@zk-fighter/ui'
+import type { XlmPrivateSubmitReport } from '@zk-freighter/core'
+import { Button, EventStepTracker, ProvingRing, type ProofStep } from '@zk-freighter/ui'
 
 import { BlockerList, Copy, ErrorText, ExplorerLink } from './extension-ui'
 

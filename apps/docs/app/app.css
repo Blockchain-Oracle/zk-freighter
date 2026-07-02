@@ -2,7 +2,7 @@
 @import 'fumadocs-ui/css/neutral.css';
 @import 'fumadocs-ui/css/preset.css';
 
-/* ZK Fighter brand — dark-only. Matches the wallet design system:
+/* ZK Freighter brand — dark-only. Matches the wallet design system:
    #0c0d0f canvas · #5E7CFA accent · Hanken Grotesk + mono microlabels. */
 .dark {
   --color-fd-background: #0c0d0f;

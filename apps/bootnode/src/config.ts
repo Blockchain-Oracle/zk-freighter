@@ -1,4 +1,4 @@
-import { NETWORKS, privateEventContractIds, type NetworkKey } from '@zk-fighter/core'
+import { NETWORKS, privateEventContractIds, type NetworkKey } from '@zk-freighter/core'
 
 export interface BootnodeConfig {
   readonly port: number

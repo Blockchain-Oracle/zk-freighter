@@ -16,7 +16,7 @@ export function classifyPrivateRuntimeIssue(error: unknown): PrivateRuntimeIssue
     return {
       kind: 'busy',
       title: 'ZK engine is already open.',
-      body: 'Another ZK Fighter window is using the local private database. Close the other window or retry after it finishes.',
+      body: 'Another ZK Freighter window is using the local private database. Close the other window or retry after it finishes.',
       retryable: true,
       raw: message,
     }
@@ -36,7 +36,7 @@ export function classifyPrivateRuntimeIssue(error: unknown): PrivateRuntimeIssue
     return {
       kind: 'asp-indexing',
       title: 'Confirming shield access.',
-      body: 'Your setup transaction is confirmed; ZK Fighter is waiting for the ASP leaf to be indexed before proving. No deposit was submitted yet.',
+      body: 'Your setup transaction is confirmed; ZK Freighter is waiting for the ASP leaf to be indexed before proving. No deposit was submitted yet.',
       retryable: true,
       raw: message,
     }
@@ -69,7 +69,7 @@ export function classifyPrivateRuntimeIssue(error: unknown): PrivateRuntimeIssue
     return {
       kind: 'stalled',
       title: 'ZK engine did not answer.',
-      body: 'The local private engine stalled while reading shielded notes. Retry after it restarts; if it persists, close other ZK Fighter tabs and reload.',
+      body: 'The local private engine stalled while reading shielded notes. Retry after it restarts; if it persists, close other ZK Freighter tabs and reload.',
       retryable: true,
       raw: message,
     }

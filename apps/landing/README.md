@@ -1,6 +1,6 @@
-# ZK Fighter Landing
+# ZK Freighter Landing
 
-Root product site for ZK Fighter.
+Root product site for ZK Freighter.
 
 This app explains the product, links to the web wallet, extension, docs, and future mobile surface, and uses product-safe copy only. It is not the wallet runtime.
 

@@ -1,4 +1,4 @@
-import { getCctpSource, isCctpSourceKey, type CctpSourceKey, type NetworkKey } from '@zk-fighter/core'
+import { getCctpSource, isCctpSourceKey, type CctpSourceKey, type NetworkKey } from '@zk-freighter/core'
 
 export function bridgeResumeBurnHashFromUrl(network: NetworkKey, publicKey: string): string | undefined {
   const params = bridgeParams()

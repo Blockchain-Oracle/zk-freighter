@@ -15,9 +15,9 @@ export function createHandler(config: BootnodeConfig, store: BootnodeStore): (re
     if (request.method !== 'POST' || url.pathname !== '/rpc') return json({ ok: false, error: 'Not found.' }, 404)
     const body = await request.json().catch(() => undefined)
     if (!isRpcRequest(body)) return rpcError(null, -32600, 'Invalid JSON-RPC request.')
-    if (!body.method || !allowedMethods.has(body.method)) return rpcError(body.id, -32601, 'Method not allowed by ZK Fighter bootnode.')
+    if (!body.method || !allowedMethods.has(body.method)) return rpcError(body.id, -32601, 'Method not allowed by ZK Freighter bootnode.')
     if (body.method === 'getEvents' && !paramsUseAllowedContracts(body.params, config.allowedContracts)) {
-      return rpcError(body.id, -32602, 'Event request must filter by ZK Fighter private index contracts only.')
+      return rpcError(body.id, -32602, 'Event request must filter by ZK Freighter private index contracts only.')
     }
     if (body.method === 'getEvents') {
       const warmed = await warmedEvents(body, store)

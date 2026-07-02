@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { RefreshCw } from 'lucide-react'
-import { Button, Callout } from '@zk-fighter/ui'
-import { isShieldedAssetEnabled, maxShieldDepositStroops, type AssetCode, type ShieldWithPrerequisitesReport, type XlmPrivateSubmitReport } from '@zk-fighter/core'
+import { Button, Callout } from '@zk-freighter/ui'
+import { isShieldedAssetEnabled, maxShieldDepositStroops, type AssetCode, type ShieldWithPrerequisitesReport, type XlmPrivateSubmitReport } from '@zk-freighter/core'
 import { AmountBox, Field, FlowScreen, ResultCard, Segment, type FlowProps } from './MobileFlowPrimitives'
 import { runMobileShield, runMobileUnshield } from './mobile-runtime'
 import { formatAssetAmount, noteBalance, summarizeError } from './mobile-format'
@@ -74,7 +74,7 @@ export function MobileShield({ network, identity, publicBalances, shieldedCache,
       <AmountBox asset={asset} amount={amount} available={available} error={amountError || null} onAsset={(next) => { setAsset(next); setAmount('') }} onAmount={setAmount} onMax={() => setAmount(maxAmount(available, poolMax, mode, asset))} />
       {mode === 'unshield' ? <Field label="Destination public account" value={recipient} placeholder="G..." onChange={setRecipient} mono /> : null}
       {recipientError ? <Callout tone="warn">{recipientError}</Callout> : null}
-      {mode === 'unshield' ? <label className="ack-row"><input type="checkbox" checked={ack} onChange={(event) => setAck(event.target.checked)} /> Destination and amount will be visible on-chain.</label> : <Callout tone="public" title="Setup runs automatically.">ZK Fighter checks balance, USDC receiving, shield access, pool sync, proof, submit, and confirm in one run.</Callout>}
+      {mode === 'unshield' ? <label className="ack-row"><input type="checkbox" checked={ack} onChange={(event) => setAck(event.target.checked)} /> Destination and amount will be visible on-chain.</label> : <Callout tone="public" title="Setup runs automatically.">ZK Freighter checks balance, USDC receiving, shield access, pool sync, proof, submit, and confirm in one run.</Callout>}
       <section className="phase-card">
         {['Balance / setup', 'Pool sync', 'Proof inputs', 'Generate proof', 'Submit and confirm'].map((label, index) => <div key={label} className={events.length > index ? 'done' : ''}><span>{events.length > index ? '✓' : index + 1}</span>{label}</div>)}
       </section>

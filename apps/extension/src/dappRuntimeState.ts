@@ -4,7 +4,7 @@ import {
   type NetworkKey,
   type PasskeyEnvelope,
   type WalletIdentity,
-} from '@zk-fighter/core'
+} from '@zk-freighter/core'
 import { browser } from 'wxt/browser'
 
 const storageKey = 'zkf.extension.dappWallet'
@@ -53,7 +53,7 @@ export async function requireUnlockedDappWallet(unlockedMnemonic: string | null)
   const state = await readStoredDappWallet()
   const identity = identityForMnemonic(unlockedMnemonic, state)
   if (!state.vault) return { ok: false, error: 'Import a seed-backed vault before shielding.' }
-  if (!identity || !unlockedMnemonic) return { ok: false, error: 'Unlock ZK Fighter before shielding.' }
+  if (!identity || !unlockedMnemonic) return { ok: false, error: 'Unlock ZK Freighter before shielding.' }
   return { ok: true, ['mnemonic']: unlockedMnemonic, network: state.network }
 }
 

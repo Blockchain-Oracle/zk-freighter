@@ -5,7 +5,7 @@ import {
   insertAspMembershipLeaf,
   writeAspAccessRecord,
   type NetworkKey,
-} from '@zk-fighter/core'
+} from '@zk-freighter/core'
 
 const explicitSetupConfirmWaitMs = 45_000
 

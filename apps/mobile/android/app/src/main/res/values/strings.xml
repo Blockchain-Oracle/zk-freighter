@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">ZK Fighter</string>
-    <string name="title_activity_main">ZK Fighter</string>
-    <string name="package_name">com.zkfighter.wallet</string>
-    <string name="custom_url_scheme">com.zkfighter.wallet</string>
+    <string name="app_name">ZK Freighter</string>
+    <string name="title_activity_main">ZK Freighter</string>
+    <string name="package_name">com.zkfreighter.wallet</string>
+    <string name="custom_url_scheme">com.zkfreighter.wallet</string>
 </resources>

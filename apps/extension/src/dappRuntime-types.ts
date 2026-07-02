@@ -11,7 +11,7 @@ import type {
   StellarUsdcTrustlineReport,
   XlmPrivateSubmitReport,
   XlmShieldSubmitReport,
-} from '@zk-fighter/core'
+} from '@zk-freighter/core'
 
 import type { ConfidentialOpKind, DappBalances } from './dappMessages'
 

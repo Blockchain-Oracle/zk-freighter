@@ -1,11 +1,11 @@
 # Redesign Design-Map — screen → v2 source
 
 **Authoritative design source (v2):** `/Users/abu/Downloads/GitHub repository link(2)/`
-(DesignContext `*.dc.html` files at the directory root. The path has a space + parens — quote it in shell: `"/Users/abu/Downloads/GitHub repository link(2)/ZK Fighter Desktop.dc.html"`.)
+(DesignContext `*.dc.html` files at the directory root. The path has a space + parens — quote it in shell: `"/Users/abu/Downloads/GitHub repository link(2)/ZK Freighter Desktop.dc.html"`.)
 
 **How to use this file:** before building any chunk, open the listed `.dc.html` and read the named screen. Never hold the whole design in context — re-ground per chunk. The `.dc.html` is a sequence of labelled screens (root `data-screen-label`s); HTML is *reference only*, never copied — reimplement in React + the shared `packages/ui` components.
 
-**Canonical token source:** `ZK Fighter Design System.dc.html` (resolve any cross-file token drift to its values — `--bg #0C0D0F`, `--tx2 #A6ABB4`, `--tx3 #878D98` [legibility floor], `--bd .08/.14`, `--ac #5E7CFA`, `--pub #8A93A2`; full light theme).
+**Canonical token source:** `ZK Freighter Design System.dc.html` (resolve any cross-file token drift to its values — `--bg #0C0D0F`, `--tx2 #A6ABB4`, `--tx3 #878D98` [legibility floor], `--bd .08/.14`, `--ac #5E7CFA`, `--pub #8A93A2`; full light theme).
 
 ---
 

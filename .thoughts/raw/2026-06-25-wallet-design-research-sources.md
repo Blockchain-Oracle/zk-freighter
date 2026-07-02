@@ -8,13 +8,13 @@ This file is a raw source index for the designer handoff and wallet reference wi
 - `.thoughts/wiki/wallet-design-references.md`
 - `.thoughts/design/2026-06-25-designer-brief-v2.md`
 
-## Local ZK Fighter Sources
+## Local ZK Freighter Sources
 
 - `README.md`
-- `.thoughts/specs/2026-06-22-zk-fighter-product-spec.md`
-- `.thoughts/stories/2026-06-22-zk-fighter-mvp-stories.md`
+- `.thoughts/specs/2026-06-22-zk-freighter-product-spec.md`
+- `.thoughts/stories/2026-06-22-zk-freighter-mvp-stories.md`
 - `.thoughts/quality/2026-06-22-project-quality-profile.md`
-- `.thoughts/plans/2026-06-22-zk-fighter-implementation-plan.md`
+- `.thoughts/plans/2026-06-22-zk-freighter-implementation-plan.md`
 - `.thoughts/handoffs/2026-06-22-codex-build-prompts.md`
 - `.thoughts/research/2026-06-22-domain-model-and-ux-reality.md`
 - `.thoughts/research/2026-06-24-phase9-atomic-bridge-shield-decision.md`

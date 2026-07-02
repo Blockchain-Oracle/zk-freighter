@@ -1,5 +1,5 @@
 import { ArrowRight } from 'lucide-react'
-import { Logo } from '@zk-fighter/ui'
+import { Logo } from '@zk-freighter/ui'
 
 export type DeviceVariant = 'web' | 'extension' | 'mobile'
 
@@ -75,7 +75,7 @@ function DeviceFrame({ variant, children }: { readonly variant: DeviceVariant; r
       <span className="frame frame-browser">
         <span className="frame-bar">
           <span className="frame-dots"><i /><i /><i /></span>
-          <span className="frame-url">app.zkfighter.dev</span>
+          <span className="frame-url">app.zkfreighter.dev</span>
         </span>
         {children}
       </span>
@@ -93,7 +93,7 @@ function DeviceFrame({ variant, children }: { readonly variant: DeviceVariant; r
     <span className="frame frame-popup">
       <span className="frame-bar">
         <span className="frame-ext-ic">⬡</span>
-        <span className="frame-url">ZK Fighter</span>
+        <span className="frame-url">ZK Freighter</span>
         <span className="frame-pin">📌</span>
       </span>
       {children}

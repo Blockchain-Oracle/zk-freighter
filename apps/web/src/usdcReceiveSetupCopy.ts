@@ -1,4 +1,4 @@
-import type { StellarUsdcTrustlineReport } from '@zk-fighter/core'
+import type { StellarUsdcTrustlineReport } from '@zk-freighter/core'
 import { truncateMiddle } from './app-helpers'
 
 export function usdcReceiveLabel(report: StellarUsdcTrustlineReport | null): string {

@@ -1,6 +1,6 @@
 # Screen cluster: Shield (deposit) + Unshield (withdraw)
 
-> Product: **ZK Fighter** (brand locked). Privacy-by-default, self-custody ZK wallet for shielded payments on **Stellar**. Browser web app. Assets: **XLM + USDC**. Network: **testnet/mainnet config toggle** with a visible indicator; mainnet privacy may be gated.
+> Product: **ZK Freighter** (brand locked). Privacy-by-default, self-custody ZK wallet for shielded payments on **Stellar**. Browser web app. Assets: **XLM + USDC**. Network: **testnet/mainnet config toggle** with a visible indicator; mainnet privacy may be gated.
 >
 > This cluster owns the **two public boundary moments** of the wallet — the only times privacy is intentionally crossed:
 > - **Shield (public → private):** move a *public* Stellar balance into the shielded pool. Destination of the "Add funds" area. Public on the way in, then `Pending → Spendable`.

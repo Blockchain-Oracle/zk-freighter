@@ -1,4 +1,4 @@
-# Founder Decisions: ZK Fighter
+# Founder Decisions: ZK Freighter
 
 Date: 2026-06-22
 
@@ -6,7 +6,7 @@ These are product decisions from the founder conversation. They are inputs to th
 
 ## Locked
 
-- **Brand/product name:** ZK Fighter.
+- **Brand/product name:** ZK Freighter.
 - **Receive model:** include both modes in the MVP:
   - Private code sharing by default.
   - Optional public key publishing/discoverability for users who choose it.
@@ -14,7 +14,7 @@ These are product decisions from the founder conversation. They are inputs to th
 - **Publishing copy requirement:** explain that publishing does not expose private keys or funds, but it creates a public on-chain link from the user's public Stellar identity to that private receive identity.
 - **Bridge MVP scope:** safe two-step bridge then shield:
   1. CCTP brings USDC publicly onto Stellar.
-  2. ZK Fighter shields that USDC into the privacy pool with a separate transaction.
+  2. ZK Freighter shields that USDC into the privacy pool with a separate transaction.
 - **Atomic bridge-and-shield:** not locked for MVP. It is a research/spike candidate only, and must not be claimed until a custom adapter proves it with real tests.
 - **Network posture:** testnet first, mainnet-capable from the beginning.
 - **Mainnet posture:** once testnet is working, mainnet can be tested/published with explicit care around real funds, deployed contract IDs, and unsupported features.

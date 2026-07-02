@@ -12,7 +12,7 @@ Stellar's public RPC only retains recent events. Shielded wallets need the pool'
 commitment history to find their notes — so the bootnode continuously indexes pool events into
 Postgres from the pool's deployment ledger, then serves them through a narrow RPC.
 
-- **Allowlisted**: only `getEvents` and `getLatestLedger`, only for ZK Fighter pool contracts —
+- **Allowlisted**: only `getEvents` and `getLatestLedger`, only for ZK Freighter pool contracts —
   it cannot be used as a general RPC proxy.
 - **Read-only**: it holds no keys and signs nothing.
 - **Transparent**: clients route pool reads to it when configured (`VITE_ZKF_*_BOOTNODE_URL`)

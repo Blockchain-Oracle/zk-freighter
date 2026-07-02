@@ -1,6 +1,6 @@
 # Screen cluster spec — Accounts + Settings
 
-Product: **ZK Fighter** (brand locked). Privacy-by-default, self-custody, zero-knowledge wallet for **shielded payments on Stellar**. Browser web app (extension later, out of scope).
+Product: **ZK Freighter** (brand locked). Privacy-by-default, self-custody, zero-knowledge wallet for **shielded payments on Stellar**. Browser web app (extension later, out of scope).
 
 This file specs ONE cluster: **Accounts** (multi-account list, switch, add, new private address) + **Settings** (Security, Network, Compliance/view-key, About, Lock). Every screen below teaches the privacy model and surfaces honest disclaimers. Prototype = high-fidelity, MOCKED data + MOCKED integrations; every mocked surface is labeled. Visual direction (color/font) is intentionally left free.
 
@@ -190,7 +190,7 @@ This file specs ONE cluster: **Accounts** (multi-account list, switch, add, new 
 
 **Layout & components:**
 - **Step A — Warning + password (`SubviewHeader` "Reveal seed phrase"):**
-  - Bold warning card: "Anyone with these words controls all your funds. Never share them. ZK Fighter staff will never ask for them. There is no recovery if you lose them." (Lift Freighter warnings.)
+  - Bold warning card: "Anyone with these words controls all your funds. Never share them. ZK Freighter staff will never ask for them. There is no recovery if you lose them." (Lift Freighter warnings.)
   - Password input (masked, autofocus). Primary **Reveal** (disabled until non-empty).
 - **Step B — Phrase reveal:**
   - Words shown in a numbered grid, initially **blurred** behind a "Tap to reveal" scrim (don't auto-expose).
@@ -320,7 +320,7 @@ Not needed in Settings (confirm lives in onboarding cluster). Cross-link only.
 - Two distinct option cards:
   1. **Disclose a single transaction (recommended)** → screen 14. Subtitle "Share proof of ONE payment without exposing your whole history."
   2. **Export a viewing key (full history)** → screen 15. Subtitle, with a danger flag: "Reveals ALL past AND future shielded activity. Can't be revoked once shared."
-- Honest footer: "Disclosure is for your compliance needs. ZK Fighter can't and won't disclose on your behalf."
+- Honest footer: "Disclosure is for your compliance needs. ZK Freighter can't and won't disclose on your behalf."
 
 **States:** default; both cards enabled. On mainnet (privacy gated) compliance applies to testnet activity only — note it. No loading/empty (entry hub).
 
@@ -383,7 +383,7 @@ Not needed in Settings (confirm lives in onboarding cluster). Cross-link only.
 **Borrow from:** Freighter `views/About/index.tsx` (logo + one-line description + Links list + copyright footer). Keep the shape; change content.
 
 **Layout & components:** `SubviewHeader` "About".
-- Restrained ZK Fighter wordmark/logo (do NOT over-design a Freighter-derivative mark).
+- Restrained ZK Freighter wordmark/logo (do NOT over-design a Freighter-derivative mark).
 - One-liner: "A privacy-by-default, self-custody wallet for shielded payments on Stellar."
 - **Honest disclaimers block (prominent, not buried):**
   - "**Unaudited prototype.** Use testnet funds only. Do not rely on this for real value."

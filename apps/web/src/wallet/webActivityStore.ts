@@ -1,4 +1,4 @@
-import type { AssetCode, NetworkKey } from '@zk-fighter/core'
+import type { AssetCode, NetworkKey } from '@zk-freighter/core'
 
 export type WebActivityIntent = 'fund' | 'shield' | 'send' | 'unshield' | 'bridge' | 'discover' | 'confidentialSetup'
 export type WebActivityBoundary = 'public' | 'shielded'

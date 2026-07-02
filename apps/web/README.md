@@ -1,6 +1,6 @@
-# ZK Fighter Web
+# ZK Freighter Web
 
-Primary wallet app for ZK Fighter.
+Primary wallet app for ZK Freighter.
 
 This surface owns the main product flow: create or import a wallet, request testnet funding, shield/deposit XLM or USDC, send shielded transfers, unshield/withdraw, bridge arrivals, discover private receive codes, and review real activity.
 

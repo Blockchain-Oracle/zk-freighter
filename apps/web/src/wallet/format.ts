@@ -1,4 +1,4 @@
-import type { XlmShieldedNote } from '@zk-fighter/core'
+import type { XlmShieldedNote } from '@zk-freighter/core'
 
 const STROOPS_PER_UNIT = 10_000_000n
 

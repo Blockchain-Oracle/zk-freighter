@@ -15,7 +15,7 @@ vi.mock('wxt/browser', () => ({
   },
 }))
 
-vi.mock('@zk-fighter/core', () => ({
+vi.mock('@zk-freighter/core', () => ({
   getNetworkConfig: () => ({ horizonUrl: 'https://horizon.test' }),
 }))
 

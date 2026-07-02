@@ -24,7 +24,7 @@ export const maxShieldAttempts = 3
 export const opApprovalGasLimit = 120_000n
 export const opCctpBurnGasLimit = 1_500_000n
 
-const configDir = path.join(os.homedir(), '.config', 'zk-fighter')
+const configDir = path.join(os.homedir(), '.config', 'zk-freighter')
 const evmWalletPath = path.join(configDir, 'cctp-evm-wallets.json')
 const evmWalletLockPath = path.join(configDir, 'cctp-evm-wallets.lock')
 const destinationWalletPath = path.join(configDir, 'cctp-bridge-destination.json')

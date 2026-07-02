@@ -1,4 +1,4 @@
-package com.zkfighter.wallet;
+package com.zkfreighter.wallet;
 
 import com.getcapacitor.BridgeActivity;
 

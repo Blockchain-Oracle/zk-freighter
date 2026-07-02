@@ -2,7 +2,7 @@
 
 ## Rule
 
-ZK Fighter wins when:
+ZK Freighter wins when:
 
 `Win = judge can try it in 30 seconds x chain tools are obviously necessary x it looks like a real product, not a demo`
 
@@ -27,8 +27,8 @@ This is the product acceptance rubric for future planning and implementation. Ev
 ## Sources
 
 - Hackathon/product bar: `.thoughts/research/exploratory/06-hackathon-brief.md`
-- Locked product spec: `.thoughts/specs/2026-06-22-zk-fighter-product-spec.md`
-- MVP stories: `.thoughts/stories/2026-06-22-zk-fighter-mvp-stories.md`
+- Locked product spec: `.thoughts/specs/2026-06-22-zk-freighter-product-spec.md`
+- MVP stories: `.thoughts/stories/2026-06-22-zk-freighter-mvp-stories.md`
 - Privacy wallet UX research: `.thoughts/research/exploratory/04-privacy-wallet-prior-art.md`
 - Wallet flow research: `.thoughts/research/2026-06-21-ux-flow-and-questions.md`
 - Fresh pool/retention evidence: `.thoughts/research/spikes-log.md`

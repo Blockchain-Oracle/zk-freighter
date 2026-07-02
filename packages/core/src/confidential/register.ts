@@ -1,7 +1,7 @@
 // Confidential-token REGISTER proof path (Track B). This module is heavy — it
 // pulls the bb.js / noir_js UltraHonk runtime via ./prover — so it is NOT
 // re-exported from the confidential barrel. Import it directly (or lazily) when
-// the user enters register, e.g. `import('@zk-fighter/core/dist/confidential/register')`.
+// the user enters register, e.g. `import('@zk-freighter/core/dist/confidential/register')`.
 //
 // Register proves: Y = sk·H, vk = Poseidon2(VIEWING_KEY, sk, addr_f), PVK = vk·H,
 // with addr_f bound to the deployed token instance (design §7.2). The contract

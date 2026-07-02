@@ -5,7 +5,7 @@ import {
   submitXlmUnshieldWithdrawal,
   type AssetCode,
   type NetworkKey,
-} from '@zk-fighter/core'
+} from '@zk-freighter/core'
 
 interface PrivateActionInput {
   readonly asset: AssetCode

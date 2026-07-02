@@ -1,4 +1,4 @@
-# ZK Fighter Agent Instructions
+# ZK Freighter Agent Instructions
 
 ## Current Project State
 
@@ -7,9 +7,9 @@
 - Phase 8 acceptance evidence is recorded in `.thoughts/research/spikes-log.md`: real Sepolia USDC approval, CCTP burn, Iris attestation, Stellar testnet mint/forward, public USDC balance proof, ASP insertion, and separate USDC shield/deposit.
 - Phase 9 decision is recorded in `.thoughts/research/2026-06-24-phase9-atomic-bridge-shield-decision.md`: atomic bridge-and-shield is deferred until a custom adapter passes real tests.
 - Phase 10 verification audit is recorded in `.thoughts/verification/2026-06-24-phase10-submission-hardening-audit.md`: code/docs pass gates, with external video/public-repo/final demo posture still remaining.
-- Phase 11 extension audit is recorded in `.thoughts/verification/2026-06-24-phase11-wxt-extension-audit.md`: WXT MV3 scaffold/build, Chrome-for-Testing runtime smoke, offscreen Nethermind module initialization, extension dry proof generation, real extension QuickShield XLM and USDC shield/deposit evidence, reusable local USDC funder automation, bridge handoff runtime evidence, and a Freighter-style detection/network profile pass. External public-key access and signing are intentionally disabled because ZK Fighter is not a general public dApp signing wallet. The current extension build plan is `.thoughts/plans/2026-06-24-extension-quickshield-bridge-plan.md`.
+- Phase 11 extension audit is recorded in `.thoughts/verification/2026-06-24-phase11-wxt-extension-audit.md`: WXT MV3 scaffold/build, Chrome-for-Testing runtime smoke, offscreen Nethermind module initialization, extension dry proof generation, real extension QuickShield XLM and USDC shield/deposit evidence, reusable local USDC funder automation, bridge handoff runtime evidence, and a Freighter-style detection/network profile pass. External public-key access and signing are intentionally disabled because ZK Freighter is not a general public dApp signing wallet. The current extension build plan is `.thoughts/plans/2026-06-24-extension-quickshield-bridge-plan.md`.
 - Mainnet readiness research is recorded in `.thoughts/research/2026-06-25-mainnet-readiness.md`: mainnet XLM/USDC SACs, Circle CCTP IDs, XLM/USDC privacy-pool deployments, real extension XLM/USDC QuickShield shield/deposits, and real mainnet XLM/USDC shielded transfer/unshield smokes are recorded. Mainnet bridge-to-shield still requires separate accepted hashes before claims.
-- Confidential Token research is recorded in `.thoughts/research/2026-06-23-confidential-tokens-preview.md`, and the future wallet-mode plan is recorded in `.thoughts/plans/2026-06-24-confidential-token-wallet-mode-plan.md`. It is not part of the current judged path and must not be claimed until ZK Fighter records its own testnet evidence.
+- Confidential Token research is recorded in `.thoughts/research/2026-06-23-confidential-tokens-preview.md`, and the future wallet-mode plan is recorded in `.thoughts/plans/2026-06-24-confidential-token-wallet-mode-plan.md`. It is not part of the current judged path and must not be claimed until ZK Freighter records its own testnet evidence.
 - Current implementation scaffold:
   - `apps/web`
   - `apps/extension`
@@ -20,8 +20,8 @@
 - Still not present:
   - no `contracts/`
   - no root `Cargo.toml`
-- Local git is initialized on `main` with private GitHub remote `Blockchain-Oracle/zk-fighter`.
-- `reference/` contains cloned projects for research only. It is gitignored and must not be treated as ZK Fighter source.
+- Local git is initialized on `main` with private GitHub remote `Blockchain-Oracle/zk-freighter`.
+- `reference/` contains cloned projects for research only. It is gitignored and must not be treated as ZK Freighter source.
 - `reference/openzeppelin-stellar-contracts-confidential` is the OpenZeppelin/SDF Confidential Tokens preview branch. Treat it as reference-only; do not import production code from it.
 
 Always inspect the actual filesystem before acting. Current files beat stale memory.
@@ -48,16 +48,16 @@ Reimplementing the UI to the designer's **v2 high-fidelity prototype** across **
 Before implementation, read:
 
 1. `README.md`
-2. `.thoughts/specs/2026-06-22-zk-fighter-product-spec.md`
-3. `.thoughts/stories/2026-06-22-zk-fighter-mvp-stories.md`
+2. `.thoughts/specs/2026-06-22-zk-freighter-product-spec.md`
+3. `.thoughts/stories/2026-06-22-zk-freighter-mvp-stories.md`
 4. `.thoughts/quality/2026-06-22-project-quality-profile.md`
-5. `.thoughts/plans/2026-06-22-zk-fighter-implementation-plan.md`
+5. `.thoughts/plans/2026-06-22-zk-freighter-implementation-plan.md`
 6. `.thoughts/handoffs/2026-06-22-codex-build-prompts.md`
 7. Relevant `.thoughts/research/` and `.thoughts/design/` docs for the active phase.
 
 ## Locked Decisions
 
-- Product name: **ZK Fighter**.
+- Product name: **ZK Freighter**.
 - Privacy-by-default: build the shielded privacy layer, not a general public wallet replacement.
 - Seed phrase is the default recovery path.
 - Passkey is optional only; no passkey-only recovery.

@@ -1,6 +1,6 @@
 import { mnemonicToAccount, type HDAccount } from 'viem/accounts'
 
-// ZK Fighter is its own EVM wallet: the same recovery phrase that controls the
+// ZK Freighter is its own EVM wallet: the same recovery phrase that controls the
 // Stellar/shielded keys also derives a standard Ethereum account (BIP44
 // m/44'/60'/0'/0/0). The wallet signs CCTP bridge burns with this key itself, so
 // no external EVM wallet (MetaMask / WalletConnect) is ever required.

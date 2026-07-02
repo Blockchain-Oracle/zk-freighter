@@ -1,4 +1,4 @@
-// Design tokens extracted from the ZK Fighter designer prototype (dark-first + light),
+// Design tokens extracted from the ZK Freighter designer prototype (dark-first + light),
 // exposed as CSS custom properties so every surface (web/extension/mobile) shares one
 // visual language. The prototype uses inline styles + `var(--xx)`; we mirror that.
 

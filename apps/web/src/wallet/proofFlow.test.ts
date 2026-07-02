@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { XlmShieldProgressEvent } from '@zk-fighter/core'
+import type { XlmShieldProgressEvent } from '@zk-freighter/core'
 import { PROOF_STEP_LABELS, proofFlowModel } from './proofFlow'
 
 function nm(step: string, message = step): XlmShieldProgressEvent {

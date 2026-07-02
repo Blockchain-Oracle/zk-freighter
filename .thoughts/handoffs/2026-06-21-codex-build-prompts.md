@@ -1,4 +1,4 @@
-# ZK Fighter — Codex build prompts (linear)
+# ZK Freighter — Codex build prompts (linear)
 
 > **SUPERSEDED:** Use `2026-06-22-codex-build-prompts.md` for the current build sequence. This file is retained only as historical context from the earlier handoff package. Its extension/Wallets Kit signing direction is no longer active; the current extension track is QuickShield + bridge companion with fail-closed dApp detection.
 

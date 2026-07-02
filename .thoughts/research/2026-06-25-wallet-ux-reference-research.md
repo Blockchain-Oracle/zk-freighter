@@ -2,19 +2,19 @@
 
 ## Scope
 
-Research current wallet UX and open-source/code-inspectable references for ZK Fighter's redesign across three product surfaces: web app, browser extension, and a possible mobile app. The goal is to document current reality and inspiration sources for a designer, not to decide a visual direction or implement UI.
+Research current wallet UX and open-source/code-inspectable references for ZK Freighter's redesign across three product surfaces: web app, browser extension, and a possible mobile app. The goal is to document current reality and inspiration sources for a designer, not to decide a visual direction or implement UI.
 
-This pass is broad but not a claim to cover every wallet in existence. It prioritizes wallets that are useful for ZK Fighter's actual flows: seed onboarding, receive QR/copy, send/review/sign, pending states, bridge tracking, activity/history, privacy warnings, extension constraints, and mobile confirmation ergonomics.
+This pass is broad but not a claim to cover every wallet in existence. It prioritizes wallets that are useful for ZK Freighter's actual flows: seed onboarding, receive QR/copy, send/review/sign, pending states, bridge tracking, activity/history, privacy warnings, extension constraints, and mobile confirmation ergonomics.
 
 ## Sources Checked
 
 Local project sources:
 
 - `README.md`
-- `.thoughts/specs/2026-06-22-zk-fighter-product-spec.md`
-- `.thoughts/stories/2026-06-22-zk-fighter-mvp-stories.md`
+- `.thoughts/specs/2026-06-22-zk-freighter-product-spec.md`
+- `.thoughts/stories/2026-06-22-zk-freighter-mvp-stories.md`
 - `.thoughts/quality/2026-06-22-project-quality-profile.md`
-- `.thoughts/plans/2026-06-22-zk-fighter-implementation-plan.md`
+- `.thoughts/plans/2026-06-22-zk-freighter-implementation-plan.md`
 - `.thoughts/handoffs/2026-06-22-codex-build-prompts.md`
 - `.thoughts/research/2026-06-22-domain-model-and-ux-reality.md`
 - `.thoughts/research/2026-06-24-phase9-atomic-bridge-shield-decision.md`
@@ -49,9 +49,9 @@ External sources are indexed in `.thoughts/raw/2026-06-25-wallet-design-research
 
 ## Verified Facts
 
-### ZK Fighter current product reality
+### ZK Freighter current product reality
 
-- ZK Fighter is a privacy-by-default Stellar wallet for shielded XLM and USDC payments. It is not a general public wallet replacement. Source: `README.md`.
+- ZK Freighter is a privacy-by-default Stellar wallet for shielded XLM and USDC payments. It is not a general public wallet replacement. Source: `README.md`.
 - The current repo has implemented a web app, a WXT MV3 extension scaffold, and shared core package. Source: `README.md`, `apps/web`, `apps/extension`, `packages/core`.
 - The web app currently exposes wallet creation/import/unlock, raw `zkf1...` receive QR/copy, passkey panel, proof status, public discovery, disclosure, bridge, QuickShield, XLM/USDC private panels, tampered proof panel, and demo evidence panel. Source: `apps/web/src/App.tsx`, `apps/web/src/WalletFlowPanels.tsx`.
 - The extension currently exposes runtime readiness, import/unlock/lock, private receive code copy, QuickShield, bridge handoff, and fail-closed dApp network/status behavior. Source: `apps/extension/src/ExtensionApp.tsx`, `.thoughts/verification/2026-06-24-phase11-wxt-extension-audit.md`.
@@ -59,7 +59,7 @@ External sources are indexed in `.thoughts/raw/2026-06-25-wallet-design-research
 - Mainnet XLM/USDC pool deployment and extension QuickShield XLM/USDC shield/deposit evidence are recorded. Mainnet shielded transfer, unshield/withdraw, and bridge-to-shield still require separate evidence before claims. Source: `.thoughts/research/2026-06-25-mainnet-readiness.md`.
 - Atomic bridge-and-shield is deferred. The safe product bridge is public CCTP bridge arrival followed by a separate USDC shield/deposit. Source: `.thoughts/research/2026-06-24-phase9-atomic-bridge-shield-decision.md`.
 
-### ZK Fighter address and network facts
+### ZK Freighter address and network facts
 
 - Private receive code is Bech32m HRP `zkf`, version `1`, max encoded length `180`, and payload is: version byte, network byte, 32-byte note public key, 32-byte encryption public key. Source: `packages/core/src/receive-code.ts`.
 - Network byte `0` maps to testnet, byte `1` maps to mainnet. Source: `packages/core/src/receive-code.ts`.
@@ -121,15 +121,15 @@ External sources are indexed in `.thoughts/raw/2026-06-25-wallet-design-research
 
 ## Inferences
 
-- For ZK Fighter, the highest-value code/design references are:
+- For ZK Freighter, the highest-value code/design references are:
   - Stellar extension structure: Freighter, xBull, LOBSTR signer extension.
   - Web + mobile wallet app structure: Safe Wallet monorepo, Uniswap interface, MetaMask mobile, Rainbow mobile, OneKey.
   - Extension confirmation/transaction risk UX: Rabby, MetaMask, Rainbow extension, Backpack, Taho, Zerion.
   - Privacy-specific flows: Zodl/Zashi, Railway, RAILGUN, Penumbra/Prax, Brume, Cake, Zingo.
   - Mobile confirmation and scanner ergonomics: Rainbow, Coinbase/Base, Phantom, Cake, Zodl/Zashi, Daimo.
   - Bridge status timelines: LI.FI, Relay, MetaMask bridge, Rainbow/Uniswap bridge surfaces.
-- ZK Fighter's designer should not copy a general wallet IA wholesale. ZK Fighter needs fewer public wallet features than MetaMask/Rainbow/xBull and more privacy-specific state clarity than most wallets.
-- The strongest reusable UX patterns for ZK Fighter are:
+- ZK Freighter's designer should not copy a general wallet IA wholesale. ZK Freighter needs fewer public wallet features than MetaMask/Rainbow/xBull and more privacy-specific state clarity than most wallets.
+- The strongest reusable UX patterns for ZK Freighter are:
   - Seed phrase onboarding with explicit recovery finality.
   - Receive QR + copy as primary action.
   - Address middle truncation with copy confirmation.
@@ -138,7 +138,7 @@ External sources are indexed in `.thoughts/raw/2026-06-25-wallet-design-research
   - Activity rows with status, visibility, asset, amount, transaction hash, and explorer links only when public.
   - Extension popup as a narrow command/status surface and side panel as the richer workspace.
   - Mobile confirmation using bottom sheets, scanner-first receive/send, and deliberate hold/slide/gesture confirmation only for irreversible public-boundary actions.
-- Privacy-wallet references consistently show that shielding status and transparent-vs-shielded balance must be visible. ZK Fighter's version must be "public funds", "shielded funds", "Pending", "Spendable", and "public boundary" rather than Zcash-specific transparent/shielded jargon.
+- Privacy-wallet references consistently show that shielding status and transparent-vs-shielded balance must be visible. ZK Freighter's version must be "public funds", "shielded funds", "Pending", "Spendable", and "public boundary" rather than Zcash-specific transparent/shielded jargon.
 - For the extension, the designer should avoid assuming public dApp signing. The product evidence says dApp public-key access and signing fail closed by design.
 - For mobile, the product should be treated as future surface planning. The designer can map mobile flows now, but any mobile build should reuse core wallet logic later rather than imply a separate wallet product.
 

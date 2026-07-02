@@ -5,7 +5,7 @@ import {
   type AssetCode,
   type FreighterBridgeRequest,
   type NetworkKey,
-} from '@zk-fighter/core'
+} from '@zk-freighter/core'
 import {
   dappMessageTypes,
   type BridgeSourceBalancesResponse,

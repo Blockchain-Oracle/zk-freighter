@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
-import { lookupPublishedReceiveCode, type NetworkKey, type WalletIdentity } from '@zk-fighter/core'
-import { BoundaryBadge, Button, Callout, QrCard, Segmented, truncateMiddle } from '@zk-fighter/ui'
+import { lookupPublishedReceiveCode, type NetworkKey, type WalletIdentity } from '@zk-freighter/core'
+import { BoundaryBadge, Button, Callout, QrCard, Segmented, truncateMiddle } from '@zk-freighter/ui'
 import type { WalletScreen } from './screens'
 import { readStoredPublish } from './discoveryStorage'
 

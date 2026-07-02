@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { AssetCode } from '@zk-fighter/core'
+import type { AssetCode } from '@zk-freighter/core'
 
 import { dappMessageTypes, type DappBalances, type DappBalancesResponse } from './dappMessages'
 import { formatStroops, stroopsToAmountInput } from './extension-format'

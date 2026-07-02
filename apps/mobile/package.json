@@ -1,5 +1,5 @@
 {
-  "name": "@zk-fighter/mobile",
+  "name": "@zk-freighter/mobile",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -23,8 +23,8 @@
   "dependencies": {
     "@capacitor/app": "8.1.0",
     "@capacitor/core": "8.4.1",
-    "@zk-fighter/core": "workspace:*",
-    "@zk-fighter/ui": "workspace:*",
+    "@zk-freighter/core": "workspace:*",
+    "@zk-freighter/ui": "workspace:*",
     "lucide-react": "1.21.0",
     "qrcode.react": "4.2.0",
     "react": "19.2.6",

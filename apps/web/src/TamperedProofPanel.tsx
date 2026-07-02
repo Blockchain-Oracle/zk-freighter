@@ -5,7 +5,7 @@ import {
   type NetworkKey,
   type WalletIdentity,
   type XlmTamperedProofRejectionReport,
-} from '@zk-fighter/core'
+} from '@zk-freighter/core'
 import './TamperedProofPanel.css'
 
 const latestEventCount = 8

@@ -6,7 +6,7 @@ import {
   phase4UsdcDemoEvidence,
   submissionEvidenceDigest,
   type DemoEvidenceTransaction,
-} from '@zk-fighter/core'
+} from '@zk-freighter/core'
 import { truncateMiddle } from './app-helpers'
 import './DemoEvidencePanel.css'
 

@@ -1,4 +1,4 @@
-import type { AssetCode } from '@zk-fighter/core'
+import type { AssetCode } from '@zk-freighter/core'
 
 export const defaultShieldAmounts = {
   XLM: 1_000_000n,

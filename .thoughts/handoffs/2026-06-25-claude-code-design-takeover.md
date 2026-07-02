@@ -2,13 +2,13 @@
 
 ## Objective
 
-Enable Claude Code to take over the ZK Fighter wallet redesign work, audit the current design/research handoff, verify the GitHub-visible artifacts, and plan the next design implementation or delegation workflow.
+Enable Claude Code to take over the ZK Freighter wallet redesign work, audit the current design/research handoff, verify the GitHub-visible artifacts, and plan the next design implementation or delegation workflow.
 
 This handoff is for **review and continuation**, not a claim that the visual redesign has been implemented. The current product UI remains functional scaffolding and should not be used as visual inspiration.
 
 ## Current State
 
-- Repo: `https://github.com/Blockchain-Oracle/zk-fighter`
+- Repo: `https://github.com/Blockchain-Oracle/zk-freighter`
 - Branch: `main`
 - Current remote head at handoff time: `fa12c4fadae0173b58a3eb0eaa813f7e171fb794`
 - Local branch was clean before creating this handoff.
@@ -22,7 +22,7 @@ This handoff is for **review and continuation**, not a claim that the visual red
 
 ## Key Decisions
 
-- ZK Fighter remains a privacy-by-default Stellar wallet for shielded XLM and USDC payments, not a general public wallet replacement.
+- ZK Freighter remains a privacy-by-default Stellar wallet for shielded XLM and USDC payments, not a general public wallet replacement.
 - The redesign covers three surfaces: web app, browser extension, and possible mobile app.
 - The web app is the primary full product surface.
 - The extension is a companion for receive, QuickShield, and bridge handoff. It is not an external public dApp signing wallet.
@@ -52,8 +52,8 @@ Start here:
 Core product context:
 
 - `README.md`
-- `.thoughts/specs/2026-06-22-zk-fighter-product-spec.md`
-- `.thoughts/stories/2026-06-22-zk-fighter-mvp-stories.md`
+- `.thoughts/specs/2026-06-22-zk-freighter-product-spec.md`
+- `.thoughts/stories/2026-06-22-zk-freighter-mvp-stories.md`
 - `.thoughts/quality/2026-06-22-project-quality-profile.md`
 - `.thoughts/research/2026-06-25-mainnet-readiness.md`
 - `.thoughts/verification/2026-06-24-phase11-wxt-extension-audit.md`
@@ -122,7 +122,7 @@ Claude should rerun relevant gates after reading this handoff, especially after 
 2. Read `AGENTS.md` and `CLAUDE.md`.
 3. Read `.thoughts/design/brief.md` and confirm it points to the full packet.
 4. Audit `.thoughts/design/designer-agent-prompt.md`:
-   - It must tell a GitHub-connected agent to inspect `https://github.com/Blockchain-Oracle/zk-fighter`.
+   - It must tell a GitHub-connected agent to inspect `https://github.com/Blockchain-Oracle/zk-freighter`.
    - It must tell the agent to clone locally if possible.
    - It must warn not to use current UI as visual inspiration.
    - It must cover web app, browser extension, and possible mobile app.
@@ -180,5 +180,5 @@ Claude should rerun relevant gates after reading this handoff, especially after 
 
 ## Resume Prompt
 
-Claude Code, take over the ZK Fighter wallet redesign handoff. Pull `https://github.com/Blockchain-Oracle/zk-fighter` on `main`, read `CLAUDE.md`, `AGENTS.md`, and `.thoughts/handoffs/2026-06-25-claude-code-design-takeover.md`, then audit the design packet and GitHub designer-agent prompt. Verify the brief covers web, extension, and possible mobile; verify the external wallet references and product-claim boundaries; dispatch focused review subagents if available; run the repo checks; then tell Abu what is ready, what needs correction, and the next implementation workflow.
+Claude Code, take over the ZK Freighter wallet redesign handoff. Pull `https://github.com/Blockchain-Oracle/zk-freighter` on `main`, read `CLAUDE.md`, `AGENTS.md`, and `.thoughts/handoffs/2026-06-25-claude-code-design-takeover.md`, then audit the design packet and GitHub designer-agent prompt. Verify the brief covers web, extension, and possible mobile; verify the external wallet references and product-claim boundaries; dispatch focused review subagents if available; run the repo checks; then tell Abu what is ready, what needs correction, and the next implementation workflow.
 

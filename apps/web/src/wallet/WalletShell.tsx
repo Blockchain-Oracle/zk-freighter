@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import type { NetworkKey, PasskeyEnvelope, WalletIdentity } from '@zk-fighter/core'
-import { Logo, NetworkPill, useTheme } from '@zk-fighter/ui'
+import type { NetworkKey, PasskeyEnvelope, WalletIdentity } from '@zk-freighter/core'
+import { Logo, NetworkPill, useTheme } from '@zk-freighter/ui'
 import { WalletFlowPanels } from '../WalletFlowPanels'
 import { HomeScreen } from './HomeScreen'
 import { ReceiveScreen } from './ReceiveScreen'
@@ -106,7 +106,7 @@ export function WalletShell({
         <div style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '0 6px 4px' }}>
           <Logo size={36} glow />
           <div style={{ lineHeight: 1.1 }}>
-            <div style={{ fontWeight: 800, fontSize: 15.5, letterSpacing: '-.02em' }}>ZK Fighter</div>
+            <div style={{ fontWeight: 800, fontSize: 15.5, letterSpacing: '-.02em' }}>ZK Freighter</div>
             <div style={{ fontSize: 9, color: 'var(--tx3)', fontFamily: 'var(--fm)', letterSpacing: '.14em' }}>SHIELDED · STELLAR</div>
           </div>
         </div>

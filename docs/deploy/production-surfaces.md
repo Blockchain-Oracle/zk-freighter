@@ -1,13 +1,13 @@
 # Production Surfaces
 
-ZK Fighter is deployed as separate surfaces:
+ZK Freighter is deployed as separate surfaces:
 
-- `@zk-fighter/landing`: root product site.
-- `@zk-fighter/web`: wallet app.
-- `@zk-fighter/docs`: documentation site (fully static; serve `apps/docs/build/client` at e.g. `docs.<domain>`).
-- `@zk-fighter/funding-api`: testnet XLM/USDC funding service.
-- `@zk-fighter/bootnode`: private-pool event cache and narrow RPC.
-- `@zk-fighter/extension`: WXT browser extension companion.
+- `@zk-freighter/landing`: root product site.
+- `@zk-freighter/web`: wallet app.
+- `@zk-freighter/docs`: documentation site (fully static; serve `apps/docs/build/client` at e.g. `docs.<domain>`).
+- `@zk-freighter/funding-api`: testnet XLM/USDC funding service.
+- `@zk-freighter/bootnode`: private-pool event cache and narrow RPC.
+- `@zk-freighter/extension`: WXT browser extension companion.
 
 `dev` commands run source code for local work. `build` creates a deployable artifact. `start` serves or runs the built artifact.
 

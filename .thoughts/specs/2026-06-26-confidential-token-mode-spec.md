@@ -1,10 +1,10 @@
-# Spec: Confidential Token Mode (ZK Fighter Track B)
+# Spec: Confidential Token Mode (ZK Freighter Track B)
 
 Status: B-S spec gate (WHAT only). Architecture is intentionally deferred to B-P (research-backed plan), after the B1 spike (PASSED). Derived strictly from reality research; no solutioning.
 
 ## Objective
 
-Add a **second, independent privacy mode** to ZK Fighter: **Confidential Tokens** — a SEP-41-wrapped Stellar token whose **amounts and balances are confidential** (hidden on-chain) while addresses and the fact of a transaction remain public, with **compliance built in** (auditor decryption channels + optional freeze/policy hooks). It complements — never replaces — the existing shielded-pool mode. A user can hold, deposit, transfer, and withdraw a confidential token on Stellar testnet, with every balance opening **recoverable** from on-chain events, proven on the user's device.
+Add a **second, independent privacy mode** to ZK Freighter: **Confidential Tokens** — a SEP-41-wrapped Stellar token whose **amounts and balances are confidential** (hidden on-chain) while addresses and the fact of a transaction remain public, with **compliance built in** (auditor decryption channels + optional freeze/policy hooks). It complements — never replaces — the existing shielded-pool mode. A user can hold, deposit, transfer, and withdraw a confidential token on Stellar testnet, with every balance opening **recoverable** from on-chain events, proven on the user's device.
 
 This mode exists to demonstrate the **other half** of real-world ZK on Stellar: where the shielded pool hides *linkage* (who paid whom), confidential tokens hide *amount* (how much) in a **regulator-compatible** way — the model financial institutions can actually adopt.
 

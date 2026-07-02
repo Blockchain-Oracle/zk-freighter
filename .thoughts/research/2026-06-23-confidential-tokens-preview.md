@@ -2,7 +2,7 @@
 
 ## Scope
 
-Check the new OpenZeppelin/SDF Confidential Tokens preview for what it actually provides, how it differs from ZK Fighter's current Nethermind Privacy Pools path, and what is safe to claim or consider for the wallet.
+Check the new OpenZeppelin/SDF Confidential Tokens preview for what it actually provides, how it differs from ZK Freighter's current Nethermind Privacy Pools path, and what is safe to claim or consider for the wallet.
 
 This is a research note only. It does not change current build scope.
 
@@ -30,7 +30,7 @@ This is a research note only. It does not change current build scope.
 - The current demo page was reachable on 2026-06-24 and serves a Next.js app titled `Stellar Confidential Token`. The page describes account-holder, disclosure verifier, and auditor roles, and labels itself `Stellar testnet · unaudited reference demo`.
 - The local reference repo contains the confidential-token implementation under `packages/tokens/src/confidential`.
 - A single confidential-token deployment is three contracts: token wrapper, auditor key registry, and UltraHonk verification-key registry.
-- The design says future documents for user flows, indexing/off-chain recovery, and SDK are still "to be added". That matters for wallet integration because ZK Fighter would need those SDK/recovery responsibilities itself if they are not published.
+- The design says future documents for user flows, indexing/off-chain recovery, and SDK are still "to be added". That matters for wallet integration because ZK Freighter would need those SDK/recovery responsibilities itself if they are not published.
 - Core cryptography:
   - balances are Grumpkin Pedersen commitments.
   - state-consuming operations use Noir/UltraHonk proofs.
@@ -62,7 +62,7 @@ This is a research note only. It does not change current build scope.
 - `merge` requires owner auth but no ZK proof. It folds receiving balance into spendable balance.
 - Transfers and withdrawals consume private state and require UltraHonk proofs.
 - The owner must maintain commitment openings as local wallet state. Event replay and recovery are therefore wallet/indexer concerns, not just contract calls.
-- The design has a spending key, viewing key, public viewing key, and per-spender delegation viewing keys. A ZK Fighter integration would need deterministic derivation and encrypted local storage for these without confusing them with the existing Nethermind pool note keys.
+- The design has a spending key, viewing key, public viewing key, and per-spender delegation viewing keys. A ZK Freighter integration would need deterministic derivation and encrypted local storage for these without confusing them with the existing Nethermind pool note keys.
 - The wrapper assumes exact-transfer SEP-41 behavior: no rebasing, no fee-on-transfer, deterministic revert, and careful handling of SAC freeze/clawback/deauthorization risk.
 - The compliance extension includes:
   - account freeze/unfreeze.
@@ -92,12 +92,12 @@ This is a research note only. It does not change current build scope.
 ## Inferences
 
 - This is a strong wallet-relevant primitive because the wallet is where the user must hold local openings, viewing keys, event history, disclosure flows, and proof generation UX.
-- It is not a direct replacement for ZK Fighter's current Privacy Pools path:
+- It is not a direct replacement for ZK Freighter's current Privacy Pools path:
   - Confidential Tokens hide amounts and balances between public addresses.
   - Privacy Pools aim to hide more of the address/history linkage inside a pool, with public deposit/withdraw boundaries.
 - Confidential Tokens are likely easier to explain to compliance-minded users: known parties, private amounts, auditor/disclosure paths.
 - Confidential Tokens are likely worse for anonymity-style claims: addresses remain visible by design.
-- A future ZK Fighter wallet could support both modes:
+- A future ZK Freighter wallet could support both modes:
   - Privacy Pool mode: shielded transfers with stronger address/history privacy.
   - Confidential Token mode: public counterparties with private amounts and regulated disclosure/auditor support.
 - The right product framing is not "replace shielded pools"; it is "add a second privacy mode for private token balances and transfer amounts".
@@ -116,7 +116,7 @@ This is a research note only. It does not change current build scope.
 
 ## Not Included
 
-- No ZK Fighter code changes.
+- No ZK Freighter code changes.
 - No Confidential Token deployment.
 - No local Noir circuit run.
 - No proof generation benchmark.

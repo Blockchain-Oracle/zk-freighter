@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Button, Callout } from '@zk-fighter/ui'
-import { decodeReceiveCode, submitPublicStellarPayment, type AssetCode, type PublicStellarPaymentReport, type XlmPrivateSubmitReport } from '@zk-fighter/core'
+import { Button, Callout } from '@zk-freighter/ui'
+import { decodeReceiveCode, submitPublicStellarPayment, type AssetCode, type PublicStellarPaymentReport, type XlmPrivateSubmitReport } from '@zk-freighter/core'
 import { AmountBox, Field, FlowScreen, ResultCard, Segment, type FlowProps } from './MobileFlowPrimitives'
 import { runMobilePrivateTransfer } from './mobile-runtime'
 import { formatAssetAmount, noteBalance, summarizeError } from './mobile-format'

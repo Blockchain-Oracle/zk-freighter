@@ -1,4 +1,4 @@
-# ZK Fighter
+# ZK Freighter
 
 **A privacy-by-default, self-custody wallet for shielded XLM and USDC payments on Stellar.**
 
@@ -57,7 +57,7 @@ docs/           concept docs, glossary, verified facts, deploy notes
 
 ## Architecture
 
-Every app is a thin presentation layer over `@zk-fighter/core`, which owns identity, proving, and transactions:
+Every app is a thin presentation layer over `@zk-freighter/core`, which owns identity, proving, and transactions:
 
 ```mermaid
 flowchart LR
@@ -234,7 +234,7 @@ pnpm docs:check             # docs consistency
 
 ## Credits and licenses
 
-- **Nethermind `stellar-private-payments`** supplies the shielded-pool engine: circuits (Circom/Groth16), browser prover (Rust→WASM), and Soroban pool contracts. Mostly Apache-2.0; `circuits/build.rs` under LGPLv3. ZK Fighter's contribution on this path is the wallet product: multi-surface UX, ASP access orchestration, receive codes, disclosure, bridge-to-shield, and services.
+- **Nethermind `stellar-private-payments`** supplies the shielded-pool engine: circuits (Circom/Groth16), browser prover (Rust→WASM), and Soroban pool contracts. Mostly Apache-2.0; `circuits/build.rs` under LGPLv3. ZK Freighter's contribution on this path is the wallet product: multi-surface UX, ASP access orchestration, receive codes, disclosure, bridge-to-shield, and services.
 - **Circle `stellar-cctp`** supplies the Stellar CCTP V2 reference (Apache-2.0).
 - **OpenZeppelin/SDF Confidential Tokens** preview informs Confidential Token mode (testnet-only).
 - Stellar/SDF documentation for Soroban, BN254, Poseidon2, SAC/USDC, and network context.

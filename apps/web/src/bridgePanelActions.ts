@@ -6,7 +6,7 @@ import type {
   RunCctpBridgeOptions,
   StellarUsdcTrustlineReport,
   WalletIdentity,
-} from '@zk-fighter/core'
+} from '@zk-freighter/core'
 
 interface RunBridgeAfterDestinationSetupOptions {
   readonly identity: WalletIdentity

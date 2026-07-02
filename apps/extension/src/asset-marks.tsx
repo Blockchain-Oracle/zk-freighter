@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react'
-import type { AssetCode, CctpSourceKey } from '@zk-fighter/core'
+import type { AssetCode, CctpSourceKey } from '@zk-freighter/core'
 
 const baseStyle: CSSProperties = {
   width: 26,

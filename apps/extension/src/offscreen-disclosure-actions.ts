@@ -7,7 +7,7 @@ import {
   type GenerateDisclosureReport,
   type NetworkKey,
   type VerifyDisclosureReport,
-} from '@zk-fighter/core'
+} from '@zk-freighter/core'
 
 // Disclosure runs in the offscreen (it proves with the selectiveDisclosure circuit).
 // We load the real notes, auto-pick the largest UNSPENT one (same rule as the web),

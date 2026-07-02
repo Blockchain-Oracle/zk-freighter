@@ -12,7 +12,7 @@ import {
   type ConfidentialSubmitReport,
   type DemoFundingRequestReport,
   type NetworkKey,
-} from '@zk-fighter/core'
+} from '@zk-freighter/core'
 
 import { readActivity, recordActivity, type ActivityBoundary, type ActivityKind, type ActivityStatus } from './activity-store'
 import { balanceCacheKey, clearAllBalanceCache, isBalanceStale, readBalanceCache, writeBalanceCache } from './balance-cache'
@@ -149,7 +149,7 @@ export async function discoverPublishFlow(
 export async function discoverStatusFlow(ready: FlowReady, runner: ExtensionDiscoverRunner | undefined): Promise<DiscoverStatusResponse> {
   const state = await readStoredDappWallet()
   const identity = identityForMnemonic(ready.mnemonic, state)
-  if (!identity) return { ok: false, discoverable: false, error: 'Unlock ZK Fighter to check discovery.' }
+  if (!identity) return { ok: false, discoverable: false, error: 'Unlock ZK Freighter to check discovery.' }
   const receiveCode = receiveCodeForIdentity(identity, ready.network)
   const stored = await readStoredDiscoverPublish(ready.network, identity.stellarPublicKey)
   const storedDiscoverable = stored?.report.status === 'submitted' || stored?.report.status === 'partial'
@@ -220,7 +220,7 @@ export async function balancesFlow(
   if (!runner) return { ok: false, syncing: false, error: 'Extension balance runner is unavailable.' }
   const state = await readStoredDappWallet()
   const identity = identityForMnemonic(ready.mnemonic, state)
-  if (!identity) return { ok: false, syncing: false, error: 'Unlock ZK Fighter to view balances.' }
+  if (!identity) return { ok: false, syncing: false, error: 'Unlock ZK Freighter to view balances.' }
   const key = balanceCacheKey(ready.network, identity.stellarPublicKey)
 
   const cached = await readBalanceCache(key)

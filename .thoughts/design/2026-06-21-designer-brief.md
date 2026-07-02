@@ -1,6 +1,6 @@
-# Designer Brief: ZK Fighter
+# Designer Brief: ZK Freighter
 
-> **Brand locked: ZK Fighter.** Do not invest in a Freighter-derivative wordmark, logo, or color identity. Use the ZK Fighter name consistently, with a restrained lockup that does not lean on Freighter's brand.
+> **Brand locked: ZK Freighter.** Do not invest in a Freighter-derivative wordmark, logo, or color identity. Use the ZK Freighter name consistently, with a restrained lockup that does not lean on Freighter's brand.
 
 ---
 
@@ -8,7 +8,7 @@
 
 Public blockchains are panopticons by default. On Stellar, as on every transparent ledger, sending someone money permanently publishes who paid whom, how much, and when, to anyone with a block explorer. For most people that is not a feature — it is a leak they never consented to. Payroll, donations, rent between roommates, savings — all of it becomes a public record keyed to a reusable address.
 
-ZK Fighter exists to make **shielded payments on Stellar feel as ordinary as sending a normal payment**. It is a privacy-by-default, self-custody, zero-knowledge wallet: the user's balance and their private-to-private transfers are hidden by a privacy pool (Nethermind's engine), while the only moments that touch the public ledger are deliberate and clearly labeled — putting money *in* (shield) and taking it *out* (unshield).
+ZK Freighter exists to make **shielded payments on Stellar feel as ordinary as sending a normal payment**. It is a privacy-by-default, self-custody, zero-knowledge wallet: the user's balance and their private-to-private transfers are hidden by a privacy pool (Nethermind's engine), while the only moments that touch the public ledger are deliberate and clearly labeled — putting money *in* (shield) and taking it *out* (unshield).
 
 The design problem is not "draw a crypto wallet." It is **teaching a genuinely unfamiliar mental model — public vs. private money living in one wallet — without lecturing, and without ever overclaiming.** The product's integrity depends on honesty: every screen must quietly teach where privacy begins and ends. A wallet that *says* "anonymous" and then leaks on withdrawal is worse than no privacy wallet at all. Our differentiator is that we tell the truth, legibly, at exactly the moment it matters.
 
@@ -109,13 +109,13 @@ Screens are grouped by cluster, in recommended build order. Each screen lists it
 ### Cluster 1 — Onboarding (build first; establishes the honesty voice)
 
 **1.1 Welcome / choose path.** First impression; teach the one-sentence privacy-by-default promise and route to exactly two paths (create / import) — no third social/seedless path that would demote the seed.
-- Components: centered restrained ZK Fighter wordmark; honest one-line tagline ("self-custody wallet for shielded payments on Stellar" — never "fully private"); primary "Create a new wallet" + tertiary "I already have a wallet"; tertiary "How privacy works" link opening a mocked explainer sheet; persistent TESTNET network pill top-right (visible from screen one).
+- Components: centered restrained ZK Freighter wordmark; honest one-line tagline ("self-custody wallet for shielded payments on Stellar" — never "fully private"); primary "Create a new wallet" + tertiary "I already have a wallet"; tertiary "How privacy works" link opening a mocked explainer sheet; persistent TESTNET network pill top-right (visible from screen one).
 - States: default (static); explainer sheet open/dismiss; returning-user variant routes to Unlock (routing note only).
 - Interactions: Create → Set password; Import → Import existing; How privacy works → dismissible sheet that does not advance.
 - Borrow: `reference/freighter/.../views/Welcome/index.tsx`; MetaMask create-wallet flow.
 
 **1.2 Create new — Set password (before phrase).** Establish the local unlock password BEFORE any seed is shown; teach that the password is local-only, is NOT the recovery secret, and can't be reset.
-- Components: heading + teaching subtext distinguishing password from recovery phrase; Password + Confirm masked fields with show/hide; mocked strength meter with live guidance; terms checkbox ("I understand ZK Fighter can't recover this password or my recovery phrase."); primary "Continue" disabled until valid + confirmed + terms; Back → Welcome.
+- Components: heading + teaching subtext distinguishing password from recovery phrase; Password + Confirm masked fields with show/hide; mocked strength meter with live guidance; terms checkbox ("I understand ZK Freighter can't recover this password or my recovery phrase."); primary "Continue" disabled until valid + confirmed + terms; Back → Welcome.
 - States: empty/default (CTA disabled, no errors until touched); typing/partial (strength updates; mismatch error after confirm touched); invalid; disabled; loading/success (mocked ~600ms "creating local vault" button spinner); error (mocked storage failure → error Notification, CTA re-enabled).
 - Interactions: per-field show/hide; Enter submits when valid; Continue → Pre-reveal explainer.
 - Borrow: `.../views/AccountCreator/index.tsx`; `.../components/accountCreator/PasswordForm`.
@@ -640,7 +640,7 @@ You own the **visual direction entirely** — colors, typography, spacing, illus
 
 These are unresolved decisions the designer can flag opinions on; none should block the prototype (pick a sensible default and mark it):
 
-1. **Product name & wordmark.** ZK Fighter is locked. Use a restrained lockup; do not use a Freighter-derivative mark.
+1. **Product name & wordmark.** ZK Freighter is locked. Use a restrained lockup; do not use a Freighter-derivative mark.
 2. **Confirm-phrase method.** Default to the tappable word-chip method; the 3-random-masked-inputs variant is a slimmer alternative — pick one as primary.
 3. **Private-address rendering prefix.** We render the bundle as `zkf1…` in copy/mocks; confirm whether the final string keeps that prefix or another (`0zk…` appears in some Send specs from Railgun lineage — keep one consistent prefix across all screens).
 4. **Directory / @handle feature depth.** Is the @handle directory (R4) in v1 scope or a later add? Design it but it may be deferred — keep it cleanly separable.

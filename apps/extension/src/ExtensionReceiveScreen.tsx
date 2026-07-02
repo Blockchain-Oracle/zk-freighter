@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
-import { Button, Logo } from '@zk-fighter/ui'
+import { Button, Logo } from '@zk-freighter/ui'
 
 import { dappMessageTypes, type DappWalletStatus, type DiscoverStatusResponse } from './dappMessages'
 import { shorten } from './extension-format'

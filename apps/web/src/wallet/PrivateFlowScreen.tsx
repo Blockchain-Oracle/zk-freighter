@@ -8,8 +8,8 @@ import {
   type XlmNotesReport,
   type XlmPrivateProgressEvent,
   type XlmPrivateSubmitReport,
-} from '@zk-fighter/core'
-import { AmountInput, Button, Callout, Segmented } from '@zk-fighter/ui'
+} from '@zk-freighter/core'
+import { AmountInput, Button, Callout, Segmented } from '@zk-freighter/ui'
 import type { ShieldedBalanceState } from './useShieldedBalance'
 import { formatStroops, stroopsToAmountInput, sumSpendableStroops } from './format'
 import { proofFlowModel } from './proofFlow'

@@ -5,7 +5,7 @@ import type {
   EvmCctpSourceConfig,
   StellarUsdcTrustlineReport,
   WalletIdentity,
-} from '@zk-fighter/core'
+} from '@zk-freighter/core'
 import { runBridgeAfterDestinationSetup } from './bridgePanelActions'
 
 const identity = { stellarPublicKey: 'GABC' } as WalletIdentity

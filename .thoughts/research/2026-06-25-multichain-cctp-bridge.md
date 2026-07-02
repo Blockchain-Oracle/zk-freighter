@@ -2,7 +2,7 @@
 
 ## Scope
 
-Check whether ZK Fighter's CCTP bridge should stay Ethereum-only or expand to other source chains, especially Base and Arbitrum. This is a current-reality pass for the bridge-in path: source-chain USDC -> public Stellar USDC -> separate ZK Fighter shield/deposit.
+Check whether ZK Freighter's CCTP bridge should stay Ethereum-only or expand to other source chains, especially Base and Arbitrum. This is a current-reality pass for the bridge-in path: source-chain USDC -> public Stellar USDC -> separate ZK Freighter shield/deposit.
 
 ## Sources Checked
 
@@ -105,7 +105,7 @@ Gas token notes:
 - Avalanche uses AVAX.
 - Polygon PoS/Amoy uses POL in current Polygon docs.
 
-### Pre-implementation ZK Fighter code was single-source-chain
+### Pre-implementation ZK Freighter code was single-source-chain
 
 - `packages/core/src/networks.ts` defines `CctpConfig.evmSource`, singular.
 - Testnet `evmSource` is Ethereum Sepolia only.
@@ -118,11 +118,11 @@ Gas token notes:
 
 ### Current evidence state
 
-- ZK Fighter already has real Sepolia -> Stellar testnet -> USDC shield evidence.
-- ZK Fighter already has mainnet XLM/USDC pool deployments, QuickShield, shielded transfer, and unshield evidence.
-- ZK Fighter does not yet have accepted mainnet bridge-to-shield evidence.
-- ZK Fighter now has Base Sepolia, Arbitrum Sepolia, and OP Sepolia -> Stellar testnet CCTP public bridge evidence and extension-offscreen post-bridge USDC shield evidence.
-- ZK Fighter does not yet have Base mainnet, Arbitrum mainnet, OP mainnet, Avalanche, Polygon, or non-EVM CCTP evidence.
+- ZK Freighter already has real Sepolia -> Stellar testnet -> USDC shield evidence.
+- ZK Freighter already has mainnet XLM/USDC pool deployments, QuickShield, shielded transfer, and unshield evidence.
+- ZK Freighter does not yet have accepted mainnet bridge-to-shield evidence.
+- ZK Freighter now has Base Sepolia, Arbitrum Sepolia, and OP Sepolia -> Stellar testnet CCTP public bridge evidence and extension-offscreen post-bridge USDC shield evidence.
+- ZK Freighter does not yet have Base mainnet, Arbitrum mainnet, OP mainnet, Avalanche, Polygon, or non-EVM CCTP evidence.
 
 ## Inferences
 
@@ -130,7 +130,7 @@ Gas token notes:
 - The best next source chains are Base Sepolia and Arbitrum Sepolia because they use the same EVM CCTP call path as Ethereum Sepolia, are officially CCTP-supported, and are cheaper than Ethereum L1 for real mainnet testing.
 - OP Sepolia is also a straightforward EVM addition. Avalanche and Polygon are feasible but add different gas-token UX, so they are slightly less clean for the first multichain demo.
 - Non-EVM sources such as Solana and Starknet are real CCTP domains, but they need different wallet connection, signing, address encoding, and testing paths. They should not block the EVM multichain bridge.
-- Stellar -> EVM bridge-out is supported by Circle's Stellar quickstart pattern, but it is a different product flow from ZK Fighter's current inbound "bridge then shield" story.
+- Stellar -> EVM bridge-out is supported by Circle's Stellar quickstart pattern, but it is a different product flow from ZK Freighter's current inbound "bridge then shield" story.
 - Mainnet Ethereum should stay available as a supported route, but Base or Arbitrum should be the preferred mainnet evidence route because the source-chain gas risk is much lower.
 
 ## Unknowns And Questions
@@ -152,12 +152,12 @@ Gas token notes:
 
 2026-06-25:
 
-- ZK Fighter now has an EVM source-chain registry in `packages/core/src/networks.ts`.
+- ZK Freighter now has an EVM source-chain registry in `packages/core/src/networks.ts`.
 - Configured active source chains are Ethereum, Base, Arbitrum, and OP for both testnet and mainnet.
 - The bridge runner accepts a `sourceChainKey` and uses the selected source domain, chain ID, USDC contract, TokenMessenger, and explorer URL.
 - Web bridge resume storage now records the selected source chain with the burn hash.
 - Extension bridge handoff can pass the selected source chain to the web route.
-- A headless evidence runner is now available through `pnpm cctp:bridge:testnet` and `pnpm cctp:bridge:mainnet`. It stores EVM private keys and the bridge destination mnemonic under `/Users/abu/.config/zk-fighter`, outside the repo.
+- A headless evidence runner is now available through `pnpm cctp:bridge:testnet` and `pnpm cctp:bridge:mainnet`. It stores EVM private keys and the bridge destination mnemonic under `/Users/abu/.config/zk-freighter`, outside the repo.
 - The runner uses one shared local EVM address per network across configured EVM sources, so Base/Arbitrum/OP/Ethereum testnet funding can target the same public address.
 - Base Sepolia, Arbitrum Sepolia, and OP Sepolia now have accepted bridge-to-shield evidence: approval, burn, Iris attestation, Stellar mint/forward, extension-offscreen ASP insertion, and separate USDC shield/deposit.
 - OP Sepolia required an explicit gas-limit fallback in the headless runner because automatic viem/RPC gas estimation returned `intrinsic gas too high` before any tx hash existed.

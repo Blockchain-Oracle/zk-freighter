@@ -14,8 +14,8 @@ import {
   type EvmCctpSourceConfig,
   type CctpSourceKey,
   type EvmBalances,
-} from '@zk-fighter/core'
-import { Button } from '@zk-fighter/ui'
+} from '@zk-freighter/core'
+import { Button } from '@zk-freighter/ui'
 import type { FlowProps } from './MobileFlowPrimitives'
 import { FlowScreen, Field, ResultCard, Segment } from './MobileFlowPrimitives'
 import { runMobileShield } from './mobile-runtime'

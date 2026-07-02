@@ -2,7 +2,7 @@
 
 ## Objective
 
-Continue from the current mobile/runtime instability work without trusting this session blindly. The goal is to make ZK Fighter work as a real product across web, WXT extension, and Capacitor mobile: funding, shield/unshield, activity, discover, receive, settings, and mobile UI must be real integration, not placeholders.
+Continue from the current mobile/runtime instability work without trusting this session blindly. The goal is to make ZK Freighter work as a real product across web, WXT extension, and Capacitor mobile: funding, shield/unshield, activity, discover, receive, settings, and mobile UI must be real integration, not placeholders.
 
 ## Current State
 
@@ -20,8 +20,8 @@ Continue from the current mobile/runtime instability work without trusting this 
 ## Key Decisions
 
 - Mobile is a full product surface, not a companion-only mock.
-- Mobile uses Capacitor (`apps/mobile`) with React/Vite, `appId: com.zkfighter.wallet`, `appName: ZK Fighter`, `webDir: dist`.
-- Mobile must reuse shared `@zk-fighter/core` behavior where web/extension already work.
+- Mobile uses Capacitor (`apps/mobile`) with React/Vite, `appId: com.zkfreighter.wallet`, `appName: ZK Freighter`, `webDir: dist`.
+- Mobile must reuse shared `@zk-freighter/core` behavior where web/extension already work.
 - Phone browser testing over `http://192.168.18.4:4183` fails Web Crypto because LAN HTTP is not a secure context.
 - Vite HTTPS preview enables Web Crypto locally, but phone browser still rejects the self-signed cert unless trusted.
 - Recommended next direction: use a trusted tunnel (for example Cloudflare quick tunnel) or a proper locally trusted cert; also make mobile preview API calls same-origin/proxied to avoid HTTPS page -> HTTP API mixed-content failures.
@@ -30,8 +30,8 @@ Continue from the current mobile/runtime instability work without trusting this 
 ## Artifacts
 
 - Mobile prototypes Abu wants treated as direction, not copied blindly:
-  - `/Users/abu/Downloads/GitHub repository link(2)/ZK Fighter Mobile Home.dc.html`
-  - `/Users/abu/Downloads/GitHub repository link(2)/ZK Fighter Mobile Flows.dc.html`
+  - `/Users/abu/Downloads/GitHub repository link(2)/ZK Freighter Mobile Home.dc.html`
+  - `/Users/abu/Downloads/GitHub repository link(2)/ZK Freighter Mobile Flows.dc.html`
 - Redesign docs:
   - `/Users/abu/dev/hackathon/stellar-zk-wallet/docs/redesign/DESIGN-MAP.md`
   - `/Users/abu/dev/hackathon/stellar-zk-wallet/docs/redesign/COMPONENTS.md`
@@ -75,12 +75,12 @@ Also many unrelated or previous-turn files are dirty in web/extension/core/bootn
 Commands that passed in this session:
 
 ```bash
-CI=true pnpm --filter @zk-fighter/bootnode test -- rpc
-CI=true pnpm --filter @zk-fighter/bootnode typecheck
-CI=true pnpm --filter @zk-fighter/bootnode build
-CI=true pnpm --filter @zk-fighter/mobile typecheck
-CI=true pnpm --filter @zk-fighter/mobile build
-CI=true pnpm --filter @zk-fighter/core test -- runtime-config
+CI=true pnpm --filter @zk-freighter/bootnode test -- rpc
+CI=true pnpm --filter @zk-freighter/bootnode typecheck
+CI=true pnpm --filter @zk-freighter/bootnode build
+CI=true pnpm --filter @zk-freighter/mobile typecheck
+CI=true pnpm --filter @zk-freighter/mobile build
+CI=true pnpm --filter @zk-freighter/core test -- runtime-config
 CI=true pnpm mobile:sync
 node scripts/check-file-size.mjs
 ```
@@ -154,10 +154,10 @@ Docs checked with Context7:
    - activity filters/network scoping
    - extension popup/native WXT behavior
 7. Run gates:
-   - `CI=true pnpm --filter @zk-fighter/core test`
-   - `CI=true pnpm --filter @zk-fighter/web test && CI=true pnpm --filter @zk-fighter/web build`
-   - `CI=true pnpm --filter @zk-fighter/extension test && CI=true pnpm --filter @zk-fighter/extension build`
-   - `CI=true pnpm --filter @zk-fighter/mobile test && CI=true pnpm --filter @zk-fighter/mobile build`
+   - `CI=true pnpm --filter @zk-freighter/core test`
+   - `CI=true pnpm --filter @zk-freighter/web test && CI=true pnpm --filter @zk-freighter/web build`
+   - `CI=true pnpm --filter @zk-freighter/extension test && CI=true pnpm --filter @zk-freighter/extension build`
+   - `CI=true pnpm --filter @zk-freighter/mobile test && CI=true pnpm --filter @zk-freighter/mobile build`
    - `CI=true pnpm mobile:sync`
    - Android/iOS native build checks
    - `node scripts/check-file-size.mjs`
@@ -165,4 +165,4 @@ Docs checked with Context7:
 
 ## Resume Prompt
 
-Continue ZK Fighter from `/Users/abu/dev/hackathon/stellar-zk-wallet` on branch `feat/web-wallet-redesign`. First read `AGENTS.md` and `.thoughts/handoffs/2026-07-02-mobile-cloud-code-handoff.md`, then independently verify the claims. The immediate issue is mobile phone testing: HTTP LAN preview lacks Web Crypto, HTTPS LAN preview has an untrusted cert, and same-origin/tunnel/proxy setup is needed before judging mobile. Also re-test web and extension because Abu no longer trusts that they still work. Do not trust previous conclusions blindly; reproduce, research docs where needed, then patch.
+Continue ZK Freighter from `/Users/abu/dev/hackathon/stellar-zk-wallet` on branch `feat/web-wallet-redesign`. First read `AGENTS.md` and `.thoughts/handoffs/2026-07-02-mobile-cloud-code-handoff.md`, then independently verify the claims. The immediate issue is mobile phone testing: HTTP LAN preview lacks Web Crypto, HTTPS LAN preview has an untrusted cert, and same-origin/tunnel/proxy setup is needed before judging mobile. Also re-test web and extension because Abu no longer trusts that they still work. Do not trust previous conclusions blindly; reproduce, research docs where needed, then patch.

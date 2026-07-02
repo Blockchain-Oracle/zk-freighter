@@ -5,11 +5,11 @@ import {
   type PasskeyEnvelope,
   type PasskeyError,
   type VaultError,
-} from '@zk-fighter/core'
+} from '@zk-freighter/core'
 
-export const vaultStorageKey = 'zk-fighter:vault:v1'
-export const passkeyEnvelopeStorageKey = 'zk-fighter:passkey-envelope:v1'
-export const walletPublicKeyStorageKey = 'zk-fighter:wallet-public-key:v1'
+export const vaultStorageKey = 'zk-freighter:vault:v1'
+export const passkeyEnvelopeStorageKey = 'zk-freighter:passkey-envelope:v1'
+export const walletPublicKeyStorageKey = 'zk-freighter:wallet-public-key:v1'
 export const passwordMinLength = 8
 
 export function truncateMiddle(value: string, head = 14, tail = 10): string {
@@ -64,7 +64,7 @@ export function passkeyErrorText(error: PasskeyError): string {
     'crypto-unavailable': 'Browser crypto is unavailable.',
     'invalid-mnemonic': 'The seed phrase could not be bound to a passkey.',
     'passkey-mismatch': 'This passkey did not unlock this wallet.',
-    'prf-unsupported': 'This passkey does not expose the PRF needed for ZK Fighter unlock.',
+    'prf-unsupported': 'This passkey does not expose the PRF needed for ZK Freighter unlock.',
     'webauthn-unavailable': 'Passkeys are unavailable in this browser context.',
   } satisfies Record<PasskeyError, string>
 

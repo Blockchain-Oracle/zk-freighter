@@ -11,8 +11,8 @@ import {
   type NetworkKey,
   type PublicBalancesReport,
   type WalletIdentity,
-} from '@zk-fighter/core'
-import { ThemeProvider, type ThemeName } from '@zk-fighter/ui'
+} from '@zk-freighter/core'
+import { ThemeProvider, type ThemeName } from '@zk-freighter/ui'
 import { MobileAccess } from './MobileAccess'
 import { MobileChrome } from './MobileChrome'
 import { MobileConfidential, MobileDiscover, MobileDisclosure } from './MobileFlows'

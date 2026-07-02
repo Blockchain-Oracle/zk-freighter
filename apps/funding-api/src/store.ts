@@ -1,6 +1,6 @@
 import { Pool } from 'pg'
 
-import type { FundingApiReport } from '@zk-fighter/core'
+import type { FundingApiReport } from '@zk-freighter/core'
 
 export interface FundingRequestRecord {
   readonly network: string

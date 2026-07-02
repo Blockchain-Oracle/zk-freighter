@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import type { AssetCode, GenerateDisclosureReport, VerifyDisclosureReport } from '@zk-fighter/core'
-import { Button, Callout, Segmented } from '@zk-fighter/ui'
+import type { AssetCode, GenerateDisclosureReport, VerifyDisclosureReport } from '@zk-freighter/core'
+import { Button, Callout, Segmented } from '@zk-freighter/ui'
 
 import { dappMessageTypes, type DisclosureResponse, type DisclosureVerifyResponse } from './dappMessages'
 import { ProvingView } from './extension-private-views'

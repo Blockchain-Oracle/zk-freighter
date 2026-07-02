@@ -20,7 +20,7 @@ import {
   type XlmNotesReport,
   type XlmPrivateSubmitReport,
   type ShieldWithPrerequisitesReport,
-} from '@zk-fighter/core'
+} from '@zk-freighter/core'
 import { writeShieldedBalanceCache } from './mobile-storage'
 
 export type RuntimeStatus = 'idle' | 'running' | 'ready' | 'blocked' | 'failed'

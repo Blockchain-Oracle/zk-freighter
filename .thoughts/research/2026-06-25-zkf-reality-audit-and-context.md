@@ -1,4 +1,4 @@
-# ZK Fighter — Reality Audit & Plan-Mode Context (Source of Truth)
+# ZK Freighter — Reality Audit & Plan-Mode Context (Source of Truth)
 
 Date: 2026-06-25 · Hackathon: Stellar Hacks: Real-World ZK (DoraHacks, SDF).
 Framing rule (per Abu): **the deadline is not a factor.** Nothing here is a "do less because of time" recommendation. Everything is "what is true" and "what is the correct way to build it." See `CLAUDE.md` → *Quality Bar — Deadline Is Not A Factor*.
@@ -11,7 +11,7 @@ Legend: REAL = wired + evidenced (tests and/or on-chain). PARTIAL = wired but in
 
 ## 1) Project Reality
 
-ZK Fighter is a privacy-by-default Stellar wallet for shielded XLM and USDC, plus a Circle CCTP cross-chain USDC inflow path. Monorepo: `apps/web` (React/Vite SPA), `apps/extension` (WXT MV3 companion), `packages/core` (shared wallet/proof/tx logic). **The ZK is genuinely load-bearing, not slideware.**
+ZK Freighter is a privacy-by-default Stellar wallet for shielded XLM and USDC, plus a Circle CCTP cross-chain USDC inflow path. Monorepo: `apps/web` (React/Vite SPA), `apps/extension` (WXT MV3 companion), `packages/core` (shared wallet/proof/tx logic). **The ZK is genuinely load-bearing, not slideware.**
 
 - **Proving stack**: Circom + Groth16 over BN254 with Poseidon2 hashing (a Privacy Pools design), generated client-side in a browser/WASM module (`web.js` + `prover-worker_bg.wasm`, ~11.7MB) and verified on-chain by a Soroban Groth16/BN254 verifier embedded in the deployed pool contract. The prover/verifier are **vendored/reused from Nethermind's stellar-private-payments** — credit honestly; the team did not author the SNARK system.
 - **Team's genuine engineering** (the novelty): the wallet/UX/derivation/disclosure/compliance/CCTP layer, plus a from-scratch, KAT-verified **Poseidon2-BN254 t=3** implementation (`poseidon2-bn254.ts`) and deterministic seed→note-key→ASP-leaf derivation that interoperates with the Nethermind circuits **without importing `reference/` source** (guardrail honored).
@@ -102,7 +102,7 @@ This is a **real, substantial second privacy mode**, not a small add-on, and it 
 
 These determine whether the project can be judged *at all*, independent of timeline. They are Abu's to decide/own:
 
-1. **GitHub repo `Blockchain-Oracle/zk-fighter` is PRIVATE** (`isPrivate:true`). The hackathon mandates a public open-source repo. **Before any public flip**: run a full git-history secret scan (gitleaks/trufflehog) — the repo handles seeds, EVM keys, Stellar S-keys, and a CCTP funder. Audit found no tracked `.env`/S-keys in non-test source and `.gitignore` excludes `.env*` + `/reference/`, but history must be confirmed clean. **Publishing is irreversible → Abu's call; I will not flip it.**
+1. **GitHub repo `Blockchain-Oracle/zk-freighter` is PRIVATE** (`isPrivate:true`). The hackathon mandates a public open-source repo. **Before any public flip**: run a full git-history secret scan (gitleaks/trufflehog) — the repo handles seeds, EVM keys, Stellar S-keys, and a CCTP funder. Audit found no tracked `.env`/S-keys in non-test source and `.gitignore` excludes `.env*` + `/reference/`, but history must be confirmed clean. **Publishing is irreversible → Abu's call; I will not flip it.**
 2. **No demo video exists** — only a written script in `docs/SUBMISSION-PACKAGE.md`. A 2–3 min video is mandatory and is where load-bearing ZK should be shown (the accept-then-tamper-reject moment, pointing at `af8f45d2…` returning successful=False). Abu's to record/own.
 3. **Filed submission ≠ ready code** — the DoraHacks entry (repo URL + video URL) must actually be filed.
 

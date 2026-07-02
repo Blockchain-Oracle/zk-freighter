@@ -3,9 +3,9 @@ import {
   freighterRequestSource,
   freighterResponseSource,
   phase11ExtensionReadiness,
-  zkFighterRequestSource,
-  zkFighterResponseSource,
-} from '@zk-fighter/core'
+  zkFreighterRequestSource,
+  zkFreighterResponseSource,
+} from '@zk-freighter/core'
 import { browser } from 'wxt/browser'
 
 import { dappMessageTypes } from '../src/dappMessages'
@@ -33,10 +33,10 @@ export default defineContentScript({
       }
 
       const request = asPageRequest(event.data)
-      if (request.source === zkFighterRequestSource) {
+      if (request.source === zkFreighterRequestSource) {
         window.postMessage(
           {
-            source: zkFighterResponseSource,
+            source: zkFreighterResponseSource,
             id: request.id,
             ok: request.method === 'status',
             readiness: phase11ExtensionReadiness,
@@ -44,7 +44,7 @@ export default defineContentScript({
             error:
               request.method === 'status'
                 ? null
-                : 'ZK Fighter external dApp access and signing are disabled; use QuickShield and bridge inside ZK Fighter.',
+                : 'ZK Freighter external dApp access and signing are disabled; use QuickShield and bridge inside ZK Freighter.',
           },
           event.origin,
         )

@@ -91,7 +91,7 @@ export async function generateDisclosureArtifact(
       receipt,
       warnings: [
         'Read-only: this artifact cannot spend funds.',
-        'User-held: ZK Fighter cannot disclose this on the user behalf.',
+        'User-held: ZK Freighter cannot disclose this on the user behalf.',
         'Activity fields are owner-supplied context; verification proves receipt proof, context, and root freshness.',
       ],
     }
@@ -197,7 +197,7 @@ export async function verifyDisclosureArtifact(options: {
 export function parseDisclosureArtifact(json: string): DisclosureArtifact {
   const value = JSON.parse(json) as unknown
   if (!isDisclosureArtifact(value)) {
-    throw new Error('Invalid ZK Fighter disclosure artifact.')
+    throw new Error('Invalid ZK Freighter disclosure artifact.')
   }
   return value
 }

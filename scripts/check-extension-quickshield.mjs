@@ -46,7 +46,7 @@ const amountStroops = process.env.ZKF_QUICKSHIELD_AMOUNT_STROOPS ?? defaultAmoun
 const mainnetFundStroops = process.env.ZKF_MAINNET_FUND_STROOPS ?? '50000000'
 const mainnetFunder = process.env.ZKF_MAINNET_FUNDER ?? 'zkf-mainnet-qa'
 const mainnetSmokeWalletPath =
-  process.env.ZKF_MAINNET_SMOKE_WALLET_PATH ?? path.join(os.homedir(), '.config', 'zk-fighter', 'mainnet-quickshield-smoke.json')
+  process.env.ZKF_MAINNET_SMOKE_WALLET_PATH ?? path.join(os.homedir(), '.config', 'zk-freighter', 'mainnet-quickshield-smoke.json')
 const mainnetFundingOptions = {
   amountStroops: mainnetFundStroops,
   funder: mainnetFunder,

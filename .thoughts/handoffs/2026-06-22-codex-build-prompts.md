@@ -1,4 +1,4 @@
-# ZK Fighter — Codex build prompts (current linear set)
+# ZK Freighter — Codex build prompts (current linear set)
 
 These prompts are the current execution set for Codex. They supersede `2026-06-21-codex-build-prompts.md`.
 
@@ -9,8 +9,8 @@ Codex runs linearly. Paste one prompt, let Codex finish, verify the report, then
 Apply these to every prompt:
 
 - Read the actual repo before acting. Current truth beats stale memory.
-- Use `.thoughts/plans/2026-06-22-zk-fighter-implementation-plan.md` as the phase source of truth.
-- Use `.thoughts/specs/2026-06-22-zk-fighter-product-spec.md`, `.thoughts/stories/2026-06-22-zk-fighter-mvp-stories.md`, and `.thoughts/quality/2026-06-22-project-quality-profile.md` as gates.
+- Use `.thoughts/plans/2026-06-22-zk-freighter-implementation-plan.md` as the phase source of truth.
+- Use `.thoughts/specs/2026-06-22-zk-freighter-product-spec.md`, `.thoughts/stories/2026-06-22-zk-freighter-mvp-stories.md`, and `.thoughts/quality/2026-06-22-project-quality-profile.md` as gates.
 - Reuse the Nethermind privacy-pool engine. Do not write new circuits for MVP.
 - Honest framing: say "shielded transfers"; never claim "anonymous," "fully private," or "untraceable."
 - No mocks in the judged path. Local fixtures are allowed only in tests and must not back product claims.
@@ -25,11 +25,11 @@ Apply these to every prompt:
 
 ▶ PASTE TO CODEX:
 
-> Execute Phase 0 from `.thoughts/plans/2026-06-22-zk-fighter-implementation-plan.md`.
+> Execute Phase 0 from `.thoughts/plans/2026-06-22-zk-freighter-implementation-plan.md`.
 >
 > First read:
-> - `.thoughts/specs/2026-06-22-zk-fighter-product-spec.md`
-> - `.thoughts/stories/2026-06-22-zk-fighter-mvp-stories.md`
+> - `.thoughts/specs/2026-06-22-zk-freighter-product-spec.md`
+> - `.thoughts/stories/2026-06-22-zk-freighter-mvp-stories.md`
 > - `.thoughts/quality/2026-06-22-project-quality-profile.md`
 > - `.thoughts/research/2026-06-22-stellar-cli-sac-verification.md`
 >
@@ -43,7 +43,7 @@ Apply these to every prompt:
 
 ▶ PASTE TO CODEX:
 
-> Execute Phase 1 from `.thoughts/plans/2026-06-22-zk-fighter-implementation-plan.md`.
+> Execute Phase 1 from `.thoughts/plans/2026-06-22-zk-freighter-implementation-plan.md`.
 >
 > First read:
 > - `.thoughts/research/2026-06-21-resolved-derivation-determinism.md`
@@ -61,7 +61,7 @@ Apply these to every prompt:
 
 ▶ PASTE TO CODEX:
 
-> Execute Phase 2 from `.thoughts/plans/2026-06-22-zk-fighter-implementation-plan.md`.
+> Execute Phase 2 from `.thoughts/plans/2026-06-22-zk-freighter-implementation-plan.md`.
 >
 > First read:
 > - `.thoughts/research/2026-06-21-client-zk-proving.md`
@@ -78,7 +78,7 @@ Apply these to every prompt:
 
 ▶ PASTE TO CODEX:
 
-> Execute Phase 3 from `.thoughts/plans/2026-06-22-zk-fighter-implementation-plan.md`.
+> Execute Phase 3 from `.thoughts/plans/2026-06-22-zk-freighter-implementation-plan.md`.
 >
 > First read:
 > - `.thoughts/research/2026-06-21-interop-boundary-flows.md`
@@ -97,7 +97,7 @@ Apply these to every prompt:
 
 ▶ PASTE TO CODEX:
 
-> Execute Phase 4 from `.thoughts/plans/2026-06-22-zk-fighter-implementation-plan.md`.
+> Execute Phase 4 from `.thoughts/plans/2026-06-22-zk-freighter-implementation-plan.md`.
 >
 > First read:
 > - `.thoughts/research/2026-06-21-usdc-and-assets.md`
@@ -114,11 +114,11 @@ Apply these to every prompt:
 
 ▶ PASTE TO CODEX:
 
-> Execute Phase 5 from `.thoughts/plans/2026-06-22-zk-fighter-implementation-plan.md`.
+> Execute Phase 5 from `.thoughts/plans/2026-06-22-zk-freighter-implementation-plan.md`.
 >
 > First read:
-> - `.thoughts/specs/2026-06-22-zk-fighter-product-spec.md` R3/R4
-> - `.thoughts/stories/2026-06-22-zk-fighter-mvp-stories.md` S3/S4
+> - `.thoughts/specs/2026-06-22-zk-freighter-product-spec.md` R3/R4
+> - `.thoughts/stories/2026-06-22-zk-freighter-mvp-stories.md` S3/S4
 > - `.thoughts/design/screens/2026-06-21-receive.md`
 >
 > Implement opt-in public discovery/publishing using the verified engine path. Keep direct receive-code sharing as the default. Add pre-publish copy explaining that publishing does not expose keys/funds but creates a public link between public Stellar identity and private receive identity.
@@ -131,14 +131,14 @@ Apply these to every prompt:
 
 ▶ PASTE TO CODEX:
 
-> Execute Phase 6 from `.thoughts/plans/2026-06-22-zk-fighter-implementation-plan.md`.
+> Execute Phase 6 from `.thoughts/plans/2026-06-22-zk-freighter-implementation-plan.md`.
 >
 > First read:
 > - `.thoughts/design/screens/2026-06-21-compliance.md`
 > - `.thoughts/research/2026-06-21-interop-boundary-flows.md`
 > - Nethermind disclosure code/docs in `reference/stellar-private-payments` as needed.
 >
-> Implement a user-held disclosure artifact: scoped disclosure if supported by the reused engine, otherwise a clearly demoted full viewing-key export only if semantics are verified. Add reviewer/auditor verification flow and copy that ZK Fighter cannot disclose on the user's behalf.
+> Implement a user-held disclosure artifact: scoped disclosure if supported by the reused engine, otherwise a clearly demoted full viewing-key export only if semantics are verified. Add reviewer/auditor verification flow and copy that ZK Freighter cannot disclose on the user's behalf.
 >
 > Acceptance: reviewer can inspect disclosed activity read-only; artifact cannot spend; warnings are clear; no fake auditor verification. Report + stop.
 
@@ -148,7 +148,7 @@ Apply these to every prompt:
 
 ▶ PASTE TO CODEX:
 
-> Execute Phase 7 from `.thoughts/plans/2026-06-22-zk-fighter-implementation-plan.md`.
+> Execute Phase 7 from `.thoughts/plans/2026-06-22-zk-freighter-implementation-plan.md`.
 >
 > First read:
 > - `.thoughts/research/2026-06-21-pov-passkey-determinism-truth.md`
@@ -165,7 +165,7 @@ Apply these to every prompt:
 
 ▶ PASTE TO CODEX:
 
-> Execute Phase 8 from `.thoughts/plans/2026-06-22-zk-fighter-implementation-plan.md`.
+> Execute Phase 8 from `.thoughts/plans/2026-06-22-zk-freighter-implementation-plan.md`.
 >
 > First read:
 > - `.thoughts/research/2026-06-21-cctp-bridge.md`
@@ -182,7 +182,7 @@ Apply these to every prompt:
 
 ▶ PASTE TO CODEX:
 
-> Execute Phase 9 from `.thoughts/plans/2026-06-22-zk-fighter-implementation-plan.md`.
+> Execute Phase 9 from `.thoughts/plans/2026-06-22-zk-freighter-implementation-plan.md`.
 >
 > First read:
 > - `.thoughts/research/2026-06-22-atomic-bridge-shield-reality.md`
@@ -198,7 +198,7 @@ Apply these to every prompt:
 
 ▶ PASTE TO CODEX:
 
-> Execute Phase 10 from `.thoughts/plans/2026-06-22-zk-fighter-implementation-plan.md`.
+> Execute Phase 10 from `.thoughts/plans/2026-06-22-zk-freighter-implementation-plan.md`.
 >
 > Verify all claims against evidence. Disable/gate unproven mainnet features. Add credits/licenses/disclaimers. Prepare public README, evidence table, production build, and demo script. Mainnet deploys/spend require explicit founder approval and small funded amounts.
 >
@@ -210,7 +210,7 @@ Apply these to every prompt:
 
 ▶ PASTE TO CODEX:
 
-> Execute Phase 11 from `.thoughts/plans/2026-06-22-zk-fighter-implementation-plan.md` only after the web flow is stable.
+> Execute Phase 11 from `.thoughts/plans/2026-06-22-zk-freighter-implementation-plan.md` only after the web flow is stable.
 >
 > First read:
 > - `.thoughts/research/2026-06-22-wxt-extension-reality-check.md`

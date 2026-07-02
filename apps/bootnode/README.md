@@ -1,8 +1,8 @@
-# ZK Fighter Bootnode
+# ZK Freighter Bootnode
 
-Hosted warmed event indexer and narrow RPC for ZK Fighter privacy pools.
+Hosted warmed event indexer and narrow RPC for ZK Freighter privacy pools.
 
-The bootnode keeps pool event history available even when a public Stellar RPC drops older events from its short retention window. It warms a Postgres-backed event table from the configured pool deployment ledger, then serves compatible `getEvents` calls from that table once the indexed range is caught up. It only exposes the methods needed by the wallet runtime and only for configured ZK Fighter pool contracts.
+The bootnode keeps pool event history available even when a public Stellar RPC drops older events from its short retention window. It warms a Postgres-backed event table from the configured pool deployment ledger, then serves compatible `getEvents` calls from that table once the indexed range is caught up. It only exposes the methods needed by the wallet runtime and only for configured ZK Freighter pool contracts.
 
 ## Commands
 

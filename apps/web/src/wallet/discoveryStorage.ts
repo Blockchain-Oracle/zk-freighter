@@ -1,6 +1,6 @@
-import type { NetworkKey, PublicDiscoveryPublishReport } from '@zk-fighter/core'
+import type { NetworkKey, PublicDiscoveryPublishReport } from '@zk-freighter/core'
 
-const STORAGE_PREFIX = 'zk-fighter:discover-publish:v1'
+const STORAGE_PREFIX = 'zk-freighter:discover-publish:v1'
 
 export function discoveryStorageKey(network: NetworkKey, publicKey: string): string {
   return `${STORAGE_PREFIX}:${network}:${publicKey}`

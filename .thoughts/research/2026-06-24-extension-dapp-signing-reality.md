@@ -1,10 +1,10 @@
 # Reality Research: Extension dApp Signing
 
-> **Decision update, 2026-06-24:** Abu rejected making ZK Fighter a general public dApp signing wallet. Keep this research as feasibility and risk context only. The active extension direction is QuickShield + bridge companion, with external public-key access and signing disabled.
+> **Decision update, 2026-06-24:** Abu rejected making ZK Freighter a general public dApp signing wallet. Keep this research as feasibility and risk context only. The active extension direction is QuickShield + bridge companion, with external public-key access and signing disabled.
 
 ## Scope
 
-Research whether ZK Fighter should become a normal Stellar signing wallet for dApps, similar to Freighter or MetaMask connect/sign flows. This covers current Stellar wallet APIs, what Freighter and Wallets Kit expect, what the Nethermind reference app needed from wallets, and what ZK Fighter currently lacks.
+Research whether ZK Freighter should become a normal Stellar signing wallet for dApps, similar to Freighter or MetaMask connect/sign flows. This covers current Stellar wallet APIs, what Freighter and Wallets Kit expect, what the Nethermind reference app needed from wallets, and what ZK Freighter currently lacks.
 
 ## Sources Checked
 
@@ -32,14 +32,14 @@ Research whether ZK Fighter should become a normal Stellar signing wallet for dA
 - Local Nethermind app reference:
   - `reference/stellar-private-payments/app/js/wallet.js`
   - `reference/stellar-private-payments/app/js/admin.js`
-- Current ZK Fighter source:
+- Current ZK Freighter source:
   - `packages/core/src/dapp-bridge.ts`
   - `apps/extension/entrypoints/content.ts`
   - `apps/extension/entrypoints/background.ts`
   - `packages/core/src/identity.ts`
   - `packages/core/src/soroban-submit.ts`
   - `packages/core/src/vault.ts`
-- Current ZK Fighter audit: `.thoughts/verification/2026-06-24-phase11-wxt-extension-audit.md`.
+- Current ZK Freighter audit: `.thoughts/verification/2026-06-24-phase11-wxt-extension-audit.md`.
 
 ## Verified Facts
 
@@ -49,14 +49,14 @@ Research whether ZK Fighter should become a normal Stellar signing wallet for dA
 - Freighter opens a grant-access window for `requestAccess()` / `setAllowed()`, then resolves the dApp request from a response queue only after user confirmation.
 - Freighter `signTransaction()` accepts transaction XDR and optional `networkPassphrase` / `address`. It parses the transaction, checks account/network context, opens a signing UI, and returns `{ signedTxXdr, signerAddress }` or an API error.
 - Freighter also exposes `signAuthEntry()` and `signMessage()`. Local docs say `signTransaction()` does not auto-request access, while `signAuthEntry()` and `signMessage()` can auto-request access.
-- Current Freighter docs/source have an auth-entry return-shape nuance: some docs describe `signedAuthEntry` as `Buffer | null`, while current API source returns a string value for the browser API path. ZK Fighter should treat the provider response as string-compatible and test against real callers.
-- Freighter `signTransaction()` does not auto-request access in current local source. ZK Fighter should reject unapproved origins for transaction signing unless the product deliberately chooses a prompt-on-sign flow.
+- Current Freighter docs/source have an auth-entry return-shape nuance: some docs describe `signedAuthEntry` as `Buffer | null`, while current API source returns a string value for the browser API path. ZK Freighter should treat the provider response as string-compatible and test against real callers.
+- Freighter `signTransaction()` does not auto-request access in current local source. ZK Freighter should reject unapproved origins for transaction signing unless the product deliberately chooses a prompt-on-sign flow.
 - Stellar Wallets Kit modules expose `isAvailable()`, `getAddress()`, `signTransaction()`, `signAuthEntry()`, and `signMessage()`. Wallets Kit docs say module availability should answer in less than 1000 ms.
 - Wallets Kit `signTransaction()` options are aligned with SEP-0043-style fields: `networkPassphrase`, `address`, and sometimes hardware-wallet `path`.
-- Wallets Kit modules return `{ signedTxXdr, signerAddress? }`, `{ signedAuthEntry, signerAddress? }`, and `{ signedMessage, signerAddress? }`. ZK Fighter needs browser runtime evidence, not only TypeScript compatibility.
-- SEP-0043 is still `Draft` as of the checked protocol file. It defines a wallet interface with `getNetwork`, `getAddress`, `signTransaction`, `signAuthEntry`, `signMessage`, and optional transaction-submit fields. ZK Fighter should not claim full SEP-0043 support until the runtime paths are proven.
-- SEP-0053 is `Final` and defines message signing as a base64-encoded XDR `SignedPayload` containing the account, payload, and decorated signature. If ZK Fighter enables `signMessage`, it must either follow SEP-0053 or explicitly document why it is disabled.
-- WXT current guidance keeps extension APIs inside entrypoint `main`/`defineBackground` callbacks. ZK Fighter's current entrypoints already follow that shape; future runtime listeners should stay there.
+- Wallets Kit modules return `{ signedTxXdr, signerAddress? }`, `{ signedAuthEntry, signerAddress? }`, and `{ signedMessage, signerAddress? }`. ZK Freighter needs browser runtime evidence, not only TypeScript compatibility.
+- SEP-0043 is still `Draft` as of the checked protocol file. It defines a wallet interface with `getNetwork`, `getAddress`, `signTransaction`, `signAuthEntry`, `signMessage`, and optional transaction-submit fields. ZK Freighter should not claim full SEP-0043 support until the runtime paths are proven.
+- SEP-0053 is `Final` and defines message signing as a base64-encoded XDR `SignedPayload` containing the account, payload, and decorated signature. If ZK Freighter enables `signMessage`, it must either follow SEP-0053 or explicitly document why it is disabled.
+- WXT current guidance keeps extension APIs inside entrypoint `main`/`defineBackground` callbacks. ZK Freighter's current entrypoints already follow that shape; future runtime listeners should stay there.
 - Chrome's side panel API is a real extension-controlled approval surface and fits longer dApp approval/signing review better than popup-only UX.
 - `stellar-build` is a skills/data bundle, not a wallet implementation. Its useful local data confirms the active comparison set: Freighter, xBull, Albedo, Hana, LOBSTR, Moonlight, Zarf, zkCross, and ZKLiquid.
 - The `stellar-build` resource link for `stellar/ecosystem-resources/connect-wallet` points to a workshop focused on smart wallets/passkeys, not browser-extension provider compatibility. It is useful for UX context but does not replace Freighter/xBull provider research.
@@ -65,32 +65,32 @@ Research whether ZK Fighter should become a normal Stellar signing wallet for dA
 - xBull recommends Stellar Wallets Kit for multi-wallet integration. Its own SDK exposes `getAddress`, `signTransaction`, `getNetwork`, and `signMessage` style methods.
 - The Nethermind privacy-pool app already wrapped Freighter as a wallet adapter with `connectWallet()`, `getWalletAddress()`, `getWalletNetwork()`, `signWalletTransaction()`, `signWalletAuthEntry()`, and `signWalletMessage()`.
 - The Nethermind app used `signMessage()` to derive privacy keys from a wallet signature, and used `signTransaction()` / `signAuthEntry()` for Soroban client calls.
-- ZK Fighter already has core signing primitives for its own identity: `deriveWalletKeypair()` and `signTransactionXdrWithWallet()` sign XDR from the seed-backed public Stellar account.
-- ZK Fighter’s encrypted vault exists in the web core, but the extension does not yet have an unlock flow, persisted vault state, approval queue, transaction review UI, or origin allow-list.
-- ZK Fighter’s current extension dApp bridge only proves read-only detection/network behavior and intentionally returns no public key before access.
-- ZK Fighter's current `packages/core/src/dapp-bridge.ts` only models the read-only/access/sign-transaction subset. It does not yet include explicit `SUBMIT_AUTH_ENTRY` or `SUBMIT_BLOB`/message-signing request handling.
+- ZK Freighter already has core signing primitives for its own identity: `deriveWalletKeypair()` and `signTransactionXdrWithWallet()` sign XDR from the seed-backed public Stellar account.
+- ZK Freighter’s encrypted vault exists in the web core, but the extension does not yet have an unlock flow, persisted vault state, approval queue, transaction review UI, or origin allow-list.
+- ZK Freighter’s current extension dApp bridge only proves read-only detection/network behavior and intentionally returns no public key before access.
+- ZK Freighter's current `packages/core/src/dapp-bridge.ts` only models the read-only/access/sign-transaction subset. It does not yet include explicit `SUBMIT_AUTH_ENTRY` or `SUBMIT_BLOB`/message-signing request handling.
 
 ## Inferences
 
-- This feature makes product sense. It would let ZK Fighter act like a Stellar wallet extension for dApps while still keeping shielded transfers as the main differentiator.
+- This feature makes product sense. It would let ZK Freighter act like a Stellar wallet extension for dApps while still keeping shielded transfers as the main differentiator.
 - The first honest compatibility target should be direct Freighter API behavior because many Stellar dApps already understand it, and Wallets Kit can be tested after the direct methods pass.
 - A full dApp signing feature needs at least three separable gates: origin access grant, public-key sharing, and transaction/auth/message signing.
-- ZK Fighter should not expose the private receive code, note keys, encryption keys, membership blinding, proof artifacts, or shielded balances through the dApp bridge. The bridge should expose only the public Stellar address and signing results for explicitly approved requests.
+- ZK Freighter should not expose the private receive code, note keys, encryption keys, membership blinding, proof artifacts, or shielded balances through the dApp bridge. The bridge should expose only the public Stellar address and signing results for explicitly approved requests.
 - Signing should reuse the public Stellar account derived from the seed phrase only after the extension vault is unlocked. It should not invent a second key unless the product deliberately chooses a separate public-wallet identity.
 - The extension approval UI should be a side panel, tab, or dedicated extension page. A popup-only ceremony is risky because browser popups can close during auth or longer review flows.
 - Public dApp signing and shielded transfers create different privacy postures. Connecting to a dApp publicly links that origin to the user’s public Stellar address; it does not reveal shielded notes by itself, but it can create user-facing privacy confusion if copy is weak.
-- Wallets Kit support likely requires either matching Freighter closely enough for its Freighter module or publishing a first-class ZK Fighter module later. The second path is cleaner long-term but slower for hackathon evidence.
-- xBull reinforces that public-key access and signing permission should be separate capabilities. For ZK Fighter, this supports a permission model with at least `share public Stellar address` and `request signatures`.
-- The connect-wallet workshop reinforces a separate smart-wallet/passkey path, but it does not change ZK Fighter's current locked decision: passkey remains optional and seed phrase remains the guaranteed recovery path.
-- Message-signing semantics are no longer the main unknown because SEP-0053 is final. The real product question is whether ZK Fighter should expose message signing during the hackathon, because signed messages can act as login or authorization proof.
+- Wallets Kit support likely requires either matching Freighter closely enough for its Freighter module or publishing a first-class ZK Freighter module later. The second path is cleaner long-term but slower for hackathon evidence.
+- xBull reinforces that public-key access and signing permission should be separate capabilities. For ZK Freighter, this supports a permission model with at least `share public Stellar address` and `request signatures`.
+- The connect-wallet workshop reinforces a separate smart-wallet/passkey path, but it does not change ZK Freighter's current locked decision: passkey remains optional and seed phrase remains the guaranteed recovery path.
+- Message-signing semantics are no longer the main unknown because SEP-0053 is final. The real product question is whether ZK Freighter should expose message signing during the hackathon, because signed messages can act as login or authorization proof.
 
 ## Unknowns And Questions
 
-- Whether Wallets Kit will treat a non-Freighter extension answering Freighter messages as the Freighter module, or whether a dedicated ZK Fighter Wallets Kit module is required for clean detection and branding.
-- How ZK Fighter should behave when Freighter and ZK Fighter are both installed and both answer Freighter-style page messages.
+- Whether Wallets Kit will treat a non-Freighter extension answering Freighter messages as the Freighter module, or whether a dedicated ZK Freighter Wallets Kit module is required for clean detection and branding.
+- How ZK Freighter should behave when Freighter and ZK Freighter are both installed and both answer Freighter-style page messages.
 - Whether `signMessage()` should be supported in the hackathon slice. The protocol shape is clear enough, but the phishing/login UX risk is higher than transaction signing.
 - Whether dApp signing should be limited to classic transaction XDR first, then Soroban `signAuthEntry()` later, or whether both are needed for a credible Stellar dApp wallet demo.
-- How much transaction decoding/review ZK Fighter can safely implement without importing a large Freighter-style transaction-inspection stack.
+- How much transaction decoding/review ZK Freighter can safely implement without importing a large Freighter-style transaction-inspection stack.
 - Whether users should explicitly opt into “public dApp wallet mode” so the privacy-by-default product does not surprise them by sharing a public address with external sites.
 
 ## Not Included
@@ -98,12 +98,12 @@ Research whether ZK Fighter should become a normal Stellar signing wallet for dA
 - No Wallets Kit module implementation or Wallets Kit detection proof.
 - No Soroban `signAuthEntry()` implementation.
 - No SEP-0053 `signMessage()` implementation.
-- No coexistence proof when Freighter and ZK Fighter are both installed.
+- No coexistence proof when Freighter and ZK Freighter are both installed.
 - No Chrome Web Store packaging claim.
 
 ## Superseded Implementation Evidence
 
-On 2026-06-24, ZK Fighter briefly implemented the first public dApp wallet-mode slice:
+On 2026-06-24, ZK Freighter briefly implemented the first public dApp wallet-mode slice:
 
 - Extension-owned encrypted vault import/unlock state.
 - Opt-in public dApp wallet mode.

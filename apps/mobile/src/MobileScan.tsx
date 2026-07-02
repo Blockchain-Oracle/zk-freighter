@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Camera, Clipboard, Settings } from 'lucide-react'
-import { BoundaryBadge, Button } from '@zk-fighter/ui'
+import { BoundaryBadge, Button } from '@zk-freighter/ui'
 import type { MobileRoute } from './mobile-storage'
 import { truncateMiddle } from './mobile-format'
 
@@ -74,7 +74,7 @@ export function MobileScan({ onRoute, onPay }: { readonly onRoute: (route: Mobil
       <section className={`scan-stage ${state}`}>
         {state === 'ready' ? <video ref={videoRef} playsInline muted /> : null}
         <div className="scan-reticle"><i /><i /><i /><i /><span /></div>
-        <p>{state === 'ready' ? 'Point at a ZK Fighter code.' : state === 'blocked' ? 'Camera scan is unavailable on this device. Paste the code instead, or enable camera in device settings.' : 'Camera stays on-device. Frames are not uploaded.'}</p>
+        <p>{state === 'ready' ? 'Point at a ZK Freighter code.' : state === 'blocked' ? 'Camera scan is unavailable on this device. Paste the code instead, or enable camera in device settings.' : 'Camera stays on-device. Frames are not uploaded.'}</p>
       </section>
       <section className="scan-actions">
         <textarea value={code} placeholder="Paste zkf1... private receive code" onChange={(event) => setCode(event.target.value)} />

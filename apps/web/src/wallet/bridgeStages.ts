@@ -1,5 +1,5 @@
-import type { CctpBridgeReport, CctpBridgeStage } from '@zk-fighter/core'
-import type { ProofStep, ProofStepState } from '@zk-fighter/ui'
+import type { CctpBridgeReport, CctpBridgeStage } from '@zk-freighter/core'
+import type { ProofStep, ProofStepState } from '@zk-freighter/ui'
 
 // The CCTP bridge timeline (ordered). Mirrors the proof-flow step model but keyed to
 // the real CctpBridgeReport stages rather than prover events.

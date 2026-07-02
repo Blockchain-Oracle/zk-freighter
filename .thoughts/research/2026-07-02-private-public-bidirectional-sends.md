@@ -4,7 +4,7 @@ Date: 2026-07-02 · Author: Claude (Fable) · Status: verified against code and 
 
 ## Question
 
-Can ZK Fighter support (a) private→public sends (spend shielded balance directly to a public
+Can ZK Freighter support (a) private→public sends (spend shielded balance directly to a public
 G-address without unshield-then-pay) and (b) public→private sends (pay someone's `zkf1…` code
 from a public balance)?
 
@@ -29,7 +29,7 @@ from a public balance)?
 - `ext_data_hash` is a bound public input (circuit `transaction.circom:29,139-140`; contract
   `pool.rs:595-598`) → a relayer **cannot redirect funds**.
 - **Footgun**: `sender.require_auth()` (`pool.rs:541`) + `tx_prepare.rs:44-57` couples tx source =
-  `sender` = fee payer. ZK Fighter passes the user's own account for every pool op
+  `sender` = fee payer. ZK Freighter passes the user's own account for every pool op
   (`xlm-private.ts`, `soroban-submit.ts` signs with wallet identity). An observer links
   "G deposited" → "G transacted". Applies to private transfers too (those still hide amount +
   counterparty).
@@ -56,7 +56,7 @@ from a public balance)?
 - Work: verify our vendored `/js/web.js` bundle exports `executeTransact`; add the binding to
   `nethermind-runtime-types.ts`; add `submitXlmShieldToRecipient` mirroring `xlm-shield.ts`.
 - Honest scope: depositor account + amount are public (deposit boundary); the **recipient is
-  hidden**. Only pool-protocol-aware apps (ZK Fighter surfaces) can construct this — external
+  hidden**. Only pool-protocol-aware apps (ZK Freighter surfaces) can construct this — external
   wallets/DEXes cannot send into the pool with a plain payment.
 
 ## Sources

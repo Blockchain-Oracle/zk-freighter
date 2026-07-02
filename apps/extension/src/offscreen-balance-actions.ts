@@ -4,7 +4,7 @@ import {
   loadXlmShieldedNoteSet,
   type NetworkKey,
   type XlmShieldedNote,
-} from '@zk-fighter/core'
+} from '@zk-freighter/core'
 
 import type { DappBalances } from './dappMessages'
 import { uniqueBlockers } from './balance-issue'

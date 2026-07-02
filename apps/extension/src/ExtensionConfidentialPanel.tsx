@@ -1,7 +1,7 @@
-import { getConfidentialConfig, isConfidentialEnabled, type ConfidentialSubmitReport } from '@zk-fighter/core'
+import { getConfidentialConfig, isConfidentialEnabled, type ConfidentialSubmitReport } from '@zk-freighter/core'
 import { Eye, KeyRound, Layers, Lock } from 'lucide-react'
 import { useState } from 'react'
-import { Button, Segmented } from '@zk-fighter/ui'
+import { Button, Segmented } from '@zk-freighter/ui'
 
 import { dappMessageTypes, type ConfidentialOpKind, type ConfidentialResponse, type DappWalletStatus } from './dappMessages'
 import { shorten } from './extension-format'

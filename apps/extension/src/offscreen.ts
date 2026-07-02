@@ -1,5 +1,5 @@
 import './runtime-env'
-import { deriveWalletIdentity, ensureStellarUsdcTrustline, extensionReadinessDigest, generateSeedPhrase, initializeNethermindWebModule, insertAspMembershipLeaf, phase11ExtensionReadiness, runNethermindDryDepositProofAttempt, submitShieldWithPrerequisites, type AssetCode, type NetworkKey, type WalletIdentity } from '@zk-fighter/core'
+import { deriveWalletIdentity, ensureStellarUsdcTrustline, extensionReadinessDigest, generateSeedPhrase, initializeNethermindWebModule, insertAspMembershipLeaf, phase11ExtensionReadiness, runNethermindDryDepositProofAttempt, submitShieldWithPrerequisites, type AssetCode, type NetworkKey, type WalletIdentity } from '@zk-freighter/core'
 import { browser } from 'wxt/browser'
 import { runPrivateTransfer, runUnshieldWithdrawal } from './offscreen-private-actions'
 import { runConfidentialOp } from './offscreen-confidential-actions'

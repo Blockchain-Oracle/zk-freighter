@@ -4,7 +4,7 @@ vi.mock('wxt/browser', () => ({
   browser: { storage: { local: { get: vi.fn(), set: vi.fn() } } },
 }))
 
-import type { DemoFundingRequestReport } from '@zk-fighter/core'
+import type { DemoFundingRequestReport } from '@zk-freighter/core'
 import { fundingTxEvidence } from './dappRuntime-flows'
 
 const baseReport = {

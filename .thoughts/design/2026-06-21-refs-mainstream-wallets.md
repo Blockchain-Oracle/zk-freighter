@@ -2,7 +2,7 @@
 
 **Date:** 2026-06-21
 **Area:** Mainstream extension-wallet UX references (MetaMask primary; Phantom, Rabby, Freighter secondary)
-**For:** **ZK Fighter**, a privacy-by-default Stellar shielded wallet (XLM + USDC, fixed assets).
+**For:** **ZK Freighter**, a privacy-by-default Stellar shielded wallet (XLM + USDC, fixed assets).
 **Method:** Official help centers (support.metamask.io, help.phantom.com), rabby.io docs + CoinGecko Rabby guide, and the cloned Freighter source under `reference/freighter`. Every pattern below cites a real URL or file path.
 
 > How to read this: Freighter is the **closest structural match** — it is a real Stellar wallet whose screens map nearly 1:1 to ours, and we have its source. Treat Freighter as the layout/IA skeleton; treat MetaMask/Phantom as the polish + microcopy reference for the mainstream-familiar moments. Then read the **DO NOT COPY** list before importing anything.
@@ -102,7 +102,7 @@
 
 ## Notes
 
-- **Name-check verdict:** Product name is now **ZK Fighter**. A quick 2026-06-22 web search did not show a direct crypto-wallet collision, but this is not legal/trademark clearance; run a final trademark, domain, GitHub, app-store, and social-handle check before public launch. (If "DeepBookie" leaked in from the host repo's CLAUDE.md, that is the other project in this monorepo and is irrelevant to the Stellar wallet.)
+- **Name-check verdict:** Product name is now **ZK Freighter**. A quick 2026-06-22 web search did not show a direct crypto-wallet collision, but this is not legal/trademark clearance; run a final trademark, domain, GitHub, app-store, and social-handle check before public launch. (If "DeepBookie" leaked in from the host repo's CLAUDE.md, that is the other project in this monorepo and is irrelevant to the Stellar wallet.)
 - **Freighter is the load-bearing reference.** It is a shipping Stellar wallet and its `views/` directory maps almost 1:1 to our screen list (Welcome, AccountCreator, RecoverAccount, MnemonicPhrase, UnlockAccount, Account, ViewPublicKey, Send, Wallets, AddAccount, Settings, Security, AccountHistory, AddFunds, AutoLockTimer, DisplayBackupPhrase, About). Designer should pull layout/IA/microcopy from these files first, then sand off the DO-NOT-COPY surfaces above.
 - **What has NO mainstream reference (our novel surface — designer must invent, do not search for a pattern to clone):** private/public address layering on Receive; Shield / Unshield as first-class home actions; the **pending-proof** state on Send and in Activity; what a private tx reveals in history; the view-key / disclosure-proof / compliance-export screen; and the failure states ASP-not-registered, sync-required, and proof-failure. These should be designed from our own spec, borrowing only generic loading/empty/error/success scaffolding from Freighter's `components/Loading`, `Notification`, and the "No transactions to show" empty pattern.
 - **Microcopy worth lifting (verbatim-quality):** Freighter's phrase warning "Your recovery phrase gives you full access to your wallets and funds" / "Keep it in a safe place" / "For your security, we'll check if you got it right in the next step"; MetaMask's framing of SRP as the single, non-recoverable point of failure distinct from the local password.

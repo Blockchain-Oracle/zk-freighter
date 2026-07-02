@@ -6,7 +6,7 @@ import path from 'node:path'
 
 const root = new URL('..', import.meta.url).pathname
 const contentDir = path.join(root, 'content/docs')
-const site = 'https://docs.zkfighter.dev'
+const site = 'https://docs.zkfreighter.dev'
 
 const pages = []
 for await (const entry of glob('**/*.mdx', { cwd: contentDir })) {
@@ -22,7 +22,7 @@ for await (const entry of glob('**/*.mdx', { cwd: contentDir })) {
 pages.sort((a, b) => a.entry.localeCompare(b.entry))
 
 const index = [
-  '# ZK Fighter',
+  '# ZK Freighter',
   '',
   '> A self-custody wallet for shielded XLM and USDC payments on Stellar. Zero-knowledge proofs on-device; shield, unshield, and bridge arrivals are public boundaries.',
   '',
@@ -32,7 +32,7 @@ const index = [
   '',
   '## Source',
   '',
-  '- [GitHub repository](https://github.com/Blockchain-Oracle/zk-fighter): monorepo with apps, core engine, circuits, and contracts',
+  '- [GitHub repository](https://github.com/Blockchain-Oracle/zk-freighter): monorepo with apps, core engine, circuits, and contracts',
 ].join('\n')
 
 const full = pages

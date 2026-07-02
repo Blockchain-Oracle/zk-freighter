@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Capacitor } from '@capacitor/core'
 import { CheckCircle2, Loader2, RefreshCw, XCircle } from 'lucide-react'
-import { Button, Callout, Logo, useTheme } from '@zk-fighter/ui'
-import type { NetworkKey } from '@zk-fighter/core'
+import { Button, Callout, Logo, useTheme } from '@zk-freighter/ui'
+import type { NetworkKey } from '@zk-freighter/core'
 import { capabilityChecks, runMobileRuntimeCheck, type MobileRuntimeReport, type RuntimeStatus } from './mobile-runtime'
 import { truncateMiddle } from './mobile-format'
 

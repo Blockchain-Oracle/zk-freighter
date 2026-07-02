@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli'
 
 const config: CapacitorConfig = {
-  appId: 'com.zkfighter.wallet',
-  appName: 'ZK Fighter',
+  appId: 'com.zkfreighter.wallet',
+  appName: 'ZK Freighter',
   webDir: 'dist',
 }
 

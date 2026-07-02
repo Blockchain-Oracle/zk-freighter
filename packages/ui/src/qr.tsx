@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 
 /**
- * White QR container with an optional ZK Fighter center logo + caption. The caller
+ * White QR container with an optional ZK Freighter center logo + caption. The caller
  * supplies the actual QR element (e.g. <QRCodeSVG/>) as children so this stays free
  * of a qrcode dependency. Use error-correction level Q+ when `logo` is on so the
  * occluded center still scans.

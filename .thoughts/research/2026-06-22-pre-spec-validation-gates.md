@@ -2,7 +2,7 @@
 
 ## Scope
 
-This brief answers: what are we not pretending to solve before writing ZK Fighter specs?
+This brief answers: what are we not pretending to solve before writing ZK Freighter specs?
 
 It is a research checkpoint, not a build plan. Funding and test credentials are treated as available from the founder when needed, so they are not product blockers. The remaining blockers are proof, tooling, target-device verification, and live transaction evidence.
 
@@ -90,7 +90,7 @@ It is a research checkpoint, not a build plan. Funding and test credentials are 
 - Circle's stock `CctpForwarder` does not call the Nethermind privacy pool and cannot pass `Proof` + `ExtData` to `pool.transact`.
 - The locked MVP bridge decision is still safe two-step bridge then shield:
   1. CCTP moves USDC publicly onto Stellar.
-  2. ZK Fighter shields that USDC into the privacy pool with a separate transaction.
+  2. ZK Freighter shields that USDC into the privacy pool with a separate transaction.
 
 ### Atomic bridge-and-shield
 
@@ -137,7 +137,7 @@ It is a research checkpoint, not a build plan. Funding and test credentials are 
 - No browser benchmark exists for the Nethermind prover on the target device/browser.
 - No WXT offscreen/dedicated-worker prover spike exists.
 - No target phone/passkey PRF matrix has been run.
-- No mainnet deployment manifest exists for ZK Fighter pools.
+- No mainnet deployment manifest exists for ZK Freighter pools.
 - The final user-facing label for optional public receive-key publishing is still unsettled.
 
 ## Validation Gates Before Claims

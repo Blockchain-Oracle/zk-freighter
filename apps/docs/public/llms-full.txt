@@ -1,5 +1,5 @@
 # Confidential mode
-URL: https://docs.zkfighter.dev/docs/apps/confidential
+URL: https://docs.zkfreighter.dev/docs/apps/confidential
 The second privacy mode — hidden amounts between public addresses. Testnet preview.
 
 Confidential Tokens are the **complementary** Stellar privacy tool: they hide *amounts and
@@ -9,7 +9,7 @@ but the numbers are nobody's business.
 
 ## Status: testnet-only, unaudited preview
 
-This mode is original ZK Fighter work — Noir circuits proved with UltraHonk (`bb.js`) in the
+This mode is original ZK Freighter work — Noir circuits proved with UltraHonk (`bb.js`) in the
 browser, balances as homomorphic commitments on the Grumpkin curve, and a Soroban SEP-41
 wrapper contract (built on OpenZeppelin's confidential-token preview). It is deliberately
 scoped to **testnet** and clearly labeled in every surface.
@@ -34,7 +34,7 @@ hidden; the participating addresses are public — the screen says exactly that.
 ---
 
 # Browser extension
-URL: https://docs.zkfighter.dev/docs/apps/extension
+URL: https://docs.zkfreighter.dev/docs/apps/extension
 The quick companion — glance, QuickShield, receive.
 
 The extension is the everyday companion: a fast popup for balances and quick actions, with a
@@ -63,12 +63,12 @@ Heavy proving runs in an offscreen document, so the popup never freezes — see
 ## The boundary with dApps
 
 Sites can detect that a Stellar wallet is present, but requests for your public key or a
-signature are **refused by design**. ZK Fighter is a privacy wallet, not a general signer.
+signature are **refused by design**. ZK Freighter is a privacy wallet, not a general signer.
 
 ---
 
 # Mobile app
-URL: https://docs.zkfighter.dev/docs/apps/mobile
+URL: https://docs.zkfreighter.dev/docs/apps/mobile
 The same wallet, thumb-first — Capacitor on Android and iOS.
 
 The mobile app is a native Capacitor shell around the same core engine: real vault, real
@@ -89,8 +89,8 @@ A phone can't use `http://<lan-ip>` (no secure context → no Web Crypto) and re
 HTTPS. The repo ships a tunnel workflow that solves both:
 
 ```bash
-pnpm --filter @zk-fighter/mobile dev:phone   # dev server with same-origin /zkf-* API proxies
-pnpm --filter @zk-fighter/mobile tunnel      # prints a trusted https://….trycloudflare.com URL
+pnpm --filter @zk-freighter/mobile dev:phone   # dev server with same-origin /zkf-* API proxies
+pnpm --filter @zk-freighter/mobile tunnel      # prints a trusted https://….trycloudflare.com URL
 ```
 
 Open the printed URL on the phone — trusted HTTPS, no mixed content, full functionality.
@@ -106,10 +106,10 @@ Open the printed URL on the phone — trusted HTTPS, no mixed content, full func
 ---
 
 # Web app
-URL: https://docs.zkfighter.dev/docs/apps/web
+URL: https://docs.zkfreighter.dev/docs/apps/web
 The full wallet in the browser.
 
-The web app is the complete ZK Fighter experience: create/import a wallet, fund (testnet),
+The web app is the complete ZK Freighter experience: create/import a wallet, fund (testnet),
 shield, send privately, unshield, bridge, disclosure, discovery, confidential mode, activity,
 and settings.
 
@@ -137,7 +137,7 @@ boundary" action strip — shield, unshield, bridge.
 ---
 
 # Extension internals
-URL: https://docs.zkfighter.dev/docs/architecture/extension
+URL: https://docs.zkfreighter.dev/docs/architecture/extension
 How heavy proving fits inside a Manifest V3 extension.
 
 MV3 popups are short-lived and service workers can't run the multi-megabyte WASM prover
@@ -159,7 +159,7 @@ comfortably. The extension splits responsibilities:
 
 ## The dApp boundary fails closed
 
-ZK Fighter answers Freighter-style detection pings so sites know a Stellar wallet exists — but
+ZK Freighter answers Freighter-style detection pings so sites know a Stellar wallet exists — but
 **external public-key access and transaction signing are refused by design**. It is a privacy
 wallet, not a general dApp signer. A site can never enumerate your address or ask you to sign.
 
@@ -176,10 +176,10 @@ pnpm extension:quickshield  # real funded XLM shield end-to-end
 ---
 
 # Overview
-URL: https://docs.zkfighter.dev/docs/architecture/overview
+URL: https://docs.zkfreighter.dev/docs/architecture/overview
 One core engine, three thin surfaces, two supporting services.
 
-Every app is a thin presentation layer over one shared package, `@zk-fighter/core`, which owns
+Every app is a thin presentation layer over one shared package, `@zk-freighter/core`, which owns
 identity, vault, proving, networks, and transactions. If a flow works on web it works on the
 extension and mobile, because they run the same code.
 
@@ -244,7 +244,7 @@ Read more in [Proving](/docs/architecture/proving) and
 ---
 
 # Proving on-device
-URL: https://docs.zkfighter.dev/docs/architecture/proving
+URL: https://docs.zkfreighter.dev/docs/architecture/proving
 The Groth16 pipeline that runs in your browser — and the second Noir stack.
 
 ## Shielded pools: Circom / Groth16
@@ -263,7 +263,7 @@ The flagship path reuses Nethermind's `stellar-private-payments` engine (credite
 
 ## Confidential tokens: Noir / UltraHonk
 
-The second mode (testnet-only preview) is original ZK Fighter work: Noir circuits
+The second mode (testnet-only preview) is original ZK Freighter work: Noir circuits
 (`circuits/`) proved with Barretenberg's UltraHonk via `bb.js`, verified on-chain by a Soroban
 verifier, with balances as homomorphic commitments on the Grumpkin curve
 (`contracts/confidential-token`). Operations: register, deposit, merge, transfer, withdraw.
@@ -278,7 +278,7 @@ wallet shows real progress for both.
 ---
 
 # Services
-URL: https://docs.zkfighter.dev/docs/architecture/services
+URL: https://docs.zkfreighter.dev/docs/architecture/services
 The bootnode event index and the hosted testnet faucet.
 
 The wallet works against public Stellar infrastructure alone. Two small self-hosted services
@@ -290,7 +290,7 @@ Stellar's public RPC only retains recent events. Shielded wallets need the pool'
 commitment history to find their notes — so the bootnode continuously indexes pool events into
 Postgres from the pool's deployment ledger, then serves them through a narrow RPC.
 
-- **Allowlisted**: only `getEvents` and `getLatestLedger`, only for ZK Fighter pool contracts —
+- **Allowlisted**: only `getEvents` and `getLatestLedger`, only for ZK Freighter pool contracts —
   it cannot be used as a general RPC proxy.
 - **Read-only**: it holds no keys and signs nothing.
 - **Transparent**: clients route pool reads to it when configured (`VITE_ZKF_*_BOOTNODE_URL`)
@@ -314,16 +314,16 @@ See `docs/deploy/production-surfaces.md` in the repo for the full variable refer
 ---
 
 # Evidence & verification
-URL: https://docs.zkfighter.dev/docs/evidence
+URL: https://docs.zkfreighter.dev/docs/evidence
 Every claim is backed by accepted on-chain transactions you can check yourself.
 
-ZK Fighter's rule is **no fakes**: no mocked balances, no fabricated hashes, no claimed flows
+ZK Freighter's rule is **no fakes**: no mocked balances, no fabricated hashes, no claimed flows
 without accepted transactions. The full evidence table — 40+ real transaction hashes across
 Stellar testnet, Stellar mainnet, and four EVM testnets — lives in the repository README, with
 the deeper audit trail in the docs folder:
 
-- [README evidence table](https://github.com/Blockchain-Oracle/zk-fighter#evidence)
-- [Verified facts record](https://github.com/Blockchain-Oracle/zk-fighter/blob/main/docs/VERIFIED-FACTS.md)
+- [README evidence table](https://github.com/Blockchain-Oracle/zk-freighter#evidence)
+- [Verified facts record](https://github.com/Blockchain-Oracle/zk-freighter/blob/main/docs/VERIFIED-FACTS.md)
 
 Spot-check any Stellar hash on [stellar.expert](https://stellar.expert/explorer/testnet), and
 EVM hashes on the respective chain explorer.
@@ -353,7 +353,7 @@ pnpm extension:quickshield  # real funded shield, end to end, on testnet
 ---
 
 # Glossary
-URL: https://docs.zkfighter.dev/docs/glossary
+URL: https://docs.zkfreighter.dev/docs/glossary
 Every term in plain English — assume smart, not cryptographer.
 
 ## Privacy concepts
@@ -362,7 +362,7 @@ Every term in plain English — assume smart, not cryptographer.
   data. Like proving you're over 21 without showing your birthday. Here: proving a payment is
   valid without revealing the amount or who's involved.
 - **Shielded transfer** — Stellar's own term for a payment whose sensitive details are hidden
-  with cryptography. The precise word for what ZK Fighter does — narrower and more honest than
+  with cryptography. The precise word for what ZK Freighter does — narrower and more honest than
   "fully private."
 - **Privacy pool** — a shared on-chain pot many people deposit into and withdraw from. Inside,
   payments are hidden because an observer can't tell which deposit connects to which withdrawal.
@@ -380,13 +380,13 @@ Every term in plain English — assume smart, not cryptographer.
 - **Selective disclosure / view evidence** — read-only proof of your own note for an auditor,
   with zero spend authority.
 - **Confidential Token** — the complementary Stellar privacy tool: hides *amounts and balances*
-  but keeps addresses public (the inverse trade-off of a privacy pool). ZK Fighter ships it as a
+  but keeps addresses public (the inverse trade-off of a privacy pool). ZK Freighter ships it as a
   second, testnet-only mode.
 
 ## Keys and recovery
 
 - **Seed phrase** — 12 ordinary words; the master backup. Anyone holding it controls the funds.
-  No reset, no backdoor. ZK Fighter's only recovery path.
+  No reset, no backdoor. ZK Freighter's only recovery path.
 - **Vault password** — unlocks the encrypted wallet *on this device*. Different from the seed
   phrase; it cannot recover funds.
 - **Private receive code (`zkf1…`)** — the shareable code that lets others pay your shielded
@@ -403,17 +403,17 @@ Every term in plain English — assume smart, not cryptographer.
 - **Groth16 / BN254 / Poseidon** — the proof system, elliptic curve, and hash function used by
   the shielded pool; Stellar Protocols 25/26 added native support that makes on-chain
   verification affordable.
-- **Bootnode** — ZK Fighter's warmed event index: Stellar's public RPC only retains recent
+- **Bootnode** — ZK Freighter's warmed event index: Stellar's public RPC only retains recent
   events, so this service remembers pool history and serves it through a narrow, allowlisted
   RPC.
 
 ---
 
 # Bridging USDC in
-URL: https://docs.zkfighter.dev/docs/how-it-works/bridge
+URL: https://docs.zkfreighter.dev/docs/how-it-works/bridge
 Real Circle USDC from Ethereum, Base, Arbitrum, or Optimism — then shield it.
 
-ZK Fighter uses **Circle's CCTP** (Cross-Chain Transfer Protocol) to bring native USDC onto
+ZK Freighter uses **Circle's CCTP** (Cross-Chain Transfer Protocol) to bring native USDC onto
 Stellar. CCTP burns USDC on the source chain and mints genuine USDC on Stellar — no wrapped
 IOU. Supported sources: **Ethereum, Base, Arbitrum, Optimism** (Sepolia testnets are the
 demo surface).
@@ -450,10 +450,10 @@ until it exists and passes real tests. We do not fake it.
 ---
 
 # Selective disclosure
-URL: https://docs.zkfighter.dev/docs/how-it-works/disclosure
+URL: https://docs.zkfreighter.dev/docs/how-it-works/disclosure
 Prove a specific note to an auditor — read-only, on your terms.
 
-Privacy products live or die on compliance. ZK Fighter's answer is **user-held selective
+Privacy products live or die on compliance. ZK Freighter's answer is **user-held selective
 disclosure**: you can prove facts about your own shielded funds to someone you choose, without
 giving them any power over the funds.
 
@@ -476,14 +476,14 @@ without trusting a server.
 ## Why this design
 
 The alternative — a custodial relayer that logs identities for compliance — puts a middleman in
-every payment who can see everything. ZK Fighter's association-set gate (screening at the pool
+every payment who can see everything. ZK Freighter's association-set gate (screening at the pool
 door) plus user-held disclosure (proof on demand) achieves compliance without anyone holding a
 master view of your activity.
 
 ---
 
 # Private receive codes
-URL: https://docs.zkfighter.dev/docs/how-it-works/receive-codes
+URL: https://docs.zkfreighter.dev/docs/how-it-works/receive-codes
 The zkf1… code that lets anyone pay your shielded balance without knowing your address.
 
 To be paid privately, you share a **private receive code** — a `zkf1…` string (Bech32m encoding,
@@ -520,7 +520,7 @@ receive code on any device.
 ---
 
 # Shielded transfers
-URL: https://docs.zkfighter.dev/docs/how-it-works/shielded-transfers
+URL: https://docs.zkfreighter.dev/docs/how-it-works/shielded-transfers
 Notes, nullifiers, and on-device proofs — the full lifecycle of private money.
 
 "Shielded" is Stellar's own word for a payment whose sensitive details are hidden with
@@ -578,17 +578,17 @@ Shielded transfers use a 2-in/2-out note design: when you spend, change comes ba
 
 The shielded-pool engine — circuits, browser prover, and pool contracts — is Nethermind's
 open-source `stellar-private-payments` reference implementation (Privacy Pools on Stellar).
-ZK Fighter builds the wallet product on top: the multi-surface UX, access orchestration,
+ZK Freighter builds the wallet product on top: the multi-surface UX, access orchestration,
 receive codes, disclosure, bridge-to-shield, and services.
 
 ---
 
-# What is ZK Fighter?
-URL: https://docs.zkfighter.dev/docs
+# What is ZK Freighter?
+URL: https://docs.zkfreighter.dev/docs
 A self-custody wallet for shielded XLM and USDC payments on Stellar.
 
-ZK Fighter is a **privacy-by-default, self-custody wallet** for the Stellar network. Normally
-every Stellar transaction is visible to anyone who looks. ZK Fighter lets you move **XLM and
+ZK Freighter is a **privacy-by-default, self-custody wallet** for the Stellar network. Normally
+every Stellar transaction is visible to anyone who looks. ZK Freighter lets you move **XLM and
 USDC** so that the sensitive details — amounts, balances, counterparties — stay private, using
 real cryptography rather than trust in a middleman.
 
@@ -615,7 +615,7 @@ Everything between those boundaries is a shielded transfer.
 - Not "anonymous", "fully private", or "untraceable" — see the [privacy model](/docs/privacy-model)
 - Not a mixer — first-time shielding registers with an association-set (ASP) contract so the
   pool can screen out flagged funds
-- Not a general-purpose public wallet — ZK Fighter builds the privacy layer only
+- Not a general-purpose public wallet — ZK Freighter builds the privacy layer only
 - Not audited — this is early software; don't use real funds yet
 
 ## One wallet, three surfaces
@@ -633,14 +633,14 @@ what's seen.
 ---
 
 # Privacy model
-URL: https://docs.zkfighter.dev/docs/privacy-model
+URL: https://docs.zkfreighter.dev/docs/privacy-model
 Exactly what is hidden, what is public, and what we refuse to claim.
 
 ## The three boundaries
 
 Stellar's own documentation says it plainly: Stellar is a public blockchain — every transaction
 is recorded on-chain and visible to anyone. Privacy exists inside specific tools you opt into.
-ZK Fighter is built around that honesty:
+ZK Freighter is built around that honesty:
 
 | Step | Visibility | What an observer sees |
 |---|---|---|
@@ -683,13 +683,13 @@ without revealing anything else. See [shielded transfers](/docs/how-it-works/shi
 ---
 
 # Quickstart
-URL: https://docs.zkfighter.dev/docs/quickstart
+URL: https://docs.zkfreighter.dev/docs/quickstart
 Run the wallet, fund it on testnet, and make your first shielded transfer.
 
 ## Prerequisites
 
 - **Node 22+** and **pnpm 10** (`corepack enable`)
-- The repo: `git clone https://github.com/Blockchain-Oracle/zk-fighter`
+- The repo: `git clone https://github.com/Blockchain-Oracle/zk-freighter`
 
 ```bash
 pnpm install

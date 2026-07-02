@@ -1,6 +1,6 @@
 # Onboarding cluster — screen spec
 
-**Product:** ZK Fighter (brand locked). A privacy-by-default, self-custody zero-knowledge wallet for shielded payments on Stellar. Browser web app first.
+**Product:** ZK Freighter (brand locked). A privacy-by-default, self-custody zero-knowledge wallet for shielded payments on Stellar. Browser web app first.
 
 **Cluster:** First-run onboarding only. Welcome / choose-path → Create new (password → pre-reveal explainer → reveal+copy → confirm) → OR Import existing → OPTIONAL passkey step → handoff to Home.
 
@@ -19,7 +19,7 @@
 ## Global onboarding chrome (applies to all screens below)
 
 - **Centered single-column card** on a full-bleed background, max width ~480–520px. Borrowed from Freighter `Onboarding` + `OnboardingModal` + `View.Content alignment="center"`.
-- **Top bar:** small restrained ZK Fighter wordmark at left; **network pill** at right reading `TESTNET` (mocked toggle — non-interactive during onboarding, but always visible so the privacy/network model is taught from screen one). On mainnet the pill reads `MAINNET` and a one-line note appears later (passkey/handoff) that shielded transfers may be gated on mainnet.
+- **Top bar:** small restrained ZK Freighter wordmark at left; **network pill** at right reading `TESTNET` (mocked toggle — non-interactive during onboarding, but always visible so the privacy/network model is taught from screen one). On mainnet the pill reads `MAINNET` and a one-line note appears later (passkey/handoff) that shielded transfers may be gated on mainnet.
 - **Progress affordance** for the Create path: a 3-step indicator (Password · Backup · Confirm) + optional 4th (Secure) when passkey step is reached. Import path shows a 1-step (or 2 with passkey) indicator. Borrow nothing visual; just communicate position.
 - **Back control** on every step except Welcome and any irreversible post-confirm screen. Going back never discards the seed silently — see Create-confirm states.
 - **Primary CTA** bottom-anchored, full-width; **secondary/tertiary** stacked below it (Freighter Welcome two-stacked-button pattern).
@@ -33,7 +33,7 @@
 **Reference:** `reference/freighter/extension/src/popup/views/Welcome/index.tsx` (centered logo + name + two stacked rounded buttons: Create new / I already have a wallet).
 
 **Layout & components:**
-- Centered restrained ZK Fighter wordmark.
+- Centered restrained ZK Freighter wordmark.
 - One-line tagline that teaches the model honestly, e.g. "A self-custody wallet for shielded payments on Stellar." (NOT "fully private"/"anonymous".)
 - Two stacked buttons:
   - Primary: **Create a new wallet**
@@ -53,7 +53,7 @@
 - Import → Screen 6 (Import seed).
 - "How privacy works" → explainer sheet (dismissible; does not advance).
 
-**Mock data:** none (static copy). Wordmark = restrained ZK Fighter lockup.
+**Mock data:** none (static copy). Wordmark = restrained ZK Freighter lockup.
 
 ---
 
@@ -69,7 +69,7 @@
 - **Password** field (masked, show/hide toggle).
 - **Confirm password** field (masked, show/hide toggle).
 - **Strength meter** (mocked rules: min length, etc.) with live inline guidance.
-- **Terms checkbox**: "I understand ZK Fighter can't recover this password or my recovery phrase." (privacy-honest variant of Freighter's terms checkbox).
+- **Terms checkbox**: "I understand ZK Freighter can't recover this password or my recovery phrase." (privacy-honest variant of Freighter's terms checkbox).
 - Primary CTA: **Continue** (disabled until valid + confirmed + terms checked — borrow Freighter `disabled={!(isValid && dirty)}`).
 - Back → Welcome.
 
@@ -218,7 +218,7 @@
 **Layout & components:**
 - Heading: "Add Face ID for faster unlock" (or platform-appropriate: Touch ID / passkey).
 - Teaching icon rows:
-  - Fingerprint icon — "Unlock ZK Fighter with Face ID instead of typing your password."
+  - Fingerprint icon — "Unlock ZK Freighter with Face ID instead of typing your password."
   - Sync icon — "On a device with your synced passkey, the same wallet returns."
   - Alert icon (honesty) — "This is NOT a backup. If you lose your recovery phrase, your wallet is gone — a passkey can't recover it."
 - Primary CTA: **Enable Face ID** (triggers mocked WebAuthn PRF prompt).

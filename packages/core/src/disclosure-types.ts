@@ -5,7 +5,7 @@ import type { NetworkKey } from './networks'
 import type { XlmPrivateProgressEvent, XlmShieldedNote } from './xlm-private-types'
 
 export const DISCLOSURE_ARTIFACT_VERSION = 1
-export const DISCLOSURE_ARTIFACT_KIND = 'zk-fighter-disclosure-artifact'
+export const DISCLOSURE_ARTIFACT_KIND = 'zk-freighter-disclosure-artifact'
 export const CANONICAL_SELECTIVE_DISCLOSURE_1_VK_HASH =
   '0xe8c9879c1239deeaab3cda366419e3536a6f66502f88c3eec09da1e52843e5af'
 

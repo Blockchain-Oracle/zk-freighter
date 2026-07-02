@@ -1,4 +1,4 @@
-package com.zkfighter.wallet;
+package com.zkfreighter.wallet;
 
 import static org.junit.Assert.*;
 
@@ -15,6 +15,6 @@ public class ExampleInstrumentedTest {
     public void useAppContext() {
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
 
-        assertEquals("com.zkfighter.wallet", appContext.getPackageName());
+        assertEquals("com.zkfreighter.wallet", appContext.getPackageName());
     }
 }

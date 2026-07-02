@@ -1,10 +1,10 @@
-# Plan: Multichain CCTP Bridge Into ZK Fighter
+# Plan: Multichain CCTP Bridge Into ZK Freighter
 
 ## Inputs
 
 - Reality research: `.thoughts/research/2026-06-25-multichain-cctp-bridge.md`
-- Product spec: `.thoughts/specs/2026-06-22-zk-fighter-product-spec.md`
-- Stories: `.thoughts/stories/2026-06-22-zk-fighter-mvp-stories.md`
+- Product spec: `.thoughts/specs/2026-06-22-zk-freighter-product-spec.md`
+- Stories: `.thoughts/stories/2026-06-22-zk-freighter-mvp-stories.md`
 - Quality profile: `.thoughts/quality/2026-06-22-project-quality-profile.md`
 - Existing bridge code:
   - `packages/core/src/networks.ts`
@@ -32,7 +32,7 @@
 
 ## Assumptions
 
-- ZK Fighter's bridge remains an inbound bridge: source-chain USDC -> public Stellar USDC -> separate shield/deposit.
+- ZK Freighter's bridge remains an inbound bridge: source-chain USDC -> public Stellar USDC -> separate shield/deposit.
 - The bridge leg is public. Privacy starts only after the user shields on Stellar.
 - The first multichain implementation targets EVM source chains only.
 - Base and Arbitrum are the first new source chains because they preserve the same CCTP EVM burn flow while lowering mainnet gas cost.
@@ -123,7 +123,7 @@ Make the bridge runner and resume path source-chain-aware.
 
 ### Real Integration Path
 
-This phase still uses the existing EVM client abstraction. The wallet submits the source-chain approval and burn; ZK Fighter polls Circle Iris; Stellar `mint_and_forward` submits on the destination.
+This phase still uses the existing EVM client abstraction. The wallet submits the source-chain approval and burn; ZK Freighter polls Circle Iris; Stellar `mint_and_forward` submits on the destination.
 
 ### Mock/Simulation Policy
 
@@ -280,7 +280,7 @@ Record one real mainnet bridge-to-shield route before claiming mainnet bridge su
 - Fund the selected source wallet with:
   - small native gas token amount.
   - small native USDC amount.
-- Bridge a tiny USDC amount into the ZK Fighter Stellar mainnet public address.
+- Bridge a tiny USDC amount into the ZK Freighter Stellar mainnet public address.
 - Shield the arrived USDC into the mainnet USDC pool.
 - Record accepted hashes and balance notes.
 

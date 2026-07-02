@@ -283,7 +283,7 @@ function contentProbe(method) {
 function startTestServer() {
   const server = http.createServer((_request, response) => {
     response.writeHead(200, { 'content-type': 'text/html' })
-    response.end('<!doctype html><title>ZK Fighter extension test</title><main>content script target</main>')
+    response.end('<!doctype html><title>ZK Freighter extension test</title><main>content script target</main>')
   })
   return new Promise((resolve) => {
     server.listen(localPort, '127.0.0.1', () => resolve(server))

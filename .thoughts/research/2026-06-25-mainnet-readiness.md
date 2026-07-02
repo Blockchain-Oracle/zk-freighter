@@ -2,7 +2,7 @@
 
 ## Scope
 
-Check whether ZK Fighter can safely move from testnet evidence to mainnet testing for XLM, USDC, CCTP bridge arrival, and shielded pool actions. This is a fact pass, not approval to spend or deploy mainnet funds.
+Check whether ZK Freighter can safely move from testnet evidence to mainnet testing for XLM, USDC, CCTP bridge arrival, and shielded pool actions. This is a fact pass, not approval to spend or deploy mainnet funds.
 
 ## Sources Checked
 
@@ -74,7 +74,7 @@ Check whether ZK Fighter can safely move from testnet evidence to mainnet testin
 - Circle docs list Stellar under Circle Mint supported chains/currencies with API chain code `XLM` and currency code `USD`.
 - Circle docs warn mainnet tokens have financial value.
 
-### Current ZK Fighter code state
+### Current ZK Freighter code state
 
 - `packages/core/src/networks.ts` has mainnet network config, mainnet XLM/USDC SAC IDs, and deployed mainnet XLM/USDC privacy-pool IDs.
 - Mainnet XLM pool: `CCE3VBWTMGS7TZBOMBXVMPZFD4RUWAJDQHV7L2FT5BHMZKHLQUJKHECE`.
@@ -89,7 +89,7 @@ Check whether ZK Fighter can safely move from testnet evidence to mainnet testin
 - Secret posture:
   - The seed/secret was not printed.
   - The identity is stored outside the repo at `/Users/abu/.config/stellar/identity/zkf-mainnet-qa.toml`.
-  - This is an operations/funding QA key, not a ZK Fighter seed-derived app wallet identity.
+  - This is an operations/funding QA key, not a ZK Freighter seed-derived app wallet identity.
 - Public address:
   - `GB3VMAPRJDHLRG2VKNCUUNOPBKJAAZCELU5TIF4QVPCTMYO5TGECGLVM`
 - The account was initially unfunded during the first readiness pass, then Abu funded it with `10.0000000 XLM`.

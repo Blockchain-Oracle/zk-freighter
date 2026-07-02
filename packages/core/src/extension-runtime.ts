@@ -23,13 +23,13 @@ export const phase11ExtensionReadiness = {
   judgedSurface: 'web + extension popup',
   status: 'in-progress',
   summary:
-    'The extension popup reuses ZK Fighter core and has Chrome runtime evidence for prover packaging, XLM and USDC QuickShield, and the native bridge route. It is a compact wallet surface, not a general public dApp signing wallet.',
+    'The extension popup reuses ZK Freighter core and has Chrome runtime evidence for prover packaging, XLM and USDC QuickShield, and the native bridge route. It is a compact wallet surface, not a general public dApp signing wallet.',
   capabilities: [
     {
       id: 'shared-core',
       label: 'Shared wallet core',
       status: 'ready',
-      evidence: '@zk-fighter/core is the only wallet/domain dependency for extension surfaces.',
+      evidence: '@zk-freighter/core is the only wallet/domain dependency for extension surfaces.',
       caveat: 'No separate extension wallet implementation is allowed.',
     },
     {

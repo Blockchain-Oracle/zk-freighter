@@ -189,7 +189,7 @@ async function findExtensionId(cdp, profileDir, stderr) {
 
     await delay(waitStepMs)
   }
-  throw new Error(`No ZK Fighter extension appeared. Stderr: ${stderr.join('').slice(-2000)}`)
+  throw new Error(`No ZK Freighter extension appeared. Stderr: ${stderr.join('').slice(-2000)}`)
 }
 
 async function extensionIdFromProfile(profileDir) {
@@ -197,7 +197,7 @@ async function extensionIdFromProfile(profileDir) {
   try {
     const preferences = JSON.parse(await readFile(preferencesFile, 'utf8'))
     for (const [id, setting] of Object.entries(preferences.extensions?.settings ?? {})) {
-      if (setting?.manifest?.name === 'ZK Fighter') {
+      if (setting?.manifest?.name === 'ZK Freighter') {
         return id
       }
     }
@@ -254,7 +254,7 @@ function freighterProbe(type, extra = {}) {
 function startTestServer() {
   const server = http.createServer((_request, response) => {
     response.writeHead(200, { 'content-type': 'text/html' })
-    response.end('<!doctype html><title>ZK Fighter dApp bridge test</title><main>dApp bridge target</main>')
+    response.end('<!doctype html><title>ZK Freighter dApp bridge test</title><main>dApp bridge target</main>')
   })
   return new Promise((resolve) => server.listen(localPort, '127.0.0.1', () => resolve(server)))
 }

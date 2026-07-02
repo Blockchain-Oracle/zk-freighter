@@ -27,11 +27,11 @@ export function baseOptions(): BaseLayoutProps {
       title: (
         <>
           <CoinMark />
-          <span style={{ fontWeight: 800, letterSpacing: '-0.02em' }}>ZK Fighter</span>
+          <span style={{ fontWeight: 800, letterSpacing: '-0.02em' }}>ZK Freighter</span>
         </>
       ),
     },
-    githubUrl: 'https://github.com/Blockchain-Oracle/zk-fighter',
+    githubUrl: 'https://github.com/Blockchain-Oracle/zk-freighter',
     themeSwitch: { enabled: false },
   }
 }

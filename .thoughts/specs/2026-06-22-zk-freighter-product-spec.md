@@ -1,14 +1,14 @@
-# Spec: ZK Fighter product MVP
+# Spec: ZK Freighter product MVP
 
 ## Objective
 
-ZK Fighter is a self-custody Stellar wallet for shielded XLM and USDC payments. It must let a user create or import a seed-backed wallet, shield public funds into a privacy pool, send privately inside the pool, unshield back to a public Stellar address, and optionally publish private receive keys for discoverability.
+ZK Freighter is a self-custody Stellar wallet for shielded XLM and USDC payments. It must let a user create or import a seed-backed wallet, shield public funds into a privacy pool, send privately inside the pool, unshield back to a public Stellar address, and optionally publish private receive keys for discoverability.
 
 The judged product must use real zero-knowledge proofs against Stellar testnet/mainnet contracts. It must not use mocked proofs, mocked balances, mocked bridge state, or fake transaction hashes in any judged path.
 
 ## Background And Current Reality
 
-ZK Fighter builds on the Nethermind `stellar-private-payments` reference implementation. That engine already has browser-side proving, Soroban contracts, ASP membership/non-membership, and a deployed testnet XLM pool. The engine's pool entry point is `transact(env, proof, ext_data, sender)`.
+ZK Freighter builds on the Nethermind `stellar-private-payments` reference implementation. That engine already has browser-side proving, Soroban contracts, ASP membership/non-membership, and a deployed testnet XLM pool. The engine's pool entry point is `transact(env, proof, ext_data, sender)`.
 
 The privacy model has public edges and private in-pool activity:
 
@@ -26,19 +26,19 @@ Current tooling state is ready for spec/planning:
 - Mainnet RPC is healthy with explicit RPC `https://mainnet.sorobanrpc.com` and passphrase `Public Global Stellar Network ; September 2015`.
 - Canonical testnet/mainnet native and USDC SAC IDs are derived and RPC-resolved.
 
-The current repo has no app scaffold, contract scaffold, git repo, deployed USDC pool, bridge run, passkey implementation, extension implementation, or transaction digest produced by ZK Fighter itself.
+The current repo has no app scaffold, contract scaffold, git repo, deployed USDC pool, bridge run, passkey implementation, extension implementation, or transaction digest produced by ZK Freighter itself.
 
 ## Users
 
 - **Primary user:** a Stellar user who wants to hold XLM/USDC and make shielded transfers without understanding nullifiers, Merkle trees, trustlines, CCTP domains, or ZK proof internals.
-- **Recipient:** a ZK Fighter user who shares a private receive code or opts into public discovery so others can send privately.
+- **Recipient:** a ZK Freighter user who shares a private receive code or opts into public discovery so others can send privately.
 - **Demo reviewer/judge:** a technically informed hackathon judge who needs to see load-bearing ZK, real Stellar integration, honest privacy framing, and real transaction evidence.
 - **Auditor/accountant recipient:** a party who receives a user-held view key or selective disclosure artifact, with read-only power and no spend ability.
 
 ## Goals
 
 - Ship a real web app first.
-- Use **ZK Fighter** as the product name.
+- Use **ZK Freighter** as the product name.
 - Use seed phrase creation/import as the default recovery and identity path.
 - Keep passkey optional and fail-closed.
 - Support both XLM and USDC as separate privacy pools.
@@ -125,7 +125,7 @@ The current repo has no app scaffold, contract scaffold, git repo, deployed USDC
 
 - The safe product bridge flow is two-step:
   1. Circle CCTP moves USDC publicly from Ethereum/Sepolia into public Stellar USDC.
-  2. ZK Fighter shields that public Stellar USDC into the USDC privacy pool with a separate Stellar transaction.
+  2. ZK Freighter shields that public Stellar USDC into the USDC privacy pool with a separate Stellar transaction.
 - The bridge UI must show that the bridge leg is public.
 - The bridge UI must show progress for source approval/burn, Circle attestation, Stellar mint/forward, and shield.
 - The app must link to real explorer entries for submitted bridge/shield transactions.
@@ -143,7 +143,7 @@ The current repo has no app scaffold, contract scaffold, git repo, deployed USDC
 - The app must let the user generate or export a read-only disclosure artifact.
 - The disclosure artifact must not grant spend authority.
 - The product must frame disclosure as user-held and user-controlled, not custodial monitoring.
-- Compliance features must not imply ZK Fighter can disclose on the user's behalf.
+- Compliance features must not imply ZK Freighter can disclose on the user's behalf.
 
 ### R11. Extension Surface
 
@@ -152,7 +152,7 @@ The current repo has no app scaffold, contract scaffold, git repo, deployed USDC
 - WXT is acceptable as the framework only after proving real prover packaging.
 - The extension background service worker must coordinate only; it must not be the prover runtime.
 - The credible prover path is extension page or offscreen document plus dedicated worker.
-- The current extension direction is a ZK Fighter companion for receive, QuickShield, and bridge handoff, not a general public dApp signing wallet.
+- The current extension direction is a ZK Freighter companion for receive, QuickShield, and bridge handoff, not a general public dApp signing wallet.
 - Freighter-style detection/network responses may exist for research, but external public-key access and signing must fail closed unless a later product decision explicitly reopens that scope.
 
 ### R12. UX And Copy
@@ -177,7 +177,7 @@ The current repo has no app scaffold, contract scaffold, git repo, deployed USDC
 ### A2. XLM Privacy Evidence
 
 - A real testnet shield transaction succeeds against the XLM pool.
-- A real private transfer succeeds between two ZK Fighter identities.
+- A real private transfer succeeds between two ZK Freighter identities.
 - A real unshield transaction succeeds to a public Stellar address.
 - Evidence includes transaction hashes, explorer links, and before/after balance notes.
 
@@ -218,7 +218,7 @@ The current repo has no app scaffold, contract scaffold, git repo, deployed USDC
 
 - User can export a read-only disclosure artifact.
 - A reviewer can use that artifact to inspect relevant user activity without spend authority.
-- Copy states ZK Fighter cannot disclose on the user's behalf.
+- Copy states ZK Freighter cannot disclose on the user's behalf.
 
 ### A9. Extension Evidence
 

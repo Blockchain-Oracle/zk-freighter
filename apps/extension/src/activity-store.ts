@@ -1,5 +1,5 @@
 import { browser } from 'wxt/browser'
-import { getNetworkConfig, type NetworkKey } from '@zk-fighter/core'
+import { getNetworkConfig, type NetworkKey } from '@zk-freighter/core'
 
 // F4 persistence: every op the runtime performs is appended here (browser.storage
 // .local), so the Activity screen shows REAL history that survives popup close +

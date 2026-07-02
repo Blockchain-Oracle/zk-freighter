@@ -12,8 +12,8 @@ import {
   type NetworkKey,
   type PasskeyEnvelope,
   type WalletIdentity,
-} from '@zk-fighter/core'
-import { ThemeProvider } from '@zk-fighter/ui'
+} from '@zk-freighter/core'
+import { ThemeProvider } from '@zk-freighter/ui'
 import {
   getStoredPasskeyEnvelope,
   getStoredWalletPublicKey,
@@ -29,8 +29,8 @@ import { OnboardingFlow } from './OnboardingFlow'
 import { WalletShell } from './wallet/WalletShell'
 
 const networks = Object.keys(NETWORKS) as NetworkKey[]
-const themeStorageKey = 'zk-fighter:theme:v1'
-const networkStorageKey = 'zk-fighter:network:v1'
+const themeStorageKey = 'zk-freighter:theme:v1'
+const networkStorageKey = 'zk-freighter:network:v1'
 
 function storedNetwork(): NetworkKey {
   return window.localStorage.getItem(networkStorageKey) === 'mainnet' ? 'mainnet' : 'testnet'

@@ -1,6 +1,6 @@
 # Compliance / selective disclosure — screen cluster spec
 
-> Product: **ZK Fighter** (brand locked). Privacy-by-default self-custody ZK wallet for shielded payments on Stellar. Browser web app.
+> Product: **ZK Freighter** (brand locked). Privacy-by-default self-custody ZK wallet for shielded payments on Stellar. Browser web app.
 > Cluster: **Compliance / selective disclosure** — let a user prove specific shielded activity to a specific auditor *without* handing over their whole history.
 > Visual direction (color/type) intentionally unspecified — leave free.
 
@@ -10,7 +10,7 @@ Every screen here exists to make ONE distinction legible, because it is the diff
 
 - **Disclosure proof (Penumbra "transaction perspective") = PREFERRED, the default CTA.** Reveals a *scoped* view — chosen transactions / a date range / a single counterparty — as a self-contained, verifiable artifact. Past-only by default. Does not leak future activity. This is "prove a payment is clean without exposing your whole history."
 - **Viewing key export = the blunt instrument, demoted.** Grants *full, permanent, ongoing* read access to ALL transactions, past **and future**, and **cannot be revoked once shared**. Always presented second, behind friction, with a louder warning.
-- **User-held, not custodial.** ZK Fighter never logs to a third party. The user manufactures the disclosure locally and hands it over themselves. The auditor gets read-only data, never spend ability — say this explicitly on every artifact.
+- **User-held, not custodial.** ZK Freighter never logs to a third party. The user manufactures the disclosure locally and hands it over themselves. The auditor gets read-only data, never spend ability — say this explicitly on every artifact.
 - **Honesty about what a proof still leaks:** the on-chain "spent" markers / unshield destinations referenced in a disclosed tx are already public; the proof just *links your identity* to them for the auditor. Never imply the proof itself is private from the auditor — it is the act of revealing.
 
 Mocked-data prototype: all transactions, generated artifacts, proof timings, and the "verify" round-trip are mock. Mark every mocked surface with a small **"Demo data"** / **"Mocked integration"** tag.

@@ -1,5 +1,5 @@
 import { browser } from 'wxt/browser'
-import type { NetworkKey, PublicDiscoveryPublishReport } from '@zk-fighter/core'
+import type { NetworkKey, PublicDiscoveryPublishReport } from '@zk-freighter/core'
 
 const storagePrefix = 'zkf.discover.publish'
 

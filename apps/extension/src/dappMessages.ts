@@ -5,7 +5,7 @@ import type {
   NetworkKey,
   PasskeyCreateMaterial,
   PasskeyUnlockMaterial,
-} from '@zk-fighter/core'
+} from '@zk-freighter/core'
 
 export type * from './dappResponses'
 

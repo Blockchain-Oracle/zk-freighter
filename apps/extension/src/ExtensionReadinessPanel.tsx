@@ -1,4 +1,4 @@
-import { phase11ExtensionReadiness } from '@zk-fighter/core'
+import { phase11ExtensionReadiness } from '@zk-freighter/core'
 
 import { Badge, Copy, Panel, SectionHeader } from './extension-ui'
 
