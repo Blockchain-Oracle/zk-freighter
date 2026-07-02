@@ -8,11 +8,35 @@ without accepted transactions. The full evidence table — 40+ real transaction 
 Stellar testnet, Stellar mainnet, and four EVM testnets — lives in the repository README, with
 the deeper audit trail in the docs folder:
 
-- [README evidence table](https://github.com/Blockchain-Oracle/zk-freighter#evidence)
+- [README evidence table](https://github.com/Blockchain-Oracle/zk-freighter#evidence) — every
+  hash is a one-click link to the right explorer for its network
 - [Verified facts record](https://github.com/Blockchain-Oracle/zk-freighter/blob/main/docs/VERIFIED-FACTS.md)
 
-Spot-check any Stellar hash on [stellar.expert](https://stellar.expert/explorer/testnet), and
-EVM hashes on the respective chain explorer.
+## Deployed contracts
+
+The exact IDs the wallet ships with (`packages/core/src/networks.ts`,
+`packages/core/src/privacy-contracts.ts`):
+
+### Stellar testnet
+
+| Contract | ID |
+|---|---|
+| XLM privacy pool | [`CCCHESF5…FE3CD4LZ`](https://stellar.expert/explorer/testnet/contract/CCCHESF5HNGMCP5ZLGFBKBTW23YXNAJ6LTGSK7CO3FKFIVEHFE3CD4LZ) |
+| USDC privacy pool | [`CDKOY3DX…KWXKTCNK`](https://stellar.expert/explorer/testnet/contract/CDKOY3DXCCS3KHBDAE7G2E735YRPDGGAWRKSN25V4VFVKZOMKWXKTCNK) |
+| ASP membership (association set) | [`CCXIGPJJ…OC2WA3Y2`](https://stellar.expert/explorer/testnet/contract/CCXIGPJJY6UHIETXFCIV77HFVJSFS6HAVRSMHJFV6UVENXPJOC2WA3Y2) |
+| Confidential token (wrapped USDC, preview) | [`CBNL4THD…KCHEVJ4F`](https://stellar.expert/explorer/testnet/contract/CBNL4THDSDDZ5OWPVLJPDBQGQ4FDH6LHBBFUBPRDNLUCIV2LKCHEVJ4F) |
+| Confidential UltraHonk verifier | [`CD5DMFWT…OIASRSTUGG`](https://stellar.expert/explorer/testnet/contract/CD5DMFWTPW6SLA5TAUNU2TLAZ2ZFXCKGR2PBS4KHQ4P56EOIASRSTUGG) |
+| Confidential auditor registry | [`CAMO6HGC…XOAQ5SDGO`](https://stellar.expert/explorer/testnet/contract/CAMO6HGCK3EGQX7IEOAO555MPXNQ6UVFI46Y34CYQRWS4HLXOAQ5SDGO) |
+
+### Stellar mainnet
+
+| Contract | ID |
+|---|---|
+| XLM privacy pool | [`CCE3VBWT…QUJKHECE`](https://stellar.expert/explorer/public/contract/CCE3VBWTMGS7TZBOMBXVMPZFD4RUWAJDQHV7L2FT5BHMZKHLQUJKHECE) |
+| USDC privacy pool | [`CDV45TTX…PBOD2KR7`](https://stellar.expert/explorer/public/contract/CDV45TTXDDUKBMK2IWPJRUYQSRVEWHTRPKCN2VZ7GEV2HVMRPBOD2KR7) |
+| ASP membership (association set) | [`CCYY3LLT…VAQIW5PP`](https://stellar.expert/explorer/public/contract/CCYY3LLTVD2UW3Z4QD76PICZNIUH3PXKWJSKJVAENBIYON7QVAQIW5PP) |
+
+Confidential Token mode is testnet-only by design, so it has no mainnet deployment.
 
 ## What's proven, at a glance
 
