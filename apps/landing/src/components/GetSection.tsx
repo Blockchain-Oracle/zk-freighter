@@ -1,6 +1,6 @@
-import { ArrowDown } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
 import { androidUrl, extensionUrl } from '../links'
+import { BrandIcon, BrowserIcons } from './BrandIcon'
 import { useReveal } from './useReveal'
 
 export function GetSection() {
@@ -16,10 +16,10 @@ export function GetSection() {
             <p>Thumb-first shielded wallet — swipeable cards, proving in-sheet.</p>
             <div className="get-actions">
               <a className="get-pill" href={androidUrl}>
-                <ArrowDown size={15} /> Get Android
+                <BrandIcon name="android" /> Get Android
               </a>
               <span className="get-pill get-pill-soon" title="iOS distribution via TestFlight is being prepared">
-                iOS · soon
+                <BrandIcon name="apple" /> iOS · soon
               </span>
             </div>
             <small>
@@ -39,7 +39,7 @@ export function GetSection() {
             <p>Glance, QuickShield, receive — heavy proving promotes to the side panel.</p>
             <div className="get-actions">
               <a className="get-pill" href={extensionUrl}>
-                <ArrowDown size={15} /> Get extension
+                <BrowserIcons /> Get extension
               </a>
             </div>
             <ol className="get-steps">

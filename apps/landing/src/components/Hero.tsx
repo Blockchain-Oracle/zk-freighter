@@ -1,4 +1,5 @@
-import { ArrowDown } from 'lucide-react'
+import { androidUrl, extensionUrl } from '../links'
+import { BrandIcon, BrowserIcons } from './BrandIcon'
 import { DeviceShowcase } from './DeviceShowcase'
 
 export function Hero() {
@@ -6,26 +7,18 @@ export function Hero() {
     <section className="hero" aria-label="ZK Freighter — shielded payments on Stellar">
       <div className="hero-band">
         <div className="hero-copy">
-          <span className="hero-eyebrow">Shielded payments on Stellar</span>
           <h1>
             Hold it. Send it.
             <br />
             <em>Nobody sees it.</em>
           </h1>
-          <p>
-            A self-custody wallet with real zero-knowledge proofs. Amounts, balances and
-            counterparties stay private — proven on your own device, settled on Stellar.
-          </p>
           <div className="hero-actions">
-            <a className="cta cta-sheen" href="#download">
-              <ArrowDown size={17} /> Download ZK Freighter
+            <a className="hero-pill" href={androidUrl}>
+              <BrandIcon name="android" /> Get Android
             </a>
-            <a className="secondary" href="#privacy">See how it works</a>
-          </div>
-          <div className="trust-strip">
-            <span>Self-custody</span>
-            <span>XLM · USDC</span>
-            <span>Proofs on-device</span>
+            <a className="hero-pill" href={extensionUrl}>
+              <BrowserIcons /> Get extension
+            </a>
           </div>
         </div>
         <DeviceShowcase />
