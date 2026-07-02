@@ -6,4 +6,6 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
   resolve: { dedupe: ['react', 'react-dom'] },
   plugins: [react(), tailwindcss()],
+  // `vite preview` serves production on Coolify; allow the public domain.
+  preview: { allowedHosts: ['app.zkfreighter.app'] },
 })
