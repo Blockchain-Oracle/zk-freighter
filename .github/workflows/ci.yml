@@ -19,6 +19,17 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # The confidential-token proof tests load compiled circuit artifacts
+      # (circuits/target/circuit_*.json), which are gitignored — compile them
+      # with the same pinned nargo used for the deployed verifiers.
+      - name: Install Noir toolchain (pinned)
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/noir-lang/noirup/main/install | bash
+          "$HOME/.nargo/bin/noirup" --version 1.0.0-beta.11
+          echo "$HOME/.nargo/bin" >> "$GITHUB_PATH"
+      - name: Compile confidential-token circuits
+        run: nargo compile
+        working-directory: circuits
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
