@@ -44,8 +44,10 @@ export function MobileChrome({ route, address, receiveCode, network, children, o
         <button className="icon-button" aria-label="Settings" onClick={() => onRoute('settings')}><Settings size={18} /></button>
       </header>
       {onRefresh ? (
-        <div className={`pull-indicator${pullActive ? ' on' : ''}`} style={{ height: refresh.refreshing ? 42 : Math.round(refresh.pull * 0.55) }} aria-hidden>
-          <Loader2 size={17} className={refresh.refreshing ? 'pull-spin' : ''} style={{ transform: refresh.refreshing ? undefined : `rotate(${refresh.pull * 2.4}deg)` }} />
+        <div className={`pull-indicator${pullActive || refresh.failed ? ' on' : ''}`} style={{ height: refresh.refreshing ? 42 : refresh.failed ? 34 : Math.round(refresh.pull * 0.55) }} aria-hidden>
+          {refresh.failed
+            ? <span className="pull-failed">Couldn’t refresh — check your connection</span>
+            : <Loader2 size={17} className={refresh.refreshing ? 'pull-spin' : ''} style={{ transform: refresh.refreshing ? undefined : `rotate(${refresh.pull * 2.4}deg)` }} />}
         </div>
       ) : null}
       <section

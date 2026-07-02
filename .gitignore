@@ -30,3 +30,6 @@ contracts/target/
 .source/
 .react-router/
 build/
+
+# scratch
+/tmp-*

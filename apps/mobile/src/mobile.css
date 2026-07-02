@@ -314,6 +314,13 @@ button { -webkit-tap-highlight-color: transparent; cursor: pointer; }
   animation: zkSpin 0.9s linear infinite;
 }
 
+.pull-failed {
+  font: 700 10px/1 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--warn);
+}
+
 .route-enter {
   animation: zkRouteIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
 }

@@ -67,12 +67,17 @@ export function BrandIntro({
     if (phase !== 'in') return
     const hold = prefersReducedMotion() ? 900 : introMs
     const timer = window.setTimeout(finish, hold)
+    let audio: HTMLAudioElement | undefined
     if (soundSrc) {
-      const audio = new Audio(soundSrc)
+      audio = new Audio(soundSrc)
       audio.volume = 0.75
       audio.play().catch(() => undefined)
     }
-    return () => window.clearTimeout(timer)
+    return () => {
+      window.clearTimeout(timer)
+      // StrictMode dev double-mount: stop the first instance so audio never overlaps
+      audio?.pause()
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- run once on mount
   }, [])
 
