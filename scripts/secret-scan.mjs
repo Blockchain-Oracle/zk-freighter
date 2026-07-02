@@ -7,6 +7,9 @@ const ignoredDirs = new Set([
   '.output',
   '.vite',
   '.wxt',
+  // Native Capacitor projects only contain copied web build output; the sources are scanned directly.
+  'android',
+  'ios',
   'coverage',
   'dist',
   'node_modules',

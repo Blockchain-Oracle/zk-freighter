@@ -28,7 +28,7 @@ export function MobileAccess({ network, hasVault, busy, error, onUnlock, onCreat
   const [ack, setAck] = useState(false)
   const [copied, setCopied] = useState(false)
   const [localError, setLocalError] = useState('')
-  const seed = mode === 'create' ? mnemonic : importPhrase.trim()
+  const seed = mode === 'import' ? importPhrase.trim() : mnemonic
   const passwordReady = password.length >= passwordMinLength && password === confirm
 
   async function saveVault() {

@@ -1,65 +1,163 @@
 # ZK Fighter
 
-A **privacy-by-default**, self-custody **zero-knowledge** wallet for **shielded** payments on Stellar. Your identity is your private keys; the only public moments are shield-in (deposit) and unshield-out (withdraw). We build the privacy layer only — NOT a duplicate general-purpose public wallet. Honest framing: these are *shielded transfers*, not a "fully private" chain.
+**A privacy-by-default, self-custody wallet for shielded XLM and USDC payments on Stellar.**
 
-Built for **Stellar Hacks: Real-World ZK** (DoraHacks, sponsored by the Stellar Development Foundation). **Deadline: 2026-06-29 19:00 UTC.** Requirements: public repo + README, 2–3 min demo video, load-bearing ZK touching Stellar. Testnet is fine.
+Hold it. Send it. Nobody sees it. Zero-knowledge proofs are generated on your own device (~6s in the browser), verified on-chain by Soroban contracts, and your shielded balances, amounts, and counterparties stay inside the pool. The public moments are named every time: **shield-in (deposit)**, **unshield-out (withdraw)**, and **bridge arrivals** are visible on Stellar — everything between them is a shielded transfer.
 
-> **Status:** Phase 11 now has a WXT MV3 extension popup with a passing production build, Chrome-for-Testing runtime smoke, offscreen Nethermind browser/WASM module initialization, dry XLM deposit proof generation, real extension QuickShield XLM and USDC shield/deposit transactions on testnet and mainnet, native bridge runtime evidence, and Freighter-style detection/network responses that fail closed for external public-key access and signing. The extension is a compact ZK Fighter wallet surface, not a general public dApp signing wallet. The app includes seed-backed identity, encrypted local vault, deterministic `zkf1...` receive codes, real testnet shield/unshield/send/disclosure/passkey slices, and CCTP bridge-then-shield evidence for Ethereum Sepolia, Base Sepolia, Arbitrum Sepolia, and OP Sepolia. The bridge code now has source-chain selection for Ethereum, Base, Arbitrum, and OP CCTP routes, with accepted approval, burn, Stellar mint/forward, extension-offscreen ASP insertion, and USDC shield/deposit hashes for each configured testnet source. Atomic bridge-and-shield is deferred until a custom adapter passes real tests. See [`.thoughts/research/spikes-log.md`](.thoughts/research/spikes-log.md) for hashes and runtime evidence, [`.thoughts/research/2026-06-24-phase9-atomic-bridge-shield-decision.md`](.thoughts/research/2026-06-24-phase9-atomic-bridge-shield-decision.md) for the atomic decision, [`.thoughts/plans/2026-06-25-multichain-cctp-bridge-plan.md`](.thoughts/plans/2026-06-25-multichain-cctp-bridge-plan.md) for the multichain bridge path, and [`.thoughts/verification/2026-06-24-phase11-wxt-extension-audit.md`](.thoughts/verification/2026-06-24-phase11-wxt-extension-audit.md) for the extension boundary.
+> ⚠️ **Unaudited hackathon software** built on research/reference implementations (Stellar Hacks: Real-World ZK). Testnet is the recommended surface. Do not use for real funds.
 
-> **Mainnet note:** Mainnet XLM/USDC SACs, Circle CCTP contract IDs, public USDC plumbing, ZK Fighter XLM/USDC pool deployments, extension QuickShield XLM/USDC shield/deposits, and XLM/USDC shielded transfer + public unshield smokes are recorded. Mainnet bridge routing is wired for Ethereum, Base, Arbitrum, and OP; the app-derived Stellar destination is funded and USDC-trustlined. Live mainnet bridge-to-shield still needs source-chain funds and accepted approval/burn/mint/shield hashes before being claimed. See [`.thoughts/research/2026-06-25-mainnet-readiness.md`](.thoughts/research/2026-06-25-mainnet-readiness.md) and [`.thoughts/research/spikes-log.md`](.thoughts/research/spikes-log.md).
+This is not a general public-purpose wallet, not an "anonymous" or "untraceable" system, and not a mixer. It is a shielded-transfer wallet with honest boundaries and user-held compliance disclosure.
 
-> 🤝 **CODEX HANDOVER — START HERE:** [`.thoughts/handoffs/2026-06-22-codex-build-prompts.md`](.thoughts/handoffs/2026-06-22-codex-build-prompts.md), one phase at a time.
+## Quickstart
 
-## Where everything lives (handover map)
+Prerequisites: **Node 22+** and **pnpm 10** (`corepack enable` or `npm i -g pnpm`). The repo enforces pnpm.
 
-| Path | What |
-|---|---|
-| [`docs/START-HERE-concept.md`](docs/START-HERE-concept.md) | **Read first.** Plain-English concept, how privacy works here, how we differ from Moonlight, the choices. |
-| [`docs/SUBMISSION-PACKAGE.md`](docs/SUBMISSION-PACKAGE.md) | Judge-facing project summary, evidence digest, demo script, and non-claims. |
-| [`docs/GLOSSARY.md`](docs/GLOSSARY.md) | Every term in plain English (ZK, shielded, passkey, view key, the bridge, etc.). |
-| [`docs/VERIFIED-FACTS.md`](docs/VERIFIED-FACTS.md) | Anti-hallucination record: every claim, confirmed/corrected, with sources. |
-| [`.thoughts/specs/2026-06-22-zk-fighter-product-spec.md`](.thoughts/specs/2026-06-22-zk-fighter-product-spec.md) | **The locked product spec**: MVP, validation gates, non-goals, risks, open questions. |
-| [`.thoughts/stories/2026-06-22-zk-fighter-mvp-stories.md`](.thoughts/stories/2026-06-22-zk-fighter-mvp-stories.md) | **Testable product stories** traced to spec requirement and acceptance IDs. |
-| [`.thoughts/quality/2026-06-22-project-quality-profile.md`](.thoughts/quality/2026-06-22-project-quality-profile.md) | **Quality gates** for web, contracts, proofs, network evidence, CI, hooks, and file-size policy. |
-| [`.thoughts/plans/2026-06-22-zk-fighter-implementation-plan.md`](.thoughts/plans/2026-06-22-zk-fighter-implementation-plan.md) | **The current implementation plan** traced to spec, stories, quality gates, and research. |
-| [`.thoughts/plans/2026-06-21-stellar-zk-wallet-plan.md`](.thoughts/plans/2026-06-21-stellar-zk-wallet-plan.md) | Earlier build plan retained as historical context. |
-| [`.thoughts/research/`](.thoughts/research/) | 8 build-readiness reality briefs (facts-only, cited) + `00-INDEX-build-readiness.md`. |
-| [`.thoughts/research/exploratory/`](.thoughts/research/exploratory/) | Earlier exploratory research (01–09): tech reality, wallet arch, prior art, Moonlight teardown, etc. |
-| [`reference/`](reference/) | Cloned reference repos (gitignored; on disk for grep). See below. |
+```bash
+pnpm install
+pnpm build          # builds every workspace
+pnpm test           # 265 tests across core, apps, services
+```
 
-### Key reference repos (in `reference/`)
-- `stellar-private-payments` — **the ZK engine we reuse** (Nethermind Privacy Pool; Rust→WASM, Circom/Groth16, on-chain BN254 verifier, ASP contracts). Deployed XLM pool on testnet.
-- `freighter` — canonical Stellar extension-wallet architecture + dApp bridge reference; not the product direction for ZK Fighter.
-- `xbull-wallet` — open-source Stellar extension-wallet reference for permissioned site connection/signing UX; reference-only.
-- `stellar-build`, `stellar-ecosystem-resources` — Stellar ecosystem/project discovery and connect-wallet references; reference-only.
-- `passkey-kit`, `smart-account-kit` — Stellar passkey smart accounts (secp256r1).
-- `stellar-cctp` — Circle CCTP V2 (USDC bridge Ethereum↔Stellar).
-- `openzeppelin-stellar-contracts-confidential` — OpenZeppelin/SDF Confidential Tokens preview branch (SEP-41 wrapper, Noir/UltraHonk, reference-only).
-- `browser-wallet`, `moonlight-sdk`, `soroban-core`, `*-platform`, `ui`, `landing-page`, `network-dashboard` — **Moonlight Protocol** (the competitor; not ZK — fragmentation + mandatory trusted relayer).
-- `soroban-examples` (groth16_verifier), `stellar-risc0-verifier` — verifier references.
+Run the surfaces:
 
-## Locked decisions
-- **Privacy-by-default** — build the privacy layer only; do NOT rebuild general public-wallet functionality.
-- Real ZK (reuse Nethermind pool; novelty = the privacy wallet experience + compliance + CCTP-to-shield flow).
-- Shield **both USDC and XLM** (one pool per asset).
-- **Web app first, browser extension second** (extension is the riskier surface for in-browser proving + passkey).
-- **Seed phrase is the default onboarding; passkey is optional** (deterministic via PRF, same-wallet only via synced credential). **No recovery secrets** — lose your phrase, it's gone.
-- **Build mainnet-capable** — network is a config toggle (testnet ↔ mainnet, no code change); mainnet XLM and USDC have QuickShield, shielded transfer, and unshield evidence; bridge-to-shield still needs separate evidence before demo claims.
-- Cross-chain USDC via **Circle CCTP** if included (never build our own bridge).
-- Private receive code is locked to Bech32m HRP `zkf`, rendered as raw `zkf1...` text/QR.
-- Ship real, network-verified; **no mockups in the judged path.**
+```bash
+pnpm web:dev            # wallet web app → http://127.0.0.1:5173
+pnpm landing:dev        # product site  → http://127.0.0.1:5174
+pnpm mobile:dev         # mobile surface (Capacitor web build) → :4183
+pnpm extension:build    # then load apps/extension/.output/chrome-mv3
+                        # as an unpacked extension in chrome://extensions
+```
 
-**Remaining founder calls (not assumed):** exact optional public-discovery warning copy, demo network posture for final video, and which mainnet features are enabled before submission.
+Optional local services (the wallet works against public Stellar RPC without them; they power demo funding and long-range shielded-note history):
 
-## Submission posture
+```bash
+ZKF_TESTNET_FUNDER_SECRET=SA... pnpm funding-api:dev   # testnet faucet, :8787
+pnpm bootnode:dev                                      # warmed event indexer/RPC, :8788
+```
 
-- **Recommended demo network:** Stellar testnet + Ethereum Sepolia, Base Sepolia, Arbitrum Sepolia, and OP Sepolia are recorded full bridge-to-shield evidence paths.
-- **Mainnet posture:** XLM/USDC pools are deployed/configured. Mainnet XLM/USDC QuickShield, shielded transfer, and unshield are proven with accepted hashes. Mainnet bridge-to-shield must not be claimed until separate evidence is recorded.
-- **Atomic bridge-and-shield:** deferred. The proven bridge path is public CCTP arrival, then separate USDC shield/deposit.
-- **Extension posture:** WXT MV3 popup/build, Chrome-for-Testing runtime smoke, extension offscreen dry proof generation, receive-code QR/copy, real extension QuickShield XLM and USDC shield/deposit, reusable local USDC funder automation, and extension-native bridge runtime evidence are implemented under `apps/extension`. Freighter-style external public-key access and signing intentionally fail closed. Extension passkey, Wallets Kit detection/branding, Soroban auth-entry signing, SEP-0053 message signing, and Chrome Web Store packaging remain deferred.
-- **Unaudited warning:** this is hackathon software built on research/reference implementations. Do not use for real funds.
+Each app reads `VITE_ZKF_*` endpoint env vars (see `apps/*/​.env.example`). Networks are a config toggle — testnet ↔ mainnet with no code change.
 
-## Evidence table
+## Repository layout
+
+```
+apps/
+  web/          React wallet app (primary surface)
+  extension/    WXT MV3 browser extension (popup + side panel, offscreen prover)
+  mobile/       Capacitor app (Android/iOS) reusing the same core
+  landing/      product site
+  bootnode/     warmed pool-event indexer + narrow RPC (Postgres)
+  funding-api/  hosted testnet faucet (XLM + USDC, budgeted/cooldowns)
+packages/
+  core/         all wallet, network, proof, and transaction logic
+  ui/           shared design system (tokens, components, theme)
+circuits/       Noir circuits for Confidential Token mode
+contracts/      Soroban contract for Confidential Token mode (Rust)
+docs/           concept docs, glossary, verified facts, deploy notes
+```
+
+## Architecture
+
+Every app is a thin presentation layer over `@zk-fighter/core`, which owns identity, proving, and transactions:
+
+```mermaid
+flowchart LR
+  subgraph Surfaces
+    web["apps/web"]
+    ext["apps/extension"]
+    mob["apps/mobile"]
+  end
+  subgraph Shared
+    core["packages/core<br/>identity · vault · proofs · tx"]
+    ui["packages/ui<br/>design system"]
+  end
+  subgraph Services
+    boot["apps/bootnode<br/>warmed event index"]
+    fund["apps/funding-api<br/>testnet faucet"]
+  end
+  web --> core
+  ext --> core
+  mob --> core
+  web --> ui
+  ext --> ui
+  mob --> ui
+  core -->|"getEvents (warmed)"| boot
+  core -->|"demo funding"| fund
+  core --> stellar[("Stellar / Soroban<br/>privacy pool contracts")]
+  core --> cctp["Circle CCTP<br/>USDC from Ethereum · Base · Arbitrum · OP"]
+```
+
+### The shielded lifecycle
+
+Proofs are Groth16 (BN254), generated in-browser by a Rust→WASM prover (Nethermind privacy-pool engine), and verified on-chain. Recipients are addressed by a private `zkf1…` receive code (Bech32m), never by their public account:
+
+```mermaid
+sequenceDiagram
+    participant S as Sender wallet
+    participant P as Soroban privacy pool
+    participant R as Recipient wallet
+    rect rgb(240, 235, 220)
+        Note over S,P: SHIELD · public boundary
+        S->>P: deposit XLM/USDC + note commitment (visible on-chain)
+    end
+    rect rgb(220, 235, 225)
+        Note over S,R: SHIELDED TRANSFER · inside the pool
+        S->>S: generate Groth16 proof on-device (~6s)
+        S->>P: proof + nullifiers + new commitments
+        Note over P: amount & counterparty stay off the public surface
+        R->>P: discover notes via encrypted outputs (zkf1… code)
+    end
+    rect rgb(240, 235, 220)
+        Note over R,P: UNSHIELD · public boundary
+        R->>P: withdrawal proof
+        P->>R: XLM/USDC to a public address (visible on-chain)
+    end
+```
+
+First-time shielding also registers a pool-access leaf with the ASP (association-set) contract — setup, confirmation, and the deposit run as one continuous flow in the UI.
+
+### Extension: proving in an offscreen document
+
+MV3 popups are short-lived, so the heavy WASM prover runs in an offscreen document; the popup stays a fast glance surface:
+
+```mermaid
+flowchart LR
+  popup["Popup / side panel UI"] --> bg["Background service worker"]
+  bg --> off["Offscreen document<br/>WASM prover + pool runtime"]
+  off --> rpc[("Stellar RPC / Horizon")]
+  dapp["dApp page"] -.->|"public-key access & signing<br/>fail closed by design"| bg
+```
+
+### Bridge: USDC in from EVM chains
+
+Circle CCTP V2 moves USDC from Ethereum, Base, Arbitrum, or OP Sepolia to Stellar; the burn is signed by a seed-derived EVM key (no MetaMask needed). Arrival is public; shielding is a separate, explicit step:
+
+```mermaid
+sequenceDiagram
+    participant E as EVM chain (Base / Arbitrum / OP / Ethereum)
+    participant I as Circle Iris attestation
+    participant X as Stellar
+    E->>E: USDC approve + depositForBurn
+    E-->>I: burn message
+    I-->>X: signed attestation
+    X->>X: receiveMessage → USDC mint (public arrival)
+    X->>X: separate shield/deposit into the privacy pool
+```
+
+## Two privacy modes
+
+| | Shielded Pools (flagship) | Confidential Tokens (testnet preview) |
+|---|---|---|
+| Hides | balances, amounts, counterparties (inside the pool) | amounts and balances (addresses stay public) |
+| Assets | XLM + USDC | wrapped USDC |
+| Proving | Circom/Groth16, Rust→WASM in-browser | Noir + UltraHonk (bb.js) in-browser |
+| Networks | testnet + mainnet (deployed) | testnet only, unaudited preview |
+| Source | Nethermind privacy-pool engine (reused; credited below) | original Soroban SEP-41 wrapper in `contracts/` + `circuits/` |
+
+Compliance is user-held on both: selective **disclosure receipts** prove ownership of a specific note to an auditor — read-only, no spend authority, nothing uploaded.
+
+## Evidence
+
+Every claim above is backed by accepted on-chain transactions. Spot-check any hash on [stellar.expert](https://stellar.expert) (testnet/mainnet) or the respective EVM explorer.
 
 | Flow | Network | Evidence |
 |---|---|---|
@@ -105,35 +203,38 @@ Built for **Stellar Hacks: Real-World ZK** (DoraHacks, sponsored by the Stellar 
 | Mainnet XLM unshield | Stellar mainnet | `df5440dd80e45daf7068c66fa225a20f8167c686244ee084268df8db3f4e1a70` |
 | Mainnet USDC shielded transfer | Stellar mainnet | `5317b8266ef93b84a6ab9f40eb5b157c5838b6b9a0826d60a6d6daf36a221aa1` |
 | Mainnet USDC unshield | Stellar mainnet | `2dd8955cd57aa35b46a0ac944380afb12ac1b82da44f8cf8ab6a9d283064531b` |
-| Extension bridge handoff | Local Chrome runtime | `pnpm extension:bridge` opened `http://localhost:5173/?zkfAction=bridge&network=testnet&destination=...&resumeBurnHash=...` |
-| Extension offscreen dry proof | Local Chrome runtime + Stellar testnet ASP | `pnpm extension:runtime:deep` generated a dry XLM proof after ASP insert `f18a1e7666ef827da5636d810ba26afc4d3808bf8d56a6b2249cbe7b2aaaec17` |
 
-Full evidence, explorer links, balances, and failure notes live in [`.thoughts/research/spikes-log.md`](.thoughts/research/spikes-log.md).
+Deeper records (explorer links, balances, failure notes, and the full verified-facts audit) live in [`docs/VERIFIED-FACTS.md`](docs/VERIFIED-FACTS.md) and [`docs/SUBMISSION-PACKAGE.md`](docs/SUBMISSION-PACKAGE.md).
 
-## Demo script
+### What we do NOT claim
 
-1. Create or unlock the seed-backed wallet and show the visible network badge.
-2. Copy the raw `zkf1...` private receive code and QR.
-3. Show USDC shielded-loop evidence: public shield, shielded transfer, public unshield.
-4. Show load-bearing ZK: valid proof accepted and tampered proof rejected.
-5. Show the bridge panel: source-chain selection, recorded Ethereum/Base/Arbitrum/OP testnet approvals and burns, Iris attestations, Stellar mint/forward transactions, then separate USDC shields.
-6. Show disclosure/export as user-held compliance evidence.
-7. State the boundaries: bridge, shield/deposit, and unshield/withdraw are public; shielded transfers happen inside the pool.
+- Not "anonymous", "fully private", or "untraceable" — shield, unshield, and bridge arrivals are public, and correlation (amounts, timing, pool size) is real.
+- Mainnet **bridge-to-shield** has no accepted evidence yet and is not claimed (mainnet QuickShield, shielded transfer, and unshield are proven above).
+- Atomic bridge-and-shield is deferred; the proven path is public CCTP arrival, then a separate shield.
+- Confidential Token mode is a testnet-only, unaudited preview.
+- The extension intentionally **fails closed** for external dApp public-key access and signing — it is a privacy wallet, not a general signer.
+
+## Try it (5 minutes, testnet)
+
+1. `pnpm web:dev`, create a wallet (12-word seed → vault password), note the visible network badge.
+2. Add testnet funds (one click — the hosted faucet delivers XLM + USDC and sets up USDC receiving automatically).
+3. Shield 1 USDC: setup, pool sync, on-device proof, and submit run as one flow; the deposit is labeled a public boundary.
+4. Copy your `zkf1…` receive code, send yourself a shielded transfer, watch the proof generate on-device.
+5. Unshield to a public address — the app tells you exactly what becomes visible before you confirm.
+6. Open Disclosure to produce a read-only compliance receipt for any note.
+
+## Verification commands
+
+```bash
+pnpm lint && pnpm typecheck && pnpm test && pnpm build   # full gates
+pnpm extension:runtime      # extension popup/runtime smoke (Chrome for Testing)
+pnpm extension:quickshield  # real funded shield through the extension, end to end
+pnpm docs:check             # docs consistency
+```
 
 ## Credits and licenses
 
-- Nethermind `stellar-private-payments` supplies the privacy-pool engine, browser prover path, circuits, and Soroban contracts. Its README states a mixed license structure: mostly Apache-2.0 with `circuits/build.rs` under LGPLv3.
-- Circle `stellar-cctp` supplies the Stellar CCTP V2 reference contracts and examples. The project is Apache-2.0.
-- Stellar/SDF documentation and protocol work provide the Soroban, BN254, Poseidon/Poseidon2, USDC/SAC, and CCTP network context.
-- OpenZeppelin/SDF Confidential Tokens are tracked as future wallet research only; they are not part of the current judged path. See [`.thoughts/research/2026-06-23-confidential-tokens-preview.md`](.thoughts/research/2026-06-23-confidential-tokens-preview.md) and [`.thoughts/plans/2026-06-24-confidential-token-wallet-mode-plan.md`](.thoughts/plans/2026-06-24-confidential-token-wallet-mode-plan.md).
-
-## Differentiators vs Moonlight (the funded incumbent)
-Real ZK proofs (they have none) · no mandatory custodial relayer (theirs is mandatory + logs identity) · optional passkey (they're seed-only) · USDC (they're XLM-only) · user-held cryptographic view-key compliance (theirs is relayer-custodial).
-
-## Design (ready to hand to a designer)
-- **Paste-ready designer prompt** (hand this to a designer / AI design tool): [`.thoughts/design/2026-06-21-designer-prompt.md`](.thoughts/design/2026-06-21-designer-prompt.md) — landing page + full wallet app, all states, QR specs, do-not-build list; points to repo references.
-- **Full design brief** (exhaustive): [`.thoughts/design/2026-06-21-designer-brief.md`](.thoughts/design/2026-06-21-designer-brief.md); per-screen specs in [`.thoughts/design/screens/`](.thoughts/design/screens/).
-- **Visual inspiration:** live Freighter screenshots in [`reference/screenshots/freighter/`](reference/screenshots/freighter/); Freighter UI source in `reference/freighter/extension/src/popup/views/`.
-
-## Next step
-Finish the external submission steps or continue mainnet bridge evidence. All configured EVM testnet CCTP sources now have accepted safe-path bridge-to-shield hashes: Ethereum Sepolia, Base Sepolia, Arbitrum Sepolia, and OP Sepolia. Use `ZKF_CCTP_PREFLIGHT_ONLY=1 ZKF_CCTP_SOURCE=<source> pnpm cctp:bridge:testnet` to inspect funding/readiness without submitting a burn; use `pnpm cctp:bridge:testnet` only when a new burn is intended; use `ZKF_CCTP_RESUME_BURN_HASH=... pnpm cctp:bridge:testnet` to resume an accepted burn. For post-bridge shielding from the local CCTP destination wallet, use `pnpm cctp:shield:extension`; this imports the bridge destination wallet into the extension harness and runs ASP insert + USDC QuickShield through Chrome/offscreen Nethermind. Set `ZKF_CCTP_SOURCE=base`, `arbitrum`, `optimism`, or `ethereum` for a configured source. If extending the browser extension, run `pnpm extension:runtime`, `pnpm extension:dapp`, and `pnpm extension:runtime:deep` before updating claims. For testnet extension USDC QuickShield, keep the reusable local USDC funder `GAH5VPZPGG5QCNTZEYFK6KHXTBELEQ3BYGZAIP4FRNKVZ7LIHY7S7UIJ` topped up, then run `pnpm extension:quickshield:usdc`; it auto-transfers from that funder into the fresh extension harness address, waits for the balance, then submits the shield transaction. Mainnet bridge routing is already enabled for Ethereum, Base, Arbitrum, and OP; the current app-derived Stellar mainnet destination is ready, and the Base live runner stops at the source-funding guard before any approval or burn when the EVM source wallet is empty. The next live evidence target should use Base or Arbitrum before Ethereum L1, with separate accepted hashes. The safe MVP bridge path remains public CCTP bridge arrival followed by a separate USDC shield/deposit. Keep atomic bridge-and-shield hidden/deferred unless a custom adapter later passes real tests and records transaction evidence. Confidential Token mode is a separate future track: private amounts and balances between public addresses, testnet/unaudited preview only.
+- **Nethermind `stellar-private-payments`** supplies the shielded-pool engine: circuits (Circom/Groth16), browser prover (Rust→WASM), and Soroban pool contracts. Mostly Apache-2.0; `circuits/build.rs` under LGPLv3. ZK Fighter's contribution on this path is the wallet product: multi-surface UX, ASP access orchestration, receive codes, disclosure, bridge-to-shield, and services.
+- **Circle `stellar-cctp`** supplies the Stellar CCTP V2 reference (Apache-2.0).
+- **OpenZeppelin/SDF Confidential Tokens** preview informs Confidential Token mode (testnet-only).
+- Stellar/SDF documentation for Soroban, BN254, Poseidon2, SAC/USDC, and network context.
