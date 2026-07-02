@@ -1,0 +1,35 @@
+name: Deploy to Coolify
+
+# Continuous deploy: every push to main triggers a redeploy of each Coolify
+# service via its API. Requires two repo secrets (Settings → Secrets → Actions):
+#   COOLIFY_URL    — https://coolify.<host>
+#   COOLIFY_TOKEN  — Coolify API token with Deploy permission
+# and one repo variable per service UUID (Settings → Variables → Actions):
+#   COOLIFY_UUID_LANDING, COOLIFY_UUID_WEB, COOLIFY_UUID_DOCS,
+#   COOLIFY_UUID_FUNDING, COOLIFY_UUID_BOOTNODE, COOLIFY_UUID_BOOTNODE_MAINNET
+#
+# Alternatively, connect the repo via Coolify's GitHub App and enable
+# "Automatic Deployment" per app — then Coolify auto-deploys on push and this
+# workflow is not needed. This workflow is the explicit, in-repo option.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Trigger Coolify deploys
+        env:
+          COOLIFY_URL: ${{ secrets.COOLIFY_URL }}
+          COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
+          COOLIFY_UUID_LANDING: ${{ vars.COOLIFY_UUID_LANDING }}
+          COOLIFY_UUID_WEB: ${{ vars.COOLIFY_UUID_WEB }}
+          COOLIFY_UUID_DOCS: ${{ vars.COOLIFY_UUID_DOCS }}
+          COOLIFY_UUID_FUNDING: ${{ vars.COOLIFY_UUID_FUNDING }}
+          COOLIFY_UUID_BOOTNODE: ${{ vars.COOLIFY_UUID_BOOTNODE }}
+          COOLIFY_UUID_BOOTNODE_MAINNET: ${{ vars.COOLIFY_UUID_BOOTNODE_MAINNET }}
+        run: node scripts/coolify-deploy.mjs all

@@ -1,0 +1,57 @@
+# Nixpacks build for ZK Freighter — ONE config, many Coolify services, selected
+# by the APP_NAME env var (set per service in Coolify). Mirrors the proven
+# mantel / verifiable-agent-execution APP_NAME-dispatch pattern.
+#
+# Set APP_NAME in the Coolify service. Base Directory = / (repo root) for ALL
+# services so pnpm's workspace resolution sees every member.
+#
+#   Service            APP_NAME                       Domain (zkfreighter.app)   Port
+#   ─────────────────  ─────────────────────────────  ─────────────────────────  ────
+#   landing (default)  (unset) / @zk-freighter/landing  zkfreighter.app            4174
+#   web wallet         @zk-freighter/web                app.zkfreighter.app        4173
+#   docs               @zk-freighter/docs               docs.zkfreighter.app       3000
+#   funding-api        @zk-freighter/funding-api        api.zkfreighter.app        8787
+#   bootnode testnet   @zk-freighter/bootnode           bootnode.zkfreighter.app   8788
+#   bootnode mainnet   @zk-freighter/bootnode           mainnet-bootnode…          8788
+#
+# Client apps (landing/web) bake VITE_ZKF_* env at BUILD time — set those on the
+# service so they reach this build phase. Node services (bootnode/funding-api)
+# read env at runtime and respect $PORT. See docs/deploy/coolify.md for the
+# full per-service env matrix.
+
+[phases.setup]
+nixPkgs = ["nodejs_22"]
+nixpkgsArchive = "nixos-24.05"
+
+[phases.install]
+# Dev deps (vite / tsc / esbuild) are needed to BUILD, so install with
+# NODE_ENV=development even though services run in production. onlyIncludeFiles
+# keeps this layer cached until a manifest or the lockfile changes.
+cmds = ["corepack enable", "NODE_ENV=development pnpm install --frozen-lockfile"]
+cacheDirectories = [".pnpm-store"]
+onlyIncludeFiles = [
+  "package.json",
+  "pnpm-lock.yaml",
+  "pnpm-workspace.yaml",
+  "apps/bootnode/package.json",
+  "apps/docs/package.json",
+  "apps/extension/package.json",
+  "apps/funding-api/package.json",
+  "apps/landing/package.json",
+  "apps/mobile/package.json",
+  "apps/web/package.json",
+  "packages/core/package.json",
+  "packages/ui/package.json",
+]
+
+[phases.build]
+# `<pkg>...` builds the target AND its workspace deps (core, ui) in topo order.
+dependsOn = ["install"]
+cmds = ["pnpm --filter \"${APP_NAME:-@zk-freighter/landing}...\" build"]
+
+[start]
+# start scripts respect $PORT (vite preview / node read it); Coolify injects it.
+cmd = "pnpm --filter \"${APP_NAME:-@zk-freighter/landing}\" start"
+
+[variables]
+NODE_ENV = "production"

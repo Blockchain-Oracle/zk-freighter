@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 5174",
     "build": "tsc -b && vite build",
-    "start": "vite preview --host 0.0.0.0 --port 4174",
+    "start": "vite preview --host 0.0.0.0 --port ${PORT:-4174}",
     "lint": "eslint .",
     "typecheck": "tsc -b",
     "test": "vitest run --passWithNoTests",
