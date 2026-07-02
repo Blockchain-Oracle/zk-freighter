@@ -1,16 +1,17 @@
 name: Deploy to Coolify
 
-# Continuous deploy: every push to main triggers a redeploy of each Coolify
-# service via its API. Requires two repo secrets (Settings → Secrets → Actions):
+# Continuous deploy, path-aware: a push to main only redeploys the services
+# whose inputs actually changed (app dir + its workspace deps + the shared
+# build files). A README-only push deploys nothing.
+#
+# Requires two repo secrets (Settings → Secrets → Actions):
 #   COOLIFY_URL    — https://coolify.<host>
 #   COOLIFY_TOKEN  — Coolify API token with Deploy permission
 # and one repo variable per service UUID (Settings → Variables → Actions):
 #   COOLIFY_UUID_LANDING, COOLIFY_UUID_WEB, COOLIFY_UUID_DOCS,
 #   COOLIFY_UUID_FUNDING, COOLIFY_UUID_BOOTNODE, COOLIFY_UUID_BOOTNODE_MAINNET
 #
-# Alternatively, connect the repo via Coolify's GitHub App and enable
-# "Automatic Deployment" per app — then Coolify auto-deploys on push and this
-# workflow is not needed. This workflow is the explicit, in-repo option.
+# workflow_dispatch deploys everything (manual full roll).
 
 on:
   push:
@@ -18,11 +19,70 @@ on:
   workflow_dispatch:
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      services: ${{ steps.list.outputs.services }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          # Workspace dependency graph (from each app's package.json):
+          #   landing → packages/ui · web → packages/core + ui · docs → none
+          #   funding-api → packages/core · bootnode(s) → packages/core
+          filters: |
+            shared:
+              - 'nixpacks.toml'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'scripts/enforce-pnpm.mjs'
+            landing:
+              - 'apps/landing/**'
+              - 'packages/ui/**'
+            web:
+              - 'apps/web/**'
+              - 'packages/core/**'
+              - 'packages/ui/**'
+            docs:
+              - 'apps/docs/**'
+            funding:
+              - 'apps/funding-api/**'
+              - 'packages/core/**'
+            bootnode:
+              - 'apps/bootnode/**'
+              - 'packages/core/**'
+      - name: Build service list
+        id: list
+        env:
+          SHARED: ${{ steps.filter.outputs.shared }}
+          LANDING: ${{ steps.filter.outputs.landing }}
+          WEB: ${{ steps.filter.outputs.web }}
+          DOCS: ${{ steps.filter.outputs.docs }}
+          FUNDING: ${{ steps.filter.outputs.funding }}
+          BOOTNODE: ${{ steps.filter.outputs.bootnode }}
+          MANUAL: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          if [ "$MANUAL" = "true" ] || [ "$SHARED" = "true" ]; then
+            echo "services=all" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          services=""
+          [ "$LANDING" = "true" ] && services="$services landing"
+          [ "$WEB" = "true" ] && services="$services web"
+          [ "$DOCS" = "true" ] && services="$services docs"
+          [ "$FUNDING" = "true" ] && services="$services funding"
+          [ "$BOOTNODE" = "true" ] && services="$services bootnode bootnode-mainnet"
+          echo "services=$(echo $services)" >> "$GITHUB_OUTPUT"
+
   deploy:
+    needs: changes
+    if: needs.changes.outputs.services != ''
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Trigger Coolify deploys
+      - name: Trigger Coolify deploys (changed services only)
         env:
           COOLIFY_URL: ${{ secrets.COOLIFY_URL }}
           COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
@@ -32,4 +92,6 @@ jobs:
           COOLIFY_UUID_FUNDING: ${{ vars.COOLIFY_UUID_FUNDING }}
           COOLIFY_UUID_BOOTNODE: ${{ vars.COOLIFY_UUID_BOOTNODE }}
           COOLIFY_UUID_BOOTNODE_MAINNET: ${{ vars.COOLIFY_UUID_BOOTNODE_MAINNET }}
-        run: node scripts/coolify-deploy.mjs all
+        run: node scripts/coolify-deploy.mjs ${{ needs.changes.outputs.services }}
+      - name: Summary
+        run: echo "Deployed:${{ needs.changes.outputs.services }}" >> "$GITHUB_STEP_SUMMARY"
