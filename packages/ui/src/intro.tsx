@@ -25,9 +25,10 @@ function ringStyle(delaySeconds: number): React.CSSProperties {
 /**
  * First-run brand intro: the coin pops in on a black stage with the wordmark,
  * holds ~2s, then fades. Tap skips. Shows once per `storageKey` (localStorage);
- * reduced-motion gets a static quick fade. `soundSrc` is attempted once —
- * browsers may block audio before a user gesture, and that failure is silent
- * and harmless by design.
+ * reduced-motion gets a static quick fade. `soundSrc` is attempted immediately;
+ * when autoplay is blocked (no user gesture yet — the normal case on a fresh
+ * page load), the first pointer/key gesture while the intro is visible retries
+ * it, so tapping the intro still lands the chime with the fade.
  */
 export function BrandIntro({
   storageKey = 'zkf.intro.v1',
@@ -68,13 +69,26 @@ export function BrandIntro({
     const hold = prefersReducedMotion() ? 900 : introMs
     const timer = window.setTimeout(finish, hold)
     let audio: HTMLAudioElement | undefined
+    const retryOnGesture = () => {
+      // pointerdown precedes the click that skips, so the tap-to-skip gesture
+      // still lands the chime; a gesture after the intro finished stays silent.
+      if (doneRef.current) return
+      audio?.play().catch(() => undefined)
+    }
     if (soundSrc) {
       audio = new Audio(soundSrc)
       audio.volume = 0.75
-      audio.play().catch(() => undefined)
+      audio.play().catch(() => {
+        // Autoplay blocked (no gesture yet). The first gesture anywhere —
+        // including the tap that skips the intro — starts the sound.
+        window.addEventListener('pointerdown', retryOnGesture, { once: true, capture: true })
+        window.addEventListener('keydown', retryOnGesture, { once: true, capture: true })
+      })
     }
     return () => {
       window.clearTimeout(timer)
+      window.removeEventListener('pointerdown', retryOnGesture, { capture: true })
+      window.removeEventListener('keydown', retryOnGesture, { capture: true })
       // StrictMode dev double-mount: stop the first instance so audio never overlaps
       audio?.pause()
     }
