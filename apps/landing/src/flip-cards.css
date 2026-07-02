@@ -1,5 +1,6 @@
 /* ── Device showcase: hover-lift + 3D flip cards ── */
 
+/* Inside the hero band: cards peek up from the bottom edge and rise on hover. */
 .device-showcase {
   position: relative;
   z-index: 1;
@@ -7,7 +8,10 @@
   grid-template-columns: 1.55fr 0.95fr 0.85fr;
   gap: 18px;
   align-items: end;
-  margin-top: 64px;
+  width: min(1020px, 100%);
+  margin: 56px auto 0;
+  margin-top: auto;
+  padding-top: 48px;
   perspective: 1400px;
 }
 
@@ -17,6 +21,20 @@
   height: 415px;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+  transform: translateY(72px);
+  transition: transform 0.5s cubic-bezier(0.22, 0.9, 0.3, 1);
+}
+
+/* rise fully when hovered or flipped — the Freighter vertical pop */
+@media (hover: hover) {
+  .flip-card:hover {
+    transform: translateY(4px);
+  }
+}
+
+.flip-card.is-flipped,
+.flip-card:focus-within {
+  transform: translateY(0);
 }
 
 .flip-toggle {
@@ -55,21 +73,17 @@
   transform: rotateY(180deg);
 }
 
-/* hover: lift + grow vertically + glow (only when not flipped) */
+/* hover: glow while the card-level transform does the vertical rise */
 @media (hover: hover) {
-  .flip-card:not(.is-flipped):hover .flip-inner {
-    transform: translateY(-16px) scale(1.025);
-  }
-
   .flip-card:not(.is-flipped):hover .flip-front .frame {
-    border-color: rgba(94, 124, 250, 0.55);
+    border-color: rgba(255, 255, 255, 0.4);
     box-shadow:
       0 34px 80px -30px rgba(94, 124, 250, 0.55),
       0 60px 120px -50px #000;
   }
 
   .flip-card:not(.is-flipped):hover .flip-toggle strong {
-    color: var(--ac2);
+    color: #fff;
   }
 }
 
@@ -263,20 +277,23 @@
   margin: 0 auto;
 }
 
-/* reduced motion: crossfade instead of 3D flip, no lift */
+/* reduced motion: crossfade instead of 3D flip, no peek/rise */
 @media (prefers-reduced-motion: reduce) {
   .device-showcase {
     perspective: none;
+  }
+
+  .flip-card,
+  .flip-card.is-flipped,
+  .flip-card:hover {
+    transform: translateY(24px);
+    transition: none;
   }
 
   .flip-inner,
   .flip-card.is-flipped .flip-inner {
     transform: none;
     transition: none;
-  }
-
-  .flip-card:not(.is-flipped):hover .flip-inner {
-    transform: none;
   }
 
   .flip-face {

@@ -110,15 +110,64 @@
 
 .hero {
   position: relative;
-  width: min(1180px, calc(100% - 40px));
-  margin: 0 auto;
-  padding: 92px 0 30px;
+  width: min(1240px, calc(100% - 32px));
+  margin: 18px auto 0;
   text-align: center;
+}
+
+/* The band: a rounded stage with a slowly-drifting gradient mesh.
+   Indigo-violet with a teal undertone — flowing, not rainbow. */
+.hero-band {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 28px;
+  background: #101018;
+  padding: 96px 40px 0;
+  min-height: 720px;
+  box-shadow: 0 60px 140px -80px #000;
+}
+
+.hero-band::before,
+.hero-band::after {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  pointer-events: none;
+  filter: blur(52px) saturate(1.15);
+}
+
+.hero-band::before {
+  background:
+    radial-gradient(38% 42% at 28% 30%, rgba(94, 124, 250, 0.75), transparent 68%),
+    radial-gradient(34% 38% at 74% 22%, rgba(123, 92, 255, 0.6), transparent 66%),
+    radial-gradient(30% 36% at 62% 74%, rgba(95, 45, 210, 0.55), transparent 70%);
+  animation: zkMeshA 22s ease-in-out infinite alternate;
+}
+
+.hero-band::after {
+  background:
+    radial-gradient(26% 30% at 18% 76%, rgba(45, 190, 210, 0.32), transparent 70%),
+    radial-gradient(30% 34% at 86% 58%, rgba(154, 166, 255, 0.4), transparent 68%);
+  animation: zkMeshB 27s ease-in-out infinite alternate;
+  mix-blend-mode: screen;
+}
+
+@keyframes zkMeshA {
+  from { transform: translate3d(-4%, -3%, 0) rotate(-4deg) scale(1); }
+  to { transform: translate3d(5%, 4%, 0) rotate(5deg) scale(1.12); }
+}
+
+@keyframes zkMeshB {
+  from { transform: translate3d(4%, 2%, 0) rotate(3deg) scale(1.08); }
+  to { transform: translate3d(-5%, -4%, 0) rotate(-5deg) scale(1); }
 }
 
 .hero-copy {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   max-width: 860px;
   margin: 0 auto;
   animation: zkRise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
@@ -126,27 +175,30 @@
 
 .hero-eyebrow {
   display: inline-flex;
-  border: 1px solid rgba(94, 124, 250, 0.36);
+  border: 1px solid rgba(255, 255, 255, 0.28);
   border-radius: 999px;
-  background: rgba(94, 124, 250, 0.09);
+  background: rgba(10, 11, 13, 0.32);
   padding: 8px 13px;
-  color: var(--ac2);
+  color: rgba(255, 255, 255, 0.88);
   font: 800 11px/1 var(--font-mono);
   letter-spacing: 0.14em;
   text-transform: uppercase;
+  backdrop-filter: blur(6px);
 }
 
 .hero h1 {
   margin: 26px 0 0;
-  font-size: clamp(46px, 7.4vw, 84px);
+  color: #fff;
+  font-size: clamp(44px, 6.6vw, 78px);
   font-weight: 850;
   line-height: 0.98;
   letter-spacing: -0.03em;
+  text-shadow: 0 10px 60px rgba(8, 8, 16, 0.55);
 }
 
 .hero h1 em {
   font-style: normal;
-  background: linear-gradient(100deg, var(--ac) 8%, #9aa6ff 48%, var(--ac2) 90%);
+  background: linear-gradient(100deg, #fff 5%, #cdd6ff 55%, #9aa6ff 95%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -155,7 +207,7 @@
 .hero p {
   max-width: 560px;
   margin: 24px auto 0;
-  color: var(--tx2);
+  color: rgba(255, 255, 255, 0.82);
   font-size: 17.5px;
   line-height: 1.6;
 }
@@ -224,18 +276,24 @@
 }
 
 .trust-strip span {
-  border: 1px solid var(--bd);
+  border: 1px solid rgba(255, 255, 255, 0.24);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(10, 11, 13, 0.28);
   padding: 7px 12px;
-  color: var(--tx3);
+  color: rgba(255, 255, 255, 0.78);
   font: 700 10.5px/1 var(--font-mono);
   letter-spacing: 0.09em;
   text-transform: uppercase;
+  backdrop-filter: blur(6px);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .hero-copy {
+    animation: none;
+  }
+
+  .hero-band::before,
+  .hero-band::after {
     animation: none;
   }
 

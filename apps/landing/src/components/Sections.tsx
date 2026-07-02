@@ -1,7 +1,7 @@
 import { ArrowDown, ArrowRight, Eye, LockKeyhole, ScanEye } from 'lucide-react'
 import { Logo } from '@zk-freighter/ui'
 import type { ReactNode } from 'react'
-import { appUrl, docsUrl, extensionUrl } from '../links'
+import { appUrl, docsUrl } from '../links'
 import { useReveal } from './useReveal'
 
 const builtOn = ['Stellar', 'Soroban', 'Groth16', 'Noir', 'Circle CCTP']
@@ -104,7 +104,7 @@ export function FooterCta() {
       <h2>Your money. Out of sight.</h2>
       <p>Self-custody, real ZK proofs, on Stellar. Install once — it’s the same wallet everywhere.</p>
       <div className="hero-actions">
-        <a className="cta cta-sheen" href={extensionUrl}><ArrowDown size={17} /> Download ZK Freighter</a>
+        <a className="cta cta-sheen" href="#download"><ArrowDown size={17} /> Download ZK Freighter</a>
         <a className="secondary" href={appUrl}>Open web app</a>
       </div>
       <span className="testnet-flag">Testnet · early build — don’t use real funds yet</span>

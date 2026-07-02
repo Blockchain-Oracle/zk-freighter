@@ -93,6 +93,7 @@
 
 .platforms h2,
 .privacy h2,
+.get h2,
 .footer-cta h2 {
   margin: 0;
   max-width: 700px;
@@ -344,5 +345,175 @@
 
   .platform-card:hover {
     transform: none;
+  }
+}
+
+/* ── Get ZK Freighter (download) ── */
+
+.get {
+  width: min(1180px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 96px 0 30px;
+}
+
+.get-grid {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  gap: 18px;
+  margin-top: 44px;
+}
+
+.get-card {
+  position: relative;
+  min-height: 320px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px;
+  padding: 30px 30px 28px;
+  overflow: visible;
+  background:
+    radial-gradient(120% 130% at 82% -10%, rgba(123, 92, 255, 0.55), transparent 60%),
+    radial-gradient(110% 120% at 10% 110%, rgba(94, 124, 250, 0.5), transparent 62%),
+    linear-gradient(160deg, #191a2e, #101018 70%);
+  box-shadow: 0 50px 110px -60px #000;
+}
+
+.get-card-copy {
+  position: relative;
+  z-index: 1;
+  max-width: 56%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 13px;
+}
+
+.get-card h3 {
+  margin: 0;
+  color: #fff;
+  font-size: 25px;
+  font-weight: 850;
+  letter-spacing: -0.02em;
+}
+
+.get-card p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.get-actions {
+  display: flex;
+  gap: 9px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.get-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border-radius: 999px;
+  background: rgba(10, 11, 13, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  padding: 11px 17px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+  backdrop-filter: blur(8px);
+  transition: transform 0.16s ease, border-color 0.16s ease;
+}
+
+a.get-pill:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.42);
+}
+
+.get-pill-soon {
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 700;
+  cursor: default;
+}
+
+.get-card small {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 11.5px;
+  line-height: 1.55;
+}
+
+.get-steps {
+  margin: 2px 0 0;
+  padding-left: 18px;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 12.5px;
+  line-height: 1.9;
+}
+
+.get-steps code {
+  border-radius: 6px;
+  background: rgba(10, 11, 13, 0.6);
+  padding: 2px 6px;
+  font: 600 11px/1 var(--font-mono);
+}
+
+.get-qr {
+  position: absolute;
+  left: 30px;
+  bottom: 28px;
+  z-index: 1;
+  display: none;
+  border-radius: 14px;
+  background: #fff;
+  padding: 10px;
+  box-shadow: 0 20px 44px -20px #000;
+}
+
+.get-shot {
+  position: absolute;
+  right: 26px;
+  bottom: 0;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 40px 90px -40px #000;
+  object-fit: cover;
+  object-position: top;
+}
+
+.get-shot-phone {
+  width: 190px;
+  height: 380px;
+  border-radius: 24px 24px 0 0;
+  transform: translateY(-24px);
+}
+
+.get-shot-popup {
+  width: 240px;
+  height: 340px;
+  border-radius: 16px 16px 0 0;
+  transform: translateY(-24px);
+}
+
+@media (min-width: 980px) {
+  .get-qr {
+    display: block;
+  }
+
+  .get-card {
+    min-height: 356px;
+    padding-bottom: 150px;
+  }
+}
+
+@media (max-width: 979px) {
+  .get-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .get-card-copy {
+    max-width: 100%;
+  }
+
+  .get-shot {
+    display: none;
   }
 }

@@ -1,5 +1,5 @@
 import { Logo } from '@zk-freighter/ui'
-import { appUrl, docsUrl, extensionUrl } from '../links'
+import { appUrl, docsUrl } from '../links'
 
 export function Nav() {
   return (
@@ -14,7 +14,7 @@ export function Nav() {
         <a href={docsUrl}>Docs</a>
       </nav>
       <a className="nav-open" href={appUrl}>Open web app</a>
-      <a className="nav-download" href={extensionUrl}>Download</a>
+      <a className="nav-download" href="#download">Download</a>
     </header>
   )
 }

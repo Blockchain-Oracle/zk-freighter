@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { appUrl, extensionUrl, mobileUrl } from '../links'
+import { appUrl, androidUrl, extensionUrl } from '../links'
 import { DeviceFlipCard, type DeviceVariant } from './DeviceFlipCard'
 
 const cards = [
@@ -31,7 +31,7 @@ const cards = [
     shotAlt: 'ZK Freighter mobile home — swipeable shielded balance card and activity',
     backLine: 'Swipeable cards, bottom-sheet flows, proving in-sheet. Early native build.',
     ctaLabel: 'Get the mobile build',
-    ctaHref: mobileUrl,
+    ctaHref: androidUrl,
   },
 ]
 

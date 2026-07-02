@@ -1,5 +1,8 @@
 export const appUrl = import.meta.env.VITE_ZKF_APP_URL ?? 'https://app.zkfreighter.dev'
 export const docsUrl = import.meta.env.VITE_ZKF_DOCS_URL ?? 'https://docs.zkfreighter.dev'
-export const extensionUrl = import.meta.env.VITE_ZKF_EXTENSION_URL ?? '/extension'
-export const mobileUrl = import.meta.env.VITE_ZKF_MOBILE_URL ?? 'https://github.com/Blockchain-Oracle/zk-freighter'
 export const sourceUrl = 'https://github.com/Blockchain-Oracle/zk-freighter'
+export const releasesUrl = import.meta.env.VITE_ZKF_RELEASES_URL ?? `${sourceUrl}/releases/latest`
+/** Android APK download; defaults to the latest GitHub release. */
+export const androidUrl = import.meta.env.VITE_ZKF_ANDROID_URL ?? releasesUrl
+/** Extension zip download; defaults to the latest GitHub release. */
+export const extensionUrl = import.meta.env.VITE_ZKF_EXTENSION_URL ?? releasesUrl
