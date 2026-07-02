@@ -1,8 +1,8 @@
 # ZK Fighter Bootnode
 
-Hosted event cache and narrow RPC for ZK Fighter privacy pools.
+Hosted warmed event indexer and narrow RPC for ZK Fighter privacy pools.
 
-The bootnode keeps pool event history available even when a public Stellar RPC drops older events from its short retention window. It only exposes the methods needed by the wallet runtime and only for configured ZK Fighter pool contracts.
+The bootnode keeps pool event history available even when a public Stellar RPC drops older events from its short retention window. It warms a Postgres-backed event table from the configured pool deployment ledger, then serves compatible `getEvents` calls from that table once the indexed range is caught up. It only exposes the methods needed by the wallet runtime and only for configured ZK Fighter pool contracts.
 
 ## Commands
 
@@ -47,4 +47,19 @@ DATABASE_URL=postgresql://abu@127.0.0.1:5432/zkf_bootnode_mainnet
 - Allowed methods: `getEvents`, `getLatestLedger`
 - Unknown methods and non-allowlisted contracts are rejected.
 
-Deploy the bootnode while fresh pool deployments are still inside the upstream RPC event window so it can warm and persist the first events.
+## Warmer
+
+The warmer starts automatically on testnet unless `ZKF_BOOTNODE_INDEXER_ENABLED=false`. On mainnet, the public default RPC cannot read back to the recorded pool deployment ledger anymore, so warming is disabled unless `ZKF_BOOTNODE_UPSTREAM_RPC_URL` points to an archive-capable RPC or `ZKF_BOOTNODE_INDEXER_ENABLED=true` is set deliberately.
+
+Important variables:
+
+```text
+ZKF_BOOTNODE_START_LEDGER=3368685
+ZKF_BOOTNODE_PAGE_SIZE=200
+ZKF_BOOTNODE_MAX_PAGES_PER_ROUND=4
+ZKF_BOOTNODE_INDEXER_INTERVAL_MS=2000
+```
+
+Defaults are network-specific verified pool deployment ledgers: testnet `3368685`, mainnet `63191069`.
+
+Deploy the bootnode while fresh pool deployments are still inside the upstream RPC event window so it can warm and persist the first events. Without persistent `DATABASE_URL`, the warmed history is lost on restart.

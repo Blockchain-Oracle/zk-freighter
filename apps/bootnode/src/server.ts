@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs'
 import { loadEnvFile } from 'node:process'
 
 import { readConfig } from './config.js'
+import { startIndexer } from './indexer.js'
 import { createHandler } from './rpc.js'
 import { createStore } from './store.js'
 
@@ -11,6 +12,7 @@ loadLocalEnv()
 const config = readConfig()
 const store = await createStore(config.databaseUrl)
 const handler = createHandler(config, store)
+const indexer = startIndexer(config, store)
 
 const server = createServer((incoming, outgoing) => {
   const url = `http://${incoming.headers.host ?? '127.0.0.1'}${incoming.url ?? '/'}`
@@ -39,6 +41,7 @@ server.listen(config.port, () => {
 
 for (const signal of ['SIGINT', 'SIGTERM'] as const) {
   process.on(signal, () => {
+    indexer.stop()
     server.close(() => {
       void store.close().finally(() => process.exit(0))
     })
