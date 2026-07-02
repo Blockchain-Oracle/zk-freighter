@@ -6,16 +6,11 @@
 
   .device-showcase {
     grid-template-columns: 1fr 1fr;
-    align-items: stretch;
-    margin-top: 52px;
+    align-items: end;
   }
 
   .flip-web {
     grid-column: 1 / -1;
-  }
-
-  .flip-card {
-    height: 400px;
   }
 
   .platform-grid,
@@ -33,32 +28,24 @@
 }
 
 @media (max-width: 620px) {
-  .hero {
-    padding-top: 64px;
-  }
-
-  .hero p {
-    font-size: 16px;
+  .hero-band {
+    padding: 56px 20px 0;
+    min-height: 540px;
   }
 
   .device-showcase {
     grid-template-columns: 1fr;
   }
 
-  .flip-card {
-    height: 380px;
-  }
-
-  .frame-phone {
-    width: min(100%, 230px);
-  }
-
-  .frame-popup {
-    width: min(100%, 290px);
+  .flip-extension,
+  .flip-mobile {
+    width: min(100%, 300px);
+    margin: 0 auto;
   }
 
   .platforms,
   .privacy,
+  .get,
   .footer-cta {
     padding-top: 72px;
   }

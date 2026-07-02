@@ -1,14 +1,19 @@
 import { ArrowRight } from 'lucide-react'
 import { Logo } from '@zk-freighter/ui'
+import { MockScreen } from './MockScreen'
 
 export type DeviceVariant = 'web' | 'extension' | 'mobile'
+
+const mockByVariant: Record<DeviceVariant, { src: string; width: number; height: number; maxHeight: number }> = {
+  web: { src: '/mock-web.html', width: 1320, height: 900, maxHeight: 340 },
+  extension: { src: '/mock-extension.html', width: 360, height: 735, maxHeight: 430 },
+  mobile: { src: '/mock-mobile.html', width: 288, height: 604, maxHeight: 430 },
+}
 
 export interface DeviceFlipCardProps {
   readonly variant: DeviceVariant
   readonly title: string
   readonly meta: string
-  readonly shot: string
-  readonly shotAlt: string
   readonly backLine: string
   readonly ctaLabel: string
   readonly ctaHref: string
@@ -17,19 +22,18 @@ export interface DeviceFlipCardProps {
 }
 
 /**
- * A device preview that lifts on hover and flips (3D) on click/tap to reveal
- * its call-to-action face. Mouse users can click anywhere on the card;
- * keyboard/AT users get a real toggle button, and the hidden face is `inert`
- * so its controls never become phantom tab stops.
+ * A live-rendered designer screen (no images) that rises on hover and flips
+ * (3D) on click/tap to reveal its call-to-action face. Mouse users can click
+ * anywhere; keyboard/AT users get a real toggle button, and the hidden face is
+ * `inert` so its controls never become phantom tab stops.
  */
-export function DeviceFlipCard({ variant, title, meta, shot, shotAlt, backLine, ctaLabel, ctaHref, flipped, onFlip }: DeviceFlipCardProps) {
+export function DeviceFlipCard({ variant, title, meta, backLine, ctaLabel, ctaHref, flipped, onFlip }: DeviceFlipCardProps) {
+  const mock = mockByVariant[variant]
   return (
     <article className={`flip-card flip-${variant}${flipped ? ' is-flipped' : ''}`} onClick={onFlip}>
       <span className="flip-inner">
         <span className="flip-face flip-front" inert={flipped || undefined}>
-          <DeviceFrame variant={variant}>
-            <img src={shot} alt={shotAlt} loading="lazy" />
-          </DeviceFrame>
+          <MockScreen {...mock} />
           <span className="flip-caption">
             <button
               type="button"
@@ -66,37 +70,5 @@ export function DeviceFlipCard({ variant, title, meta, shot, shotAlt, backLine, 
         </span>
       </span>
     </article>
-  )
-}
-
-function DeviceFrame({ variant, children }: { readonly variant: DeviceVariant; readonly children: React.ReactNode }) {
-  if (variant === 'web') {
-    return (
-      <span className="frame frame-browser">
-        <span className="frame-bar">
-          <span className="frame-dots"><i /><i /><i /></span>
-          <span className="frame-url">app.zkfreighter.dev</span>
-        </span>
-        {children}
-      </span>
-    )
-  }
-  if (variant === 'mobile') {
-    return (
-      <span className="frame frame-phone">
-        <span className="frame-notch" />
-        {children}
-      </span>
-    )
-  }
-  return (
-    <span className="frame frame-popup">
-      <span className="frame-bar">
-        <span className="frame-ext-ic">⬡</span>
-        <span className="frame-url">ZK Freighter</span>
-        <span className="frame-pin">📌</span>
-      </span>
-      {children}
-    </span>
   )
 }

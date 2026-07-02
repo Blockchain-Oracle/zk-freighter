@@ -1,34 +1,45 @@
-/* ── Device showcase: hover-lift + 3D flip cards ── */
+/* ── Device showcase: live-rendered designer screens, rise on hover, 3D flip ── */
 
 /* Inside the hero band: cards peek up from the bottom edge and rise on hover. */
 .device-showcase {
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: 1.55fr 0.95fr 0.85fr;
-  gap: 18px;
+  grid-template-columns: 1.3fr 0.78fr 0.68fr;
+  gap: 20px;
   align-items: end;
-  width: min(1020px, 100%);
-  margin: 56px auto 0;
+  width: min(1080px, 100%);
+  margin: 48px auto 0;
   margin-top: auto;
-  padding-top: 48px;
+  padding-top: 44px;
   perspective: 1400px;
 }
 
 .flip-card {
   position: relative;
   display: block;
-  height: 415px;
+  min-width: 0;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transform: translateY(72px);
+  transform: translateY(64px);
   transition: transform 0.5s cubic-bezier(0.22, 0.9, 0.3, 1);
 }
 
 /* rise fully when hovered or flipped — the Freighter vertical pop */
 @media (hover: hover) {
   .flip-card:hover {
-    transform: translateY(4px);
+    transform: translateY(2px);
+  }
+
+  .flip-card:not(.is-flipped):hover .mock-screen {
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow:
+      0 34px 80px -30px rgba(94, 124, 250, 0.55),
+      0 60px 120px -50px #000;
+  }
+
+  .flip-card:not(.is-flipped):hover .flip-toggle strong {
+    color: #fff;
   }
 }
 
@@ -55,16 +66,10 @@
   outline-offset: 3px;
 }
 
-/* the web app is the composed focal card; the portrait shots subordinate */
-.flip-web {
-  height: 460px;
-}
-
 .flip-inner {
   position: relative;
   display: block;
   width: 100%;
-  height: 100%;
   transform-style: preserve-3d;
   transition: transform 0.62s cubic-bezier(0.34, 1.2, 0.4, 1);
 }
@@ -73,24 +78,7 @@
   transform: rotateY(180deg);
 }
 
-/* hover: glow while the card-level transform does the vertical rise */
-@media (hover: hover) {
-  .flip-card:not(.is-flipped):hover .flip-front .frame {
-    border-color: rgba(255, 255, 255, 0.4);
-    box-shadow:
-      0 34px 80px -30px rgba(94, 124, 250, 0.55),
-      0 60px 120px -50px #000;
-  }
-
-  .flip-card:not(.is-flipped):hover .flip-toggle strong {
-    color: #fff;
-  }
-}
-
-
 .flip-face {
-  position: absolute;
-  inset: 0;
   display: flex;
   flex-direction: column;
   backface-visibility: hidden;
@@ -98,12 +86,15 @@
   border-radius: 20px;
 }
 
+/* front defines the card's height; back overlays it */
 .flip-front {
-  justify-content: flex-end;
+  position: relative;
   gap: 12px;
 }
 
 .flip-back {
+  position: absolute;
+  inset: 0;
   transform: rotateY(180deg);
   align-items: center;
   justify-content: center;
@@ -185,96 +176,24 @@
   text-transform: uppercase;
 }
 
-/* ── Device frames ── */
+/* ── Live mock screens ── */
 
-.frame {
+.mock-screen {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
+  width: 100%;
+  min-width: 0;
   overflow: hidden;
-  border: 1px solid var(--bd2);
-  border-radius: 18px;
-  background: var(--panel);
+  contain: layout style;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(10, 11, 13, 0.35);
   box-shadow: 0 40px 90px -44px #000;
   transition: border-color 0.22s ease, box-shadow 0.25s ease;
 }
 
-.frame img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  min-height: 0;
-  object-fit: cover;
-  object-position: top center;
-}
-
-.frame-bar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex: none;
-  border-bottom: 1px solid var(--bd);
-  background: var(--card);
-  padding: 9px 12px;
-}
-
-.frame-dots {
-  display: inline-flex;
-  gap: 5px;
-}
-
-.frame-dots i {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.14);
-}
-
-.frame-url {
-  flex: 1;
-  overflow: hidden;
-  border-radius: 7px;
-  background: rgba(255, 255, 255, 0.045);
-  padding: 5px 10px;
-  color: var(--tx3);
-  font: 600 10.5px/1.2 var(--font-mono);
-  text-align: center;
-  white-space: nowrap;
-}
-
-.frame-ext-ic,
-.frame-pin {
-  flex: none;
-  color: var(--tx3);
-  font-size: 11px;
-}
-
-.frame-phone {
-  width: min(100%, 250px);
-  margin: 0 auto;
-  border-radius: 30px;
-  border-width: 5px;
-  border-color: #1a1c22;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.09), 0 40px 90px -44px #000;
-}
-
-.frame-notch {
+.mock-screen iframe {
   position: absolute;
-  top: 8px;
-  left: 50%;
-  z-index: 1;
-  width: 84px;
-  height: 18px;
-  border-radius: 999px;
-  background: #0a0b0d;
-  transform: translateX(-50%);
-}
-
-.frame-popup {
-  width: min(100%, 300px);
-  margin: 0 auto;
+  top: 0;
+  left: 0;
 }
 
 /* reduced motion: crossfade instead of 3D flip, no peek/rise */
@@ -286,7 +205,7 @@
   .flip-card,
   .flip-card.is-flipped,
   .flip-card:hover {
-    transform: translateY(24px);
+    transform: translateY(20px);
     transition: none;
   }
 

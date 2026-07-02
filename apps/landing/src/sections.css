@@ -472,25 +472,25 @@ a.get-pill:hover {
 .get-shot {
   position: absolute;
   right: 26px;
-  bottom: 0;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  box-shadow: 0 40px 90px -40px #000;
-  object-fit: cover;
-  object-position: top;
+  bottom: -1px;
+  overflow: hidden;
+  border-radius: 18px 18px 0 0;
+}
+
+/* live mocks: crop to the card, peeking out of its top */
+.get-shot .mock-screen {
+  border-bottom: none;
+  border-radius: 18px 18px 0 0 !important;
 }
 
 .get-shot-phone {
-  width: 190px;
-  height: 380px;
-  border-radius: 24px 24px 0 0;
-  transform: translateY(-24px);
+  width: 200px;
+  max-height: 396px;
 }
 
 .get-shot-popup {
-  width: 240px;
-  height: 340px;
-  border-radius: 16px 16px 0 0;
-  transform: translateY(-24px);
+  width: 226px;
+  max-height: 420px;
 }
 
 @media (min-width: 980px) {

@@ -1,6 +1,7 @@
 import { QRCodeSVG } from 'qrcode.react'
 import { androidUrl, extensionUrl } from '../links'
 import { BrandIcon, BrowserIcons } from './BrandIcon'
+import { MockScreen } from './MockScreen'
 import { useReveal } from './useReveal'
 
 export function GetSection() {
@@ -30,7 +31,9 @@ export function GetSection() {
           <div className="get-qr" aria-label="QR code linking to the Android download">
             <QRCodeSVG value={androidUrl} size={92} level="M" marginSize={0} />
           </div>
-          <img className="get-shot get-shot-phone" src="/shot-mobile.png" alt="" aria-hidden loading="lazy" />
+          <div className="get-shot get-shot-phone">
+            <MockScreen src="/mock-mobile.html" width={288} height={604} radius={22} />
+          </div>
         </article>
 
         <article className="get-card">
@@ -49,7 +52,9 @@ export function GetSection() {
             </ol>
             <small>Chrome Web Store listing is in the works.</small>
           </div>
-          <img className="get-shot get-shot-popup" src="/shot-extension.png" alt="" aria-hidden loading="lazy" />
+          <div className="get-shot get-shot-popup">
+            <MockScreen src="/mock-extension.html" width={360} height={735} radius={16} />
+          </div>
         </article>
       </div>
     </section>
