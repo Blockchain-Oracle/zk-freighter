@@ -27,7 +27,12 @@ nixpkgsArchive = "nixos-24.05"
 # Dev deps (vite / tsc / esbuild) are needed to BUILD, so install with
 # NODE_ENV=development even though services run in production. onlyIncludeFiles
 # keeps this layer cached until a manifest or the lockfile changes.
-cmds = ["corepack enable", "NODE_ENV=development pnpm install --frozen-lockfile"]
+# COREPACK_INTEGRITY_KEYS=0 works around corepack's stale-signing-key bug
+# ("Cannot find matching keyid") when it fetches the pinned pnpm on fresh images.
+cmds = [
+  "COREPACK_INTEGRITY_KEYS=0 corepack enable",
+  "COREPACK_INTEGRITY_KEYS=0 NODE_ENV=development pnpm install --frozen-lockfile",
+]
 cacheDirectories = [".pnpm-store"]
 onlyIncludeFiles = [
   "package.json",
@@ -55,3 +60,4 @@ cmd = "pnpm --filter \"${APP_NAME:-@zk-freighter/landing}\" start"
 
 [variables]
 NODE_ENV = "production"
+COREPACK_INTEGRITY_KEYS = "0"
