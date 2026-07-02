@@ -1,5 +1,5 @@
 import type { AssetCode, XlmShieldSubmitReport } from '@zk-fighter/core'
-import { isShieldedAssetEnabled, parseAssetAmountToStroops } from '@zk-fighter/core'
+import { isShieldedAssetEnabled, maxShieldDepositStroops, parseAssetAmountToStroops } from '@zk-fighter/core'
 import { Shield } from 'lucide-react'
 import { useState } from 'react'
 import { Button, Callout, Segmented } from '@zk-fighter/ui'
@@ -9,7 +9,7 @@ import {
   type DappWalletStatus,
   type QuickShieldResponse,
 } from './dappMessages'
-import { amountLabel, defaultShieldAmounts, shorten } from './extension-format'
+import { amountLabel, defaultShieldAmounts, formatStroops, shorten } from './extension-format'
 import { Badge, BlockerList, Caption, Copy, ErrorText, ExplorerLink, MetaRow, Panel, SectionHeader, fieldStyle } from './extension-ui'
 import { balanceLabel, balanceStroops, maxAmountInput, useExtensionBalances } from './useExtensionBalances'
 
@@ -38,9 +38,19 @@ export function ExtensionQuickShieldPanel({ status, sendRuntimeMessage }: Extens
   const poolEnabled = status ? isShieldedAssetEnabled(status.network, asset) : false
   const disabledReason = !status?.unlocked ? 'Unlock the extension vault first.' : !poolEnabled ? `${asset} pool is not configured for this network.` : ''
   const available = balanceStroops(publicBalance.balances, 'public', asset)
+  const poolMax = status ? maxShieldDepositStroops(status.network, asset) : null
+  const maxSelectable = cappedAvailable(available, poolMax)
+  const poolMaxLabel = poolMax !== null ? `${formatStroops(poolMax, asset === 'XLM' ? 3 : 2)} ${asset}` : ''
   const parsedAmount = parseAssetAmountToStroops(amountInput, asset)
   const overBalance = parsedAmount.ok && available !== null && parsedAmount.stroops > available
-  const amountError = overBalance ? `Amount exceeds your public ${asset} balance.` : ''
+  const overPoolMax = parsedAmount.ok && poolMax !== null && parsedAmount.stroops > poolMax
+  const amountError = amountInput.trim() && !parsedAmount.ok
+    ? parsedAmount.error
+    : overBalance
+      ? `Amount exceeds your public ${asset} balance.`
+      : overPoolMax
+        ? `Amount exceeds this pool's ${poolMaxLabel} per-deposit limit.`
+        : ''
 
   async function runQuickShield() {
     const parsed = parseAssetAmountToStroops(amountInput, asset)
@@ -77,10 +87,11 @@ export function ExtensionQuickShieldPanel({ status, sendRuntimeMessage }: Extens
       <div>
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: 6 }}>
           <Caption>AMOUNT</Caption>
-          <button type="button" onClick={() => setAmountInput(maxAmountInput(available))} disabled={available === null || available <= 0n} style={{ marginLeft: 'auto', border: 0, background: 'transparent', color: available && available > 0n ? 'var(--ac2)' : 'var(--tx3)', fontSize: 10.5, fontWeight: 800, cursor: available && available > 0n ? 'pointer' : 'default' }}>Max</button>
+          <button type="button" onClick={() => setAmountInput(maxAmountInput(maxSelectable))} disabled={maxSelectable === null || maxSelectable <= 0n} style={{ marginLeft: 'auto', border: 0, background: 'transparent', color: maxSelectable && maxSelectable > 0n ? 'var(--ac2)' : 'var(--tx3)', fontSize: 10.5, fontWeight: 800, cursor: maxSelectable && maxSelectable > 0n ? 'pointer' : 'default' }}>Max</button>
         </div>
         <input data-zkf-action="shield-amount" value={amountInput} onChange={(event) => setAmountInput(event.target.value)} inputMode="decimal" placeholder="0.00" style={fieldStyle} />
         <Copy>Available public balance: {balanceLabel(available, asset, publicBalance.loading)}</Copy>
+        {poolMaxLabel ? <Copy>Pool limit: shield up to {poolMaxLabel} per deposit.</Copy> : null}
       </div>
       <Button fullWidth loading={busy} disabled={Boolean(disabledReason) || Boolean(amountError) || busy} onClick={() => void runQuickShield()}>
         <Shield size={15} aria-hidden="true" /> {busy ? 'Shielding…' : `Shield ${amountInput || '0'} ${asset}`}
@@ -129,6 +140,11 @@ function ShieldReport({ report, asset }: { readonly report: ShieldReportWithPrer
 
 function defaultAmountInput(asset: AssetCode): string {
   return amountLabel(defaultShieldAmounts[asset], asset).replace(` ${asset}`, '')
+}
+
+function cappedAvailable(available: bigint | null, poolMax: bigint | null): bigint | null {
+  if (available === null) return null
+  return poolMax !== null && available > poolMax ? poolMax : available
 }
 
 function reportLabel(report: XlmShieldSubmitReport | null, asset: AssetCode): string {

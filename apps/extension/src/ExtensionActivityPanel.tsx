@@ -11,12 +11,13 @@ import { Copy, ExplorerLink } from './extension-ui'
 // filter chips as the web. Records are written by the runtime from actual op
 // reports — never fabricated; an empty store shows an honest empty state.
 
-type Filter = 'all' | 'shielded' | 'public' | 'pending'
+type Filter = 'all' | 'shielded' | 'public' | 'pending' | 'failed'
 const FILTERS: ReadonlyArray<{ value: Filter; label: string }> = [
   { value: 'all', label: 'All' },
   { value: 'shielded', label: 'Shielded' },
   { value: 'public', label: 'Public' },
   { value: 'pending', label: 'Pending' },
+  { value: 'failed', label: 'Failed' },
 ]
 const KIND_LABEL: Record<ActivityRecord['kind'], string> = {
   send: 'Sent privately',
@@ -65,7 +66,12 @@ export function ExtensionActivityPanel({ network, sendRuntimeMessage }: { readon
     return () => { cancelled = true }
   }, [network, sendRuntimeMessage])
 
-  const shown = records.filter((record) => (filter === 'all' ? true : filter === 'pending' ? record.status === 'pending' : record.boundary === filter))
+  const shown = records.filter((record) => {
+    if (filter === 'all') return true
+    if (filter === 'pending') return record.status === 'pending'
+    if (filter === 'failed') return record.status === 'failed' || record.status === 'blocked'
+    return record.boundary === filter
+  })
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>

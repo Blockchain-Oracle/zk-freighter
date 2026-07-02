@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { ArrowDownToLine, Send, Shield, WalletCards } from 'lucide-react'
+import { ArrowDownToLine, RefreshCw, Send, Shield, WalletCards } from 'lucide-react'
 import type { AssetCode } from '@zk-fighter/core'
 import { Callout, PublicCard, ShieldedCard } from '@zk-fighter/ui'
 
@@ -35,6 +35,7 @@ export function ExtensionHome({ status, sendRuntimeMessage, navigate, openSheet 
   const [error, setError] = useState('')
   const [fundingBusy, setFundingBusy] = useState(false)
   const [fundingMessage, setFundingMessage] = useState('')
+  const [manualSyncing, setManualSyncing] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -99,9 +100,29 @@ export function ExtensionHome({ status, sendRuntimeMessage, navigate, openSheet 
     }
   }
 
+  async function syncBalancesNow() {
+    setManualSyncing(true)
+    setSyncing(true)
+    setError('')
+    try {
+      const res = (await sendRuntimeMessage({ type: dappMessageTypes.balances, syncBeforeRead: true })) as DappBalancesResponse
+      if (res.ok && res.balances) {
+        setBalances(res.balances)
+      } else {
+        setError(res.error ?? 'Could not sync balances.')
+      }
+      setSyncing(Boolean(res.syncing))
+    } catch {
+      setError('Couldn’t reach the wallet — reopen to retry.')
+      setSyncing(false)
+    } finally {
+      setManualSyncing(false)
+    }
+  }
+
   return (
     <>
-      <BalanceCardStack balances={balances} syncing={syncing} error={error} shieldedKnown={shieldedKnown} publicKnown={publicKnown} />
+      <BalanceCardStack balances={balances} syncing={syncing || manualSyncing} error={error} shieldedKnown={shieldedKnown} publicKnown={publicKnown} manualSyncing={manualSyncing} onSync={() => void syncBalancesNow()} />
       {needsDemoFunding ? (
         <section style={{ border: '1px solid rgba(229,180,92,.38)', borderRadius: 16, background: 'rgba(229,180,92,.06)', padding: 13, display: 'flex', flexDirection: 'column', gap: 10 }}>
           <div style={{ fontSize: 12.5, color: 'var(--tx)', fontWeight: 800 }}>Add testnet funds</div>
@@ -122,7 +143,7 @@ export function ExtensionHome({ status, sendRuntimeMessage, navigate, openSheet 
   )
 }
 
-export function BalanceCardStack({ balances, syncing, error, shieldedKnown, publicKnown }: { readonly balances: DappBalances | null; readonly syncing: boolean; readonly error: string; readonly shieldedKnown: boolean; readonly publicKnown: boolean }) {
+export function BalanceCardStack({ balances, syncing, error, shieldedKnown, publicKnown, manualSyncing, onSync }: { readonly balances: DappBalances | null; readonly syncing: boolean; readonly error: string; readonly shieldedKnown: boolean; readonly publicKnown: boolean; readonly manualSyncing: boolean; readonly onSync: () => void }) {
   const issue = describeBalanceIssue(balances?.blockers ?? [], error)
   const syncLabel = syncing ? 'syncing' : balances ? (shieldedKnown ? `updated ${ago(balances.scannedAt)}` : 'scan blocked') : ''
   return (
@@ -130,7 +151,13 @@ export function BalanceCardStack({ balances, syncing, error, shieldedKnown, publ
       <ShieldedCard style={{ padding: 16, borderRadius: 20 }}>
         <CardTop label="SHIELDED BALANCE" badge={<BoundaryBadge tone="shielded">Private pool</BoundaryBadge>} />
         <AssetRows rows={[['USDC', shieldedKnown ? formatStroops(balances!.shieldedUsdcStroops, 2) : '—'], ['XLM', shieldedKnown ? formatStroops(balances!.shieldedXlmStroops, 3) : '—']]} muted={!shieldedKnown} />
-        <div style={{ fontSize: 11, color: 'var(--tx3)', marginTop: 9, fontFamily: 'var(--fm)' }}>{balances ? shieldedKnown ? `${balances.noteCount} note${balances.noteCount === 1 ? '' : 's'}` : 'Shielded balances are unavailable from this RPC window.' : 'Loading shielded notes…'}</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 9 }}>
+          <div style={{ minWidth: 0, flex: 1, fontSize: 11, color: 'var(--tx3)', fontFamily: 'var(--fm)' }}>{balances ? shieldedKnown ? `${balances.noteCount} note${balances.noteCount === 1 ? '' : 's'}` : 'Shielded balances are unavailable from this RPC window.' : 'Loading shielded notes…'}</div>
+          <button type="button" data-zkf-action="sync-balances" disabled={manualSyncing} onClick={onSync} aria-label="Sync shielded balances" title="Sync shielded balances" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, border: '1px solid var(--bd)', borderRadius: 999, background: 'var(--card2)', color: 'var(--tx)', padding: '7px 9px', fontSize: 10.5, fontWeight: 800, cursor: manualSyncing ? 'default' : 'pointer', opacity: manualSyncing ? 0.65 : 1 }}>
+            <RefreshCw size={12} />
+            {manualSyncing ? 'Syncing' : 'Sync now'}
+          </button>
+        </div>
         {syncLabel ? <div style={{ fontSize: 9.5, color: 'var(--tx3)', marginTop: 8 }}>{syncLabel}</div> : null}
         {issue ? <div style={{ marginTop: 9 }}><Callout tone="warn" title={issue.title}>{issue.body}</Callout></div> : null}
       </ShieldedCard>

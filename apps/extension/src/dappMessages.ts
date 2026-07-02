@@ -25,6 +25,7 @@ export const dappMessageTypes = {
   demoFundingStatus: 'zkf.extension.demoFunding.status',
   demoFundingRequest: 'zkf.extension.demoFunding.request',
   privateRuntimeStatus: 'zkf.extension.privateRuntime.status',
+  privateEngineReset: 'zkf.extension.privateEngine.reset',
   privateTransfer: 'zkf.extension.dapp.privateTransfer',
   publicTransfer: 'zkf.extension.dapp.publicTransfer',
   unshield: 'zkf.extension.dapp.unshield',
@@ -110,6 +111,9 @@ export type DappRuntimeMessage =
     }
   | {
       readonly type: typeof dappMessageTypes.privateRuntimeStatus
+    }
+  | {
+      readonly type: typeof dappMessageTypes.privateEngineReset
     }
   | {
       readonly type: typeof dappMessageTypes.privateTransfer

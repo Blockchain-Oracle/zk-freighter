@@ -132,6 +132,12 @@ export interface PrivateRuntimeStatusResponse {
   readonly proving: 'offscreen'
 }
 
+export interface PrivateEngineResetResponse {
+  readonly ok: boolean
+  readonly removedEntries: number
+  readonly error?: string
+}
+
 export interface PrivateActionResponse {
   readonly ok: boolean
   readonly report?: XlmPrivateSubmitReport
@@ -207,6 +213,7 @@ export type DappRuntimeResponse =
   | DappBalancesResponse
   | DemoFundingResponse
   | PrivateRuntimeStatusResponse
+  | PrivateEngineResetResponse
   | PrivateActionResponse
   | PublicActionResponse
   | DiscoverLookupResponse

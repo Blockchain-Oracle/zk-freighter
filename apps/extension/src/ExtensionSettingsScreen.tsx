@@ -2,7 +2,7 @@ import { useState, type ReactNode } from 'react'
 import type { NetworkKey } from '@zk-fighter/core'
 import { Button, useTheme } from '@zk-fighter/ui'
 
-import { dappMessageTypes, type DappWalletStatus } from './dappMessages'
+import { dappMessageTypes, type DappWalletStatus, type PrivateEngineResetResponse } from './dappMessages'
 import { shorten } from './extension-format'
 import { Badge, Caption, Copy, GhostButton, MetaRow, Panel, SectionHeader } from './extension-ui'
 
@@ -15,11 +15,25 @@ interface SettingsProps {
 export function ExtensionSettingsScreen({ status, sendRuntimeMessage, lockWallet }: SettingsProps) {
   const { theme, setTheme } = useTheme()
   const [busy, setBusy] = useState('')
+  const [resetMessage, setResetMessage] = useState('')
 
   async function setNetwork(network: NetworkKey) {
     setBusy(`network-${network}`)
     try {
       await sendRuntimeMessage({ type: dappMessageTypes.setNetwork, network })
+    } finally {
+      setBusy('')
+    }
+  }
+
+  async function resetPrivateEngine() {
+    setBusy('private-engine-reset')
+    setResetMessage('')
+    try {
+      const result = (await sendRuntimeMessage({ type: dappMessageTypes.privateEngineReset })) as PrivateEngineResetResponse
+      setResetMessage(result.ok ? `Private engine cache reset. Removed ${result.removedEntries} entr${result.removedEntries === 1 ? 'y' : 'ies'}.` : result.error ?? 'Private engine reset failed.')
+    } catch (error) {
+      setResetMessage(`Private engine reset failed: ${error instanceof Error ? error.message : String(error)}`)
     } finally {
       setBusy('')
     }
@@ -49,6 +63,12 @@ export function ExtensionSettingsScreen({ status, sendRuntimeMessage, lockWallet
 
       <SettingBlock label="Recovery">
         <Copy>Seed phrase recovery is the only recovery path. Keep it offline; ZK Fighter cannot recover it for you.</Copy>
+      </SettingBlock>
+
+      <SettingBlock label="Private engine">
+        <Copy>Clears the local private scan cache and restarts the offscreen proof engine. Your vault and seed phrase stay untouched.</Copy>
+        <Button variant="secondary" fullWidth loading={busy === 'private-engine-reset'} onClick={() => void resetPrivateEngine()}>Reset private engine cache</Button>
+        {resetMessage ? <Copy>{resetMessage}</Copy> : null}
       </SettingBlock>
 
       <Button variant="danger" fullWidth onClick={() => void lockWallet()}>Lock wallet</Button>

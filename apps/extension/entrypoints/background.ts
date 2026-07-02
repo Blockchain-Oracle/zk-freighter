@@ -3,9 +3,10 @@ import { createSeedEvmClient, deriveWalletIdentity, ensureStellarUsdcTrustline, 
 import { browser } from 'wxt/browser'
 
 import type { ExtensionAspInsertRequest, ExtensionBalancesRequest, ExtensionBridgeRequest, ExtensionConfidentialRequest, ExtensionDisclosureRequest, ExtensionDisclosureVerifyRequest, ExtensionDiscoverPublishRequest, ExtensionDiscoverRequest, ExtensionPrivateTransferRequest, ExtensionShieldRequest, ExtensionUnshieldRequest, ExtensionUsdcTrustlineRequest } from '../src/dappRuntime-types'
-import { type DappBalances, type DappRuntimeMessage } from '../src/dappMessages'
+import { type DappBalances, type DappRuntimeMessage, type PrivateEngineResetResponse } from '../src/dappMessages'
 import { ExtensionDappRuntime } from '../src/dappRuntime'
 import { assertOffscreenSuccess } from '../src/offscreen-response'
+import { clearAllBalanceCache } from '../src/balance-cache'
 
 const statusMessageType = 'zkf.extension.status'
 const offscreenStatusMessageType = 'zkf.extension.offscreenStatus'
@@ -24,6 +25,7 @@ const offscreenDiscoverLookupMessageType = 'zkf.offscreen.discoverLookup'
 const offscreenDiscoverPublishMessageType = 'zkf.offscreen.discoverPublish'
 const offscreenDisclosureMessageType = 'zkf.offscreen.disclosure'
 const offscreenDisclosureVerifyMessageType = 'zkf.offscreen.disclosureVerify'
+const offscreenResetPrivateStorageMessageType = 'zkf.offscreen.resetPrivateStorage'
 let offscreenQueue: Promise<unknown> = Promise.resolve()
 let offscreenReset: Promise<void> = Promise.resolve()
 
@@ -44,6 +46,7 @@ export default defineBackground(() => {
     runDisclosureInOffscreen,
     runDisclosureVerifyInOffscreen,
     resetOffscreenRuntime,
+    resetOffscreenPrivateStorage,
   )
 
   browser.runtime.onInstalled.addListener(() => {
@@ -219,6 +222,23 @@ async function resetOffscreenRuntime(): Promise<void> {
   offscreenReset = offscreenReset.catch(() => undefined).then(closeOffscreenDocument)
   offscreenQueue = offscreenReset
   await offscreenReset
+}
+
+async function resetOffscreenPrivateStorage(): Promise<PrivateEngineResetResponse> {
+  let report: PrivateEngineResetResponse = { ok: true, removedEntries: 0 }
+  void offscreenQueue.catch(() => undefined)
+  offscreenReset = offscreenReset.catch(() => undefined).then(async () => {
+    await closeOffscreenDocument()
+    try {
+      report = (await sendOffscreenMessageNow({ type: offscreenResetPrivateStorageMessageType })) as PrivateEngineResetResponse
+    } finally {
+      await closeOffscreenDocument()
+    }
+  })
+  offscreenQueue = offscreenReset
+  await offscreenReset
+  await clearAllBalanceCache()
+  return report
 }
 
 async function closeOffscreenDocument(): Promise<void> {

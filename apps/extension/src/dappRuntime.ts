@@ -17,6 +17,7 @@ import {
   type DiscoverLookupResponse,
   type DiscoverPublishResponse,
   type DiscoverStatusResponse,
+  type PrivateEngineResetResponse,
   type PrivateActionResponse,
   type QuickShieldResponse,
 } from './dappMessages'
@@ -61,6 +62,7 @@ export class ExtensionDappRuntime {
     private readonly runDisclosure?: ExtensionDisclosureRunner,
     private readonly runDisclosureVerify?: ExtensionDisclosureVerifyRunner,
     private readonly resetPrivateRuntime?: () => Promise<void>,
+    private readonly resetPrivateStorage?: () => Promise<PrivateEngineResetResponse>,
   ) {}
 
   canHandle(type: string | undefined): boolean {
@@ -77,7 +79,6 @@ export class ExtensionDappRuntime {
         return this.unlock(message.password)
       case dappMessageTypes.lock:
         this.unlockedMnemonic = null
-        // Locking must not leave shielded amounts readable at rest.
         void clearAllBalanceCache()
         return this.status()
       case dappMessageTypes.prepareShieldAccess:
@@ -104,6 +105,8 @@ export class ExtensionDappRuntime {
         return this.demoFundingRequest()
       case dappMessageTypes.privateRuntimeStatus:
         return { ok: true, surface: 'extension-popup', coordinator: 'offscreen-queue', proving: 'offscreen' }
+      case dappMessageTypes.privateEngineReset:
+        return this.resetPrivateEngine()
       case dappMessageTypes.privateTransfer:
         return this.privateTransfer(message.asset, message.amountStroops, message.receiveCode, message.timeoutMs)
       case dappMessageTypes.publicTransfer:
@@ -149,7 +152,6 @@ export class ExtensionDappRuntime {
 
     this.unlockedMnemonic = message.mnemonic
     const identity = identityForMnemonic(message.mnemonic, { network: message.network ?? 'testnet' })
-    // A new/replaced wallet must not inherit a previous wallet's cached balances.
     await clearAllBalanceCache()
     await writeStoredDappWallet({
       vault: created.value,
@@ -195,12 +197,7 @@ export class ExtensionDappRuntime {
     return freighterResponse(request, state.network)
   }
 
-  /**
-   * Run an offscreen op behind the unlock gate. The unlocked mnemonic is injected
-   * HERE (never from the popup); a missing runner or a thrown error becomes a
-   * structured failure. Shared by the simple runner-delegating handlers so each
-   * stays one line + the gate is enforced uniformly.
-   */
+  // The unlocked mnemonic is injected here; the popup never sends it directly.
   private async gated<Q extends { mnemonic: string; network: NetworkKey }, T>(
     runner: ((request: Q) => Promise<T>) | undefined,
     name: string,
@@ -236,19 +233,27 @@ export class ExtensionDappRuntime {
     if (!ready.ok) return { ok: false, error: ready.error }
     return demoFundingStatusFlow(ready)
   }
-
   private async demoFundingRequest(): Promise<DemoFundingResponse> {
     const ready = await requireUnlockedDappWallet(this.unlockedMnemonic)
     if (!ready.ok) return { ok: false, error: ready.error }
     return demoFundingRequestFlow(ready)
   }
-
+  private async resetPrivateEngine(): Promise<PrivateEngineResetResponse> {
+    try {
+      this.refreshingBalances.clear()
+      await clearAllBalanceCache()
+      if (this.resetPrivateStorage) return this.resetPrivateStorage()
+      await this.resetPrivateRuntime?.()
+      return { ok: true, removedEntries: 0 }
+    } catch (error) {
+      return { ok: false, removedEntries: 0, error: error instanceof Error ? error.message : String(error) }
+    }
+  }
   private async privateTransfer(asset: AssetCode, amountStroops: string, receiveCode: string, timeoutMs?: number): Promise<PrivateActionResponse> {
     const ready = await requireUnlockedDappWallet(this.unlockedMnemonic)
     if (!ready.ok) return { ok: false, error: ready.error }
     return privateTransferFlow(ready, this.runPrivateTransfer, asset, amountStroops, receiveCode, timeoutMs)
   }
-
   private async publicTransfer(asset: AssetCode, amountStroops: string, recipientAddress: string) {
     const ready = await requireUnlockedDappWallet(this.unlockedMnemonic)
     if (!ready.ok) return { ok: false, error: ready.error }

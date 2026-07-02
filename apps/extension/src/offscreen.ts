@@ -8,6 +8,7 @@ import { runAspInsert } from './offscreen-asp-actions'
 import { runDiscoverLookup, runDiscoverPublish } from './offscreen-discover-actions'
 import { runDisclosure, runDisclosureVerify } from './offscreen-disclosure-actions'
 import { serializeChromeMessage } from './chrome-message-serialization'
+import { resetPrivateEngineStorage } from './private-engine-storage'
 
 const offscreenStatusMessageType = 'zkf.offscreen.status'
 const nethermindProbeMessageType = 'zkf.offscreen.nethermindProbe'
@@ -25,6 +26,7 @@ const discoverLookupMessageType = 'zkf.offscreen.discoverLookup'
 const discoverPublishMessageType = 'zkf.offscreen.discoverPublish'
 const disclosureMessageType = 'zkf.offscreen.disclosure'
 const disclosureVerifyMessageType = 'zkf.offscreen.disclosureVerify'
+const resetPrivateStorageMessageType = 'zkf.offscreen.resetPrivateStorage'
 const extensionProofAttemptTimeoutMs = 18_000
 const deepProofAttemptTimeoutMs = 180_000
 const statusEventLimit = 8
@@ -35,6 +37,11 @@ browser.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) 
   const respond = (response: unknown) => sendResponse(serializeChromeMessage(response))
 
   if (payload.type !== offscreenStatusMessageType) {
+    if (payload.type === resetPrivateStorageMessageType) {
+      void resetPrivateEngineStorage().then(respond)
+      return true
+    }
+
     if (payload.type === dryProofAttemptMessageType) {
       void runExtensionDryProofAttempt().then(respond)
       return true
