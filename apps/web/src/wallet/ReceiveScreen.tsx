@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { lookupPublishedReceiveCode, type NetworkKey, type WalletIdentity } from '@zk-fighter/core'
 import { BoundaryBadge, Button, Callout, QrCard, Segmented, truncateMiddle } from '@zk-fighter/ui'
-import { UsdcReceiveSetupPanel } from '../UsdcReceiveSetupPanel'
 import type { WalletScreen } from './screens'
 import { readStoredPublish } from './discoveryStorage'
 
@@ -24,16 +23,19 @@ export function ReceiveScreen({ identity, network, receiveCode, onNav }: Receive
   const [tab, setTab] = useState<Tab>('private')
   const [copied, setCopied] = useState(false)
   const [showFull, setShowFull] = useState(false)
-  const [discoverableCode, setDiscoverableCode] = useState<string | null>(() =>
-    readStoredPublish(network, identity.stellarPublicKey) ? receiveCode : null,
-  )
+  const publishKey = `${network}:${identity.stellarPublicKey}`
+  const [publishedCode, setPublishedCode] = useState<{ key: string; code: string } | null>(null)
+  const discoverableCode = publishedCode?.key === publishKey
+    ? publishedCode.code
+    : readStoredPublish(network, identity.stellarPublicKey) ? receiveCode : null
 
   useEffect(() => {
     let cancelled = false
-    setDiscoverableCode(readStoredPublish(network, identity.stellarPublicKey) ? receiveCode : null)
     void lookupPublishedReceiveCode({ ownerAddress: identity.stellarPublicKey, network })
       .then((report) => {
-        if (!cancelled && report.status === 'found') setDiscoverableCode(report.receiveCode ?? receiveCode)
+        if (!cancelled && report.status === 'found') {
+          setPublishedCode({ key: `${network}:${identity.stellarPublicKey}`, code: report.receiveCode ?? receiveCode })
+        }
       })
       .catch(() => undefined)
     return () => { cancelled = true }
@@ -105,8 +107,8 @@ export function ReceiveScreen({ identity, network, receiveCode, onNav }: Receive
             <>
               <Callout tone="warn" title="This is a public boundary.">
                 Deposits here are visible on-chain until you shield them ({truncateMiddle(identity.stellarPublicKey, 6, 6)}). For private payments, share your Private code instead.
+                {' '}USDC receiving is set up automatically the first time you fund, shield, or bridge.
               </Callout>
-              <UsdcReceiveSetupPanel key={`${network}:${identity.stellarPublicKey}`} identity={identity} network={network} />
             </>
           )}
         </div>

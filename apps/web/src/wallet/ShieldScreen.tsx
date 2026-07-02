@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 
 import {
   isShieldedAssetEnabled,
   loadPublicStellarBalances,
+  maxShieldDepositStroops,
   parseAssetAmountToStroops,
   submitShieldWithPrerequisites,
   submitXlmUnshieldWithdrawal,
@@ -93,13 +94,24 @@ export function ShieldScreen({ identity, network, balance, initialTab = 'shield'
   const available = isUnshield ? shieldedSpendable : pubKnown ? pub!.balances[asset] : null
   const sourceLabel = isUnshield ? 'shielded' : 'public'
   const availableLabel = available != null ? `${formatStroops(available, DISPLAY_DECIMALS[asset])} ${asset}` : balance.loading || !pub ? '…' : '—'
+  const poolMax = !isUnshield ? maxShieldDepositStroops(network, asset) : null
+  const poolMaxLabel = poolMax !== null ? `${formatStroops(poolMax, DISPLAY_DECIMALS[asset])} ${asset}` : null
 
   const poolEnabled = isShieldedAssetEnabled(network, asset)
   const parsed = parseAssetAmountToStroops(amount, asset)
   const overBalance = parsed.ok && available != null && parsed.stroops > available
+  const overPoolMax = parsed.ok && poolMax !== null && parsed.stroops > poolMax
   const recipientValid = !isUnshield || STELLAR_ADDRESS.test(recipient.trim())
-  const amountError = amount.trim() === '' ? null : !parsed.ok ? parsed.error : overBalance ? `Amount exceeds your ${sourceLabel} ${asset} balance.` : null
-  const canReview = poolEnabled && parsed.ok && !overBalance && recipientValid && (!isUnshield || ack)
+  const amountError = amount.trim() === ''
+    ? null
+    : !parsed.ok
+      ? parsed.error
+      : overBalance
+        ? `Amount exceeds your ${sourceLabel} ${asset} balance.`
+        : overPoolMax
+          ? `Amount exceeds this pool's ${poolMaxLabel} per-deposit limit.`
+          : null
+  const canReview = poolEnabled && parsed.ok && !overBalance && !overPoolMax && recipientValid && (!isUnshield || ack)
   const amountLabel = `${amount.trim() || '0'} ${asset}`
 
   function switchTab(next: Tab) {
@@ -113,7 +125,9 @@ export function ShieldScreen({ identity, network, balance, initialTab = 'shield'
   function applyMax() {
     if (available == null) return
     const buffer = !isUnshield && asset === 'XLM' ? XLM_FEE_RESERVE_BUFFER_STROOPS : 0n
-    setAmount(stroopsToAmountInput(available > buffer ? available - buffer : 0n))
+    let next = available > buffer ? available - buffer : 0n
+    if (poolMax !== null && next > poolMax) next = poolMax
+    setAmount(stroopsToAmountInput(next))
   }
 
   async function run() {
@@ -240,6 +254,7 @@ export function ShieldScreen({ identity, network, balance, initialTab = 'shield'
           <span>{isUnshield ? 'Spendable' : 'Public balance'} <b style={{ color: 'var(--tx2)', fontFamily: 'var(--fm)' }}>{availableLabel}</b></span>
           <span style={{ fontFamily: 'var(--fm)' }}>{isUnshield ? `To ${truncateMiddle(identity.stellarPublicKey, 4, 4)}` : `From ${truncateMiddle(identity.stellarPublicKey, 4, 4)}`}</span>
         </div>
+        {!isUnshield && poolMaxLabel ? <Callout tone="info">Pool limit: shield up to {poolMaxLabel} per deposit.</Callout> : null}
         {isUnshield ? (
           <div>
             <div style={{ font: '600 9px/1 var(--fm)', letterSpacing: '.1em', color: 'var(--tx3)', marginBottom: 8 }}>TO PUBLIC ADDRESS</div>

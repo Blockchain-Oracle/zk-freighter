@@ -137,8 +137,10 @@ function PublicFace({ identity, balances, loading, onShield }: { identity: Walle
 
 export function HomeScreen({ identity, network, balance, onNav }: HomeScreenProps) {
   const { loading, xlm, usdc, refresh } = balance
-  const [publicBalances, setPublicBalances] = useState<PublicBalancesReport | null>(null)
-  const [publicLoading, setPublicLoading] = useState(true)
+  const publicKey = `${network}:${identity.stellarPublicKey}`
+  const [publicState, setPublicState] = useState<{ key: string; report: PublicBalancesReport } | null>(null)
+  const publicBalances = publicState?.key === publicKey ? publicState.report : null
+  const publicLoading = publicBalances === null
   const [activity, setActivity] = useState<readonly WebActivityRecord[]>(() => readWebActivity(network).slice(0, 3))
   const usdcShown = spendable(usdc, 2)
   const xlmShown = spendable(xlm, 3)
@@ -149,10 +151,9 @@ export function HomeScreen({ identity, network, balance, onNav }: HomeScreenProp
 
   useEffect(() => {
     let cancelled = false
-    setPublicLoading(true)
     void loadPublicStellarBalances({ address: identity.stellarPublicKey, network })
-      .then((report) => { if (!cancelled) setPublicBalances(report) })
-      .finally(() => { if (!cancelled) setPublicLoading(false) })
+      .then((report) => { if (!cancelled) setPublicState({ key: `${network}:${identity.stellarPublicKey}`, report }) })
+      .catch(() => undefined)
     return () => { cancelled = true }
   }, [identity.stellarPublicKey, network])
 
@@ -171,7 +172,10 @@ export function HomeScreen({ identity, network, balance, onNav }: HomeScreenProp
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
           <Pill label={loading ? 'SYNCING' : 'SYNCED'} tone={loading ? 'warn' : 'pos'} dot pulse={loading} />
-          <button onClick={() => refresh({ syncBeforeRead: true })} title="Refresh notes" style={{ display: 'grid', placeItems: 'center', width: 36, height: 36, borderRadius: 11, border: '1px solid var(--bd)', background: 'var(--card)', color: 'var(--tx2)', cursor: 'pointer', fontSize: 14 }}>⟳</button>
+          <button onClick={() => refresh({ syncBeforeRead: true })} title="Sync shielded balance" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, height: 36, borderRadius: 11, border: '1px solid var(--bd)', background: 'var(--card)', color: 'var(--tx)', cursor: 'pointer', fontSize: 12, fontWeight: 800, padding: '0 12px' }}>
+            <span aria-hidden="true">⟳</span>
+            <span>Sync balance</span>
+          </button>
         </div>
       </div>
 
@@ -204,7 +208,7 @@ export function HomeScreen({ identity, network, balance, onNav }: HomeScreenProp
           <button onClick={() => onNav('activity')} style={{ marginLeft: 'auto', background: 'none', border: 'none', fontSize: 11.5, color: 'var(--ac2)', fontWeight: 600, cursor: 'pointer' }}>See all →</button>
         </div>
         <div style={{ padding: '16px 2px', borderTop: '1px solid var(--bd)', fontSize: 12, color: 'var(--tx3)' }}>
-          {activity.length > 0 ? activity.map((record) => <HomeActivityRow key={record.id} record={record} />) : loading ? 'Loading shielded notes…' : 'Open Activity for your shielded notes and public boundary legs.'}
+          {activity.length > 0 ? activity.map((record) => <HomeActivityRow key={record.id} record={record} />) : 'Open Activity for your shielded notes and public boundary legs.'}
         </div>
       </div>
     </section>
