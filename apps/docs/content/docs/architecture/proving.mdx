@@ -1,0 +1,32 @@
+---
+title: Proving on-device
+description: The Groth16 pipeline that runs in your browser — and the second Noir stack.
+---
+
+## Shielded pools: Circom / Groth16
+
+The flagship path reuses Nethermind's `stellar-private-payments` engine (credited openly):
+
+- **Circuit:** a 2-in/2-out "policy transaction" — every operation (deposit, transfer,
+  withdrawal) is the same circuit with different public amounts. Change returns as a hidden
+  note.
+- **Prover:** Rust compiled to WebAssembly, running in the browser (in a worker on web/mobile,
+  in an offscreen document in the extension). A proof takes ~6 seconds on a laptop.
+- **Verifier:** the Soroban pool contract verifies the Groth16 proof on-chain over BN254 with
+  Poseidon2 hashing — the primitives Stellar added natively in Protocols 25/26.
+- **Binding:** the recipient and amount of a withdrawal are hashed into the proof
+  (`ext_data_hash`), so nobody — not even a submitting service — can redirect funds.
+
+## Confidential tokens: Noir / UltraHonk
+
+The second mode (testnet-only preview) is original ZK Fighter work: Noir circuits
+(`circuits/`) proved with Barretenberg's UltraHonk via `bb.js`, verified on-chain by a Soroban
+verifier, with balances as homomorphic commitments on the Grumpkin curve
+(`contracts/confidential-token`). Operations: register, deposit, merge, transfer, withdraw.
+
+## Why proofs never leave your device
+
+Both stacks generate proofs locally. A server-side prover would see your amounts and
+counterparties — the exact thing the product exists to protect. The trade-off is honest: the
+first load pulls multi-megabyte WASM artifacts, and proving costs a few seconds of CPU. The
+wallet shows real progress for both.

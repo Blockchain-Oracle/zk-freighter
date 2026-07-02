@@ -1,0 +1,34 @@
+---
+title: Services
+description: The bootnode event index and the hosted testnet faucet.
+---
+
+The wallet works against public Stellar infrastructure alone. Two small self-hosted services
+make it resilient and friction-free:
+
+## Bootnode — warmed event index
+
+Stellar's public RPC only retains recent events. Shielded wallets need the pool's **full**
+commitment history to find their notes — so the bootnode continuously indexes pool events into
+Postgres from the pool's deployment ledger, then serves them through a narrow RPC.
+
+- **Allowlisted**: only `getEvents` and `getLatestLedger`, only for ZK Fighter pool contracts —
+  it cannot be used as a general RPC proxy.
+- **Read-only**: it holds no keys and signs nothing.
+- **Transparent**: clients route pool reads to it when configured (`VITE_ZKF_*_BOOTNODE_URL`)
+  and fall back to public RPC otherwise.
+
+Default ports: testnet `:8788`, mainnet `:8789`. `GET /health` reports indexing progress.
+
+## Funding API — hosted testnet faucet
+
+Removes the faucet hunt on testnet: one request delivers XLM and USDC to a new wallet, setting
+up the USDC trustline automatically. Budgeted, cooldown-limited, backed by a capped hot wallet —
+and it **refuses mainnet** by design.
+
+Default port `:8787`; endpoints `GET /v1/funding/status` and `POST /v1/funding/request`.
+
+## Deployment posture
+
+Every surface is an env-driven build (`PORT`, `VITE_ZKF_*`); nothing assumes a specific host.
+See `docs/deploy/production-surfaces.md` in the repo for the full variable reference.

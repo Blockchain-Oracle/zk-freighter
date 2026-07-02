@@ -1,0 +1,32 @@
+---
+title: Browser extension
+description: The quick companion — glance, QuickShield, receive.
+---
+
+The extension is the everyday companion: a fast popup for balances and quick actions, with a
+side panel for heavier flows. Same seed, same receive code, same pool as web and mobile.
+
+## Install (developer build)
+
+```bash
+pnpm extension:build
+# then chrome://extensions → Developer mode → Load unpacked
+# → apps/extension/.output/chrome-mv3
+```
+
+## What the popup does
+
+- **Instant balances** — cached balances render immediately on open and refresh in the
+  background (with an honest syncing indicator, never fabricated zeros)
+- **QuickShield** — shield XLM or USDC in a couple of taps; first-time access setup runs
+  automatically in the same flow
+- **Receive** — `zkf1…` code and public address with QR
+- **Activity, settings, disclosure, discovery** — via bottom tabs and the More menu
+
+Heavy proving runs in an offscreen document, so the popup never freezes — see
+[Extension internals](/docs/architecture/extension).
+
+## The boundary with dApps
+
+Sites can detect that a Stellar wallet is present, but requests for your public key or a
+signature are **refused by design**. ZK Fighter is a privacy wallet, not a general signer.

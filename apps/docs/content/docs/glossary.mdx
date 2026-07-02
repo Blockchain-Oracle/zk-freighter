@@ -1,0 +1,55 @@
+---
+title: Glossary
+description: Every term in plain English — assume smart, not cryptographer.
+---
+
+## Privacy concepts
+
+- **Zero-knowledge proof (ZK)** — proving a statement is true without revealing the underlying
+  data. Like proving you're over 21 without showing your birthday. Here: proving a payment is
+  valid without revealing the amount or who's involved.
+- **Shielded transfer** — Stellar's own term for a payment whose sensitive details are hidden
+  with cryptography. The precise word for what ZK Fighter does — narrower and more honest than
+  "fully private."
+- **Privacy pool** — a shared on-chain pot many people deposit into and withdraw from. Inside,
+  payments are hidden because an observer can't tell which deposit connects to which withdrawal.
+  The edges (deposits/withdrawals) stay visible.
+- **Shield / deposit** — moving money *into* the pool. Public.
+- **Unshield / withdraw** — moving money *out* of the pool. Public.
+- **Commitment** — a sealed on-chain receipt proving a note exists without revealing amount or
+  owner.
+- **Nullifier** — a one-time "spent" stamp that prevents double-spending without being traceable
+  to the deposit.
+- **Merkle tree** — bundles many records into one fingerprint so you can prove membership
+  ("my note is in the pool") without revealing the rest.
+- **ASP / association set** — an on-chain membership list deciding which deposits may
+  participate, so the pool can screen out flagged funds. How privacy and compliance coexist.
+- **Selective disclosure / view evidence** — read-only proof of your own note for an auditor,
+  with zero spend authority.
+- **Confidential Token** — the complementary Stellar privacy tool: hides *amounts and balances*
+  but keeps addresses public (the inverse trade-off of a privacy pool). ZK Fighter ships it as a
+  second, testnet-only mode.
+
+## Keys and recovery
+
+- **Seed phrase** — 12 ordinary words; the master backup. Anyone holding it controls the funds.
+  No reset, no backdoor. ZK Fighter's only recovery path.
+- **Vault password** — unlocks the encrypted wallet *on this device*. Different from the seed
+  phrase; it cannot recover funds.
+- **Private receive code (`zkf1…`)** — the shareable code that lets others pay your shielded
+  balance. Contains no spending power. See [receive codes](/docs/how-it-works/receive-codes).
+- **Passkey** — optional device-biometric unlock (WebAuthn/PRF) layered over the seed-backed
+  vault. Never a recovery method on its own.
+
+## Plumbing
+
+- **Soroban** — Stellar's smart-contract platform, where the pool and verifier contracts run.
+- **SAC (Stellar Asset Contract)** — the standard wrapper letting assets like USDC be used in
+  Soroban contracts.
+- **Circle CCTP** — Circle's burn-and-mint bridge delivering *native* USDC across chains.
+- **Groth16 / BN254 / Poseidon** — the proof system, elliptic curve, and hash function used by
+  the shielded pool; Stellar Protocols 25/26 added native support that makes on-chain
+  verification affordable.
+- **Bootnode** — ZK Fighter's warmed event index: Stellar's public RPC only retains recent
+  events, so this service remembers pool history and serves it through a narrow, allowlisted
+  RPC.

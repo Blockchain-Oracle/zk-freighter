@@ -1,0 +1,47 @@
+---
+title: What is ZK Fighter?
+description: A self-custody wallet for shielded XLM and USDC payments on Stellar.
+---
+
+ZK Fighter is a **privacy-by-default, self-custody wallet** for the Stellar network. Normally
+every Stellar transaction is visible to anyone who looks. ZK Fighter lets you move **XLM and
+USDC** so that the sensitive details — amounts, balances, counterparties — stay private, using
+real cryptography rather than trust in a middleman.
+
+The proofs are **zero-knowledge proofs**, generated **on your own device** in about six seconds,
+and verified on-chain by Soroban smart contracts. No server ever sees your payment.
+
+## The honest one-liner
+
+> Public in. Private through. Your call out.
+
+Stellar is a public blockchain — you cannot make everything disappear, and we never claim to.
+What you get is **shielded transfers**: the link between money entering and leaving the pool is
+broken, and payments *inside* the pool are private. Three moments are public, and the wallet
+names them every time:
+
+- **Shield in (deposit)** — visible on-chain
+- **Unshield out (withdraw)** — visible on-chain
+- **Bridge arrivals** — USDC arriving from another chain is visible on-chain
+
+Everything between those boundaries is a shielded transfer.
+
+## What it is not
+
+- Not "anonymous", "fully private", or "untraceable" — see the [privacy model](/docs/privacy-model)
+- Not a mixer — first-time shielding registers with an association-set (ASP) contract so the
+  pool can screen out flagged funds
+- Not a general-purpose public wallet — ZK Fighter builds the privacy layer only
+- Not audited — this is early software; don't use real funds yet
+
+## One wallet, three surfaces
+
+The [web app](/docs/apps/web), [browser extension](/docs/apps/extension), and
+[mobile app](/docs/apps/mobile) share one shielded pool and one core engine. Every feature is
+consistent — only the shape changes.
+
+## Compliance, on your terms
+
+[Selective disclosure](/docs/how-it-works/disclosure) produces a **read-only proof of a specific
+note** for an auditor or counterparty — without handing over keys or spend authority. You decide
+what's seen.

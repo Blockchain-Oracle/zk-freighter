@@ -1,0 +1,748 @@
+# Confidential mode
+URL: https://docs.zkfighter.dev/docs/apps/confidential
+The second privacy mode — hidden amounts between public addresses. Testnet preview.
+
+Confidential Tokens are the **complementary** Stellar privacy tool: they hide *amounts and
+balances* while keeping sender and recipient addresses public — the inverse trade-off of the
+shielded pool. Useful when the relationship is known (payroll, invoices between named parties)
+but the numbers are nobody's business.
+
+## Status: testnet-only, unaudited preview
+
+This mode is original ZK Fighter work — Noir circuits proved with UltraHonk (`bb.js`) in the
+browser, balances as homomorphic commitments on the Grumpkin curve, and a Soroban SEP-41
+wrapper contract (built on OpenZeppelin's confidential-token preview). It is deliberately
+scoped to **testnet** and clearly labeled in every surface.
+
+## Operations
+
+| Operation | What it does |
+|---|---|
+| Register | Creates your confidential account on the token |
+| Deposit | Wraps public USDC into a hidden balance |
+| Merge | Consolidates pending amounts into your spendable balance |
+| Transfer | Sends a hidden amount to another registered address |
+| Withdraw | Unwraps back to public USDC |
+
+Every operation generates its proof on your device, like the shielded pool.
+
+## Where to find it
+
+The **Confidential** screen on web and extension, and the mobile Confidential flow. Amounts are
+hidden; the participating addresses are public — the screen says exactly that.
+
+---
+
+# Browser extension
+URL: https://docs.zkfighter.dev/docs/apps/extension
+The quick companion — glance, QuickShield, receive.
+
+The extension is the everyday companion: a fast popup for balances and quick actions, with a
+side panel for heavier flows. Same seed, same receive code, same pool as web and mobile.
+
+## Install (developer build)
+
+```bash
+pnpm extension:build
+# then chrome://extensions → Developer mode → Load unpacked
+# → apps/extension/.output/chrome-mv3
+```
+
+## What the popup does
+
+- **Instant balances** — cached balances render immediately on open and refresh in the
+  background (with an honest syncing indicator, never fabricated zeros)
+- **QuickShield** — shield XLM or USDC in a couple of taps; first-time access setup runs
+  automatically in the same flow
+- **Receive** — `zkf1…` code and public address with QR
+- **Activity, settings, disclosure, discovery** — via bottom tabs and the More menu
+
+Heavy proving runs in an offscreen document, so the popup never freezes — see
+[Extension internals](/docs/architecture/extension).
+
+## The boundary with dApps
+
+Sites can detect that a Stellar wallet is present, but requests for your public key or a
+signature are **refused by design**. ZK Fighter is a privacy wallet, not a general signer.
+
+---
+
+# Mobile app
+URL: https://docs.zkfighter.dev/docs/apps/mobile
+The same wallet, thumb-first — Capacitor on Android and iOS.
+
+The mobile app is a native Capacitor shell around the same core engine: real vault, real
+proving, real transactions — thumb-first. Swipe between the shielded and public balance cards,
+run flows in bottom sheets, and prove in-sheet.
+
+## Run it
+
+```bash
+pnpm mobile:dev        # browser preview → http://127.0.0.1:4183
+pnpm mobile:android    # native Android project (Android Studio)
+pnpm mobile:ios        # native iOS project (Xcode)
+```
+
+### Testing from a real phone browser
+
+A phone can't use `http://<lan-ip>` (no secure context → no Web Crypto) and rejects self-signed
+HTTPS. The repo ships a tunnel workflow that solves both:
+
+```bash
+pnpm --filter @zk-fighter/mobile dev:phone   # dev server with same-origin /zkf-* API proxies
+pnpm --filter @zk-fighter/mobile tunnel      # prints a trusted https://….trycloudflare.com URL
+```
+
+Open the printed URL on the phone — trusted HTTPS, no mixed content, full functionality.
+
+## Honest status
+
+- Shielded balances load via an explicit **Sync** (keeps background storage pressure off mobile
+  browsers)
+- Proof support on physical devices is gated behind an on-device runtime check — the app
+  verifies WebCrypto, workers, and WASM before claiming it
+- Bridge on mobile starts as a hand-off to the web app
+
+---
+
+# Web app
+URL: https://docs.zkfighter.dev/docs/apps/web
+The full wallet in the browser.
+
+The web app is the complete ZK Fighter experience: create/import a wallet, fund (testnet),
+shield, send privately, unshield, bridge, disclosure, discovery, confidential mode, activity,
+and settings.
+
+```bash
+pnpm web:dev   # → http://127.0.0.1:5173
+```
+
+## Layout
+
+A sidebar navigates the full feature set; the home screen pairs the **shielded balance card**
+(private) with the **public balance card** (boundary-labeled), separated by a "cross the
+boundary" action strip — shield, unshield, bridge.
+
+## Things worth knowing
+
+- **Balances**: public balances load from Horizon; shielded balances come from scanning pool
+  notes — use **Sync balance** after restoring a wallet or switching devices.
+- **USDC receiving** (the trustline) is established automatically the first time you fund,
+  shield, or bridge — there is no manual setup step.
+- **Activity** spans both worlds: shielded entries hide their detail; public boundary legs are
+  labeled and link to the explorer.
+- **Lock wallet** clears the unlocked vault from memory; your password unlocks it again. The
+  seed phrase remains the only recovery path.
+
+---
+
+# Extension internals
+URL: https://docs.zkfighter.dev/docs/architecture/extension
+How heavy proving fits inside a Manifest V3 extension.
+
+MV3 popups are short-lived and service workers can't run the multi-megabyte WASM prover
+comfortably. The extension splits responsibilities:
+
+<Mermaid
+  chart={`flowchart LR
+    popup["Popup / side panel UI"] --> bg["Background service worker"]
+    bg --> off["Offscreen document<br/>WASM prover + pool runtime"]
+    off --> rpc[("Stellar RPC / Horizon")]
+    dapp["dApp page"] -.->|"public-key access & signing<br/>fail closed by design"| bg`}
+/>
+
+- **Popup** — the fast glance surface: balances (served instantly from cache, refreshed in the
+  background), QuickShield, receive, activity.
+- **Side panel** — where heavier flows (send, unshield, bridge) get room to breathe.
+- **Offscreen document** — hosts the Nethermind WASM prover and pool runtime; the background
+  worker proxies typed messages to it.
+
+## The dApp boundary fails closed
+
+ZK Fighter answers Freighter-style detection pings so sites know a Stellar wallet exists — but
+**external public-key access and transaction signing are refused by design**. It is a privacy
+wallet, not a general dApp signer. A site can never enumerate your address or ask you to sign.
+
+## Verification harnesses
+
+The repo ships CDP-driven runtime checks that launch a real Chrome, load the built extension,
+and drive real flows — including a fully funded shield on testnet:
+
+```bash
+pnpm extension:runtime      # popup renders, routes work, prover initializes
+pnpm extension:quickshield  # real funded XLM shield end-to-end
+```
+
+---
+
+# Overview
+URL: https://docs.zkfighter.dev/docs/architecture/overview
+One core engine, three thin surfaces, two supporting services.
+
+Every app is a thin presentation layer over one shared package, `@zk-fighter/core`, which owns
+identity, vault, proving, networks, and transactions. If a flow works on web it works on the
+extension and mobile, because they run the same code.
+
+<Mermaid
+  chart={`flowchart LR
+    subgraph Surfaces
+      web["apps/web"]
+      ext["apps/extension"]
+      mob["apps/mobile"]
+    end
+    subgraph Shared
+      core["packages/core<br/>identity · vault · proofs · tx"]
+      ui["packages/ui<br/>design system"]
+    end
+    subgraph Services
+      boot["apps/bootnode<br/>warmed event index"]
+      fund["apps/funding-api<br/>testnet faucet"]
+    end
+    web --> core
+    ext --> core
+    mob --> core
+    web --> ui
+    ext --> ui
+    mob --> ui
+    core -->|"getEvents (warmed)"| boot
+    core -->|"demo funding"| fund
+    core --> stellar[("Stellar / Soroban<br/>privacy pool contracts")]
+    core --> cctp["Circle CCTP<br/>USDC bridge"]`}
+/>
+
+## The monorepo
+
+| Path | What it is |
+|---|---|
+| `apps/web` | React wallet app — the primary surface |
+| `apps/extension` | WXT MV3 browser extension (popup + side panel, offscreen prover) |
+| `apps/mobile` | Capacitor app (Android/iOS) reusing the same core |
+| `apps/landing` | Product site |
+| `apps/bootnode` | Warmed pool-event indexer + narrow RPC (Postgres) |
+| `apps/funding-api` | Hosted testnet faucet (XLM + USDC, budgets and cooldowns) |
+| `packages/core` | All wallet, network, proof, and transaction logic |
+| `packages/ui` | Shared design system |
+| `circuits/`, `contracts/` | Noir circuits + Soroban contract for Confidential Token mode |
+
+## Networks are configuration
+
+Testnet ↔ mainnet is a config toggle, not a code change: RPC/Horizon endpoints, pool contract
+IDs, asset contracts, and bridge routes all come from one network config. The UI always shows
+which network you're on.
+
+## Two privacy modes, two proving stacks
+
+| | Shielded Pools (flagship) | Confidential Tokens (preview) |
+|---|---|---|
+| Hides | balances, amounts, counterparties | amounts and balances only |
+| Proving | Circom / Groth16, Rust→WASM | Noir + UltraHonk (bb.js) |
+| Networks | testnet + mainnet | testnet only |
+
+Read more in [Proving](/docs/architecture/proving) and
+[Confidential mode](/docs/apps/confidential).
+
+---
+
+# Proving on-device
+URL: https://docs.zkfighter.dev/docs/architecture/proving
+The Groth16 pipeline that runs in your browser — and the second Noir stack.
+
+## Shielded pools: Circom / Groth16
+
+The flagship path reuses Nethermind's `stellar-private-payments` engine (credited openly):
+
+- **Circuit:** a 2-in/2-out "policy transaction" — every operation (deposit, transfer,
+  withdrawal) is the same circuit with different public amounts. Change returns as a hidden
+  note.
+- **Prover:** Rust compiled to WebAssembly, running in the browser (in a worker on web/mobile,
+  in an offscreen document in the extension). A proof takes ~6 seconds on a laptop.
+- **Verifier:** the Soroban pool contract verifies the Groth16 proof on-chain over BN254 with
+  Poseidon2 hashing — the primitives Stellar added natively in Protocols 25/26.
+- **Binding:** the recipient and amount of a withdrawal are hashed into the proof
+  (`ext_data_hash`), so nobody — not even a submitting service — can redirect funds.
+
+## Confidential tokens: Noir / UltraHonk
+
+The second mode (testnet-only preview) is original ZK Fighter work: Noir circuits
+(`circuits/`) proved with Barretenberg's UltraHonk via `bb.js`, verified on-chain by a Soroban
+verifier, with balances as homomorphic commitments on the Grumpkin curve
+(`contracts/confidential-token`). Operations: register, deposit, merge, transfer, withdraw.
+
+## Why proofs never leave your device
+
+Both stacks generate proofs locally. A server-side prover would see your amounts and
+counterparties — the exact thing the product exists to protect. The trade-off is honest: the
+first load pulls multi-megabyte WASM artifacts, and proving costs a few seconds of CPU. The
+wallet shows real progress for both.
+
+---
+
+# Services
+URL: https://docs.zkfighter.dev/docs/architecture/services
+The bootnode event index and the hosted testnet faucet.
+
+The wallet works against public Stellar infrastructure alone. Two small self-hosted services
+make it resilient and friction-free:
+
+## Bootnode — warmed event index
+
+Stellar's public RPC only retains recent events. Shielded wallets need the pool's **full**
+commitment history to find their notes — so the bootnode continuously indexes pool events into
+Postgres from the pool's deployment ledger, then serves them through a narrow RPC.
+
+- **Allowlisted**: only `getEvents` and `getLatestLedger`, only for ZK Fighter pool contracts —
+  it cannot be used as a general RPC proxy.
+- **Read-only**: it holds no keys and signs nothing.
+- **Transparent**: clients route pool reads to it when configured (`VITE_ZKF_*_BOOTNODE_URL`)
+  and fall back to public RPC otherwise.
+
+Default ports: testnet `:8788`, mainnet `:8789`. `GET /health` reports indexing progress.
+
+## Funding API — hosted testnet faucet
+
+Removes the faucet hunt on testnet: one request delivers XLM and USDC to a new wallet, setting
+up the USDC trustline automatically. Budgeted, cooldown-limited, backed by a capped hot wallet —
+and it **refuses mainnet** by design.
+
+Default port `:8787`; endpoints `GET /v1/funding/status` and `POST /v1/funding/request`.
+
+## Deployment posture
+
+Every surface is an env-driven build (`PORT`, `VITE_ZKF_*`); nothing assumes a specific host.
+See `docs/deploy/production-surfaces.md` in the repo for the full variable reference.
+
+---
+
+# Evidence & verification
+URL: https://docs.zkfighter.dev/docs/evidence
+Every claim is backed by accepted on-chain transactions you can check yourself.
+
+ZK Fighter's rule is **no fakes**: no mocked balances, no fabricated hashes, no claimed flows
+without accepted transactions. The full evidence table — 40+ real transaction hashes across
+Stellar testnet, Stellar mainnet, and four EVM testnets — lives in the repository README, with
+the deeper audit trail in the docs folder:
+
+- [README evidence table](https://github.com/Blockchain-Oracle/zk-fighter#evidence)
+- [Verified facts record](https://github.com/Blockchain-Oracle/zk-fighter/blob/main/docs/VERIFIED-FACTS.md)
+
+Spot-check any Stellar hash on [stellar.expert](https://stellar.expert/explorer/testnet), and
+EVM hashes on the respective chain explorer.
+
+## What's proven, at a glance
+
+- **Testnet:** the full loop — fund, shield, shielded transfer, unshield — for USDC and XLM,
+  from the web app, the extension (via its CDP harness), and the mobile surface
+- **Mainnet:** QuickShield (XLM + USDC), shielded transfers, and unshields with accepted hashes
+- **Bridge:** complete bridge-to-shield evidence from Ethereum, Base, Arbitrum, and OP Sepolia
+- **Load-bearing ZK:** a tampered proof is rejected on-chain (the wallet ships a demo of this)
+
+## What's explicitly NOT claimed
+
+- Mainnet **bridge-to-shield** (no accepted hashes yet)
+- Atomic bridge-and-shield (deferred until a custom adapter passes real tests)
+- Any audit. This is early, unaudited software — testnet is the recommended surface.
+
+## Run the verification yourself
+
+```bash
+pnpm test                   # 265 tests
+pnpm extension:runtime      # extension runtime smoke in a real Chrome
+pnpm extension:quickshield  # real funded shield, end to end, on testnet
+```
+
+---
+
+# Glossary
+URL: https://docs.zkfighter.dev/docs/glossary
+Every term in plain English — assume smart, not cryptographer.
+
+## Privacy concepts
+
+- **Zero-knowledge proof (ZK)** — proving a statement is true without revealing the underlying
+  data. Like proving you're over 21 without showing your birthday. Here: proving a payment is
+  valid without revealing the amount or who's involved.
+- **Shielded transfer** — Stellar's own term for a payment whose sensitive details are hidden
+  with cryptography. The precise word for what ZK Fighter does — narrower and more honest than
+  "fully private."
+- **Privacy pool** — a shared on-chain pot many people deposit into and withdraw from. Inside,
+  payments are hidden because an observer can't tell which deposit connects to which withdrawal.
+  The edges (deposits/withdrawals) stay visible.
+- **Shield / deposit** — moving money *into* the pool. Public.
+- **Unshield / withdraw** — moving money *out* of the pool. Public.
+- **Commitment** — a sealed on-chain receipt proving a note exists without revealing amount or
+  owner.
+- **Nullifier** — a one-time "spent" stamp that prevents double-spending without being traceable
+  to the deposit.
+- **Merkle tree** — bundles many records into one fingerprint so you can prove membership
+  ("my note is in the pool") without revealing the rest.
+- **ASP / association set** — an on-chain membership list deciding which deposits may
+  participate, so the pool can screen out flagged funds. How privacy and compliance coexist.
+- **Selective disclosure / view evidence** — read-only proof of your own note for an auditor,
+  with zero spend authority.
+- **Confidential Token** — the complementary Stellar privacy tool: hides *amounts and balances*
+  but keeps addresses public (the inverse trade-off of a privacy pool). ZK Fighter ships it as a
+  second, testnet-only mode.
+
+## Keys and recovery
+
+- **Seed phrase** — 12 ordinary words; the master backup. Anyone holding it controls the funds.
+  No reset, no backdoor. ZK Fighter's only recovery path.
+- **Vault password** — unlocks the encrypted wallet *on this device*. Different from the seed
+  phrase; it cannot recover funds.
+- **Private receive code (`zkf1…`)** — the shareable code that lets others pay your shielded
+  balance. Contains no spending power. See [receive codes](/docs/how-it-works/receive-codes).
+- **Passkey** — optional device-biometric unlock (WebAuthn/PRF) layered over the seed-backed
+  vault. Never a recovery method on its own.
+
+## Plumbing
+
+- **Soroban** — Stellar's smart-contract platform, where the pool and verifier contracts run.
+- **SAC (Stellar Asset Contract)** — the standard wrapper letting assets like USDC be used in
+  Soroban contracts.
+- **Circle CCTP** — Circle's burn-and-mint bridge delivering *native* USDC across chains.
+- **Groth16 / BN254 / Poseidon** — the proof system, elliptic curve, and hash function used by
+  the shielded pool; Stellar Protocols 25/26 added native support that makes on-chain
+  verification affordable.
+- **Bootnode** — ZK Fighter's warmed event index: Stellar's public RPC only retains recent
+  events, so this service remembers pool history and serves it through a narrow, allowlisted
+  RPC.
+
+---
+
+# Bridging USDC in
+URL: https://docs.zkfighter.dev/docs/how-it-works/bridge
+Real Circle USDC from Ethereum, Base, Arbitrum, or Optimism — then shield it.
+
+ZK Fighter uses **Circle's CCTP** (Cross-Chain Transfer Protocol) to bring native USDC onto
+Stellar. CCTP burns USDC on the source chain and mints genuine USDC on Stellar — no wrapped
+IOU. Supported sources: **Ethereum, Base, Arbitrum, Optimism** (Sepolia testnets are the
+demo surface).
+
+<Mermaid
+  chart={`sequenceDiagram
+    participant E as EVM chain (Base / Arbitrum / OP / Ethereum)
+    participant I as Circle Iris attestation
+    participant X as Stellar
+    E->>E: USDC approve + depositForBurn
+    E-->>I: burn message
+    I-->>X: signed attestation
+    X->>X: receiveMessage → USDC mint (public arrival)
+    X->>X: separate shield/deposit into the privacy pool`}
+/>
+
+## The burn is signed by your own wallet
+
+The EVM-side burn is signed with an **EVM key derived from your same seed phrase** — no
+MetaMask, no WalletConnect, no separate wallet to manage.
+
+## Two honest steps, not one fake atomic
+
+Circle's contract mints USDC to the recipient — it does not call the privacy pool. So the flow
+is deliberately two labeled steps:
+
+1. **Bridge arrival (public):** burn → Circle attestation (this can take minutes; the UI shows
+   real progress) → Stellar mint. Every leg has a real transaction hash.
+2. **Shield (public boundary):** a separate deposit moves the arrived USDC into the pool.
+
+An atomic bridge-and-shield would require a custom adapter contract; it stays out of the product
+until it exists and passes real tests. We do not fake it.
+
+---
+
+# Selective disclosure
+URL: https://docs.zkfighter.dev/docs/how-it-works/disclosure
+Prove a specific note to an auditor — read-only, on your terms.
+
+Privacy products live or die on compliance. ZK Fighter's answer is **user-held selective
+disclosure**: you can prove facts about your own shielded funds to someone you choose, without
+giving them any power over the funds.
+
+## How it works
+
+The Disclosure screen produces a **read-only proof of a specific note** — its existence and your
+ownership — that a counterparty or auditor can verify. Two powers stay deliberately separated:
+
+- **Spend authority** — never leaves your wallet
+- **View evidence** — the disclosure receipt, which you hand over explicitly
+
+Proving runs on your device; nothing is uploaded. The receipt covers exactly the note you chose —
+not your balance, not your other notes, not your history.
+
+## Verifying a receipt
+
+The same screen verifies receipts you receive from others, so both sides of an audit can run it
+without trusting a server.
+
+## Why this design
+
+The alternative — a custodial relayer that logs identities for compliance — puts a middleman in
+every payment who can see everything. ZK Fighter's association-set gate (screening at the pool
+door) plus user-held disclosure (proof on demand) achieves compliance without anyone holding a
+master view of your activity.
+
+---
+
+# Private receive codes
+URL: https://docs.zkfighter.dev/docs/how-it-works/receive-codes
+The zkf1… code that lets anyone pay your shielded balance without knowing your address.
+
+To be paid privately, you share a **private receive code** — a `zkf1…` string (Bech32m encoding,
+human-readable prefix `zkf`) shown as text and QR in every surface's Receive screen.
+
+## What's inside
+
+The code packs two public keys derived from your seed:
+
+- your **note public key** — ownership of the notes a sender creates for you
+- your **encryption public key** — lets the sender encrypt the note details so only you can
+  discover them on-chain
+
+It contains **no spending power and no link to your Stellar address**. Sharing it is safe; it
+only lets people pay you privately.
+
+## Discovery
+
+Your wallet finds incoming notes by scanning the pool's encrypted outputs with your keys —
+locally. Nobody else can tell which notes are yours.
+
+## Optional: make your code discoverable
+
+If you want people to find your code from your public Stellar address, you can opt in to
+publishing the link on-chain ("Make my code discoverable" in the Receive screen). This is a
+**public, deliberate act** — it never exposes your seed or any power to spend, only the mapping
+from address to receive code. Skip it and share the code out-of-band for maximum privacy.
+
+## Recovery
+
+Codes are deterministic: restoring your wallet from the 12-word phrase regenerates the same
+receive code on any device.
+
+---
+
+# Shielded transfers
+URL: https://docs.zkfighter.dev/docs/how-it-works/shielded-transfers
+Notes, nullifiers, and on-device proofs — the full lifecycle of private money.
+
+"Shielded" is Stellar's own word for a payment whose sensitive details are hidden with
+cryptography. Here is the whole lifecycle, with the public boundaries marked:
+
+<Mermaid
+  chart={`sequenceDiagram
+    participant S as Sender wallet
+    participant P as Soroban privacy pool
+    participant R as Recipient wallet
+    rect rgba(229,180,92,0.07)
+        Note over S,P: SHIELD — public boundary
+        S->>P: deposit XLM/USDC + note commitment (public tx)
+    end
+    rect rgba(94,124,250,0.08)
+        Note over S,R: SHIELDED TRANSFER — inside the pool
+        S->>S: generate Groth16 proof on-device (~6s)
+        S->>P: proof + nullifiers + new commitments
+        R->>P: discover notes via encrypted outputs
+    end
+    rect rgba(229,180,92,0.07)
+        Note over R,P: UNSHIELD — public boundary
+        R->>P: withdrawal proof
+        P->>R: XLM/USDC to a public address (public tx)
+    end`}
+/>
+
+## The moving parts
+
+- **Commitment** — a sealed, tamper-proof receipt posted on-chain when money enters the pool.
+  It proves a note exists without revealing its amount or owner: a locked box everyone can see
+  but nobody can open.
+- **Nullifier** — a unique one-time "spent" stamp published when you spend a note. It prevents
+  double-spending but cannot be traced back to the original deposit.
+- **Merkle tree** — all commitments are bundled into one short fingerprint, so a proof can show
+  "my note is in the pool" without revealing which one.
+- **The proof** — a Groth16 zero-knowledge proof over the BN254 curve, generated by a Rust→WASM
+  prover **in your browser** (recorded at roughly six seconds on a laptop), then verified by the
+  pool contract on-chain. Stellar's Protocol 25/26 upgrades added the native BN254 and Poseidon
+  primitives that make on-chain verification affordable.
+
+## First-time setup: shield access
+
+Before your first shield, the wallet registers a membership leaf with the on-chain
+**association-set (ASP)** contract. This is the compliance layer — the pool can include
+known-good participants and exclude flagged funds. The wallet handles it in one continuous run:
+setup transaction → wait for on-chain indexing → deposit, with live progress.
+
+## Change stays private
+
+Shielded transfers use a 2-in/2-out note design: when you spend, change comes back to you as a
+**new hidden note**. There is no visible change output to correlate.
+
+## Credit where due
+
+The shielded-pool engine — circuits, browser prover, and pool contracts — is Nethermind's
+open-source `stellar-private-payments` reference implementation (Privacy Pools on Stellar).
+ZK Fighter builds the wallet product on top: the multi-surface UX, access orchestration,
+receive codes, disclosure, bridge-to-shield, and services.
+
+---
+
+# What is ZK Fighter?
+URL: https://docs.zkfighter.dev/docs
+A self-custody wallet for shielded XLM and USDC payments on Stellar.
+
+ZK Fighter is a **privacy-by-default, self-custody wallet** for the Stellar network. Normally
+every Stellar transaction is visible to anyone who looks. ZK Fighter lets you move **XLM and
+USDC** so that the sensitive details — amounts, balances, counterparties — stay private, using
+real cryptography rather than trust in a middleman.
+
+The proofs are **zero-knowledge proofs**, generated **on your own device** in about six seconds,
+and verified on-chain by Soroban smart contracts. No server ever sees your payment.
+
+## The honest one-liner
+
+> Public in. Private through. Your call out.
+
+Stellar is a public blockchain — you cannot make everything disappear, and we never claim to.
+What you get is **shielded transfers**: the link between money entering and leaving the pool is
+broken, and payments *inside* the pool are private. Three moments are public, and the wallet
+names them every time:
+
+- **Shield in (deposit)** — visible on-chain
+- **Unshield out (withdraw)** — visible on-chain
+- **Bridge arrivals** — USDC arriving from another chain is visible on-chain
+
+Everything between those boundaries is a shielded transfer.
+
+## What it is not
+
+- Not "anonymous", "fully private", or "untraceable" — see the [privacy model](/docs/privacy-model)
+- Not a mixer — first-time shielding registers with an association-set (ASP) contract so the
+  pool can screen out flagged funds
+- Not a general-purpose public wallet — ZK Fighter builds the privacy layer only
+- Not audited — this is early software; don't use real funds yet
+
+## One wallet, three surfaces
+
+The [web app](/docs/apps/web), [browser extension](/docs/apps/extension), and
+[mobile app](/docs/apps/mobile) share one shielded pool and one core engine. Every feature is
+consistent — only the shape changes.
+
+## Compliance, on your terms
+
+[Selective disclosure](/docs/how-it-works/disclosure) produces a **read-only proof of a specific
+note** for an auditor or counterparty — without handing over keys or spend authority. You decide
+what's seen.
+
+---
+
+# Privacy model
+URL: https://docs.zkfighter.dev/docs/privacy-model
+Exactly what is hidden, what is public, and what we refuse to claim.
+
+## The three boundaries
+
+Stellar's own documentation says it plainly: Stellar is a public blockchain — every transaction
+is recorded on-chain and visible to anyone. Privacy exists inside specific tools you opt into.
+ZK Fighter is built around that honesty:
+
+| Step | Visibility | What an observer sees |
+|---|---|---|
+| **1 · Shield in** | ○ Public | Your address deposited X into the pool contract |
+| **2 · Send privately** | ⛉ Shielded | A valid proof was accepted — no amount, balance, or counterparty |
+| **3 · Unshield out** | ○ Public | An address withdrew Y from the pool |
+
+Bridge arrivals (USDC landing from another chain via Circle CCTP) are also public — the wallet
+says so in the flow.
+
+## How the hiding actually works
+
+Inside the pool, your money exists as **notes** — sealed commitments on-chain that prove a coin
+exists without revealing its amount or owner. Spending publishes a **nullifier**, a one-time
+"spent" stamp that prevents double-spends but cannot be traced back to the deposit. A
+**zero-knowledge proof**, generated on your device, convinces the contract the transfer is valid
+without revealing anything else. See [shielded transfers](/docs/how-it-works/shielded-transfers).
+
+## Compliance without a custodian
+
+- **Association set (ASP):** first-time shielding registers a membership leaf with an on-chain
+  association-set contract, so the pool can include known-good funds and screen out flagged
+  ones. Privacy and compliance coexist — this is not a mixer.
+- **Selective disclosure:** you can produce a [read-only proof of a specific note](/docs/how-it-works/disclosure)
+  for an auditor — no keys, no spend authority, nothing uploaded.
+
+## What we refuse to claim
+
+- **Not "anonymous", "fully private", or "untraceable."** Boundaries are public, and correlation
+  is real: matching deposit and withdrawal **amounts**, close **timing**, and a small pool
+  (**anonymity set**) can all weaken privacy. Sending common amounts and waiting after shielding
+  improves it.
+- **Today, pool transactions are signed by your own Stellar account.** An observer can link your
+  account to pool activity at the envelope level (though never the amounts or counterparties of
+  shielded transfers). A relayer that submits on your behalf is designed and planned — until it
+  ships, we say this plainly instead of overclaiming.
+- **Unaudited.** The shielded-pool engine (Nethermind's reference implementation) and this wallet
+  are not security-audited. Testnet is the recommended surface; do not use real funds.
+
+---
+
+# Quickstart
+URL: https://docs.zkfighter.dev/docs/quickstart
+Run the wallet, fund it on testnet, and make your first shielded transfer.
+
+## Prerequisites
+
+- **Node 22+** and **pnpm 10** (`corepack enable`)
+- The repo: `git clone https://github.com/Blockchain-Oracle/zk-fighter`
+
+```bash
+pnpm install
+pnpm build     # builds every workspace
+pnpm test      # full test suite
+```
+
+## Run the web wallet
+
+```bash
+pnpm web:dev   # → http://127.0.0.1:5173
+```
+
+The wallet works against public Stellar RPC out of the box. Two optional local services improve
+the experience — the hosted testnet faucet and the warmed event index:
+
+```bash
+ZKF_TESTNET_FUNDER_SECRET=SA... pnpm funding-api:dev   # faucet, :8787
+pnpm bootnode:dev                                      # event index, :8788
+```
+
+## Five minutes to a shielded transfer
+
+<Steps>
+<Step>
+**Create a wallet.** 12-word recovery phrase → vault password. The phrase is the only recovery
+path — there is no reset and no support backdoor.
+</Step>
+<Step>
+**Add testnet funds.** One tap delivers XLM and USDC; USDC receiving (the trustline) is set up
+automatically.
+</Step>
+<Step>
+**Shield.** Pick an amount. The wallet checks your balance, prepares shield access
+(a one-time on-chain setup, first shield only), syncs the pool, generates the proof on your
+device, and submits — all in one run. The deposit is labeled a **public boundary**.
+</Step>
+<Step>
+**Send privately.** Paste the recipient's `zkf1…` private receive code, choose an amount, and
+generate the proof (~6s on-device). Amount and counterparty stay inside the pool.
+</Step>
+<Step>
+**Unshield when you choose.** Withdraw to any public address — the wallet tells you exactly
+what becomes visible before you confirm.
+</Step>
+</Steps>
+
+## Other surfaces
+
+```bash
+pnpm extension:build   # load apps/extension/.output/chrome-mv3 as an
+                       # unpacked extension in chrome://extensions
+pnpm mobile:dev        # mobile surface in the browser, :4183
+```
+
+See the [app guides](/docs/apps/web) for each surface in detail.

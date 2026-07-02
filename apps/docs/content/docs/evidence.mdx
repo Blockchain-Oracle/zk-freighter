@@ -1,0 +1,37 @@
+---
+title: Evidence & verification
+description: Every claim is backed by accepted on-chain transactions you can check yourself.
+---
+
+ZK Fighter's rule is **no fakes**: no mocked balances, no fabricated hashes, no claimed flows
+without accepted transactions. The full evidence table — 40+ real transaction hashes across
+Stellar testnet, Stellar mainnet, and four EVM testnets — lives in the repository README, with
+the deeper audit trail in the docs folder:
+
+- [README evidence table](https://github.com/Blockchain-Oracle/zk-fighter#evidence)
+- [Verified facts record](https://github.com/Blockchain-Oracle/zk-fighter/blob/main/docs/VERIFIED-FACTS.md)
+
+Spot-check any Stellar hash on [stellar.expert](https://stellar.expert/explorer/testnet), and
+EVM hashes on the respective chain explorer.
+
+## What's proven, at a glance
+
+- **Testnet:** the full loop — fund, shield, shielded transfer, unshield — for USDC and XLM,
+  from the web app, the extension (via its CDP harness), and the mobile surface
+- **Mainnet:** QuickShield (XLM + USDC), shielded transfers, and unshields with accepted hashes
+- **Bridge:** complete bridge-to-shield evidence from Ethereum, Base, Arbitrum, and OP Sepolia
+- **Load-bearing ZK:** a tampered proof is rejected on-chain (the wallet ships a demo of this)
+
+## What's explicitly NOT claimed
+
+- Mainnet **bridge-to-shield** (no accepted hashes yet)
+- Atomic bridge-and-shield (deferred until a custom adapter passes real tests)
+- Any audit. This is early, unaudited software — testnet is the recommended surface.
+
+## Run the verification yourself
+
+```bash
+pnpm test                   # 265 tests
+pnpm extension:runtime      # extension runtime smoke in a real Chrome
+pnpm extension:quickshield  # real funded shield, end to end, on testnet
+```

@@ -1,0 +1,31 @@
+---
+title: Selective disclosure
+description: Prove a specific note to an auditor — read-only, on your terms.
+---
+
+Privacy products live or die on compliance. ZK Fighter's answer is **user-held selective
+disclosure**: you can prove facts about your own shielded funds to someone you choose, without
+giving them any power over the funds.
+
+## How it works
+
+The Disclosure screen produces a **read-only proof of a specific note** — its existence and your
+ownership — that a counterparty or auditor can verify. Two powers stay deliberately separated:
+
+- **Spend authority** — never leaves your wallet
+- **View evidence** — the disclosure receipt, which you hand over explicitly
+
+Proving runs on your device; nothing is uploaded. The receipt covers exactly the note you chose —
+not your balance, not your other notes, not your history.
+
+## Verifying a receipt
+
+The same screen verifies receipts you receive from others, so both sides of an audit can run it
+without trusting a server.
+
+## Why this design
+
+The alternative — a custodial relayer that logs identities for compliance — puts a middleman in
+every payment who can see everything. ZK Fighter's association-set gate (screening at the pool
+door) plus user-held disclosure (proof on demand) achieves compliance without anyone holding a
+master view of your activity.

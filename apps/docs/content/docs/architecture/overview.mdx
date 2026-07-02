@@ -1,0 +1,66 @@
+---
+title: Overview
+description: One core engine, three thin surfaces, two supporting services.
+---
+
+Every app is a thin presentation layer over one shared package, `@zk-fighter/core`, which owns
+identity, vault, proving, networks, and transactions. If a flow works on web it works on the
+extension and mobile, because they run the same code.
+
+<Mermaid
+  chart={`flowchart LR
+    subgraph Surfaces
+      web["apps/web"]
+      ext["apps/extension"]
+      mob["apps/mobile"]
+    end
+    subgraph Shared
+      core["packages/core<br/>identity · vault · proofs · tx"]
+      ui["packages/ui<br/>design system"]
+    end
+    subgraph Services
+      boot["apps/bootnode<br/>warmed event index"]
+      fund["apps/funding-api<br/>testnet faucet"]
+    end
+    web --> core
+    ext --> core
+    mob --> core
+    web --> ui
+    ext --> ui
+    mob --> ui
+    core -->|"getEvents (warmed)"| boot
+    core -->|"demo funding"| fund
+    core --> stellar[("Stellar / Soroban<br/>privacy pool contracts")]
+    core --> cctp["Circle CCTP<br/>USDC bridge"]`}
+/>
+
+## The monorepo
+
+| Path | What it is |
+|---|---|
+| `apps/web` | React wallet app — the primary surface |
+| `apps/extension` | WXT MV3 browser extension (popup + side panel, offscreen prover) |
+| `apps/mobile` | Capacitor app (Android/iOS) reusing the same core |
+| `apps/landing` | Product site |
+| `apps/bootnode` | Warmed pool-event indexer + narrow RPC (Postgres) |
+| `apps/funding-api` | Hosted testnet faucet (XLM + USDC, budgets and cooldowns) |
+| `packages/core` | All wallet, network, proof, and transaction logic |
+| `packages/ui` | Shared design system |
+| `circuits/`, `contracts/` | Noir circuits + Soroban contract for Confidential Token mode |
+
+## Networks are configuration
+
+Testnet ↔ mainnet is a config toggle, not a code change: RPC/Horizon endpoints, pool contract
+IDs, asset contracts, and bridge routes all come from one network config. The UI always shows
+which network you're on.
+
+## Two privacy modes, two proving stacks
+
+| | Shielded Pools (flagship) | Confidential Tokens (preview) |
+|---|---|---|
+| Hides | balances, amounts, counterparties | amounts and balances only |
+| Proving | Circom / Groth16, Rust→WASM | Noir + UltraHonk (bb.js) |
+| Networks | testnet + mainnet | testnet only |
+
+Read more in [Proving](/docs/architecture/proving) and
+[Confidential mode](/docs/apps/confidential).

@@ -1,0 +1,33 @@
+---
+title: Confidential mode
+description: The second privacy mode — hidden amounts between public addresses. Testnet preview.
+---
+
+Confidential Tokens are the **complementary** Stellar privacy tool: they hide *amounts and
+balances* while keeping sender and recipient addresses public — the inverse trade-off of the
+shielded pool. Useful when the relationship is known (payroll, invoices between named parties)
+but the numbers are nobody's business.
+
+## Status: testnet-only, unaudited preview
+
+This mode is original ZK Fighter work — Noir circuits proved with UltraHonk (`bb.js`) in the
+browser, balances as homomorphic commitments on the Grumpkin curve, and a Soroban SEP-41
+wrapper contract (built on OpenZeppelin's confidential-token preview). It is deliberately
+scoped to **testnet** and clearly labeled in every surface.
+
+## Operations
+
+| Operation | What it does |
+|---|---|
+| Register | Creates your confidential account on the token |
+| Deposit | Wraps public USDC into a hidden balance |
+| Merge | Consolidates pending amounts into your spendable balance |
+| Transfer | Sends a hidden amount to another registered address |
+| Withdraw | Unwraps back to public USDC |
+
+Every operation generates its proof on your device, like the shielded pool.
+
+## Where to find it
+
+The **Confidential** screen on web and extension, and the mobile Confidential flow. Amounts are
+hidden; the participating addresses are public — the screen says exactly that.

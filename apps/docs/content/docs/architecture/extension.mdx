@@ -1,0 +1,37 @@
+---
+title: Extension internals
+description: How heavy proving fits inside a Manifest V3 extension.
+---
+
+MV3 popups are short-lived and service workers can't run the multi-megabyte WASM prover
+comfortably. The extension splits responsibilities:
+
+<Mermaid
+  chart={`flowchart LR
+    popup["Popup / side panel UI"] --> bg["Background service worker"]
+    bg --> off["Offscreen document<br/>WASM prover + pool runtime"]
+    off --> rpc[("Stellar RPC / Horizon")]
+    dapp["dApp page"] -.->|"public-key access & signing<br/>fail closed by design"| bg`}
+/>
+
+- **Popup** — the fast glance surface: balances (served instantly from cache, refreshed in the
+  background), QuickShield, receive, activity.
+- **Side panel** — where heavier flows (send, unshield, bridge) get room to breathe.
+- **Offscreen document** — hosts the Nethermind WASM prover and pool runtime; the background
+  worker proxies typed messages to it.
+
+## The dApp boundary fails closed
+
+ZK Fighter answers Freighter-style detection pings so sites know a Stellar wallet exists — but
+**external public-key access and transaction signing are refused by design**. It is a privacy
+wallet, not a general dApp signer. A site can never enumerate your address or ask you to sign.
+
+## Verification harnesses
+
+The repo ships CDP-driven runtime checks that launch a real Chrome, load the built extension,
+and drive real flows — including a fully funded shield on testnet:
+
+```bash
+pnpm extension:runtime      # popup renders, routes work, prover initializes
+pnpm extension:quickshield  # real funded XLM shield end-to-end
+```

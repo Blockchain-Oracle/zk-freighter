@@ -1,0 +1,48 @@
+---
+title: Privacy model
+description: Exactly what is hidden, what is public, and what we refuse to claim.
+---
+
+## The three boundaries
+
+Stellar's own documentation says it plainly: Stellar is a public blockchain — every transaction
+is recorded on-chain and visible to anyone. Privacy exists inside specific tools you opt into.
+ZK Fighter is built around that honesty:
+
+| Step | Visibility | What an observer sees |
+|---|---|---|
+| **1 · Shield in** | ○ Public | Your address deposited X into the pool contract |
+| **2 · Send privately** | ⛉ Shielded | A valid proof was accepted — no amount, balance, or counterparty |
+| **3 · Unshield out** | ○ Public | An address withdrew Y from the pool |
+
+Bridge arrivals (USDC landing from another chain via Circle CCTP) are also public — the wallet
+says so in the flow.
+
+## How the hiding actually works
+
+Inside the pool, your money exists as **notes** — sealed commitments on-chain that prove a coin
+exists without revealing its amount or owner. Spending publishes a **nullifier**, a one-time
+"spent" stamp that prevents double-spends but cannot be traced back to the deposit. A
+**zero-knowledge proof**, generated on your device, convinces the contract the transfer is valid
+without revealing anything else. See [shielded transfers](/docs/how-it-works/shielded-transfers).
+
+## Compliance without a custodian
+
+- **Association set (ASP):** first-time shielding registers a membership leaf with an on-chain
+  association-set contract, so the pool can include known-good funds and screen out flagged
+  ones. Privacy and compliance coexist — this is not a mixer.
+- **Selective disclosure:** you can produce a [read-only proof of a specific note](/docs/how-it-works/disclosure)
+  for an auditor — no keys, no spend authority, nothing uploaded.
+
+## What we refuse to claim
+
+- **Not "anonymous", "fully private", or "untraceable."** Boundaries are public, and correlation
+  is real: matching deposit and withdrawal **amounts**, close **timing**, and a small pool
+  (**anonymity set**) can all weaken privacy. Sending common amounts and waiting after shielding
+  improves it.
+- **Today, pool transactions are signed by your own Stellar account.** An observer can link your
+  account to pool activity at the envelope level (though never the amounts or counterparties of
+  shielded transfers). A relayer that submits on your behalf is designed and planned — until it
+  ships, we say this plainly instead of overclaiming.
+- **Unaudited.** The shielded-pool engine (Nethermind's reference implementation) and this wallet
+  are not security-audited. Testnet is the recommended surface; do not use real funds.

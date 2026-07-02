@@ -1,0 +1,15 @@
+{
+  "title": "ZK Fighter",
+  "pages": [
+    "index",
+    "quickstart",
+    "how-it-works",
+    "privacy-model",
+    "glossary",
+    "---Under the hood---",
+    "architecture",
+    "apps",
+    "---Verify it---",
+    "evidence"
+  ]
+}

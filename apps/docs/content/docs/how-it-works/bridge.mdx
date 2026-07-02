@@ -1,0 +1,38 @@
+---
+title: Bridging USDC in
+description: Real Circle USDC from Ethereum, Base, Arbitrum, or Optimism — then shield it.
+---
+
+ZK Fighter uses **Circle's CCTP** (Cross-Chain Transfer Protocol) to bring native USDC onto
+Stellar. CCTP burns USDC on the source chain and mints genuine USDC on Stellar — no wrapped
+IOU. Supported sources: **Ethereum, Base, Arbitrum, Optimism** (Sepolia testnets are the
+demo surface).
+
+<Mermaid
+  chart={`sequenceDiagram
+    participant E as EVM chain (Base / Arbitrum / OP / Ethereum)
+    participant I as Circle Iris attestation
+    participant X as Stellar
+    E->>E: USDC approve + depositForBurn
+    E-->>I: burn message
+    I-->>X: signed attestation
+    X->>X: receiveMessage → USDC mint (public arrival)
+    X->>X: separate shield/deposit into the privacy pool`}
+/>
+
+## The burn is signed by your own wallet
+
+The EVM-side burn is signed with an **EVM key derived from your same seed phrase** — no
+MetaMask, no WalletConnect, no separate wallet to manage.
+
+## Two honest steps, not one fake atomic
+
+Circle's contract mints USDC to the recipient — it does not call the privacy pool. So the flow
+is deliberately two labeled steps:
+
+1. **Bridge arrival (public):** burn → Circle attestation (this can take minutes; the UI shows
+   real progress) → Stellar mint. Every leg has a real transaction hash.
+2. **Shield (public boundary):** a separate deposit moves the arrived USDC into the pool.
+
+An atomic bridge-and-shield would require a custom adapter contract; it stays out of the product
+until it exists and passes real tests. We do not fake it.

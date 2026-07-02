@@ -1,0 +1,35 @@
+---
+title: Private receive codes
+description: The zkf1… code that lets anyone pay your shielded balance without knowing your address.
+---
+
+To be paid privately, you share a **private receive code** — a `zkf1…` string (Bech32m encoding,
+human-readable prefix `zkf`) shown as text and QR in every surface's Receive screen.
+
+## What's inside
+
+The code packs two public keys derived from your seed:
+
+- your **note public key** — ownership of the notes a sender creates for you
+- your **encryption public key** — lets the sender encrypt the note details so only you can
+  discover them on-chain
+
+It contains **no spending power and no link to your Stellar address**. Sharing it is safe; it
+only lets people pay you privately.
+
+## Discovery
+
+Your wallet finds incoming notes by scanning the pool's encrypted outputs with your keys —
+locally. Nobody else can tell which notes are yours.
+
+## Optional: make your code discoverable
+
+If you want people to find your code from your public Stellar address, you can opt in to
+publishing the link on-chain ("Make my code discoverable" in the Receive screen). This is a
+**public, deliberate act** — it never exposes your seed or any power to spend, only the mapping
+from address to receive code. Skip it and share the code out-of-band for maximum privacy.
+
+## Recovery
+
+Codes are deterministic: restoring your wallet from the 12-word phrase regenerates the same
+receive code on any device.

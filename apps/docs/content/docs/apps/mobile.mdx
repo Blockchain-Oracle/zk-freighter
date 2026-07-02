@@ -1,0 +1,36 @@
+---
+title: Mobile app
+description: The same wallet, thumb-first — Capacitor on Android and iOS.
+---
+
+The mobile app is a native Capacitor shell around the same core engine: real vault, real
+proving, real transactions — thumb-first. Swipe between the shielded and public balance cards,
+run flows in bottom sheets, and prove in-sheet.
+
+## Run it
+
+```bash
+pnpm mobile:dev        # browser preview → http://127.0.0.1:4183
+pnpm mobile:android    # native Android project (Android Studio)
+pnpm mobile:ios        # native iOS project (Xcode)
+```
+
+### Testing from a real phone browser
+
+A phone can't use `http://<lan-ip>` (no secure context → no Web Crypto) and rejects self-signed
+HTTPS. The repo ships a tunnel workflow that solves both:
+
+```bash
+pnpm --filter @zk-fighter/mobile dev:phone   # dev server with same-origin /zkf-* API proxies
+pnpm --filter @zk-fighter/mobile tunnel      # prints a trusted https://….trycloudflare.com URL
+```
+
+Open the printed URL on the phone — trusted HTTPS, no mixed content, full functionality.
+
+## Honest status
+
+- Shielded balances load via an explicit **Sync** (keeps background storage pressure off mobile
+  browsers)
+- Proof support on physical devices is gated behind an on-device runtime check — the app
+  verifies WebCrypto, workers, and WASM before claiming it
+- Bridge on mobile starts as a hand-off to the web app

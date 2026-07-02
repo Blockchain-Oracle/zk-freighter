@@ -1,0 +1,29 @@
+---
+title: Web app
+description: The full wallet in the browser.
+---
+
+The web app is the complete ZK Fighter experience: create/import a wallet, fund (testnet),
+shield, send privately, unshield, bridge, disclosure, discovery, confidential mode, activity,
+and settings.
+
+```bash
+pnpm web:dev   # → http://127.0.0.1:5173
+```
+
+## Layout
+
+A sidebar navigates the full feature set; the home screen pairs the **shielded balance card**
+(private) with the **public balance card** (boundary-labeled), separated by a "cross the
+boundary" action strip — shield, unshield, bridge.
+
+## Things worth knowing
+
+- **Balances**: public balances load from Horizon; shielded balances come from scanning pool
+  notes — use **Sync balance** after restoring a wallet or switching devices.
+- **USDC receiving** (the trustline) is established automatically the first time you fund,
+  shield, or bridge — there is no manual setup step.
+- **Activity** spans both worlds: shielded entries hide their detail; public boundary legs are
+  labeled and link to the explorer.
+- **Lock wallet** clears the unlocked vault from memory; your password unlocks it again. The
+  seed phrase remains the only recovery path.

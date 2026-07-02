@@ -25,3 +25,8 @@ circuits/**/target/
 # Soroban contracts build output
 contracts/target/
 .playwright-mcp/
+
+# Docs app generated
+.source/
+.react-router/
+build/

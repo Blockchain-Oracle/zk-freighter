@@ -3,7 +3,8 @@
 ZK Fighter is deployed as separate surfaces:
 
 - `@zk-fighter/landing`: root product site.
-- `@zk-fighter/web`: wallet app and primary judge path.
+- `@zk-fighter/web`: wallet app.
+- `@zk-fighter/docs`: documentation site (fully static; serve `apps/docs/build/client` at e.g. `docs.<domain>`).
 - `@zk-fighter/funding-api`: testnet XLM/USDC funding service.
 - `@zk-fighter/bootnode`: private-pool event cache and narrow RPC.
 - `@zk-fighter/extension`: WXT browser extension companion.
@@ -18,6 +19,7 @@ Local defaults:
 
 - web preview: `4173`
 - landing preview: `4174`
+- docs dev: `5177` (production build is static — any static host serves `apps/docs/build/client`)
 - funding API: `8787`
 - bootnode testnet: `8788`
 - bootnode mainnet: `8789`

@@ -1,0 +1,65 @@
+---
+title: Quickstart
+description: Run the wallet, fund it on testnet, and make your first shielded transfer.
+---
+
+## Prerequisites
+
+- **Node 22+** and **pnpm 10** (`corepack enable`)
+- The repo: `git clone https://github.com/Blockchain-Oracle/zk-fighter`
+
+```bash
+pnpm install
+pnpm build     # builds every workspace
+pnpm test      # full test suite
+```
+
+## Run the web wallet
+
+```bash
+pnpm web:dev   # → http://127.0.0.1:5173
+```
+
+The wallet works against public Stellar RPC out of the box. Two optional local services improve
+the experience — the hosted testnet faucet and the warmed event index:
+
+```bash
+ZKF_TESTNET_FUNDER_SECRET=SA... pnpm funding-api:dev   # faucet, :8787
+pnpm bootnode:dev                                      # event index, :8788
+```
+
+## Five minutes to a shielded transfer
+
+<Steps>
+<Step>
+**Create a wallet.** 12-word recovery phrase → vault password. The phrase is the only recovery
+path — there is no reset and no support backdoor.
+</Step>
+<Step>
+**Add testnet funds.** One tap delivers XLM and USDC; USDC receiving (the trustline) is set up
+automatically.
+</Step>
+<Step>
+**Shield.** Pick an amount. The wallet checks your balance, prepares shield access
+(a one-time on-chain setup, first shield only), syncs the pool, generates the proof on your
+device, and submits — all in one run. The deposit is labeled a **public boundary**.
+</Step>
+<Step>
+**Send privately.** Paste the recipient's `zkf1…` private receive code, choose an amount, and
+generate the proof (~6s on-device). Amount and counterparty stay inside the pool.
+</Step>
+<Step>
+**Unshield when you choose.** Withdraw to any public address — the wallet tells you exactly
+what becomes visible before you confirm.
+</Step>
+</Steps>
+
+## Other surfaces
+
+```bash
+pnpm extension:build   # load apps/extension/.output/chrome-mv3 as an
+                       # unpacked extension in chrome://extensions
+pnpm mobile:dev        # mobile surface in the browser, :4183
+```
+
+See the [app guides](/docs/apps/web) for each surface in detail.
