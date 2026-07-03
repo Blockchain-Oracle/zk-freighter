@@ -45,6 +45,10 @@ jobs:
               - 'apps/web/**'
               - 'packages/core/**'
               - 'packages/ui/**'
+            mobile:
+              - 'apps/mobile/**'
+              - 'packages/core/**'
+              - 'packages/ui/**'
             docs:
               - 'apps/docs/**'
             funding:
@@ -59,6 +63,7 @@ jobs:
           SHARED: ${{ steps.filter.outputs.shared }}
           LANDING: ${{ steps.filter.outputs.landing }}
           WEB: ${{ steps.filter.outputs.web }}
+          MOBILE: ${{ steps.filter.outputs.mobile }}
           DOCS: ${{ steps.filter.outputs.docs }}
           FUNDING: ${{ steps.filter.outputs.funding }}
           BOOTNODE: ${{ steps.filter.outputs.bootnode }}
@@ -71,6 +76,7 @@ jobs:
           services=""
           [ "$LANDING" = "true" ] && services="$services landing"
           [ "$WEB" = "true" ] && services="$services web"
+          [ "$MOBILE" = "true" ] && services="$services mobile"
           [ "$DOCS" = "true" ] && services="$services docs"
           [ "$FUNDING" = "true" ] && services="$services funding"
           [ "$BOOTNODE" = "true" ] && services="$services bootnode bootnode-mainnet"
@@ -88,6 +94,7 @@ jobs:
           COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
           COOLIFY_UUID_LANDING: ${{ vars.COOLIFY_UUID_LANDING }}
           COOLIFY_UUID_WEB: ${{ vars.COOLIFY_UUID_WEB }}
+          COOLIFY_UUID_MOBILE: ${{ vars.COOLIFY_UUID_MOBILE }}
           COOLIFY_UUID_DOCS: ${{ vars.COOLIFY_UUID_DOCS }}
           COOLIFY_UUID_FUNDING: ${{ vars.COOLIFY_UUID_FUNDING }}
           COOLIFY_UUID_BOOTNODE: ${{ vars.COOLIFY_UUID_BOOTNODE }}

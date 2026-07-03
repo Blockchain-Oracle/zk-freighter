@@ -9,6 +9,7 @@
 const services = {
   landing: process.env.COOLIFY_UUID_LANDING,
   web: process.env.COOLIFY_UUID_WEB,
+  mobile: process.env.COOLIFY_UUID_MOBILE,
   docs: process.env.COOLIFY_UUID_DOCS,
   funding: process.env.COOLIFY_UUID_FUNDING,
   bootnode: process.env.COOLIFY_UUID_BOOTNODE,

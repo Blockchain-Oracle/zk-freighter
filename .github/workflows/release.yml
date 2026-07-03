@@ -1,0 +1,84 @@
+name: Release builds (APK + extension zip)
+
+# Rebuilds the signed Android APK and the browser-extension zip and uploads them
+# to a GitHub Release under stable names, so the landing QR, README, docs, and
+# Obtainium always point at the newest build. Trigger by pushing a version tag
+# (v*) or manually (workflow_dispatch → pick the release tag to attach to).
+#
+# Requires repo secrets: ANDROID_KEYSTORE_B64 (base64 of the release keystore),
+# ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing release tag to attach assets to'
+        required: true
+        default: v0.1.0-alpha
+
+env:
+  TAG: ${{ github.event.inputs.tag || github.ref_name }}
+  PROD_FUNDING: https://api.zkfreighter.app
+  PROD_BOOTNODE_TESTNET: https://bootnode.zkfreighter.app/rpc
+  PROD_BOOTNODE_MAINNET: https://mainnet-bootnode.zkfreighter.app/rpc
+
+jobs:
+  extension:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: pnpm/action-setup@v4
+        with: { version: 10.33.0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @zk-freighter/extension zip
+      - name: Upload extension zip
+        run: |
+          ZIP=$(ls apps/extension/.output/*chrome*.zip | head -1)
+          cp "$ZIP" zk-freighter-extension-chrome.zip
+          gh release upload "$TAG" zk-freighter-extension-chrome.zip --clobber
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 10.33.0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: pnpm }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 21 }
+      - uses: android-actions/setup-android@v3
+      - run: pnpm install --frozen-lockfile
+      - name: Build web bundle + Capacitor sync (production endpoints)
+        working-directory: apps/mobile
+        env:
+          VITE_ZKF_TESTNET_FUNDING_API_URL: ${{ env.PROD_FUNDING }}
+          VITE_ZKF_TESTNET_BOOTNODE_URL: ${{ env.PROD_BOOTNODE_TESTNET }}
+          VITE_ZKF_MAINNET_BOOTNODE_URL: ${{ env.PROD_BOOTNODE_MAINNET }}
+        run: pnpm sync
+      - name: Restore release keystore
+        working-directory: apps/mobile/android/app
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_B64 }}" | base64 -d > zkfreighter-release.keystore
+          cat > keystore.properties <<EOF
+          storeFile=zkfreighter-release.keystore
+          storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
+          keyPassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          EOF
+      - name: Assemble signed release APK
+        working-directory: apps/mobile/android
+        run: ./gradlew :app:assembleRelease --no-daemon
+      - name: Upload APK
+        run: |
+          cp apps/mobile/android/app/build/outputs/apk/release/app-release.apk zk-freighter.apk
+          gh release upload "$TAG" zk-freighter.apk --clobber
+        env:
+          GH_TOKEN: ${{ github.token }}
