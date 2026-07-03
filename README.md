@@ -11,6 +11,7 @@
   <a href="https://m.zkfreighter.app">Mobile app</a> ·
   <a href="https://zkfreighter.app">Website</a> ·
   <a href="https://docs.zkfreighter.app">Docs</a> ·
+  <a href="https://www.canva.com/design/DAHOWNOxVZE/OB_8v7ELWleVxDFKeWXeIA/view">Pitch deck</a> ·
   <a href="https://github.com/Blockchain-Oracle/zk-freighter">Source</a> ·
   <a href="https://x.com/zkfreighter">X</a>
 </p>
