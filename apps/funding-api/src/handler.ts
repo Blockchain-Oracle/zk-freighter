@@ -2,6 +2,9 @@ import { Keypair, StrKey } from '@stellar/stellar-sdk'
 
 import type { AssetCode, FundingApiReport, FundingAssetReport, NetworkKey } from '@zk-freighter/core'
 import type { FundingConfig } from './config.js'
+import { handleEvmFundingRoutes } from './evm-routes.js'
+import { empty, ipFor, isRecord, json } from './http.js'
+import type { EvmFundingProvider } from './evm.js'
 import { fundAddress, fundingStatus } from './stellar.js'
 import type { FundingStore } from './store.js'
 
@@ -17,12 +20,12 @@ const defaultProvider: FundingProvider = {
   fund: fundAddress,
 }
 
-export function createHandler(config: FundingConfig, store: FundingStore, provider: FundingProvider = defaultProvider): (request: Request) => Promise<Response> {
+export function createHandler(config: FundingConfig, store: FundingStore, provider: FundingProvider = defaultProvider, evmProvider?: EvmFundingProvider): (request: Request) => Promise<Response> {
   return async (request) => {
     if (request.method === 'OPTIONS') return empty(204)
     const url = new URL(request.url)
     if (request.method === 'GET' && url.pathname === '/health') {
-      return json({ ok: true, fundingConfigured: Boolean(config.funderSecret), database: config.databaseUrl ? 'postgres' : 'memory' })
+      return json({ ok: true, fundingConfigured: Boolean(config.funderSecret), evmFundingConfigured: Boolean(config.evmFunderPrivateKey), database: config.databaseUrl ? 'postgres' : 'memory' })
     }
     if (request.method === 'GET' && url.pathname === '/v1/funding/status') {
       return status(request, config, provider, url)
@@ -30,6 +33,8 @@ export function createHandler(config: FundingConfig, store: FundingStore, provid
     if (request.method === 'POST' && url.pathname === '/v1/funding/request') {
       return fundingRequest(request, config, store, provider)
     }
+    const evmResponse = await handleEvmFundingRoutes(request, url, config, store, evmProvider)
+    if (evmResponse) return evmResponse
     return json({ ok: false, error: 'Not found.' }, 404)
   }
 }
@@ -107,29 +112,7 @@ function assetList(value: unknown): readonly AssetCode[] {
   return Array.isArray(value) ? value.filter((asset): asset is AssetCode => asset === 'XLM' || asset === 'USDC') : allowedAssets
 }
 
-function ipFor(request: Request): string {
-  return request.headers.get('x-zkf-client-ip') || 'local'
-}
 
-function json(body: unknown, status = 200): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...cors(), 'content-type': 'application/json; charset=utf-8' },
-  })
-}
 
-function empty(status: number): Response {
-  return new Response(null, { status, headers: cors() })
-}
 
-function cors(): Record<string, string> {
-  return {
-    'access-control-allow-origin': '*',
-    'access-control-allow-methods': 'GET,POST,OPTIONS',
-    'access-control-allow-headers': 'content-type',
-  }
-}
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null
-}

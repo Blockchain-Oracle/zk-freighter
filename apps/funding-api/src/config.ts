@@ -8,6 +8,12 @@ export interface FundingConfig {
   readonly ipWindowMs: number
   readonly addressLimit: number
   readonly ipLimit: number
+  /** EVM faucet (Base + OP Sepolia). Testnet-only by construction. */
+  readonly evmFunderPrivateKey?: string
+  /** USDC base units (6 decimals). */
+  readonly evmUsdcAmount: bigint
+  readonly evmGasAmountWei: bigint
+  readonly evmRpcUrls: { readonly base: string; readonly optimism: string }
 }
 
 export function readConfig(env: NodeJS.ProcessEnv = process.env): FundingConfig {
@@ -21,7 +27,20 @@ export function readConfig(env: NodeJS.ProcessEnv = process.env): FundingConfig 
     ipWindowMs: parseNumber(env.ZKF_FUNDING_IP_WINDOW_MS, 60 * 60 * 1000),
     addressLimit: parseNumber(env.ZKF_FUNDING_ADDRESS_LIMIT, 3),
     ipLimit: parseNumber(env.ZKF_FUNDING_IP_LIMIT, 20),
+    evmFunderPrivateKey: text(env.ZKF_EVM_FUNDER_PRIVATE_KEY),
+    evmUsdcAmount: parseBigint(env.ZKF_EVM_FUND_USDC_UNITS, 10_000_000n), // 10 USDC
+    evmGasAmountWei: parseBigint(env.ZKF_EVM_FUND_GAS_WEI, 2_000_000_000_000_000n), // 0.002 ETH
+    evmRpcUrls: {
+      base: text(env.ZKF_EVM_RPC_BASE) ?? 'https://sepolia.base.org',
+      optimism: text(env.ZKF_EVM_RPC_OPTIMISM) ?? 'https://sepolia.optimism.io',
+    },
   }
+}
+
+function parseBigint(value: string | undefined, fallback: bigint): bigint {
+  const normalized = text(value)
+  if (!normalized || !/^\d+$/u.test(normalized)) return fallback
+  return BigInt(normalized)
 }
 
 function parseNumber(value: string | undefined, fallback: number): number {

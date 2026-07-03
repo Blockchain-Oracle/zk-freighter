@@ -14,7 +14,8 @@
   "dependencies": {
     "@stellar/stellar-sdk": "16.0.1",
     "@zk-freighter/core": "workspace:*",
-    "pg": "8.16.3"
+    "pg": "8.16.3",
+    "viem": "2.53.1"
   },
   "devDependencies": {
     "@types/node": "^24.12.3",

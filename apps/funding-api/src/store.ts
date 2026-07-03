@@ -1,13 +1,12 @@
 import { Pool } from 'pg'
 
-import type { FundingApiReport } from '@zk-freighter/core'
-
 export interface FundingRequestRecord {
   readonly network: string
   readonly address: string
   readonly ip: string
   readonly assets: readonly string[]
-  readonly response: FundingApiReport
+  /** The report returned to the caller (Stellar or EVM shape), stored as jsonb. */
+  readonly response: unknown
 }
 
 export interface FundingStore {
