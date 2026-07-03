@@ -5,7 +5,6 @@ import {
   deriveWalletIdentity,
   encodeReceiveCode,
   requestDemoFunding,
-  restartNethermindWebClientCache,
   unlockPasskeyEnvelope,
   unlockEncryptedVault,
   type EncryptedVault,
@@ -24,6 +23,7 @@ import {
   vaultStorageKey,
   walletPublicKeyStorageKey,
 } from './app-helpers'
+import { requestPrivateEngineStorageReset } from './privateEngineStorage'
 import { UnlockScreen } from './AccessPanels'
 import { OnboardingFlow } from './OnboardingFlow'
 import { WalletShell } from './wallet/WalletShell'
@@ -37,7 +37,9 @@ function storedNetwork(): NetworkKey {
 }
 
 function App() {
-  const [network, setNetwork] = useState<NetworkKey>(() => storedNetwork())
+  // Network changes go through changeNetwork() → storage + full reload, so the
+  // in-session value never mutates.
+  const [network] = useState<NetworkKey>(() => storedNetwork())
   const [vault, setVault] = useState<EncryptedVault | null>(() => getStoredVault())
   const [passkeyEnvelope, setPasskeyEnvelope] = useState<PasskeyEnvelope | null>(() => getStoredPasskeyEnvelope())
   const [identity, setIdentity] = useState<WalletIdentity | null>(null)
@@ -47,7 +49,6 @@ function App() {
   const [unlockPassword, setUnlockPassword] = useState('')
   const [unlockError, setUnlockError] = useState('')
   const [busy, setBusy] = useState(false)
-  const [privateEngineSwitching, setPrivateEngineSwitching] = useState(false)
 
   const receiveCode = useMemo(() => {
     if (!identity) return ''
@@ -145,10 +146,11 @@ function App() {
 
   function changeNetwork(nextNetwork: NetworkKey) {
     window.localStorage.setItem(networkStorageKey, nextNetwork)
-    setPrivateEngineSwitching(true)
-    void restartNethermindWebClientCache().finally(() => setPrivateEngineSwitching(false))
-    setNetwork(nextNetwork)
-    setIdentity((current) => (current ? deriveWalletIdentity(current.mnemonic, nextNetwork) : null))
+    // The private engine's persisted scan cache (OPFS) is not network-keyed, so
+    // every switch wipes it via the proven reset-flag + reload path (the wipe
+    // runs in main.tsx before the runtime starts and can hold files open).
+    requestPrivateEngineStorageReset()
+    window.location.reload()
   }
 
   const initialTheme: 'dark' | 'light' = window.localStorage.getItem(themeStorageKey) === 'light' ? 'light' : 'dark'
@@ -163,7 +165,6 @@ function App() {
             network={network}
             receiveCode={receiveCode}
             passkeyEnvelope={passkeyEnvelope}
-            privateEngineSwitching={privateEngineSwitching}
             onChangeNetwork={changeNetwork}
             onPasskeyEnvelopeChange={savePasskeyEnvelope}
             onLock={() => { setIdentity(null); setFlow('unlock') }}

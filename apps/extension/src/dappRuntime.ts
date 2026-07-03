@@ -127,7 +127,7 @@ export class ExtensionDappRuntime {
         return activityFlow(message.network)
       case dappMessageTypes.setNetwork:
         await setNetworkFlow(message.network)
-        await this.resetPrivateRuntime?.()
+        await this.resetPrivateStorage?.() // full OPFS wipe — cache isn't network-keyed
         return this.status()
       case dappMessageTypes.passkeySupport:
         return passkeySupportFlow()

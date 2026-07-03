@@ -23,9 +23,8 @@ import { MobileSheetOverlay } from './MobileSheetOverlay'
 import { MobileSettings } from './MobileTools'
 import type { MobileRouteParams } from './MobileFlowPrimitives'
 import { isSheetRoute, parseMobileDeepLink, vaultErrorText } from './mobile-routing'
-import { resetMobilePrivateRuntime, syncMobileShieldedBalances } from './mobile-runtime'
+import { resetMobilePrivateStateForNetworkSwitch, syncMobileShieldedBalances } from './mobile-runtime'
 import {
-  clearMobilePrivateCache,
   getStoredNetwork,
   getStoredTheme,
   getStoredVault,
@@ -185,6 +184,8 @@ export function MobileApp() {
   }
 
   function changeNetwork(nextNetwork: NetworkKey) {
+    setShieldedCache(null)
+    if (identity) void resetMobilePrivateStateForNetworkSwitch(network, nextNetwork, identity.stellarPublicKey)
     setStoredNetwork(nextNetwork)
     setNetwork(nextNetwork)
     setIdentity((current) => current ? deriveWalletIdentity(current.mnemonic, nextNetwork) : null)
@@ -207,9 +208,8 @@ export function MobileApp() {
 
   async function resetPrivate() {
     if (!identity) return
-    clearMobilePrivateCache(network, identity.stellarPublicKey)
     setShieldedCache(null)
-    await resetMobilePrivateRuntime()
+    await resetMobilePrivateStateForNetworkSwitch(network, network, identity.stellarPublicKey)
   }
 
   async function requestFunds(): Promise<string> {

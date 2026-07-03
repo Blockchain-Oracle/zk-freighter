@@ -34,7 +34,6 @@ interface WalletShellProps {
   network: NetworkKey
   receiveCode: string
   passkeyEnvelope: PasskeyEnvelope | null
-  privateEngineSwitching: boolean
   onChangeNetwork: (network: NetworkKey) => void
   onPasskeyEnvelopeChange: (envelope: PasskeyEnvelope | null) => void
   onLock: () => void
@@ -70,7 +69,6 @@ export function WalletShell({
   network,
   receiveCode,
   passkeyEnvelope,
-  privateEngineSwitching,
   onChangeNetwork,
   onPasskeyEnvelopeChange,
   onLock,
@@ -79,7 +77,7 @@ export function WalletShell({
   const { theme, toggleTheme } = useTheme()
   // Loaded once for the whole shell so the expensive prover note-load is shared
   // across Home + Activity instead of re-running on every tab switch.
-  const balance = useShieldedBalance(identity, network, !privateEngineSwitching)
+  const balance = useShieldedBalance(identity, network)
 
   function navItemStyle(active: boolean) {
     return {
@@ -136,11 +134,6 @@ export function WalletShell({
       </aside>
 
       <main style={{ flex: 1, minWidth: 0, height: '100%', overflowY: 'auto' }}>
-        {privateEngineSwitching ? (
-          <div style={{ margin: '18px auto 0', width: 'calc(100% - 56px)', maxWidth: 760, border: '1px solid rgba(240,181,77,.32)', borderRadius: 12, background: 'rgba(240,181,77,.08)', color: 'var(--tx2)', padding: '10px 12px', fontSize: 12, fontWeight: 650 }}>
-            Switching private engine… shielded scans and proofs will resume on {network}.
-          </div>
-        ) : null}
         {screen === 'home' ? <HomeScreen identity={identity} network={network} balance={balance} onNav={setScreen} /> : null}
         {screen === 'shield' ? <ShieldScreen identity={identity} network={network} balance={balance} onNav={setScreen} /> : null}
         {screen === 'send' ? <SendScreen identity={identity} network={network} balance={balance} onNav={setScreen} /> : null}

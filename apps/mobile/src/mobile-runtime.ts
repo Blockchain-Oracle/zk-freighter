@@ -21,7 +21,7 @@ import {
   type XlmPrivateSubmitReport,
   type ShieldWithPrerequisitesReport,
 } from '@zk-freighter/core'
-import { writeShieldedBalanceCache } from './mobile-storage'
+import { clearMobilePrivateCache, writeShieldedBalanceCache } from './mobile-storage'
 
 export type RuntimeStatus = 'idle' | 'running' | 'ready' | 'blocked' | 'failed'
 
@@ -120,4 +120,19 @@ export function runMobileDisclosureVerify(options: {
 
 export async function resetMobilePrivateRuntime(): Promise<void> {
   await runMobilePrivateJob(() => restartNethermindWebClientCache())
+}
+
+/**
+ * Network-switch reset: the engine cache is not safe to reuse across networks.
+ * Clears both networks' note caches for the address and restarts the runtime
+ * (serialized on the private-job queue so it cannot race an in-flight proof).
+ */
+export async function resetMobilePrivateStateForNetworkSwitch(
+  from: NetworkKey,
+  to: NetworkKey,
+  address: string,
+): Promise<void> {
+  clearMobilePrivateCache(from, address)
+  clearMobilePrivateCache(to, address)
+  await resetMobilePrivateRuntime()
 }
