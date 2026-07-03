@@ -1,4 +1,5 @@
 import {
+  deriveEvmAddress,
   deriveWalletIdentity,
   demoFundingStatus as coreDemoFundingStatus,
   encodeReceiveCode,
@@ -6,24 +7,33 @@ import {
   loadEvmBalances,
   privateRuntimeErrorText,
   requestDemoFunding,
+  requestEvmFunding,
   type AssetCode,
   type CctpBridgeReport,
   type CctpSourceKey,
   type ConfidentialSubmitReport,
   type DemoFundingRequestReport,
+  type EvmFaucetChain,
   type NetworkKey,
 } from '@zk-freighter/core'
 
 import { readActivity, recordActivity, type ActivityBoundary, type ActivityKind, type ActivityStatus } from './activity-store'
 import { balanceCacheKey, clearAllBalanceCache, isBalanceStale, readBalanceCache, writeBalanceCache } from './balance-cache'
 import { serializeDemoFundingRequestReport, serializeDemoFundingStatusReport } from './demo-funding-serialization'
-import type { ActivityResponse, BridgeSourceBalancesResponse, DappBalancesResponse, DemoFundingResponse, DiscoverLookupResponse, DiscoverPublishResponse, DiscoverStatusResponse, PrivateActionResponse, QuickShieldResponse } from './dappMessages'
+import type { ActivityResponse, BridgeSourceBalancesResponse, DappBalancesResponse, DemoFundingResponse, DiscoverLookupResponse, DiscoverPublishResponse, DiscoverStatusResponse, EvmFundResponse, PrivateActionResponse, QuickShieldResponse } from './dappMessages'
 import { readStoredDiscoverPublish, writeStoredDiscoverPublish } from './discover-store'
 import type { ExtensionBalancesRunner, ExtensionDiscoverPublishRunner, ExtensionDiscoverRunner, ExtensionPrivateTransferRunner, ExtensionShieldRunner, ExtensionUnshieldRunner } from './dappRuntime-types'
-import { identityForMnemonic, readStoredDappWallet } from './dappRuntimeState'
+import { identityForMnemonic, readStoredDappWallet, requireUnlockedDappWallet } from './dappRuntimeState'
 
 export { autoShieldTickFlow } from './auto-shield-flow'
 
+// Testnet EVM faucet: derives the seed EVM address in the background, then requests funding.
+export async function evmFundFlow(unlockedMnemonic: string | null, chain: EvmFaucetChain): Promise<EvmFundResponse> {
+  const ready = await requireUnlockedDappWallet(unlockedMnemonic)
+  if (!ready.ok) return { ok: false, error: ready.error }
+  const report = await requestEvmFunding({ chain, address: deriveEvmAddress(ready.mnemonic), network: ready.network })
+  return { ok: true, report }
+}
 // Post-gate flow bodies, split out of dappRuntime.ts (<300 lines). The unlock GATE
 // stays in the runtime methods that call these — these run only once gated, and the
 // unlocked mnemonic is passed in (the security model is unchanged).

@@ -22,7 +22,7 @@ import {
   type QuickShieldResponse,
 } from './dappMessages'
 import { clearAllBalanceCache } from './balance-cache'
-import { activityFlow, autoShieldTickFlow, balancesFlow, bridgeSourceBalancesFlow, demoFundingRequestFlow, demoFundingStatusFlow, discoverFlow, discoverPublishFlow, discoverStatusFlow, privateTransferFlow, quickShieldFlow, receiveCodeForIdentity, recordBridgeActivity, recordConfidentialActivity, unshieldFlow } from './dappRuntime-flows'
+import { activityFlow, autoShieldTickFlow, balancesFlow, bridgeSourceBalancesFlow, demoFundingRequestFlow, demoFundingStatusFlow, discoverFlow, discoverPublishFlow, discoverStatusFlow, evmFundFlow, privateTransferFlow, quickShieldFlow, receiveCodeForIdentity, recordBridgeActivity, recordConfidentialActivity, unshieldFlow } from './dappRuntime-flows'
 import { publicTransferFlow } from './dappRuntime-public-flow'
 import { passkeyCreateFlow, passkeyPrepareCreateFlow, passkeyRemoveFlow, passkeySupportFlow, passkeyUnlockFlow, setNetworkFlow } from './dappRuntime-wallet'
 import { freighterResponse } from './dappRuntimeHelpers'
@@ -94,16 +94,15 @@ export class ExtensionDappRuntime {
         })
       case dappMessageTypes.bridgeSourceBalances:
         return this.bridgeSourceBalances(message.sourceChainKey)
+      case dappMessageTypes.evmFund: return evmFundFlow(this.unlockedMnemonic, message.chain)
       case dappMessageTypes.confidential:
         return this.gated(this.runConfidential, 'confidential', { op: message.op, amount: message.amount, to: message.to }, (report, ready) => {
           recordConfidentialActivity(report, ready.network)
         })
       case dappMessageTypes.balances:
         return this.balances(message.syncBeforeRead === true)
-      case dappMessageTypes.demoFundingStatus:
-        return this.demoFundingStatus()
-      case dappMessageTypes.demoFundingRequest:
-        return this.demoFundingRequest()
+      case dappMessageTypes.demoFundingStatus: return this.demoFundingStatus()
+      case dappMessageTypes.demoFundingRequest: return this.demoFundingRequest()
       case dappMessageTypes.privateRuntimeStatus: return { ok: true, surface: 'extension-popup', coordinator: 'offscreen-queue', proving: 'offscreen' }
       case dappMessageTypes.privateEngineReset:
         return this.resetPrivateEngine()

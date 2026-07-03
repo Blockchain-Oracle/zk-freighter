@@ -18,6 +18,7 @@ import {
 import { Button } from '@zk-freighter/ui'
 import type { FlowProps } from './MobileFlowPrimitives'
 import { FlowScreen, Field, ResultCard, Segment } from './MobileFlowPrimitives'
+import { MobileEvmFundButton } from './MobileEvmFundButton'
 import { runMobileShield } from './mobile-runtime'
 import { readMobileBridgeResume, recordMobileActivity, updateMobileActivity, writeMobileBridgeResume } from './mobile-storage'
 import { parseMobileAmount, reportMessage, shieldReportExplorer, shieldReportHash, shortTx } from './mobile-flow-helpers'
@@ -168,6 +169,7 @@ export function MobileBridge(props: FlowProps) {
           <span>USDC {balances ? formatAtomic(balances.usdcAtomic, 6, 2) : '--'}</span>
           <span>{source?.gasToken ?? 'Gas'} {balances ? formatAtomic(balances.nativeWei, 18, 4) : '--'}</span>
         </div>
+        <MobileEvmFundButton network={network} chain={sourceKey} label={source?.label ?? 'this chain'} address={evmAddress} />
       </section>
       {mode === 'bridge' ? <Field label="Amount" value={amount} placeholder={balances && balances.usdcAtomic > 0n ? formatAtomic(balances.usdcAtomic, 6, 2) : '0.00'} onChange={setAmount} /> : null}
       {mode === 'resume' ? <Field label="Burn hash" value={resumeHash} placeholder="0x..." mono onChange={setResumeHash} /> : null}

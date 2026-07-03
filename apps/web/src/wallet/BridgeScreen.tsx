@@ -18,6 +18,7 @@ import {
   type XlmShieldSubmitReport,
 } from '@zk-freighter/core'
 import { BoundaryBadge, Button, Callout, Chip, EventStepTracker, type ProofStep } from '@zk-freighter/ui'
+import { EvmFundButton } from './EvmFundButton'
 import type { ShieldedBalanceState } from './useShieldedBalance'
 import { runBridgeAfterDestinationSetup } from '../bridgePanelActions'
 import { loadCompletedBridgeResumeReport, saveBridgeResumeReport } from '../bridge-storage'
@@ -221,6 +222,7 @@ export function BridgeScreen({ identity, network, balance }: BridgeScreenProps) 
               ) : <span style={{ color: 'var(--tx3)' }}>Balance unavailable — you can still bridge.</span>}
             </div>
             <div style={{ marginTop: 10, fontSize: 10.5, color: 'var(--tx3)', lineHeight: 1.5 }}>Send USDC (and a little {source?.gasToken ?? 'gas'}) to this address, then start the bridge.</div>
+            <EvmFundButton network={network} sourceKey={sourceKey} sourceLabel={source?.label ?? 'this chain'} address={evmAddress} />
           </div>
           <div>
             <div style={{ ...mono9, marginBottom: 8 }}>AMOUNT TO BRIDGE</div>

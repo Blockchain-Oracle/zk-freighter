@@ -3,6 +3,7 @@ import type {
   AssetCode,
   CctpBridgeReport,
   CctpSourceKey,
+  EvmFundingReport,
   FreighterBridgeResponse,
   GenerateDisclosureReport,
   NetworkKey,
@@ -215,6 +216,12 @@ export interface AutoShieldTickResponse {
   readonly error?: string
 }
 
+export interface EvmFundResponse {
+  readonly ok: boolean
+  readonly report?: EvmFundingReport
+  readonly error?: string
+}
+
 export type DappRuntimeResponse =
   | DappWalletStatus
   | FreighterBridgeResponse
@@ -239,4 +246,5 @@ export type DappRuntimeResponse =
   | PasskeySupportResponse
   | PasskeyPrepareCreateResponse
   | AutoShieldTickResponse
+  | EvmFundResponse
   | { readonly ok: boolean; readonly publicKey?: string; readonly error?: string }

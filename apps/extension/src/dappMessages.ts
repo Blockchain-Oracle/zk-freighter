@@ -1,6 +1,7 @@
 import type {
   AssetCode,
   CctpSourceKey,
+  EvmFaucetChain,
   FreighterBridgeRequest,
   NetworkKey,
   PasskeyCreateMaterial,
@@ -21,6 +22,7 @@ export const dappMessageTypes = {
   autoShield: 'zkf.extension.autoShield.tick',
   quickBridge: 'zkf.extension.bridge.run',
   bridgeSourceBalances: 'zkf.extension.bridge.balances',
+  evmFund: 'zkf.extension.bridge.evmFund',
   confidential: 'zkf.extension.confidential',
   balances: 'zkf.extension.balances',
   demoFundingStatus: 'zkf.extension.demoFunding.status',
@@ -94,6 +96,10 @@ export type DappRuntimeMessage =
   | {
       readonly type: typeof dappMessageTypes.bridgeSourceBalances
       readonly sourceChainKey: CctpSourceKey
+    }
+  | {
+      readonly type: typeof dappMessageTypes.evmFund
+      readonly chain: EvmFaucetChain
     }
   | {
       readonly type: typeof dappMessageTypes.confidential

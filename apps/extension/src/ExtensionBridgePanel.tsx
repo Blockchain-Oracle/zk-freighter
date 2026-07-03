@@ -1,10 +1,10 @@
 import { ArrowLeftRight } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
-import { bridgeAmountDisplay, getDefaultCctpSource, getEnabledCctpSources, parseEvmUsdcAmountToAtomic, type CctpSourceKey } from '@zk-freighter/core'
+import { bridgeAmountDisplay, getDefaultCctpSource, getEnabledCctpSources, isEvmFaucetChain, parseEvmUsdcAmountToAtomic, type CctpSourceKey, type EvmFundingReport, type NetworkKey } from '@zk-freighter/core'
 import { Button } from '@zk-freighter/ui'
 
 import { ChainMark } from './asset-marks'
-import { dappMessageTypes, type BridgeSourceBalancesResponse, type DappBalances, type DappBalancesResponse, type DappWalletStatus, type QuickBridgeResponse } from './dappMessages'
+import { dappMessageTypes, type BridgeSourceBalancesResponse, type DappBalances, type DappBalancesResponse, type DappWalletStatus, type EvmFundResponse, type QuickBridgeResponse } from './dappMessages'
 import { amountLabel, atomicToAmountInput, formatAtomic, shorten } from './extension-format'
 import { Caption, Copy, ErrorText, ExplorerLink, MetaRow, Panel, SectionHeader, fieldStyle } from './extension-ui'
 
@@ -100,6 +100,7 @@ export function ExtensionBridgePanel({ status, sendRuntimeMessage }: ExtensionBr
       <MetaRow label="PUBLIC STELLAR USDC">{destinationUsdc}</MetaRow>
       <MetaRow label="SOURCE USDC">{sourceLoading ? 'Loading…' : sourceUsdcAtomic === null ? '—' : `${formatAtomic(sourceUsdcAtomic, 6, 2)} USDC`}</MetaRow>
       <MetaRow label="SOURCE GAS">{sourceLoading ? 'Loading…' : sourceNativeWei === null ? '—' : `${formatAtomic(sourceNativeWei, 18, 4)} ${sourceBalances?.gasToken ?? selectedSource?.gasToken ?? 'gas'}`}</MetaRow>
+      <EvmFundRow network={network} chain={selectedSource?.key ?? sourceChainKey} label={selectedSource?.label ?? 'this chain'} sendRuntimeMessage={sendRuntimeMessage} />
       <MetaRow label="SOURCE">{selectedSource ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}><ChainMark chain={selectedSource.key} size={21} />{selectedSource.label}</span> : 'Unavailable'}</MetaRow>
       <MetaRow label="AMOUNT">{resumeMode ? 'Resolved from burn attestation' : parsedAmount.ok ? bridgeAmountDisplay(parsedAmount.atomic) : '— USDC'}</MetaRow>
       <div>
@@ -148,4 +149,43 @@ function bridgeResultText(result: QuickBridgeResponse | null): string {
     return 'USDC arrived publicly on Stellar — shield it via Quick shield.'
   }
   return `${report.status}: ${report.statusEvents.at(-1)?.message ?? report.blockers[0] ?? 'in progress'}`
+}
+
+function EvmFundRow({ network, chain, label, sendRuntimeMessage }: { readonly network: NetworkKey; readonly chain: CctpSourceKey; readonly label: string; readonly sendRuntimeMessage: (message: object) => Promise<unknown> }) {
+  const [busy, setBusy] = useState(false)
+  const [report, setReport] = useState<EvmFundingReport | null>(null)
+  if (network !== 'testnet' || !isEvmFaucetChain(chain)) return null
+  const faucetChain = chain
+
+  async function fund() {
+    setBusy(true)
+    try {
+      const res = (await sendRuntimeMessage({ type: dappMessageTypes.evmFund, chain: faucetChain })) as EvmFundResponse
+      setReport(res.report ?? null)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const cooldown = report?.cooldownUntil ? new Date(report.cooldownUntil) : null
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <button type="button" data-zkf-action="evm-fund" disabled={busy} onClick={() => void fund()} style={{ border: '1px solid rgba(94,124,250,.35)', borderRadius: 12, background: 'rgba(94,124,250,.08)', color: 'var(--tx)', padding: '9px 11px', fontSize: 11, fontWeight: 800, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.65 : 1 }}>
+        {busy ? 'Requesting…' : `Get test USDC + gas on ${label}`}
+      </button>
+      {report ? (
+        <div style={{ fontSize: 10.5, color: 'var(--tx2)', lineHeight: 1.5 }}>
+          {report.assets.map((asset) => (
+            <div key={asset.asset} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontFamily: 'var(--fm)', color: 'var(--tx)' }}>{asset.asset}</span>
+              <span style={{ color: asset.status === 'funded' || asset.status === 'ready' ? 'var(--pos)' : 'var(--warn)' }}>{asset.status}</span>
+              {asset.explorerUrl ? <a href={asset.explorerUrl} target="_blank" rel="noreferrer" style={{ color: 'var(--ac2)' }}>view ↗</a> : null}
+            </div>
+          ))}
+          {report.assets.length === 0 && report.blockers[0] ? <div style={{ color: 'var(--warn)' }}>{report.blockers[0]}</div> : null}
+          {cooldown ? <div style={{ color: 'var(--tx3)', marginTop: 3 }}>Faucet cooldown until {cooldown.toLocaleTimeString()}.</div> : null}
+        </div>
+      ) : null}
+    </div>
+  )
 }
