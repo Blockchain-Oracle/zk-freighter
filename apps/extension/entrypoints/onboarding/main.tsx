@@ -3,10 +3,10 @@ import { createRoot } from 'react-dom/client'
 import '../../src/runtime-env'
 import '@zk-freighter/ui/theme.css'
 
-import { ExtensionPopupRoot } from '../../src/ExtensionPopupRoot'
+import { ExtensionOnboarding } from '../../src/ExtensionOnboarding'
 
 createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <ExtensionPopupRoot />
+    <ExtensionOnboarding />
   </React.StrictMode>,
 )

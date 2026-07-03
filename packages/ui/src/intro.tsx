@@ -69,26 +69,29 @@ export function BrandIntro({
     const hold = prefersReducedMotion() ? 900 : introMs
     const timer = window.setTimeout(finish, hold)
     let audio: HTMLAudioElement | undefined
-    const retryOnGesture = () => {
+    let started = false
+    const startAudio = () => {
       // pointerdown precedes the click that skips, so the tap-to-skip gesture
-      // still lands the chime; a gesture after the intro finished stays silent.
-      if (doneRef.current) return
-      audio?.play().catch(() => undefined)
+      // still lands the chime. Listeners are attached up front (not only inside a
+      // rejected play() — that races the first tap); `start` is idempotent and a
+      // failed attempt retries on the next gesture.
+      if (!audio || started || doneRef.current) return
+      started = true
+      audio.play().catch(() => { started = false })
     }
     if (soundSrc) {
       audio = new Audio(soundSrc)
       audio.volume = 0.75
-      audio.play().catch(() => {
-        // Autoplay blocked (no gesture yet). The first gesture anywhere —
-        // including the tap that skips the intro — starts the sound.
-        window.addEventListener('pointerdown', retryOnGesture, { once: true, capture: true })
-        window.addEventListener('keydown', retryOnGesture, { once: true, capture: true })
-      })
+      audio.preload = 'auto'
+      audio.load()
+      startAudio()
+      window.addEventListener('pointerdown', startAudio, { capture: true })
+      window.addEventListener('keydown', startAudio, { capture: true })
     }
     return () => {
       window.clearTimeout(timer)
-      window.removeEventListener('pointerdown', retryOnGesture, { capture: true })
-      window.removeEventListener('keydown', retryOnGesture, { capture: true })
+      window.removeEventListener('pointerdown', startAudio, { capture: true })
+      window.removeEventListener('keydown', startAudio, { capture: true })
       // StrictMode dev double-mount: stop the first instance so audio never overlaps
       audio?.pause()
     }

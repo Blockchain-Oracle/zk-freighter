@@ -36,7 +36,7 @@ function storedNetwork(): NetworkKey {
   return window.localStorage.getItem(networkStorageKey) === 'mainnet' ? 'mainnet' : 'testnet'
 }
 
-function App() {
+function App({ initialChoice }: { initialChoice?: 'create' | 'import' } = {}) {
   // Network changes go through changeNetwork() → storage + full reload, so the
   // in-session value never mutates.
   const [network] = useState<NetworkKey>(() => storedNetwork())
@@ -192,6 +192,7 @@ function App() {
           network={network}
           networks={networks}
           busy={busy}
+          initialChoice={initialChoice}
           onChangeNetwork={changeNetwork}
           onCreate={createVault}
           onDemoFunding={requestOnboardingDemoFunding}

@@ -49,10 +49,15 @@ export default defineBackground(() => {
     resetOffscreenPrivateStorage,
   )
 
-  browser.runtime.onInstalled.addListener(() => {
+  browser.runtime.onInstalled.addListener((details) => {
     void browser.storage.local.set({
       'zkf.extension.installedAt': new Date().toISOString(),
     })
+    // Fresh install → open the full-tab intro v2 (MetaMask/Phantom pattern).
+    // Updates keep the user where they are.
+    if (details.reason === 'install') {
+      void browser.tabs.create({ url: browser.runtime.getURL('/onboarding.html') })
+    }
   })
 
   browser.runtime.onMessage.addListener((message: unknown, sender, sendResponse) => {

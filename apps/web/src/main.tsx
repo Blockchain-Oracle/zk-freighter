@@ -1,8 +1,7 @@
 import { createRoot } from 'react-dom/client'
 import './runtime-env'
 import '@zk-freighter/ui/theme.css'
-import { BrandIntro } from '@zk-freighter/ui'
-import App from './App.tsx'
+import { Root } from './Root'
 import { runPendingPrivateEngineStorageReset } from './privateEngineStorage'
 
 void (async () => {
@@ -10,10 +9,5 @@ void (async () => {
   if (reset && !reset.ok) {
     console.warn('[private-engine-storage] reset failed', reset.error)
   }
-  createRoot(document.getElementById('root')!).render(
-    <>
-      <BrandIntro storageKey="zkf.intro.web.v1" soundSrc="/intro-welcome.mp3" />
-      <App />
-    </>,
-  )
+  createRoot(document.getElementById('root')!).render(<Root />)
 })()

@@ -14,15 +14,26 @@ interface AccessProps {
   readonly onCreate: (mnemonic: string, password: string) => Promise<boolean>
   readonly onImport: (mnemonic: string, password: string) => Promise<boolean>
   readonly onNetwork: (network: NetworkKey) => void
+  /** Preselected fork from intro v2 — skips the welcome card on first run. */
+  readonly initialChoice?: Mode
 }
 
 type Step = 'welcome' | 'recovery' | 'import' | 'password' | 'ready' | 'unlock'
 type Mode = 'create' | 'import'
 
-export function MobileAccess({ network, hasVault, busy, error, onUnlock, onCreate, onImport, onNetwork }: AccessProps) {
-  const [step, setStep] = useState<Step>(hasVault ? 'unlock' : 'welcome')
-  const [mode, setMode] = useState<Mode>('create')
-  const [mnemonic, setMnemonic] = useState('')
+// First-run fork can be preselected by intro v2. A stored vault always wins → unlock.
+function initialStep(hasVault: boolean, choice?: Mode): Step {
+  if (hasVault) return 'unlock'
+  if (choice === 'import') return 'import'
+  if (choice === 'create') return 'recovery'
+  return 'welcome'
+}
+
+export function MobileAccess({ network, hasVault, busy, error, onUnlock, onCreate, onImport, onNetwork, initialChoice }: AccessProps) {
+  const preCreate = !hasVault && initialChoice === 'create'
+  const [step, setStep] = useState<Step>(() => initialStep(hasVault, initialChoice))
+  const [mode, setMode] = useState<Mode>(() => (!hasVault && initialChoice === 'import' ? 'import' : 'create'))
+  const [mnemonic, setMnemonic] = useState(() => (preCreate ? generateSeedPhrase() : ''))
   const [importPhrase, setImportPhrase] = useState('')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')

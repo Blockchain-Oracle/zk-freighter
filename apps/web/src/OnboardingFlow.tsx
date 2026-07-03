@@ -11,6 +11,8 @@ interface OnboardingFlowProps {
   network: NetworkKey
   networks: readonly NetworkKey[]
   busy: boolean
+  /** Preselected fork from intro v2 — jumps straight past the welcome card. */
+  initialChoice?: Mode
   onChangeNetwork: (network: NetworkKey) => void
   onCreate: (seedPhrase: string, password: string) => Promise<{ ok: boolean; error?: string }>
   onDemoFunding: (seedPhrase: string) => Promise<{ ok: boolean; message: string }>
@@ -20,10 +22,11 @@ interface OnboardingFlowProps {
 const labelStyle = { font: '600 9px/1 var(--fm)', letterSpacing: '.1em', color: 'var(--tx3)', marginBottom: 8 } as const
 const backArrow = { fontSize: 15, color: 'var(--tx2)', cursor: 'pointer', background: 'none', border: 'none' } as const
 
-export function OnboardingFlow({ network, networks, busy, onChangeNetwork, onCreate, onDemoFunding, onEnter }: OnboardingFlowProps) {
-  const [step, setStep] = useState<Step>('welcome')
-  const [mode, setMode] = useState<Mode>('create')
-  const [mnemonic, setMnemonic] = useState('')
+export function OnboardingFlow({ network, networks, busy, initialChoice, onChangeNetwork, onCreate, onDemoFunding, onEnter }: OnboardingFlowProps) {
+  // intro v2 can preselect a fork: jump the welcome card straight to recovery/import.
+  const [step, setStep] = useState<Step>(() => (initialChoice === 'import' ? 'import' : initialChoice === 'create' ? 'recovery' : 'welcome'))
+  const [mode, setMode] = useState<Mode>(() => (initialChoice === 'import' ? 'import' : 'create'))
+  const [mnemonic, setMnemonic] = useState(() => (initialChoice === 'create' ? generateSeedPhrase() : ''))
   const [importPhrase, setImportPhrase] = useState('')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')

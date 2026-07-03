@@ -42,7 +42,7 @@ import {
   type MobileShieldedBalanceCache,
 } from './mobile-storage'
 
-export function MobileApp() {
+export function MobileApp({ initialChoice }: { initialChoice?: 'create' | 'import' } = {}) {
   const [network, setNetwork] = useState<NetworkKey>(() => getStoredNetwork())
   const [vault, setVault] = useState<EncryptedVault | null>(() => getStoredVault())
   const [identity, setIdentity] = useState<WalletIdentity | null>(null)
@@ -256,7 +256,7 @@ export function MobileApp() {
   if (!identity) {
     return (
       <ThemeProvider initialTheme={theme} onThemeChange={onThemeChange}>
-        <MobileAccess network={network} hasVault={vault !== null} busy={busy} error={accessError} onUnlock={(password) => void unlock(password)} onCreate={saveVault} onImport={saveVault} onNetwork={changeNetwork} />
+        <MobileAccess network={network} hasVault={vault !== null} busy={busy} error={accessError} onUnlock={(password) => void unlock(password)} onCreate={saveVault} onImport={saveVault} onNetwork={changeNetwork} initialChoice={initialChoice} />
       </ThemeProvider>
     )
   }
