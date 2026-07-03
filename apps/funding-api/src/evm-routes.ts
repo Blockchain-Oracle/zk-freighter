@@ -46,10 +46,14 @@ export async function handleEvmFundingRoutes(
     const limited = await rateLimit(parsed.chain, parsed.address, ip, config, store)
     if (limited) return json(limited, 429)
 
+    // Record the rate-limit slot BEFORE dispensing: recording after the (slow)
+    // on-chain transfers leaves a seconds-wide window where concurrent requests
+    // all pass the count check. Record-first shrinks it to milliseconds; a failed
+    // dispense consumes the slot (acceptable for a testnet faucet), and the
+    // authoritative outcome lives on-chain via the returned tx hashes.
+    await store.recordRequest({ network: networkKeyFor(parsed.chain), address: parsed.address, ip, assets: ['USDC', 'GAS'], response: { dispatched: true } })
     const assets = await provider.fund(parsed.address, parsed.chain, config)
-    const report = reportFor(parsed.chain, parsed.address, assets)
-    await store.recordRequest({ network: networkKeyFor(parsed.chain), address: parsed.address, ip, assets: assets.map((asset) => asset.asset), response: report })
-    return json(report)
+    return json(reportFor(parsed.chain, parsed.address, assets))
   }
 
   return null

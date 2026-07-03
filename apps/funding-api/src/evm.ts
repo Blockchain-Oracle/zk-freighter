@@ -61,7 +61,10 @@ export async function evmFundingStatus(
       { asset: 'GAS', status: gasWei >= config.evmGasAmountWei ? 'ready' : 'needs-funding', balance: gasWei.toString() },
     ]
   } catch (cause) {
-    const blocker = cause instanceof Error ? cause.message : 'EVM balance read failed.'
+    // Never forward raw viem errors: they can embed the RPC URL (which may
+    // carry an API key) into responses, logs, and the request ledger.
+    console.error('[funding-api] EVM balance read failed', cause)
+    const blocker = 'EVM balance read failed. Try again shortly.'
     return [{ asset: 'USDC', status: 'failed', blocker }, { asset: 'GAS', status: 'failed', blocker }]
   }
 }
@@ -100,7 +103,8 @@ export async function fundEvmAddress(
       await publicClient.waitForTransactionReceipt({ hash })
       reports.push({ ...asset, status: 'funded', txHash: hash, explorerUrl: `${source.explorerTxUrl}/${hash}` })
     } catch (cause) {
-      reports.push({ ...asset, status: 'failed', blocker: cause instanceof Error ? cause.message : 'EVM funding transfer failed.' })
+      console.error(`[funding-api] EVM ${asset.asset} transfer failed`, cause)
+      reports.push({ ...asset, status: 'failed', blocker: `${asset.asset} transfer failed. Try again shortly.` })
     }
   }
   return reports

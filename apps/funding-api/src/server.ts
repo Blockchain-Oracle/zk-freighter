@@ -12,14 +12,36 @@ const config = readConfig()
 const store = await createStore(config.databaseUrl)
 const handler = createHandler(config, store)
 
+// Behind a reverse proxy (Coolify/Traefik in production) the socket address is
+// the proxy for every client, collapsing per-IP rate limits into one global
+// bucket. When the operator declares the proxy trusted, use the client hop of
+// X-Forwarded-For; never trust it on direct connections (spoofable).
+const trustProxy = process.env.ZKF_TRUST_PROXY === 'true'
+
+function clientIpFor(incoming: import('node:http').IncomingMessage): string {
+  const socketIp = incoming.socket.remoteAddress ?? 'local'
+  if (!trustProxy) return socketIp
+  const forwarded = incoming.headers['x-forwarded-for']
+  const chain = (Array.isArray(forwarded) ? forwarded.join(',') : forwarded ?? '').split(',').map((hop) => hop.trim()).filter(Boolean)
+  return chain[0] ?? socketIp
+}
+
+const maxBodyBytes = 4096
+
 const server = createServer((incoming, outgoing) => {
+  const declaredLength = Number(incoming.headers['content-length'] ?? 0)
+  if (Number.isFinite(declaredLength) && declaredLength > maxBodyBytes) {
+    outgoing.writeHead(413, { 'content-type': 'application/json; charset=utf-8' })
+    outgoing.end(JSON.stringify({ ok: false, error: 'Request body too large.' }))
+    return
+  }
   const url = `http://${incoming.headers.host ?? '127.0.0.1'}${incoming.url ?? '/'}`
   const headers = new Headers()
   for (const [key, value] of Object.entries(incoming.headers)) {
     if (typeof value === 'string') headers.set(key, value)
     else if (Array.isArray(value)) headers.set(key, value.join(', '))
   }
-  headers.set('x-zkf-client-ip', incoming.socket.remoteAddress ?? 'local')
+  headers.set('x-zkf-client-ip', clientIpFor(incoming))
   const request = new Request(url, {
     method: incoming.method,
     headers,

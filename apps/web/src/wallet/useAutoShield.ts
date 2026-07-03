@@ -57,13 +57,27 @@ export function useAutoShield(
       },
     })
 
+    // A later success must never mask an earlier failure banner (USDC failed,
+    // XLM shielded → the failure stays visible).
+    const publish = (outcome: AutoShieldRunResult) =>
+      setResult((current) =>
+        current && (current.kind === 'failed' || current.kind === 'blocked') && outcome.kind === 'shielded' ? current : outcome,
+      )
+
     void (async () => {
       for (const asset of ['USDC', 'XLM'] as const) {
-        const outcome = await runner.maybeRun(asset)
-        if (cancelled) return
-        if (isBannerWorthy(outcome)) {
-          setResult(outcome)
-          if (outcome.kind === 'shielded') onShielded()
+        try {
+          const outcome = await runner.maybeRun(asset)
+          if (cancelled) return
+          if (isBannerWorthy(outcome)) {
+            publish(outcome)
+            if (outcome.kind === 'shielded') onShielded()
+          }
+        } catch (cause) {
+          // Unattended money flow: a rejection must surface, never vanish.
+          if (cancelled) return
+          console.error('[auto-shield] run rejected', cause)
+          publish({ kind: 'failed', asset, amountStroops: 0n, reason: 'submit-rejected', blocker: cause instanceof Error ? cause.message : String(cause) })
         }
       }
     })()

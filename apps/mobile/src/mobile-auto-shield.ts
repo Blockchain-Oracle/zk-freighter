@@ -39,13 +39,26 @@ export function useMobileAutoShield(
         readMobileActivity(network, address).some((record) => record.intent === 'shield' && record.status === 'submitted'),
     })
 
+    // A later success must never mask an earlier failure banner.
+    const publish = (outcome: AutoShieldRunResult) =>
+      setResult((current) =>
+        current && (current.kind === 'failed' || current.kind === 'blocked') && outcome.kind === 'shielded' ? current : outcome,
+      )
+
     void (async () => {
       for (const asset of ['USDC', 'XLM'] as const) {
-        const outcome = await runner.maybeRun(asset)
-        if (cancelled) return
-        if (outcome.kind !== 'skipped' || outcome.reason === 'first-shield') {
-          setResult(outcome)
-          if (outcome.kind === 'shielded') onShielded()
+        try {
+          const outcome = await runner.maybeRun(asset)
+          if (cancelled) return
+          if (outcome.kind !== 'skipped' || outcome.reason === 'first-shield') {
+            publish(outcome)
+            if (outcome.kind === 'shielded') onShielded()
+          }
+        } catch (cause) {
+          // Unattended money flow: a rejection must surface, never vanish.
+          if (cancelled) return
+          console.error('[auto-shield] run rejected', cause)
+          publish({ kind: 'failed', asset, amountStroops: 0n, reason: 'submit-rejected', blocker: cause instanceof Error ? cause.message : String(cause) })
         }
       }
     })()

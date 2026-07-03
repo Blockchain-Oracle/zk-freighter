@@ -27,6 +27,9 @@ export type AutoShieldSkipReason =
   | 'max-runs'
   | 'latched'
   | 'balance-unavailable'
+  | 'blocked'
+  | 'failed'
+  | 'submit-rejected'
 
 export interface AutoShieldRunResult {
   readonly kind: AutoShieldRunKind
@@ -118,21 +121,35 @@ export function createAutoShieldRunner(options: CreateAutoShieldRunnerOptions): 
       })
       if (plan.action === 'skip') return skip(asset, plan.reason)
 
-      const report = await options.submit({ asset, amountStroops: plan.amountStroops })
+      // The submit contract is "return a report, never throw" — but this moves real
+      // funds unattended, so a rejection MUST latch the asset: the outcome is unknown
+      // (the tx may have reached the network) and a cooldown retry could double-deposit.
+      let report: AutoShieldSubmitReport
+      try {
+        report = await options.submit({ asset, amountStroops: plan.amountStroops })
+      } catch (cause) {
+        state.latched = true
+        return {
+          kind: 'failed',
+          asset,
+          amountStroops: plan.amountStroops,
+          reason: 'submit-rejected',
+          blocker: cause instanceof Error ? cause.message : 'Auto-shield submit rejected unexpectedly.',
+        }
+      }
       if (report.status === 'submitted') {
         state.successRuns += 1
         return { kind: 'shielded', asset, amountStroops: plan.amountStroops, reason: 'ok', report }
       }
 
       state.latched = true
-      const blocker = report.blockers?.[0]
       return {
         kind: report.status === 'blocked' ? 'blocked' : 'failed',
         asset,
         amountStroops: plan.amountStroops,
-        reason: 'ok',
+        reason: report.status,
         report,
-        blocker,
+        blocker: report.blockers?.join(' · '),
       }
     } finally {
       busy = false

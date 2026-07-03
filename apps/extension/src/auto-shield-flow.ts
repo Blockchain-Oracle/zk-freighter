@@ -61,7 +61,8 @@ export async function autoShieldTickFlow(
   return { ok: true, ...(salient && isBannerWorthy(salient) ? { result: serializeResult(salient) } : {}) }
 }
 
-const SALIENCE: Record<AutoShieldRunResult['kind'], number> = { shielded: 3, blocked: 2, failed: 2, skipped: 1 }
+// Failures outrank successes: "USDC failed, XLM shielded" must show the failure.
+const SALIENCE: Record<AutoShieldRunResult['kind'], number> = { failed: 4, blocked: 3, shielded: 2, skipped: 1 }
 
 function moreSalient(current: AutoShieldRunResult | null, next: AutoShieldRunResult): AutoShieldRunResult {
   if (!current) return next

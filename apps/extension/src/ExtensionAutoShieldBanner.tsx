@@ -16,7 +16,7 @@ function copyFor(result: AutoShieldTickResult): BannerCopy | null {
     return { color: 'var(--warn)', title: 'Auto-shield paused', body: result.blocker ?? 'Shield access is still confirming — it will try again next time you open the wallet.' }
   }
   if (result.kind === 'failed') {
-    return { color: 'var(--warn)', title: 'Auto-shield couldn’t complete', body: 'Your funds are untouched. Try a manual shield.' }
+    return { color: 'var(--warn)', title: 'Auto-shield couldn’t complete', body: result.blocker ? `${result.blocker} — your funds are untouched. Try a manual shield.` : 'Your funds are untouched. Try a manual shield.' }
   }
   if (result.reason === 'first-shield') {
     return { color: 'var(--ac2)', title: 'Turn on privacy with your first shield', body: 'Auto-shield starts after your first manual shield — it takes about a minute to set up.' }

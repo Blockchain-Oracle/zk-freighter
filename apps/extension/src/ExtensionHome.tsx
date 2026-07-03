@@ -45,11 +45,19 @@ export function ExtensionHome({ status, sendRuntimeMessage, navigate, openSheet 
       // Fires the popup-open auto-shield tick; the background runner's cooldown / latch
       // guards make a rapid re-open a no-op, so this stays a single opportunistic attempt.
       const res = (await sendRuntimeMessage({ type: dappMessageTypes.autoShield })) as AutoShieldTickResponse
-      if (cancelled || !res?.ok || !res.result) return
+      if (cancelled) return
+      // Locked wallet / nothing-to-do stays silent, but real errors must not vanish.
+      if (!res?.ok) {
+        if (res?.error) console.error('[extension] auto-shield tick failed', res.error)
+        return
+      }
+      if (!res.result) return
       setAutoShield(res.result)
       if (res.result.kind === 'shielded') {
         const balanceRes = (await sendRuntimeMessage({ type: dappMessageTypes.balances, syncBeforeRead: true })) as DappBalancesResponse
-        if (!cancelled && balanceRes.ok && balanceRes.balances) setBalances(balanceRes.balances)
+        if (cancelled) return
+        if (balanceRes.ok && balanceRes.balances) setBalances(balanceRes.balances)
+        else console.error('[extension] post-auto-shield balance refresh failed', balanceRes)
       }
     })()
     return () => { cancelled = true }
