@@ -53,8 +53,8 @@ function ToolsScreen({
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
         <button onClick={onBack} style={{ display: 'grid', placeItems: 'center', width: 32, height: 32, borderRadius: 9, border: '1px solid var(--bd)', background: 'var(--card)', color: 'var(--tx2)', cursor: 'pointer', fontSize: 15 }}>←</button>
         <div>
-          <div style={{ fontWeight: 800, fontSize: 21, letterSpacing: '-.02em' }}>Developer · Demo evidence</div>
-          <div style={{ fontSize: 12, color: 'var(--tx3)' }}>Real working flows, being migrated into the redesign — no mocks.</div>
+          <div style={{ fontWeight: 800, fontSize: 21, letterSpacing: '-.02em' }}>Verify it yourself</div>
+          <div style={{ fontSize: 12, color: 'var(--tx3)' }}>Prover readiness, tampered-proof rejection, and recorded on-chain evidence — all real, no mocks.</div>
         </div>
       </div>
       <div style={{ color: 'var(--tx)' }}>

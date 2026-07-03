@@ -202,7 +202,7 @@ export function PrivateFlowScreen({ config, identity, network, balance, onNav }:
           Visibility
           <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 600, color: reveals ? 'var(--warn)' : 'var(--ac2)' }}>
             <span style={{ width: 7, height: 7, border: `1.4px solid ${reveals ? 'var(--warn)' : 'var(--ac2)'}`, transform: 'rotate(45deg)' }} />
-            {reveals ? 'Public on Stellar' : 'Fully shielded'}
+            {reveals ? 'Public on Stellar' : 'Shielded — amount & counterparty hidden'}
           </span>
         </div>
         {config.reviewWarn ? <Callout tone="danger" title={config.reviewWarn.title}>{config.reviewWarn.body}</Callout> : null}
@@ -285,7 +285,7 @@ export function PrivateFlowScreen({ config, identity, network, balance, onNav }:
         title={config.title}
         steps={RAIL_STEPS}
         current={railCurrent}
-        note={<>Proving runs <b style={{ color: 'var(--tx)' }}>on your device</b>. {config.reviewWarn ? 'Only the public boundary is visible on Stellar.' : 'Nothing about this payment touches the public chain.'}</>}
+        note={<>Proving runs <b style={{ color: 'var(--tx)' }}>on your device</b>. {config.reviewWarn ? 'Only the public boundary is visible on Stellar.' : 'The amount and counterparty stay inside the pool.'}</>}
       />
       <div style={{ width: 440, maxWidth: '100%', minHeight: 560, background: 'linear-gradient(180deg, rgba(255,255,255,.02), transparent 36%), var(--panel)', border: '1px solid var(--bd2)', borderRadius: 22, boxShadow: '0 50px 120px -50px #000, 0 0 0 1px rgba(0,0,0,.4)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '18px 22px', borderBottom: '1px solid var(--bd)' }}>

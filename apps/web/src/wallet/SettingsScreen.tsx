@@ -44,7 +44,7 @@ export function SettingsScreen({ identity, network, receiveCode, onChangeNetwork
   return (
     <section style={{ width: '100%', maxWidth: 880, margin: '0 auto', padding: '30px 34px 44px', display: 'flex', flexDirection: 'column', gap: 8 }}>
       <div style={{ fontWeight: 800, fontSize: 26, letterSpacing: '-.025em' }}>Settings</div>
-      <div style={{ fontSize: 13.5, color: 'var(--tx2)', marginBottom: 18 }}>Account, security, network and appearance — plus developer evidence for judges.</div>
+      <div style={{ fontSize: 13.5, color: 'var(--tx2)', marginBottom: 18 }}>Account, security, network and appearance.</div>
 
       <div style={{ display: 'flex', gap: 26, alignItems: 'flex-start', flexWrap: 'wrap' }}>
         <div style={{ flex: '1 1 320px', display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -86,8 +86,8 @@ export function SettingsScreen({ identity, network, receiveCode, onChangeNetwork
           <button onClick={() => onNav('tools')} style={{ textAlign: 'left', cursor: 'pointer', border: '1px solid rgba(94,124,250,.25)', borderRadius: 16, background: 'linear-gradient(160deg, rgba(94,124,250,.08), transparent 60%), var(--panel)', padding: 20 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
               <span style={{ width: 30, height: 30, borderRadius: 9, background: 'rgba(94,124,250,.16)', display: 'grid', placeItems: 'center', color: 'var(--ac2)', fontSize: 14 }}>◆</span>
-              <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--tx)' }}>Developer · Demo evidence</div>
-              <div style={{ marginLeft: 'auto' }}><BoundaryBadge kind="neutral" label="FOR JUDGES" size="sm" /></div>
+              <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--tx)' }}>Verify it yourself</div>
+              <div style={{ marginLeft: 'auto' }}><BoundaryBadge kind="neutral" label="DEVELOPER" size="sm" /></div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12, color: 'var(--tx2)' }}><span style={{ color: 'var(--pos)' }}>✓</span>Prover readiness check<span style={{ marginLeft: 'auto', fontFamily: 'var(--fm)', fontSize: 10.5, color: 'var(--ac2)' }}>Open ›</span></div>
