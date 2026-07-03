@@ -22,7 +22,7 @@ import {
   type QuickShieldResponse,
 } from './dappMessages'
 import { clearAllBalanceCache } from './balance-cache'
-import { activityFlow, balancesFlow, bridgeSourceBalancesFlow, demoFundingRequestFlow, demoFundingStatusFlow, discoverFlow, discoverPublishFlow, discoverStatusFlow, privateTransferFlow, quickShieldFlow, receiveCodeForIdentity, recordBridgeActivity, recordConfidentialActivity, unshieldFlow } from './dappRuntime-flows'
+import { activityFlow, autoShieldTickFlow, balancesFlow, bridgeSourceBalancesFlow, demoFundingRequestFlow, demoFundingStatusFlow, discoverFlow, discoverPublishFlow, discoverStatusFlow, privateTransferFlow, quickShieldFlow, receiveCodeForIdentity, recordBridgeActivity, recordConfidentialActivity, unshieldFlow } from './dappRuntime-flows'
 import { publicTransferFlow } from './dappRuntime-public-flow'
 import { passkeyCreateFlow, passkeyPrepareCreateFlow, passkeyRemoveFlow, passkeySupportFlow, passkeyUnlockFlow, setNetworkFlow } from './dappRuntime-wallet'
 import { freighterResponse } from './dappRuntimeHelpers'
@@ -87,6 +87,7 @@ export class ExtensionDappRuntime {
         return this.gated(this.runUsdcTrustline, 'USDC receive setup', {})
       case dappMessageTypes.quickShield:
         return this.quickShield(message.asset, message.amountStroops, message.timeoutMs)
+      case dappMessageTypes.autoShield: return autoShieldTickFlow(this.unlockedMnemonic, this.runShield)
       case dappMessageTypes.quickBridge:
         return this.gated(this.runBridge, 'native bridge', { sourceChainKey: message.sourceChainKey, amountAtomic: message.amountAtomic, resumeBurnHash: message.resumeBurnHash }, (report, ready) => {
           recordBridgeActivity(report, ready.network)
@@ -103,8 +104,7 @@ export class ExtensionDappRuntime {
         return this.demoFundingStatus()
       case dappMessageTypes.demoFundingRequest:
         return this.demoFundingRequest()
-      case dappMessageTypes.privateRuntimeStatus:
-        return { ok: true, surface: 'extension-popup', coordinator: 'offscreen-queue', proving: 'offscreen' }
+      case dappMessageTypes.privateRuntimeStatus: return { ok: true, surface: 'extension-popup', coordinator: 'offscreen-queue', proving: 'offscreen' }
       case dappMessageTypes.privateEngineReset:
         return this.resetPrivateEngine()
       case dappMessageTypes.privateTransfer:

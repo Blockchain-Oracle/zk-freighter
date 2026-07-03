@@ -1,6 +1,10 @@
 import {
+  AUTO_SHIELD_STORAGE_KEY,
+  parseAutoShieldSettings,
   parseEncryptedVault,
+  serializeAutoShieldSettings,
   type AssetCode,
+  type AutoShieldSettings,
   type EncryptedVault,
   type NetworkKey,
   type PublicDiscoveryLookupReport,
@@ -74,6 +78,14 @@ export function getStoredTheme(): ThemeName {
 
 export function setStoredTheme(theme: ThemeName): void {
   localStorage.setItem(themeStorageKey, theme)
+}
+
+export function getStoredAutoShieldSettings(): AutoShieldSettings {
+  return parseAutoShieldSettings(localStorage.getItem(AUTO_SHIELD_STORAGE_KEY))
+}
+
+export function setStoredAutoShieldSettings(settings: AutoShieldSettings): void {
+  localStorage.setItem(AUTO_SHIELD_STORAGE_KEY, serializeAutoShieldSettings(settings))
 }
 
 export function getStoredVault(): EncryptedVault | null {

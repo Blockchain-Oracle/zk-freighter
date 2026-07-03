@@ -1,4 +1,13 @@
-import { NETWORKS, type NetworkKey, type PasskeyEnvelope, type WalletIdentity } from '@zk-freighter/core'
+import { useState } from 'react'
+import {
+  AUTO_SHIELD_STORAGE_KEY,
+  NETWORKS,
+  parseAutoShieldSettings,
+  serializeAutoShieldSettings,
+  type NetworkKey,
+  type PasskeyEnvelope,
+  type WalletIdentity,
+} from '@zk-freighter/core'
 import { BoundaryBadge, Segmented, truncateMiddle, useTheme } from '@zk-freighter/ui'
 import { requestPrivateEngineStorageReset } from '../privateEngineStorage'
 import type { WalletScreen } from './screens'
@@ -12,6 +21,14 @@ const THEME_OPTIONS = [
 
 const groupStyle: CSSProperties = { border: '1px solid var(--bd)', borderRadius: 16, background: 'var(--panel)', overflow: 'hidden' }
 const groupHeader: CSSProperties = { padding: '13px 18px', borderBottom: '1px solid var(--bd)', font: '600 9px/1 var(--fm)', letterSpacing: '.12em', color: 'var(--tx3)' }
+
+function ToggleSwitch({ on, onChange, label }: { on: boolean; onChange: (next: boolean) => void; label: string }) {
+  return (
+    <button role="switch" aria-checked={on} aria-label={label} onClick={() => onChange(!on)} style={{ flex: 'none', width: 42, height: 24, borderRadius: 999, border: '1px solid var(--bd2)', background: on ? 'var(--ac)' : 'var(--card2)', position: 'relative', cursor: 'pointer', transition: 'background .15s' }}>
+      <span style={{ position: 'absolute', top: 2, left: on ? 20 : 2, width: 18, height: 18, borderRadius: '50%', background: '#fff', transition: 'left .15s', boxShadow: '0 1px 3px rgba(0,0,0,.3)' }} />
+    </button>
+  )
+}
 
 function Rev({ label, children, top }: { label: string; children: ReactNode; top?: boolean }) {
   return (
@@ -35,6 +52,15 @@ interface SettingsScreenProps {
 
 export function SettingsScreen({ identity, network, receiveCode, onChangeNetwork, onNav, onLock }: SettingsScreenProps) {
   const { theme, setTheme } = useTheme()
+  const [autoShieldOn, setAutoShieldOn] = useState(
+    () => parseAutoShieldSettings(window.localStorage.getItem(AUTO_SHIELD_STORAGE_KEY)).enabled,
+  )
+
+  function setAutoShield(enabled: boolean) {
+    const current = parseAutoShieldSettings(window.localStorage.getItem(AUTO_SHIELD_STORAGE_KEY))
+    window.localStorage.setItem(AUTO_SHIELD_STORAGE_KEY, serializeAutoShieldSettings({ ...current, enabled }))
+    setAutoShieldOn(enabled)
+  }
 
   function resetPrivateEngineCache() {
     requestPrivateEngineStorageReset()
@@ -67,6 +93,19 @@ export function SettingsScreen({ identity, network, receiveCode, onChangeNetwork
             <div style={groupHeader}>PREFERENCES</div>
             <Rev label="Network" top><Segmented options={NETWORK_OPTIONS} value={network} onChange={(value) => onChangeNetwork(value as NetworkKey)} size="sm" /></Rev>
             <Rev label="Appearance"><Segmented options={THEME_OPTIONS} value={theme} onChange={(value) => setTheme(value as 'light' | 'dark')} size="sm" /></Rev>
+          </div>
+
+          <div style={groupStyle}>
+            <div style={groupHeader}>PRIVACY</div>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, padding: '16px 18px' }}>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--tx)' }}>Auto-shield incoming funds</div>
+                <div style={{ marginTop: 4, fontSize: 11.5, lineHeight: 1.55, color: 'var(--tx2)' }}>
+                  When public funds arrive, automatically move them to your shielded balance. Each deposit is a public transaction (up to 100 per run). You can turn this off anytime.
+                </div>
+              </div>
+              <ToggleSwitch on={autoShieldOn} onChange={setAutoShield} label="Auto-shield incoming funds" />
+            </div>
           </div>
 
           <div style={groupStyle}>

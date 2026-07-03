@@ -22,6 +22,8 @@ import { readStoredDiscoverPublish, writeStoredDiscoverPublish } from './discove
 import type { ExtensionBalancesRunner, ExtensionDiscoverPublishRunner, ExtensionDiscoverRunner, ExtensionPrivateTransferRunner, ExtensionShieldRunner, ExtensionUnshieldRunner } from './dappRuntime-types'
 import { identityForMnemonic, readStoredDappWallet } from './dappRuntimeState'
 
+export { autoShieldTickFlow } from './auto-shield-flow'
+
 // Post-gate flow bodies, split out of dappRuntime.ts (<300 lines). The unlock GATE
 // stays in the runtime methods that call these — these run only once gated, and the
 // unlocked mnemonic is passed in (the security model is unchanged).

@@ -6,7 +6,8 @@ import { Callout, PublicCard, ShieldedCard } from '@zk-freighter/ui'
 import type { ActivityRecord } from './activity-store'
 import { AssetMark } from './asset-marks'
 import { describeBalanceIssue } from './balance-issue'
-import { dappMessageTypes, type ActivityResponse, type DappBalances, type DappBalancesResponse, type DappWalletStatus, type DemoFundingResponse } from './dappMessages'
+import { ExtensionAutoShieldBanner } from './ExtensionAutoShieldBanner'
+import { dappMessageTypes, type ActivityResponse, type AutoShieldTickResponse, type AutoShieldTickResult, type DappBalances, type DappBalancesResponse, type DappWalletStatus, type DemoFundingResponse } from './dappMessages'
 import { amountLabel, formatStroops, shorten } from './extension-format'
 import { BoundaryBadge, type ExtensionSheet } from './ExtensionShell'
 import type { ExtensionNavigate } from './extension-routes'
@@ -36,6 +37,23 @@ export function ExtensionHome({ status, sendRuntimeMessage, navigate, openSheet 
   const [fundingBusy, setFundingBusy] = useState(false)
   const [fundingMessage, setFundingMessage] = useState('')
   const [manualSyncing, setManualSyncing] = useState(false)
+  const [autoShield, setAutoShield] = useState<AutoShieldTickResult | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    void (async () => {
+      // Fires the popup-open auto-shield tick; the background runner's cooldown / latch
+      // guards make a rapid re-open a no-op, so this stays a single opportunistic attempt.
+      const res = (await sendRuntimeMessage({ type: dappMessageTypes.autoShield })) as AutoShieldTickResponse
+      if (cancelled || !res?.ok || !res.result) return
+      setAutoShield(res.result)
+      if (res.result.kind === 'shielded') {
+        const balanceRes = (await sendRuntimeMessage({ type: dappMessageTypes.balances, syncBeforeRead: true })) as DappBalancesResponse
+        if (!cancelled && balanceRes.ok && balanceRes.balances) setBalances(balanceRes.balances)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [sendRuntimeMessage, status.network])
 
   useEffect(() => {
     let cancelled = false
@@ -122,6 +140,7 @@ export function ExtensionHome({ status, sendRuntimeMessage, navigate, openSheet 
 
   return (
     <>
+      {autoShield ? <ExtensionAutoShieldBanner result={autoShield} onDismiss={() => setAutoShield(null)} /> : null}
       <BalanceCardStack balances={balances} syncing={syncing || manualSyncing} error={error} shieldedKnown={shieldedKnown} publicKnown={publicKnown} manualSyncing={manualSyncing} onSync={() => void syncBalancesNow()} />
       {needsDemoFunding ? (
         <section style={{ border: '1px solid rgba(229,180,92,.38)', borderRadius: 16, background: 'rgba(229,180,92,.06)', padding: 13, display: 'flex', flexDirection: 'column', gap: 10 }}>

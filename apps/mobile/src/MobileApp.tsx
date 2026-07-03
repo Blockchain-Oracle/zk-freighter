@@ -24,6 +24,7 @@ import { MobileSettings } from './MobileTools'
 import type { MobileRouteParams } from './MobileFlowPrimitives'
 import { isSheetRoute, parseMobileDeepLink, vaultErrorText } from './mobile-routing'
 import { resetMobilePrivateStateForNetworkSwitch, syncMobileShieldedBalances } from './mobile-runtime'
+import { useMobileAutoShield } from './mobile-auto-shield'
 import {
   getStoredNetwork,
   getStoredTheme,
@@ -194,6 +195,8 @@ export function MobileApp() {
     setFlowParams({})
   }
 
+  const autoShield = useMobileAutoShield(identity, network, () => { void syncPrivate() })
+
   async function syncPrivate() {
     if (!identity) return
     setSyncStatus('syncing')
@@ -248,10 +251,7 @@ export function MobileApp() {
     return report.blockers[0] ?? (report.status === 'ready' ? 'Funding is ready.' : report.status === 'funded' ? 'Funding submitted. Wait a few ledgers.' : 'Funding did not complete.')
   }
 
-  const onThemeChange = (nextTheme: ThemeName) => {
-    setStoredTheme(nextTheme)
-    setTheme(nextTheme)
-  }
+  const onThemeChange = (nextTheme: ThemeName) => { setStoredTheme(nextTheme); setTheme(nextTheme) }
 
   if (!identity) {
     return (
@@ -284,7 +284,7 @@ export function MobileApp() {
   return (
     <ThemeProvider initialTheme={theme} onThemeChange={onThemeChange}>
       <MobileChrome route={route} address={unlockedIdentity.stellarPublicKey} receiveCode={receiveCode} network={network} overlay={sheetOverlay} onRoute={navigate} onLock={() => setIdentity(null)} onRefresh={contentRoute === 'home' || contentRoute === 'activity' ? refreshBothWorlds : undefined}>
-        {contentRoute === 'home' ? <MobileHome network={network} address={unlockedIdentity.stellarPublicKey} publicBalances={publicBalances} publicLoading={publicLoading} shieldedCache={shieldedCache} records={records} syncStatus={syncStatus} onRoute={navigate} onSync={syncPrivate} onFunding={requestFunds} /> : null}
+        {contentRoute === 'home' ? <MobileHome network={network} address={unlockedIdentity.stellarPublicKey} publicBalances={publicBalances} publicLoading={publicLoading} shieldedCache={shieldedCache} records={records} syncStatus={syncStatus} onRoute={navigate} onSync={syncPrivate} onFunding={requestFunds} autoShield={autoShield.result} onDismissAutoShield={autoShield.dismiss} /> : null}
         {contentRoute === 'receive' ? <MobileReceive network={network} identity={unlockedIdentity} receiveCode={receiveCode} onRoute={navigate} /> : null}
         {contentRoute === 'activity' ? <MobileActivity records={records} network={network} /> : null}
         {contentRoute === 'settings' ? <MobileSettings network={network} address={unlockedIdentity.stellarPublicKey} syncStatus={syncStatus} onNetwork={changeNetwork} onSync={syncPrivate} onReset={resetPrivate} onLock={() => setIdentity(null)} /> : null}

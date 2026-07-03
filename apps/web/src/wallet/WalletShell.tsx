@@ -14,6 +14,8 @@ import { BridgeScreen } from './BridgeScreen'
 import { DisclosureScreen } from './DisclosureScreen'
 import { ConfidentialScreen } from './ConfidentialScreen'
 import { useShieldedBalance } from './useShieldedBalance'
+import { useAutoShield } from './useAutoShield'
+import { AutoShieldBanner } from './AutoShieldBanner'
 import type { WalletScreen } from './screens'
 
 const NAV: { id: WalletScreen; label: string; glyph: string }[] = [
@@ -78,6 +80,7 @@ export function WalletShell({
   // Loaded once for the whole shell so the expensive prover note-load is shared
   // across Home + Activity instead of re-running on every tab switch.
   const balance = useShieldedBalance(identity, network)
+  const autoShield = useAutoShield(identity, network, () => balance.refresh({ syncBeforeRead: true }))
 
   function navItemStyle(active: boolean) {
     return {
@@ -134,6 +137,7 @@ export function WalletShell({
       </aside>
 
       <main style={{ flex: 1, minWidth: 0, height: '100%', overflowY: 'auto' }}>
+        {autoShield.result ? <AutoShieldBanner result={autoShield.result} onDismiss={autoShield.dismiss} /> : null}
         {screen === 'home' ? <HomeScreen identity={identity} network={network} balance={balance} onNav={setScreen} /> : null}
         {screen === 'shield' ? <ShieldScreen identity={identity} network={network} balance={balance} onNav={setScreen} /> : null}
         {screen === 'send' ? <SendScreen identity={identity} network={network} balance={balance} onNav={setScreen} /> : null}

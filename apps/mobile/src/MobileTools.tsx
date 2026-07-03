@@ -4,6 +4,7 @@ import { CheckCircle2, Loader2, RefreshCw, XCircle } from 'lucide-react'
 import { Button, Callout, Logo, useTheme } from '@zk-freighter/ui'
 import type { NetworkKey } from '@zk-freighter/core'
 import { capabilityChecks, runMobileRuntimeCheck, type MobileRuntimeReport, type RuntimeStatus } from './mobile-runtime'
+import { getStoredAutoShieldSettings, setStoredAutoShieldSettings } from './mobile-storage'
 import { truncateMiddle } from './mobile-format'
 
 interface SettingsProps {
@@ -20,8 +21,14 @@ export function MobileSettings({ network, address, syncStatus, onNetwork, onSync
   const [runtime, setRuntime] = useState<MobileRuntimeReport | null>(null)
   const [running, setRunning] = useState(false)
   const [resetting, setResetting] = useState(false)
+  const [autoShieldOn, setAutoShieldOn] = useState(() => getStoredAutoShieldSettings().enabled)
   const platform = Capacitor.getPlatform()
   const { theme, setTheme } = useTheme()
+
+  function setAutoShield(enabled: boolean) {
+    setStoredAutoShieldSettings({ ...getStoredAutoShieldSettings(), enabled })
+    setAutoShieldOn(enabled)
+  }
 
   async function checkRuntime() {
     setRunning(true)
@@ -57,6 +64,14 @@ export function MobileSettings({ network, address, syncStatus, onNetwork, onSync
         <div className="settings-segment">
           <button className={theme === 'dark' ? 'on' : ''} onClick={() => setTheme('dark')}>Dark</button>
           <button className={theme === 'light' ? 'on' : ''} onClick={() => setTheme('light')}>Light</button>
+        </div>
+      </section>
+      <section className="settings-card">
+        <label>Auto-shield</label>
+        <p style={{ margin: '0 0 4px', fontSize: 11.5, lineHeight: 1.45, color: 'var(--tx2)' }}>When public funds arrive, automatically move them to your shielded balance. Each deposit is a public transaction (up to 100 per run). You can turn this off anytime.</p>
+        <div className="settings-segment">
+          <button className={autoShieldOn ? 'on' : ''} onClick={() => setAutoShield(true)}>On</button>
+          <button className={!autoShieldOn ? 'on' : ''} onClick={() => setAutoShield(false)}>Off</button>
         </div>
       </section>
       <section className="settings-card">

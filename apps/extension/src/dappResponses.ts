@@ -201,6 +201,20 @@ export interface PasskeyPrepareCreateResponse {
   readonly error?: string
 }
 
+export interface AutoShieldTickResult {
+  readonly kind: 'shielded' | 'skipped' | 'blocked' | 'failed'
+  readonly asset: AssetCode
+  readonly amountStroops: string
+  readonly reason: string
+  readonly blocker?: string
+}
+
+export interface AutoShieldTickResponse {
+  readonly ok: boolean
+  readonly result?: AutoShieldTickResult
+  readonly error?: string
+}
+
 export type DappRuntimeResponse =
   | DappWalletStatus
   | FreighterBridgeResponse
@@ -224,4 +238,5 @@ export type DappRuntimeResponse =
   | ActivityResponse
   | PasskeySupportResponse
   | PasskeyPrepareCreateResponse
+  | AutoShieldTickResponse
   | { readonly ok: boolean; readonly publicKey?: string; readonly error?: string }

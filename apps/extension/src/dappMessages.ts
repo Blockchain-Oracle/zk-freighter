@@ -18,6 +18,7 @@ export const dappMessageTypes = {
   prepareShieldAccess: 'zkf.extension.quickShield.prepareAccess',
   prepareUsdcReceive: 'zkf.extension.quickShield.prepareUsdcReceive',
   quickShield: 'zkf.extension.quickShield',
+  autoShield: 'zkf.extension.autoShield.tick',
   quickBridge: 'zkf.extension.bridge.run',
   bridgeSourceBalances: 'zkf.extension.bridge.balances',
   confidential: 'zkf.extension.confidential',
@@ -81,6 +82,9 @@ export type DappRuntimeMessage =
       readonly asset: AssetCode
       readonly amountStroops?: string
       readonly timeoutMs?: number
+    }
+  | {
+      readonly type: typeof dappMessageTypes.autoShield
     }
   | {
       readonly type: typeof dappMessageTypes.quickBridge

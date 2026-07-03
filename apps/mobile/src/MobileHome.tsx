@@ -3,7 +3,9 @@ import type { ReactNode } from 'react'
 import { ArrowDown, RefreshCw, Send, Shield, Shuffle } from 'lucide-react'
 import { Button, StatusPill } from '@zk-freighter/ui'
 import type { AssetCode, NetworkKey, PublicBalancesReport } from '@zk-freighter/core'
+import type { AutoShieldRunResult } from '@zk-freighter/core'
 import type { MobileActivityRecord, MobileRoute, MobileShieldedBalanceCache } from './mobile-storage'
+import { MobileAutoShieldBanner } from './MobileAutoShieldBanner'
 import { formatAssetAmount, noteBalance, summarizeError, truncateMiddle } from './mobile-format'
 
 interface HomeProps {
@@ -17,11 +19,13 @@ interface HomeProps {
   readonly onRoute: (route: MobileRoute) => void
   readonly onSync: () => Promise<void>
   readonly onFunding: () => Promise<string>
+  readonly autoShield?: AutoShieldRunResult | null
+  readonly onDismissAutoShield?: () => void
 }
 
 type CardFace = 'shielded' | 'public'
 
-export function MobileHome({ network, address, publicBalances, publicLoading, shieldedCache, records, syncStatus, onRoute, onSync, onFunding }: HomeProps) {
+export function MobileHome({ network, address, publicBalances, publicLoading, shieldedCache, records, syncStatus, onRoute, onSync, onFunding, autoShield, onDismissAutoShield }: HomeProps) {
   const [face, setFace] = useState<CardFace>('shielded')
   const [funding, setFunding] = useState(false)
   const [fundingMessage, setFundingMessage] = useState('')
@@ -59,6 +63,7 @@ export function MobileHome({ network, address, publicBalances, publicLoading, sh
 
   return (
     <div className="home-screen">
+      {autoShield ? <MobileAutoShieldBanner result={autoShield} onDismiss={onDismissAutoShield ?? (() => undefined)} /> : null}
       <section className="balance-stack">
         <div ref={railRef} className="balance-rail" onScroll={trackRail}>
           <div className="balance-slide"><ShieldedCard shieldedCache={shieldedCache} syncStatus={syncStatus} onSync={onSync} onPublic={() => showCard('public')} /></div>

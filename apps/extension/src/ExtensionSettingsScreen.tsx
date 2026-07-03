@@ -1,7 +1,8 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import type { NetworkKey } from '@zk-freighter/core'
 import { Button, useTheme } from '@zk-freighter/ui'
 
+import { readAutoShieldSettings, writeAutoShieldSettings } from './auto-shield-settings'
 import { dappMessageTypes, type DappWalletStatus, type PrivateEngineResetResponse } from './dappMessages'
 import { shorten } from './extension-format'
 import { Badge, Caption, Copy, GhostButton, MetaRow, Panel, SectionHeader } from './extension-ui'
@@ -16,6 +17,17 @@ export function ExtensionSettingsScreen({ status, sendRuntimeMessage, lockWallet
   const { theme, setTheme } = useTheme()
   const [busy, setBusy] = useState('')
   const [resetMessage, setResetMessage] = useState('')
+  const [autoShieldOn, setAutoShieldOn] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    void readAutoShieldSettings().then((settings) => setAutoShieldOn(settings.enabled))
+  }, [])
+
+  async function setAutoShield(enabled: boolean) {
+    const current = await readAutoShieldSettings()
+    await writeAutoShieldSettings({ ...current, enabled })
+    setAutoShieldOn(enabled)
+  }
 
   async function setNetwork(network: NetworkKey) {
     setBusy(`network-${network}`)
@@ -63,6 +75,14 @@ export function ExtensionSettingsScreen({ status, sendRuntimeMessage, lockWallet
 
       <SettingBlock label="Recovery">
         <Copy>Seed phrase recovery is the only recovery path. Keep it offline; ZK Freighter cannot recover it for you.</Copy>
+      </SettingBlock>
+
+      <SettingBlock label="Auto-shield">
+        <Copy>When public funds arrive, automatically move them to your shielded balance. Each deposit is a public transaction (up to 100 per run). You can turn this off anytime.</Copy>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+          <ChoiceButton active={autoShieldOn === true} loading={autoShieldOn === null} onClick={() => void setAutoShield(true)}>on</ChoiceButton>
+          <ChoiceButton active={autoShieldOn === false} loading={autoShieldOn === null} onClick={() => void setAutoShield(false)}>off</ChoiceButton>
+        </div>
       </SettingBlock>
 
       <SettingBlock label="Private engine">
