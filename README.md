@@ -23,11 +23,13 @@ The hosted web wallet is built against these endpoints (`VITE_ZKF_TESTNET_FUNDIN
 
 ## Install
 
-Nothing to install to try it — the [web wallet](https://app.zkfreighter.app) runs in any browser. For an app-like experience:
+Nothing to install to try it — the [web wallet](https://app.zkfreighter.app) runs in any browser. The app-store listings (Chrome Web Store, Edge Add-ons, native iOS) are **submitted and pending review**; you don't have to wait for them — everything is installable now:
 
-- **Android:** [`zk-freighter.apk`](https://github.com/Blockchain-Oracle/zk-freighter/releases/latest/download/zk-freighter.apk) (or scan the QR on [zkfreighter.app](https://zkfreighter.app)). Allow "install unknown apps" when your browser asks; [Obtainium](https://github.com/ImranR98/Obtainium) auto-updates it.
-- **Browser extension:** [Chrome/Edge zip](https://github.com/Blockchain-Oracle/zk-freighter/releases/latest/download/zk-freighter-extension-chrome.zip) — unzip, `chrome://extensions`, Developer mode, Load unpacked (Chrome Web Store listing pending review).
-- **iPhone:** open [app.zkfreighter.app](https://app.zkfreighter.app) in Safari → Share → Add to Home Screen.
+- **Desktop:** [app.zkfreighter.app](https://app.zkfreighter.app).
+- **Any phone (iPhone + Android), no install:** [m.zkfreighter.app](https://m.zkfreighter.app) — the responsive mobile app; Share → Add to Home Screen.
+- **Android native:** [`zk-freighter.apk`](https://github.com/Blockchain-Oracle/zk-freighter/releases/latest/download/zk-freighter.apk) (or scan the QR on [zkfreighter.app](https://zkfreighter.app)); allow "install unknown apps"; [Obtainium](https://github.com/ImranR98/Obtainium) auto-updates it.
+- **iPhone native:** a native build (via [AltStore](https://altstore.io), later TestFlight) is being prepared; use the mobile web app above meanwhile.
+- **Browser extension:** [download the zip](https://github.com/Blockchain-Oracle/zk-freighter/releases/latest/download/zk-freighter-extension-chrome.zip) — unzip, `chrome://extensions`, Developer mode, Load unpacked. Store listings land after review.
 
 Full per-platform steps: [docs.zkfreighter.app/docs/install](https://docs.zkfreighter.app/docs/install).
 

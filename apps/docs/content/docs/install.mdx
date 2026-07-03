@@ -1,54 +1,61 @@
 ---
 title: Install
-description: How to install ZK Freighter on each platform today — extension, Android, iPhone.
+description: How to get ZK Freighter on every platform today — web, mobile, extension, iPhone.
 ---
 
-ZK Freighter runs on the web, as a browser extension, and as a mobile app. You don't have to
-install anything to use it — the [web wallet](https://app.zkfreighter.app) works in any modern
-browser. The installs below are for a more app-like experience.
+ZK Freighter runs on the web, as a mobile app, and as a browser extension. You don't have to
+install anything to try it — the [web wallet](https://app.zkfreighter.app) works in any browser.
+
+> **Publishing status:** the app-store listings (Chrome Web Store, Microsoft Edge Add-ons, and a
+> native iOS build) are **submitted and pending review**. You do not have to wait for them — every
+> platform is installable right now via the direct links below.
 
 > This is early, unaudited software. Testnet is the recommended surface.
 
-## Web wallet — nothing to install
+## Desktop — web wallet
 
-Open **[app.zkfreighter.app](https://app.zkfreighter.app)**. That's the full wallet. On a phone
-you can add it to your home screen (below) to run it full-screen like an app.
+Open **[app.zkfreighter.app](https://app.zkfreighter.app)** in any desktop browser. That's the
+full wallet, nothing to install.
 
-## Browser extension — Chrome, Edge, Brave
+## Phone — mobile web app
 
-The extension adds a popup and side panel and can respond to dapp requests.
+The phone experience is a separate, thumb-first design at **[m.zkfreighter.app](https://m.zkfreighter.app)**.
+It works on **any** phone (iPhone and Android) with no install and no store:
 
-- **Chrome / Brave / any Chromium browser:** install from the Chrome Web Store listing (link
-  published once the store review completes). Until then, load the packaged build:
-  download the extension zip from the [latest release](https://github.com/Blockchain-Oracle/zk-freighter/releases/latest),
-  unzip it, open `chrome://extensions`, enable **Developer mode**, and choose **Load unpacked**.
-- **Edge:** the same build installs from the Edge Add-ons store (link published after review).
+1. Open **[m.zkfreighter.app](https://m.zkfreighter.app)** in your phone's browser (Safari on
+   iPhone, Chrome on Android).
+2. Use the browser's **Share → Add to Home Screen**. It then launches full-screen like a native app.
 
-## Android
+(The desktop `app.zkfreighter.app` is built for large screens — on a phone it will point you here.)
 
-Install the signed APK directly — no Play Store account needed:
+## Android — native app (APK)
 
-1. On your phone, open the **[latest release](https://github.com/Blockchain-Oracle/zk-freighter/releases/latest)**
-   and download `zk-freighter.apk` (or scan the QR code on [zkfreighter.app](https://zkfreighter.app)).
+Prefer a real installed app? Install the signed APK directly, no Play Store account needed:
+
+1. On your phone, download **[`zk-freighter.apk`](https://github.com/Blockchain-Oracle/zk-freighter/releases/latest/download/zk-freighter.apk)**
+   (or scan the QR on [zkfreighter.app](https://zkfreighter.app)).
 2. Android will ask **once** to allow installs from your browser — allow it.
-3. Play Protect may offer to scan the app. This is normal for any app installed outside the Play
-   Store; the wallet requests no SMS, contacts, or accessibility permissions.
+3. Play Protect may offer to scan the app — normal for any app installed outside the Play Store;
+   the wallet requests no SMS, contacts, or accessibility permissions.
 
-**Stay up to date automatically:** install [Obtainium](https://github.com/ImranR98/Obtainium)
-and point it at this repository — it watches for new releases and updates the app for you. (This
-works because every release is signed with the same key.)
+**Auto-updates:** install [Obtainium](https://github.com/ImranR98/Obtainium) and point it at this
+repository — it watches for new releases and updates the app for you (every release is signed with
+the same key). A Google Play listing may follow later.
 
 ## iPhone
 
-Apple does not allow installing a persistent native app without a paid developer account, so
-today there are two honest options:
+- **Now — the mobile web app.** Open **[m.zkfreighter.app](https://m.zkfreighter.app)** in Safari
+  and **Add to Home Screen**. The full wallet, no install, every feature works.
+- **Native app — coming.** A native iPhone build (installable via [AltStore](https://altstore.io)
+  and, later, TestFlight) is being prepared; the install link will appear here when it's published.
 
-- **Recommended — use the web app.** Open **[app.zkfreighter.app](https://app.zkfreighter.app)**
-  in Safari, tap the **Share** button, then **Add to Home Screen**. It runs full-screen like a
-  native app, and every wallet feature works (proofs run on-device in the browser).
-- **Sideload the native build (advanced).** With [AltStore](https://altstore.io) or Sideloadly
-  and your own Apple ID you can install the `.ipa` from the latest release. A free Apple ID
-  signature expires after **7 days** and must be refreshed; a paid Apple Developer account
-  removes that limit (and enables TestFlight).
+## Browser extension — Chrome, Edge, Brave
 
-A proper TestFlight link will be added once a Developer account is in place.
+The extension adds a popup and side panel.
+
+- **Now (any Chromium browser):** download the
+  **[extension zip](https://github.com/Blockchain-Oracle/zk-freighter/releases/latest/download/zk-freighter-extension-chrome.zip)**,
+  unzip it, open `chrome://extensions`, enable **Developer mode**, and choose **Load unpacked**.
+- **After review:** the [Chrome Web Store](https://chrome.google.com/webstore) and
+  [Edge Add-ons](https://microsoftedge.microsoft.com/addons) listings publish once their review
+  completes (submitted and pending). The links will be added here when live.
