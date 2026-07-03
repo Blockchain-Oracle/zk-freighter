@@ -30,6 +30,9 @@ export function MobileHome({ network, address, publicBalances, publicLoading, sh
   const [funding, setFunding] = useState(false)
   const [fundingMessage, setFundingMessage] = useState('')
   const railRef = useRef<HTMLDivElement | null>(null)
+  // Explicit pointer-swipe so both directions work reliably on touch (native
+  // scroll-snap was one-way in practice). A short movement stays a tap (card flip).
+  const swipe = useRef({ x: 0, y: 0, moved: false })
   const publicXlm = publicBalances?.balances.XLM ?? 0n
   const publicUsdc = publicBalances?.balances.USDC ?? 0n
   const activityPreview = records.slice(0, 2)
@@ -61,13 +64,30 @@ export function MobileHome({ network, address, publicBalances, publicLoading, sh
     setFace(rail.scrollLeft > rail.clientWidth * 0.45 ? 'public' : 'shielded')
   }
 
+  function onSwipeStart(event: React.PointerEvent) {
+    swipe.current = { x: event.clientX, y: event.clientY, moved: false }
+  }
+  function onSwipeEnd(event: React.PointerEvent) {
+    const dx = event.clientX - swipe.current.x
+    const dy = event.clientY - swipe.current.y
+    if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) {
+      swipe.current.moved = true
+      showCard(dx < 0 ? 'public' : 'shielded')
+    }
+  }
+  // A card tap flips forward only when it wasn't the tail of a swipe.
+  function flipToPublic() {
+    if (swipe.current.moved) { swipe.current.moved = false; return }
+    showCard('public')
+  }
+
   return (
     <div className="home-screen">
       {autoShield ? <MobileAutoShieldBanner result={autoShield} onDismiss={onDismissAutoShield ?? (() => undefined)} /> : null}
-      <section className="balance-stack">
+      <section className="balance-stack" onPointerDown={onSwipeStart} onPointerUp={onSwipeEnd}>
         <div ref={railRef} className="balance-rail" onScroll={trackRail}>
-          <div className="balance-slide"><ShieldedCard shieldedCache={shieldedCache} syncStatus={syncStatus} onSync={onSync} onPublic={() => showCard('public')} /></div>
-          <div className="balance-slide"><PublicCard address={address} publicLoading={publicLoading} publicXlm={publicXlm} publicUsdc={publicUsdc} needsDemoFunding={needsDemoFunding} funding={funding} fundingMessage={fundingMessage} onShield={() => onRoute('shield')} onBridge={() => onRoute('bridge')} onFunding={requestFunds} onShielded={() => showCard('shielded')} /></div>
+          <div className="balance-slide"><ShieldedCard shieldedCache={shieldedCache} syncStatus={syncStatus} onSync={onSync} onPublic={flipToPublic} /></div>
+          <div className="balance-slide"><PublicCard address={address} publicLoading={publicLoading} publicXlm={publicXlm} publicUsdc={publicUsdc} onShielded={() => showCard('shielded')} /></div>
         </div>
       </section>
       <div className="card-dots">
@@ -87,10 +107,10 @@ export function MobileHome({ network, address, publicBalances, publicLoading, sh
         {activityPreview.length === 0 ? <p className="muted-copy">Real shield, send, fund, and discover actions appear here.</p> : activityPreview.map((record) => <PreviewRow key={record.id} record={record} />)}
       </section>
 
-      {face === 'shielded' && needsDemoFunding ? <section className="fund-card">
-        <div><strong>Add testnet funds</strong><span>Funds XLM and USDC from the hosted testnet funder.</span></div>
+      {needsDemoFunding ? <section className="fund-card">
+        <div><strong>Testnet faucet</strong><span>Sends XLM and USDC from the hosted testnet funder.</span></div>
         {fundingMessage ? <p>{fundingMessage}</p> : null}
-        <Button fullWidth variant="secondary" loading={funding} onClick={() => void requestFunds()}>Add funds</Button>
+        <Button fullWidth variant="secondary" loading={funding} onClick={() => void requestFunds()}>Get test funds</Button>
       </section> : null}
     </div>
   )
@@ -122,17 +142,11 @@ function ShieldedCard({ shieldedCache, syncStatus, onSync, onPublic }: {
   )
 }
 
-function PublicCard({ address, publicLoading, publicXlm, publicUsdc, needsDemoFunding, funding, fundingMessage, onShield, onBridge, onFunding, onShielded }: {
+function PublicCard({ address, publicLoading, publicXlm, publicUsdc, onShielded }: {
   readonly address: string
   readonly publicLoading: boolean
   readonly publicXlm: bigint
   readonly publicUsdc: bigint
-  readonly needsDemoFunding: boolean
-  readonly funding: boolean
-  readonly fundingMessage: string
-  readonly onShield: () => void
-  readonly onBridge: () => void
-  readonly onFunding: () => void
   readonly onShielded: () => void
 }) {
   return (
@@ -146,13 +160,8 @@ function PublicCard({ address, publicLoading, publicXlm, publicUsdc, needsDemoFu
         <strong>{publicLoading ? '-- USDC' : formatAssetAmount(publicUsdc, 'USDC')}</strong>
         <span>{publicLoading ? '-- XLM' : formatAssetAmount(publicXlm, 'XLM')}</span>
       </div>
-      <code>{truncateMiddle(address, 8, 8)}</code>
-      <Button fullWidth onClick={onShield}>⛉ Shield into the pool</Button>
-      <div className="public-card-actions">
-        {needsDemoFunding ? <Button variant="secondary" loading={funding} onClick={onFunding}>Add funds</Button> : null}
-        <Button variant="secondary" onClick={onBridge}>Bridge</Button>
-      </div>
-      {fundingMessage ? <p className="public-card-note">{fundingMessage}</p> : <p className="public-card-note">Public balances stay visible until you shield them.</p>}
+      <code className="public-address">{truncateMiddle(address, 8, 8)}</code>
+      <p className="public-card-note">Visible on Stellar until you shield. Shield and bridge are in the actions below.</p>
     </section>
   )
 }

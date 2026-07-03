@@ -162,6 +162,7 @@ button { -webkit-tap-highlight-color: transparent; cursor: pointer; }
 .balance-rail::-webkit-scrollbar { display: none; }
 .balance-slide { flex: 0 0 100%; scroll-snap-align: center; scroll-snap-stop: always; min-width: 0; display: flex; }
 .shielded-front {
+  position: relative;
   width: 100%;
   min-height: 184px;
   overflow: hidden;
@@ -179,25 +180,16 @@ button { -webkit-tap-highlight-color: transparent; cursor: pointer; }
   outline: none;
   transition: transform .22s ease;
 }
+/* Let a horizontal swipe that STARTS on a card drive the rail scroll (both
+   directions), so sliding back to shielded works — not only the tap/dots. */
+.shielded-front, .public-card-face { touch-action: pan-x; }
 .shielded-front:active, .public-card-face:active { cursor: grabbing; transform: scale(.992); }
 .shielded-front::before {
   content: "";
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(90deg, rgba(255,255,255,.22), transparent 44%),
-    repeating-linear-gradient(118deg, transparent 0 11px, rgba(255,255,255,.055) 11px 12px);
-  opacity: .8;
+  background: linear-gradient(96deg, rgba(255,255,255,.08), transparent 48%);
   pointer-events: none;
-}
-.shielded-front::after {
-  content: "";
-  position: absolute;
-  inset: auto -28px -38px auto;
-  width: 138px;
-  height: 138px;
-  border-radius: 50%;
-  border: 1px solid rgba(255,255,255,.08);
 }
 .card-topline { position: relative; display: flex; align-items: center; z-index: 1; }
 .boundary-line { display: inline-flex; align-items: center; gap: 7px; color: var(--ac2); font-family: var(--fm); font-size: 8px; letter-spacing: .12em; }
@@ -209,7 +201,7 @@ button { -webkit-tap-highlight-color: transparent; cursor: pointer; }
 .sync-pill { margin-left: auto; display: inline-flex; align-items: center; gap: 5px; border: 1px solid rgba(255,255,255,.16); border-radius: 999px; background: rgba(0,0,0,.16); color: var(--tx); padding: 5px 8px; font-size: 9px; font-weight: 800; }
 .public-card-face {
   width: 100%;
-  min-height: 222px;
+  min-height: 184px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -236,14 +228,18 @@ button { -webkit-tap-highlight-color: transparent; cursor: pointer; }
 .public-balances { display: grid; gap: 3px; margin-top: 2px; }
 .public-balances strong { font-family: var(--fm); font-size: 25px; line-height: 1; }
 .public-balances span { color: var(--tx2); font-family: var(--fm); font-size: 12px; }
-.public-card-face code {
-  color: var(--tx3);
+.public-card-face code.public-address {
+  align-self: flex-start;
+  color: var(--tx2);
   font-family: var(--fm);
-  font-size: 10px;
-  word-break: break-all;
+  font-size: 11px;
+  letter-spacing: .02em;
+  padding: 4px 9px;
+  border-radius: 8px;
+  background: rgba(0,0,0,.18);
+  white-space: nowrap;
 }
-.public-card-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.public-card-note { margin: 0; color: var(--tx3); font-size: 10px; line-height: 1.4; }
+.public-card-note { margin: auto 0 0; color: var(--tx3); font-size: 10px; line-height: 1.4; }
 .card-dots { display: flex; justify-content: center; gap: 5px; margin-top: -4px; }
 .card-dots button { width: 6px; height: 6px; border: 0; border-radius: 50%; background: var(--tx3); opacity: .45; padding: 0; }
 .card-dots button.on { width: 15px; border-radius: 999px; background: var(--ac2); opacity: 1; }
