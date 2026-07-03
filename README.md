@@ -7,6 +7,14 @@
 <p align="center"><b>A privacy-by-default, self-custody wallet for shielded XLM and USDC payments on Stellar.</b></p>
 
 <p align="center">
+  <a href="https://app.zkfreighter.app">Web wallet</a> ·
+  <a href="https://m.zkfreighter.app">Mobile app</a> ·
+  <a href="https://zkfreighter.app">Website</a> ·
+  <a href="https://docs.zkfreighter.app">Docs</a> ·
+  <a href="https://github.com/Blockchain-Oracle/zk-freighter">Source</a>
+</p>
+
+<p align="center">
   <img src="https://raw.githubusercontent.com/Blockchain-Oracle/zk-freighter/main/assets/zkf-home.png" alt="ZK Freighter across web, extension, and mobile" width="960" />
 </p>
 
@@ -21,8 +29,10 @@ This is not a general public-purpose wallet, not an "anonymous" or "untraceable"
 | Surface | URL |
 |---|---|
 | Product site | <https://zkfreighter.app> |
-| Web wallet | <https://app.zkfreighter.app> |
+| Web wallet (desktop) | <https://app.zkfreighter.app> |
+| Mobile web app (any phone) | <https://m.zkfreighter.app> |
 | Documentation | <https://docs.zkfreighter.app> |
+| Source code | <https://github.com/Blockchain-Oracle/zk-freighter> |
 | Funding API — testnet faucet | <https://api.zkfreighter.app> (`GET /v1/funding/status`) |
 | Bootnode — testnet event index | <https://bootnode.zkfreighter.app> (RPC at `/rpc`, `GET /health`) |
 | Bootnode — mainnet event index | <https://mainnet-bootnode.zkfreighter.app> (RPC at `/rpc`, `GET /health`) |
