@@ -19,6 +19,11 @@
   <img src="https://raw.githubusercontent.com/Blockchain-Oracle/zk-freighter/main/assets/zkf-home.png" alt="ZK Freighter across web, extension, and mobile" width="960" />
 </p>
 
+<p align="center">
+  <a href="https://vimeo.com/1206821318"><img src="https://raw.githubusercontent.com/Blockchain-Oracle/zk-freighter/main/assets/demo-thumbnail.jpg" alt="Watch the ZK Freighter demo" width="720" /></a>
+</p>
+<p align="center"><a href="https://vimeo.com/1206821318"><b>▶ Watch the 30-second demo</b></a></p>
+
 Hold it. Send it. Nobody sees it. Zero-knowledge proofs are generated on your own device (~6s in the browser), verified on-chain by Soroban contracts, and your shielded balances, amounts, and counterparties stay inside the pool. The public moments are named every time: **shield-in (deposit)**, **unshield-out (withdraw)**, and **bridge arrivals** are visible on Stellar — everything between them is a shielded transfer.
 
 > ⚠️ **Unaudited hackathon software** built on research/reference implementations (Stellar Hacks: Real-World ZK). Testnet is the recommended surface. Do not use for real funds.
