@@ -1,0 +1,58 @@
+---
+title: Troubleshooting
+description: Fixing a stalled private engine, stale scans, and sync issues.
+---
+
+Most wallet issues are local to your browser, not the network. This page covers the common
+ones and the honest way to tell them apart.
+
+## "The private engine stalled while reading shielded notes"
+
+The private engine is the in-browser prover and note scanner. Its local scan cache lives in
+**OPFS** (the browser's origin-private file system), and OPFS is **shared across every tab** on
+the same site. A stale tab left open from an earlier session — or a heavy sequence of wallet
+switches — can wedge the engine.
+
+**Fix, in order:**
+
+1. **Close every other wallet tab**, leaving just one. This alone resolves most stalls, because
+   a second tab can hold the engine's storage open.
+2. **Reset the private engine cache**: **Settings → Private engine → Reset private engine
+   cache**. This wipes only the local OPFS scan cache and reloads. Your vault, seed phrase,
+   public address, and activity are untouched.
+3. Retry the shielded action.
+
+The cache is also reset **automatically whenever you switch networks** (testnet ↔ mainnet),
+because the scan cache is not network-specific and stale entries from one network must not leak
+into the other.
+
+## Sync is slow or shielded balance looks stale
+
+Shielded balances are found by scanning every pool event since deployment. Two things make this
+fast and reliable, and both can be checked:
+
+- **The bootnode** serves the pool's warmed event history. Check its health — a healthy testnet
+  bootnode reports `ready: true` with the indexer caught up (`lag: 0`). If your build points at
+  a self-hosted bootnode that is down, the scan falls back to public RPC, which only retains a
+  short window and can miss older notes.
+- **Your local scan cache** — if it is corrupt, reset it as above.
+
+If the bootnode is healthy (caught up, lag 0) and a reset does not help, the issue is worth
+reporting rather than retrying.
+
+## Is it me or the service?
+
+A quick way to isolate a local problem from a real outage: open the hosted wallet in a **fresh**
+browser tab. If the hosted wallet works but your local build does not, the difference is local
+browser state (the cache above), not the backend.
+
+## Network endpoints
+
+The wallet works against public Stellar RPC alone; the hosted services make it faster and
+friction-free. Their health is public:
+
+- Testnet bootnode: `https://bootnode.zkfreighter.app/health`
+- Mainnet bootnode: `https://mainnet-bootnode.zkfreighter.app/health`
+- Funding API: `https://api.zkfreighter.app/health`
+
+See [Services](/docs/architecture/services) for what each one does.
