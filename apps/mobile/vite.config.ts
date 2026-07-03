@@ -35,10 +35,10 @@ export default defineConfig({
   },
   server: {
     proxy: localServiceProxy,
-    allowedHosts: ['.trycloudflare.com'],
+    allowedHosts: ['.trycloudflare.com', 'm.zkfreighter.app', 'mobile.zkfreighter.app'],
   },
   preview: {
     proxy: localServiceProxy,
-    allowedHosts: ['.trycloudflare.com'],
+    allowedHosts: ['.trycloudflare.com', 'm.zkfreighter.app', 'mobile.zkfreighter.app'],
   },
 })

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { BrandIntro, BrandOnboarding, type OnboardingChoice } from '@zk-freighter/ui'
 import App from './App.tsx'
+import { PhoneGate } from './PhoneGate'
 
 const onboardingKey = 'zkf.onboarding.web.v2'
 
@@ -15,6 +16,14 @@ function hasOnboarded(): boolean {
 // First run: the intro v2 flow replaces the short splash and forks into the
 // existing create/import flow. Returning users (key present) get only BrandIntro.
 export function Root() {
+  return (
+    <PhoneGate>
+      <RootApp />
+    </PhoneGate>
+  )
+}
+
+function RootApp() {
   const [done, setDone] = useState(() => hasOnboarded())
   const [choice, setChoice] = useState<OnboardingChoice | undefined>(undefined)
 

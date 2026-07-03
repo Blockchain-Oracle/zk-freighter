@@ -10,7 +10,9 @@ export const androidUrl =
 export const extensionUrl =
   import.meta.env.VITE_ZKF_EXTENSION_URL ??
   `${sourceUrl}/releases/latest/download/zk-freighter-extension-chrome.zip`
-/** iPhone: the web wallet (Add to Home Screen); native TestFlight is a later step. */
-export const iosUrl = import.meta.env.VITE_ZKF_IOS_URL ?? appUrl
+/** Responsive mobile web app (PWA) — the right phone experience for iOS + Android web. */
+export const mobileUrl = import.meta.env.VITE_ZKF_MOBILE_URL ?? 'https://m.zkfreighter.app'
+/** iPhone: open the mobile PWA in Safari and Add to Home Screen (native TestFlight is later). */
+export const iosUrl = import.meta.env.VITE_ZKF_IOS_URL ?? mobileUrl
 /** Install instructions per platform. */
 export const installUrl = `${docsUrl}/docs/install`
