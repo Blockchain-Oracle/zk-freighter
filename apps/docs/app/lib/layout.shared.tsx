@@ -32,6 +32,7 @@ export function baseOptions(): BaseLayoutProps {
       ),
     },
     githubUrl: 'https://github.com/Blockchain-Oracle/zk-freighter',
+    links: [{ text: 'X', url: 'https://x.com/zkfreighter', external: true }],
     themeSwitch: { enabled: false },
   }
 }
