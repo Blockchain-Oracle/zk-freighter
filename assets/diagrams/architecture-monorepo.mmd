@@ -1,0 +1,24 @@
+flowchart LR
+  subgraph Surfaces
+    web["apps/web"]
+    ext["apps/extension"]
+    mob["apps/mobile"]
+  end
+  subgraph Shared
+    core["packages/core<br/>identity · vault · proofs · tx"]
+    ui["packages/ui<br/>design system"]
+  end
+  subgraph Services
+    boot["apps/bootnode<br/>warmed event index"]
+    fund["apps/funding-api<br/>testnet faucet"]
+  end
+  web --> core
+  ext --> core
+  mob --> core
+  web --> ui
+  ext --> ui
+  mob --> ui
+  core -->|"getEvents (warmed)"| boot
+  core -->|"demo funding"| fund
+  core --> stellar[("Stellar / Soroban<br/>privacy pool contracts")]
+  core --> cctp["Circle CCTP<br/>USDC from Ethereum · Base · Arbitrum · OP"]

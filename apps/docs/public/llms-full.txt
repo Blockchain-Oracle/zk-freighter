@@ -284,6 +284,18 @@ The bootnode event index and the hosted testnet faucet.
 The wallet works against public Stellar infrastructure alone. Two small self-hosted services
 make it resilient and friction-free:
 
+## Official hosted endpoints
+
+| Service | URL |
+|---|---|
+| Bootnode (testnet) | `https://bootnode.zkfreighter.app` — RPC at `/rpc`, health at `/health` |
+| Bootnode (mainnet) | `https://mainnet-bootnode.zkfreighter.app` — RPC at `/rpc`, health at `/health` |
+| Funding API (testnet faucet) | `https://api.zkfreighter.app` — `GET /v1/funding/status`, `POST /v1/funding/request` |
+
+The hosted web wallet at [app.zkfreighter.app](https://app.zkfreighter.app) is built against
+these endpoints. Self-hosted builds can point `VITE_ZKF_*` at their own instances or omit them
+entirely and rely on public Stellar RPC.
+
 ## Bootnode — warmed event index
 
 Stellar's public RPC only retains recent events. Shielded wallets need the pool's **full**
@@ -322,11 +334,35 @@ without accepted transactions. The full evidence table — 40+ real transaction 
 Stellar testnet, Stellar mainnet, and four EVM testnets — lives in the repository README, with
 the deeper audit trail in the docs folder:
 
-- [README evidence table](https://github.com/Blockchain-Oracle/zk-freighter#evidence)
-- [Verified facts record](https://github.com/Blockchain-Oracle/zk-freighter/blob/main/docs/VERIFIED-FACTS.md)
+- [README evidence table](https://github.com/Blockchain-Oracle/zk-freighter#evidence) — every
+  hash is a one-click link to the right explorer for its network
+- [Submission package](https://github.com/Blockchain-Oracle/zk-freighter/blob/main/docs/SUBMISSION-PACKAGE.md)
 
-Spot-check any Stellar hash on [stellar.expert](https://stellar.expert/explorer/testnet), and
-EVM hashes on the respective chain explorer.
+## Deployed contracts
+
+The exact IDs the wallet ships with (`packages/core/src/networks.ts`,
+`packages/core/src/privacy-contracts.ts`):
+
+### Stellar testnet
+
+| Contract | ID |
+|---|---|
+| XLM privacy pool | [`CCCHESF5…FE3CD4LZ`](https://stellar.expert/explorer/testnet/contract/CCCHESF5HNGMCP5ZLGFBKBTW23YXNAJ6LTGSK7CO3FKFIVEHFE3CD4LZ) |
+| USDC privacy pool | [`CDKOY3DX…KWXKTCNK`](https://stellar.expert/explorer/testnet/contract/CDKOY3DXCCS3KHBDAE7G2E735YRPDGGAWRKSN25V4VFVKZOMKWXKTCNK) |
+| ASP membership (association set) | [`CCXIGPJJ…OC2WA3Y2`](https://stellar.expert/explorer/testnet/contract/CCXIGPJJY6UHIETXFCIV77HFVJSFS6HAVRSMHJFV6UVENXPJOC2WA3Y2) |
+| Confidential token (wrapped USDC, preview) | [`CBNL4THD…KCHEVJ4F`](https://stellar.expert/explorer/testnet/contract/CBNL4THDSDDZ5OWPVLJPDBQGQ4FDH6LHBBFUBPRDNLUCIV2LKCHEVJ4F) |
+| Confidential UltraHonk verifier | [`CD5DMFWT…OIASRSTUGG`](https://stellar.expert/explorer/testnet/contract/CD5DMFWTPW6SLA5TAUNU2TLAZ2ZFXCKGR2PBS4KHQ4P56EOIASRSTUGG) |
+| Confidential auditor registry | [`CAMO6HGC…XOAQ5SDGO`](https://stellar.expert/explorer/testnet/contract/CAMO6HGCK3EGQX7IEOAO555MPXNQ6UVFI46Y34CYQRWS4HLXOAQ5SDGO) |
+
+### Stellar mainnet
+
+| Contract | ID |
+|---|---|
+| XLM privacy pool | [`CCE3VBWT…QUJKHECE`](https://stellar.expert/explorer/public/contract/CCE3VBWTMGS7TZBOMBXVMPZFD4RUWAJDQHV7L2FT5BHMZKHLQUJKHECE) |
+| USDC privacy pool | [`CDV45TTX…PBOD2KR7`](https://stellar.expert/explorer/public/contract/CDV45TTXDDUKBMK2IWPJRUYQSRVEWHTRPKCN2VZ7GEV2HVMRPBOD2KR7) |
+| ASP membership (association set) | [`CCYY3LLT…VAQIW5PP`](https://stellar.expert/explorer/public/contract/CCYY3LLTVD2UW3Z4QD76PICZNIUH3PXKWJSKJVAENBIYON7QVAQIW5PP) |
+
+Confidential Token mode is testnet-only by design, so it has no mainnet deployment.
 
 ## What's proven, at a glance
 
@@ -406,6 +442,79 @@ Every term in plain English — assume smart, not cryptographer.
 - **Bootnode** — ZK Freighter's warmed event index: Stellar's public RPC only retains recent
   events, so this service remembers pool history and serves it through a narrow, allowlisted
   RPC.
+
+---
+
+# Auto-shield
+URL: https://docs.zkfreighter.dev/docs/how-it-works/auto-shield
+Automatically move your public balance into your shielded balance — how it triggers, its limits, and its boundaries.
+
+Auto-shield is an optional convenience: instead of shielding by hand every time, the wallet
+does it for you. It is **off by default**. Turn it on in **Settings → Privacy** (web) or the
+Auto-shield setting on the extension and mobile.
+
+## What it actually does
+
+When auto-shield runs, it looks at your **current public balance** and moves what it can into
+your shielded balance — as a normal shield deposit.
+
+The key thing to understand: it shields **the balance you already have**, not only "incoming"
+funds. There is no background watcher waiting for a new payment to land. Each time the trigger
+fires, it takes a fresh look at your public balance and shields what's available.
+
+## When it triggers
+
+Auto-shield runs **when the wallet opens or unlocks, and when balances refresh** — not
+continuously.
+
+- Turning the toggle **on while the wallet is already open does not fire it retroactively**. It
+  runs on the **next** open/refresh. (This surprises people: enable it, then refresh the wallet,
+  and you'll see it happen with the balance you already had.)
+- It is opportunistic, not a daemon: close the wallet and nothing runs.
+
+## The first shield is always manual
+
+Auto-shield stays dormant until the wallet has shielded **at least once**.
+
+The first-ever shield does extra work — it sets up your **shield access** (registers you with
+the association-set contract), which takes about 90 seconds and submits its own setup
+transaction. Doing that silently in the background is fragile (close the tab mid-setup and it
+orphans), so the first shield must be a deliberate, manual action. After one successful manual
+shield, auto-shield is live for that wallet.
+
+## Limits and safety
+
+Each auto-shield deposit is bounded so it can never strand you or move more than the pool
+allows:
+
+| Guard | Value | Why |
+|---|---|---|
+| **Per-deposit cap** | **100 units** (100 XLM or 100 USDC) | The privacy pool's maximum deposit size. A larger public balance is shielded across several refreshes, 100 at a time. |
+| **XLM holdback** | **5 XLM** kept public | Covers the account's base reserve and transaction fees so auto-shield never empties the account below what Stellar requires. |
+| **Minimum to trigger** | floor per asset (default 5 XLM / 1 USDC of *spendable* balance) | Avoids shielding dust. |
+| **Per-session cap** | 3 deposits per asset | A hard stop so it can't loop. |
+| **Cooldown** | 30 seconds between attempts | Prevents rapid re-fires. |
+
+So for XLM specifically: you need at least ~10 XLM public (5 held back + 5 floor) before
+anything happens, and each deposit shields up to 100, leaving the 5 XLM holdback in place.
+
+## It is still a public boundary
+
+Shielding in is **always** a public moment on Stellar — auto-shield does not change that. Each
+auto-shield is an ordinary deposit transaction, visible on-chain, and the confirmation banner
+says so explicitly. What stays private is everything *after* the deposit, inside the pool.
+
+## When something goes wrong
+
+If an auto-shield can't complete, the wallet **tells you** with a banner carrying the reason,
+and then **stops trying for the session** — it does not silently retry in a way that could
+double-deposit. Your funds are untouched on your public balance; you can shield manually from
+the Shield screen. A failure banner is never hidden by a later success.
+
+## Turning it off
+
+Flip the setting off at any time. It takes effect on the next trigger; anything mid-flight
+finishes, and nothing new starts.
 
 ---
 
@@ -569,6 +678,12 @@ Before your first shield, the wallet registers a membership leaf with the on-cha
 known-good participants and exclude flagged funds. The wallet handles it in one continuous run:
 setup transaction → wait for on-chain indexing → deposit, with live progress.
 
+## Auto-shield
+
+Auto-shield can move your public balance into your shielded balance for you, so you don't have
+to shield by hand every time. It is off by default. See the dedicated
+[Auto-shield](/docs/how-it-works/auto-shield) page for exactly how it behaves.
+
 ## Change stays private
 
 Shielded transfers use a 2-in/2-out note design: when you spend, change comes back to you as a
@@ -624,11 +739,88 @@ The [web app](/docs/apps/web), [browser extension](/docs/apps/extension), and
 [mobile app](/docs/apps/mobile) share one shielded pool and one core engine. Every feature is
 consistent — only the shape changes.
 
+## Try it
+
+- **Web wallet** — [app.zkfreighter.app](https://app.zkfreighter.app) (testnet recommended)
+- **Product site** — [zkfreighter.app](https://zkfreighter.app)
+- **Hosted services** — the wallet runs on our [bootnode event index and testnet faucet](/docs/architecture/services#official-hosted-endpoints)
+
 ## Compliance, on your terms
 
 [Selective disclosure](/docs/how-it-works/disclosure) produces a **read-only proof of a specific
 note** for an auditor or counterparty — without handing over keys or spend authority. You decide
 what's seen.
+
+---
+
+# Install
+URL: https://docs.zkfreighter.dev/docs/install
+How to get ZK Freighter on every platform today — web, mobile, extension, iPhone.
+
+ZK Freighter runs on the web, as a mobile app, and as a browser extension. You don't have to
+install anything to try it — the [web wallet](https://app.zkfreighter.app) works in any browser.
+
+> **Publishing status:** the app-store listings (Chrome Web Store, Microsoft Edge Add-ons, and a
+> native iOS build) are **submitted and pending review**. You do not have to wait for them — every
+> platform is installable right now via the direct links below.
+
+> This is early, unaudited software. Testnet is the recommended surface.
+
+**Looking for the download files?** Every build — the Android app, the iPhone app, and the
+browser extension — lives on the
+**[Releases page](https://github.com/Blockchain-Oracle/zk-freighter/releases/latest)**. The links
+below point straight to the newest of each.
+
+## Desktop — web wallet
+
+Open **[app.zkfreighter.app](https://app.zkfreighter.app)** in any desktop browser. That's the
+full wallet, nothing to install.
+
+## Phone — mobile web app
+
+The phone experience is a separate, thumb-first design at **[m.zkfreighter.app](https://m.zkfreighter.app)**.
+It works on **any** phone (iPhone and Android) with no install and no store:
+
+1. Open **[m.zkfreighter.app](https://m.zkfreighter.app)** in your phone's browser (Safari on
+   iPhone, Chrome on Android).
+2. Use the browser's **Share → Add to Home Screen**. It then launches full-screen like a native app.
+
+(The desktop `app.zkfreighter.app` is built for large screens — on a phone it will point you here.)
+
+## Android — native app (APK)
+
+Prefer a real installed app? Install the signed APK directly, no Play Store account needed:
+
+1. On your phone, download **[`zk-freighter.apk`](https://github.com/Blockchain-Oracle/zk-freighter/releases/latest/download/zk-freighter.apk)**
+   (or scan the QR on [zkfreighter.app](https://zkfreighter.app)).
+2. Android will ask **once** to allow installs from your browser — allow it.
+3. Play Protect may offer to scan the app — normal for any app installed outside the Play Store;
+   the wallet requests no SMS, contacts, or accessibility permissions.
+
+**Auto-updates:** install [Obtainium](https://github.com/ImranR98/Obtainium) and point it at this
+repository — it watches for new releases and updates the app for you (every release is signed with
+the same key). A Google Play listing may follow later.
+
+## iPhone
+
+- **Now — the mobile web app.** Open **[m.zkfreighter.app](https://m.zkfreighter.app)** in Safari
+  and **Add to Home Screen**. The full wallet, no install, every feature works.
+- **Native app (AltStore).** If you have [AltStore](https://altstore.io) on your iPhone, add our
+  source — AltStore then installs ZK Freighter and keeps it refreshed for you:
+  in AltStore, **Browse → Sources → +** and paste **`https://zkfreighter.app/altstore.json`**.
+  (Free-Apple-ID installs re-sign every 7 days; AltStore does this automatically. A paid Apple
+  Developer account / TestFlight removes the limit and is planned.)
+
+## Browser extension — Chrome, Edge, Brave
+
+The extension adds a popup and side panel.
+
+- **Now (any Chromium browser):** download the
+  **[extension zip](https://github.com/Blockchain-Oracle/zk-freighter/releases/latest/download/zk-freighter-extension-chrome.zip)**,
+  unzip it, open `chrome://extensions`, enable **Developer mode**, and choose **Load unpacked**.
+- **After review:** the [Chrome Web Store](https://chrome.google.com/webstore) and
+  [Edge Add-ons](https://microsoftedge.microsoft.com/addons) listings publish once their review
+  completes (submitted and pending). The links will be added here when live.
 
 ---
 
@@ -679,6 +871,72 @@ without revealing anything else. See [shielded transfers](/docs/how-it-works/shi
   ships, we say this plainly instead of overclaiming.
 - **Unaudited.** The shielded-pool engine (Nethermind's reference implementation) and this wallet
   are not security-audited. Testnet is the recommended surface; do not use real funds.
+
+---
+
+# Privacy Policy
+URL: https://docs.zkfreighter.dev/docs/privacy-policy
+What data ZK Freighter does and does not collect. Short, because we collect almost nothing.
+
+_Last updated: 2026-07-03._
+
+ZK Freighter is a self-custody wallet — for the web, as a browser extension, and as a mobile
+app. It is built so that we never see your money or your keys. This policy explains exactly what
+that means.
+
+## We do not collect personal data
+
+- **No account, no sign-up, no email.** You are never asked to identify yourself.
+- **No analytics, telemetry, tracking, ads, or third-party trackers** of any kind.
+- We do not sell, rent, or share any data, because we do not collect any to begin with.
+
+## Your keys and seed phrase never leave your device
+
+Your seed phrase and private keys are generated on your device, encrypted with your password,
+and stored **locally** (browser storage / the app's local storage). They are never transmitted
+to us or anyone else. Zero-knowledge proofs are generated **on your device**; no server sees
+your payment contents.
+
+## What does leave your device
+
+Using any wallet means broadcasting transactions to a public blockchain. Specifically:
+
+- **Stellar network.** Transactions you make are submitted to public Stellar RPC/Horizon and are
+  visible on-chain, exactly as with any Stellar wallet. Shield and unshield deposits are public
+  boundaries by design — the wallet says so each time.
+- **Optional hosted services**, which make the wallet faster but are not required:
+  - **Bootnode** — serves the public event history of the privacy pool contracts. It receives
+    ordinary read requests; it holds no keys and stores no personal data about you.
+  - **Testnet faucet (funding API)** — if you request free testnet funds, it receives the
+    destination address and your IP address **solely to rate-limit abuse**. This is testnet
+    only and involves no real value.
+
+You can point the wallet at your own services or public infrastructure instead; see the
+[Install](/docs/install) and [Services](/docs/architecture/services) pages.
+
+## Browser-extension permissions
+
+The extension requests the minimum it needs:
+
+- **`storage`** — to keep your encrypted vault and settings on your device.
+- **`offscreen`** — to run the WebAssembly zero-knowledge prover off the popup so proving does
+  not block the UI.
+
+It does **not** request access to your browsing history, tabs, or the content of websites, and
+it **fails closed** for external dapp key-access and signing requests — it is a privacy wallet,
+not a general signer.
+
+## Honest limits
+
+ZK Freighter provides **shielded transfers**, not anonymity. Shielding in, unshielding out, and
+bridge arrivals are public on-chain moments, and on-chain analysis (amounts, timing, pool size)
+is always possible. We never claim the wallet is "anonymous," "untraceable," or "fully private."
+It is early, unaudited software; use testnet.
+
+## Changes and contact
+
+If this policy changes, the date above changes with it. Questions or reports:
+[github.com/Blockchain-Oracle/zk-freighter](https://github.com/Blockchain-Oracle/zk-freighter).
 
 ---
 
@@ -746,3 +1004,63 @@ pnpm mobile:dev        # mobile surface in the browser, :4183
 ```
 
 See the [app guides](/docs/apps/web) for each surface in detail.
+
+---
+
+# Troubleshooting
+URL: https://docs.zkfreighter.dev/docs/troubleshooting
+Fixing a stalled private engine, stale scans, and sync issues.
+
+Most wallet issues are local to your browser, not the network. This page covers the common
+ones and the honest way to tell them apart.
+
+## "The private engine stalled while reading shielded notes"
+
+The private engine is the in-browser prover and note scanner. Its local scan cache lives in
+**OPFS** (the browser's origin-private file system), and OPFS is **shared across every tab** on
+the same site. A stale tab left open from an earlier session — or a heavy sequence of wallet
+switches — can wedge the engine.
+
+**Fix, in order:**
+
+1. **Close every other wallet tab**, leaving just one. This alone resolves most stalls, because
+   a second tab can hold the engine's storage open.
+2. **Reset the private engine cache**: **Settings → Private engine → Reset private engine
+   cache**. This wipes only the local OPFS scan cache and reloads. Your vault, seed phrase,
+   public address, and activity are untouched.
+3. Retry the shielded action.
+
+The cache is also reset **automatically whenever you switch networks** (testnet ↔ mainnet),
+because the scan cache is not network-specific and stale entries from one network must not leak
+into the other.
+
+## Sync is slow or shielded balance looks stale
+
+Shielded balances are found by scanning every pool event since deployment. Two things make this
+fast and reliable, and both can be checked:
+
+- **The bootnode** serves the pool's warmed event history. Check its health — a healthy testnet
+  bootnode reports `ready: true` with the indexer caught up (`lag: 0`). If your build points at
+  a self-hosted bootnode that is down, the scan falls back to public RPC, which only retains a
+  short window and can miss older notes.
+- **Your local scan cache** — if it is corrupt, reset it as above.
+
+If the bootnode is healthy (caught up, lag 0) and a reset does not help, the issue is worth
+reporting rather than retrying.
+
+## Is it me or the service?
+
+A quick way to isolate a local problem from a real outage: open the hosted wallet in a **fresh**
+browser tab. If the hosted wallet works but your local build does not, the difference is local
+browser state (the cache above), not the backend.
+
+## Network endpoints
+
+The wallet works against public Stellar RPC alone; the hosted services make it faster and
+friction-free. Their health is public:
+
+- Testnet bootnode: `https://bootnode.zkfreighter.app/health`
+- Mainnet bootnode: `https://mainnet-bootnode.zkfreighter.app/health`
+- Funding API: `https://api.zkfreighter.app/health`
+
+See [Services](/docs/architecture/services) for what each one does.

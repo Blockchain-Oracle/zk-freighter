@@ -1,0 +1,5 @@
+flowchart LR
+  popup["Popup / side panel UI"] --> bg["Background service worker"]
+  bg --> off["Offscreen document<br/>WASM prover + pool runtime"]
+  off --> rpc[("Stellar RPC / Horizon")]
+  dapp["dApp page"] -.->|"public-key access & signing<br/>fail closed by design"| bg

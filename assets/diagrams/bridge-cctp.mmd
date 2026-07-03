@@ -1,0 +1,9 @@
+sequenceDiagram
+    participant E as EVM chain (Base / Arbitrum / OP / Ethereum)
+    participant I as Circle Iris attestation
+    participant X as Stellar
+    E->>E: USDC approve + depositForBurn
+    E-->>I: burn message
+    I-->>X: signed attestation
+    X->>X: receiveMessage → USDC mint (public arrival)
+    X->>X: separate shield/deposit into the privacy pool

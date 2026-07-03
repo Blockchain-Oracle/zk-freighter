@@ -33,3 +33,14 @@ build/
 
 # scratch
 /tmp-*
+
+# AI-agent working files (kept local, out of the public repo)
+.thoughts/
+.agents/
+.claude/
+.cloud/
+reference/
+AGENTS.md
+CLAUDE.md
+skills.log
+skills.log*

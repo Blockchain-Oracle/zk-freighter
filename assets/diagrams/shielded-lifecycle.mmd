@@ -1,0 +1,20 @@
+sequenceDiagram
+    participant S as Sender wallet
+    participant P as Soroban privacy pool
+    participant R as Recipient wallet
+    rect rgba(229, 180, 92, 0.14)
+        Note over S,P: SHIELD · public boundary
+        S->>P: deposit XLM/USDC + note commitment (visible on-chain)
+    end
+    rect rgba(94, 124, 250, 0.14)
+        Note over S,R: SHIELDED TRANSFER · inside the pool
+        S->>S: generate Groth16 proof on-device (~6s)
+        S->>P: proof + nullifiers + new commitments
+        Note over P: amount & counterparty stay off the public surface
+        R->>P: discover notes via encrypted outputs (zkf1… code)
+    end
+    rect rgba(229, 180, 92, 0.14)
+        Note over R,P: UNSHIELD · public boundary
+        R->>P: withdrawal proof
+        P->>R: XLM/USDC to a public address (visible on-chain)
+    end

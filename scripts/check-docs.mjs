@@ -1,13 +1,10 @@
 import { readFileSync } from 'node:fs'
 
+// Only public, tracked docs. AI-agent working files (.thoughts, AGENTS.md) are
+// gitignored and must not be a build dependency.
 const files = [
-  'AGENTS.md',
   'README.md',
-  '.thoughts/specs/2026-06-22-zk-freighter-product-spec.md',
-  '.thoughts/stories/2026-06-22-zk-freighter-mvp-stories.md',
-  '.thoughts/quality/2026-06-22-project-quality-profile.md',
-  '.thoughts/plans/2026-06-22-zk-freighter-implementation-plan.md',
-  '.thoughts/handoffs/2026-06-22-codex-build-prompts.md',
+  'docs/SUBMISSION-PACKAGE.md',
 ]
 
 const stalePatterns = [

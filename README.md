@@ -120,18 +120,18 @@ sequenceDiagram
     participant S as Sender wallet
     participant P as Soroban privacy pool
     participant R as Recipient wallet
-    rect rgb(240, 235, 220)
+    rect rgba(229, 180, 92, 0.14)
         Note over S,P: SHIELD · public boundary
         S->>P: deposit XLM/USDC + note commitment (visible on-chain)
     end
-    rect rgb(220, 235, 225)
+    rect rgba(94, 124, 250, 0.14)
         Note over S,R: SHIELDED TRANSFER · inside the pool
         S->>S: generate Groth16 proof on-device (~6s)
         S->>P: proof + nullifiers + new commitments
         Note over P: amount & counterparty stay off the public surface
         R->>P: discover notes via encrypted outputs (zkf1… code)
     end
-    rect rgb(240, 235, 220)
+    rect rgba(229, 180, 92, 0.14)
         Note over R,P: UNSHIELD · public boundary
         R->>P: withdrawal proof
         P->>R: XLM/USDC to a public address (visible on-chain)
@@ -266,7 +266,7 @@ Every claim above is backed by accepted on-chain transactions — every hash bel
 | Mainnet USDC shielded transfer | Stellar mainnet | [`5317b8…221aa1`](https://stellar.expert/explorer/public/tx/5317b8266ef93b84a6ab9f40eb5b157c5838b6b9a0826d60a6d6daf36a221aa1) |
 | Mainnet USDC unshield | Stellar mainnet | [`2dd895…64531b`](https://stellar.expert/explorer/public/tx/2dd8955cd57aa35b46a0ac944380afb12ac1b82da44f8cf8ab6a9d283064531b) |
 
-Deeper records (explorer links, balances, failure notes, and the full verified-facts audit) live in [`docs/VERIFIED-FACTS.md`](docs/VERIFIED-FACTS.md) and [`docs/SUBMISSION-PACKAGE.md`](docs/SUBMISSION-PACKAGE.md).
+Deeper records (explorer links, balances, and the submission audit) live in [`docs/SUBMISSION-PACKAGE.md`](docs/SUBMISSION-PACKAGE.md).
 
 ### What we do NOT claim
 

@@ -14,13 +14,17 @@
 - [Services](https://docs.zkfreighter.dev/docs/architecture/services): The bootnode event index and the hosted testnet faucet.
 - [Evidence & verification](https://docs.zkfreighter.dev/docs/evidence): Every claim is backed by accepted on-chain transactions you can check yourself.
 - [Glossary](https://docs.zkfreighter.dev/docs/glossary): Every term in plain English — assume smart, not cryptographer.
+- [Auto-shield](https://docs.zkfreighter.dev/docs/how-it-works/auto-shield): Automatically move your public balance into your shielded balance — how it triggers, its limits, and its boundaries.
 - [Bridging USDC in](https://docs.zkfreighter.dev/docs/how-it-works/bridge): Real Circle USDC from Ethereum, Base, Arbitrum, or Optimism — then shield it.
 - [Selective disclosure](https://docs.zkfreighter.dev/docs/how-it-works/disclosure): Prove a specific note to an auditor — read-only, on your terms.
 - [Private receive codes](https://docs.zkfreighter.dev/docs/how-it-works/receive-codes): The zkf1… code that lets anyone pay your shielded balance without knowing your address.
 - [Shielded transfers](https://docs.zkfreighter.dev/docs/how-it-works/shielded-transfers): Notes, nullifiers, and on-device proofs — the full lifecycle of private money.
 - [What is ZK Freighter?](https://docs.zkfreighter.dev/docs): A self-custody wallet for shielded XLM and USDC payments on Stellar.
+- [Install](https://docs.zkfreighter.dev/docs/install): How to get ZK Freighter on every platform today — web, mobile, extension, iPhone.
 - [Privacy model](https://docs.zkfreighter.dev/docs/privacy-model): Exactly what is hidden, what is public, and what we refuse to claim.
+- [Privacy Policy](https://docs.zkfreighter.dev/docs/privacy-policy): What data ZK Freighter does and does not collect. Short, because we collect almost nothing.
 - [Quickstart](https://docs.zkfreighter.dev/docs/quickstart): Run the wallet, fund it on testnet, and make your first shielded transfer.
+- [Troubleshooting](https://docs.zkfreighter.dev/docs/troubleshooting): Fixing a stalled private engine, stale scans, and sync issues.
 
 ## Source
 
