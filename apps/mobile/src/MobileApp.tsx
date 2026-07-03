@@ -185,7 +185,7 @@ export function MobileApp() {
 
   function changeNetwork(nextNetwork: NetworkKey) {
     setShieldedCache(null)
-    if (identity) void resetMobilePrivateStateForNetworkSwitch(network, nextNetwork, identity.stellarPublicKey)
+    if (identity) resetMobilePrivateStateForNetworkSwitch(network, nextNetwork, identity.stellarPublicKey).catch((cause) => console.error('[mobile] engine reset after network switch failed', cause))
     setStoredNetwork(nextNetwork)
     setNetwork(nextNetwork)
     setIdentity((current) => current ? deriveWalletIdentity(current.mnemonic, nextNetwork) : null)

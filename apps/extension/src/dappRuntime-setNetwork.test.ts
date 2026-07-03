@@ -35,7 +35,7 @@ describe('setNetwork dispatch', () => {
     })
     const resetPrivateStorage = vi.fn(async () => {
       calls.push('storage')
-      return { ok: true as const, cleared: true }
+      return { ok: true, removedEntries: 3 }
     })
     const runtime = new ExtensionDappRuntime(
       undefined, undefined, undefined, undefined, undefined, undefined, undefined,
@@ -50,6 +50,7 @@ describe('setNetwork dispatch', () => {
     // The OPFS scan cache is not network-keyed — a switch MUST run the full
     // storage wipe, or the other network's scan reads poisoned files.
     expect(resetPrivateStorage).toHaveBeenCalledTimes(1)
+    expect(resetPrivateRuntime).toHaveBeenCalledTimes(0)
     expect(calls).toEqual(['storage'])
     expect(response).not.toBeNull()
   })
