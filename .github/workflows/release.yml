@@ -1,28 +1,33 @@
-name: Release builds (APK + extension zip)
+name: Release builds (APK + IPA + extension zip)
 
-# Rebuilds the signed Android APK and the browser-extension zip and uploads them
-# to a GitHub Release under stable names, so the landing QR, README, docs, and
-# Obtainium always point at the newest build. Trigger by pushing a version tag
-# (v*) or manually (workflow_dispatch → pick the release tag to attach to).
-#
-# Requires repo secrets: ANDROID_KEYSTORE_B64 (base64 of the release keystore),
-# ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS.
+# Fully automatic: whenever the app/extension/mobile code changes on main, rebuild
+# the Android APK, the iPhone IPA, and the browser-extension zip and upload them to
+# the rolling release under stable names — so the landing QR, README, docs, Obtainium,
+# and the AltStore source always serve the newest build with zero manual steps.
+# A pushed version tag (v*) targets that tag's release instead.
 
 on:
   push:
+    branches: [main]
+    paths:
+      - 'apps/extension/**'
+      - 'apps/mobile/**'
+      - 'packages/core/**'
+      - 'packages/ui/**'
     tags: ['v*']
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Existing release tag to attach assets to'
+        description: 'Release tag to attach assets to'
         required: true
         default: v0.1.0-alpha
 
 env:
-  TAG: ${{ github.event.inputs.tag || github.ref_name }}
-  PROD_FUNDING: https://api.zkfreighter.app
-  PROD_BOOTNODE_TESTNET: https://bootnode.zkfreighter.app/rpc
-  PROD_BOOTNODE_MAINNET: https://mainnet-bootnode.zkfreighter.app/rpc
+  # Tag push → that tag; otherwise the rolling latest release.
+  TAG: ${{ github.ref_type == 'tag' && github.ref_name || (github.event.inputs.tag || 'v0.1.0-alpha') }}
+  VITE_ZKF_TESTNET_FUNDING_API_URL: https://api.zkfreighter.app
+  VITE_ZKF_TESTNET_BOOTNODE_URL: https://bootnode.zkfreighter.app/rpc
+  VITE_ZKF_MAINNET_BOOTNODE_URL: https://mainnet-bootnode.zkfreighter.app/rpc
 
 jobs:
   extension:
@@ -36,10 +41,8 @@ jobs:
         with: { node-version: 24, cache: pnpm }
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @zk-freighter/extension zip
-      - name: Upload extension zip
-        run: |
-          ZIP=$(ls apps/extension/.output/*chrome*.zip | head -1)
-          cp "$ZIP" zk-freighter-extension-chrome.zip
+      - run: |
+          cp "$(ls apps/extension/.output/*chrome*.zip | head -1)" zk-freighter-extension-chrome.zip
           gh release upload "$TAG" zk-freighter-extension-chrome.zip --clobber
         env:
           GH_TOKEN: ${{ github.token }}
@@ -56,12 +59,7 @@ jobs:
         with: { distribution: temurin, java-version: 21 }
       - uses: android-actions/setup-android@v3
       - run: pnpm install --frozen-lockfile
-      - name: Build web bundle + Capacitor sync (production endpoints)
-        working-directory: apps/mobile
-        env:
-          VITE_ZKF_TESTNET_FUNDING_API_URL: ${{ env.PROD_FUNDING }}
-          VITE_ZKF_TESTNET_BOOTNODE_URL: ${{ env.PROD_BOOTNODE_TESTNET }}
-          VITE_ZKF_MAINNET_BOOTNODE_URL: ${{ env.PROD_BOOTNODE_MAINNET }}
+      - working-directory: apps/mobile
         run: pnpm sync
       - name: Restore release keystore
         working-directory: apps/mobile/android/app
@@ -73,12 +71,34 @@ jobs:
           keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
           keyPassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           EOF
-      - name: Assemble signed release APK
-        working-directory: apps/mobile/android
+      - working-directory: apps/mobile/android
         run: ./gradlew :app:assembleRelease --no-daemon
-      - name: Upload APK
-        run: |
+      - run: |
           cp apps/mobile/android/app/build/outputs/apk/release/app-release.apk zk-freighter.apk
           gh release upload "$TAG" zk-freighter.apk --clobber
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+  ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 10.33.0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - working-directory: apps/mobile
+        run: pnpm sync
+      - name: Build unsigned IPA (AltStore re-signs on device)
+        working-directory: apps/mobile/ios/App
+        run: |
+          xcodebuild -project App.xcodeproj -scheme App -configuration Release -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO build
+          cd build/Build/Products/Release-iphoneos
+          mkdir Payload && cp -R App.app Payload/
+          zip -qr "$GITHUB_WORKSPACE/zk-freighter.ipa" Payload
+      - run: gh release upload "$TAG" zk-freighter.ipa --clobber
         env:
           GH_TOKEN: ${{ github.token }}

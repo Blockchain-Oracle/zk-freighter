@@ -31,7 +31,7 @@ Nothing to install to try it — the [web wallet](https://app.zkfreighter.app) r
 - **iPhone native:** in [AltStore](https://altstore.io), add the source `https://zkfreighter.app/altstore.json` and install — or just use the mobile web app above.
 - **Browser extension:** [download the zip](https://github.com/Blockchain-Oracle/zk-freighter/releases/latest/download/zk-freighter-extension-chrome.zip) — unzip, `chrome://extensions`, Developer mode, Load unpacked. Store listings land after review.
 
-Full per-platform steps: [docs.zkfreighter.app/docs/install](https://docs.zkfreighter.app/docs/install).
+Every build (Android app, iPhone app, extension) also lives on the [**Releases page**](https://github.com/Blockchain-Oracle/zk-freighter/releases/latest). Full per-platform steps: [docs.zkfreighter.app/docs/install](https://docs.zkfreighter.app/docs/install).
 
 ## Quickstart
 
