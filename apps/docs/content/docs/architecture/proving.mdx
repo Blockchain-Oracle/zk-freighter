@@ -1,32 +1,73 @@
 ---
 title: Proving on-device
-description: The Groth16 pipeline that runs in your browser — and the second Noir stack.
+description: The two zero-knowledge stacks — how proofs are generated, where they run, and how they're verified on-chain.
 ---
 
-## Shielded pools: Circom / Groth16
+ZK Freighter has **two independent proving stacks**. Both generate proofs **on your
+device** and verify them **on-chain** — a server-side prover would see your amounts and
+counterparties, the exact thing the product exists to protect.
 
-The flagship path reuses Nethermind's `stellar-private-payments` engine (credited openly):
+| | Shielded Pools (flagship) | Confidential Tokens (preview) |
+|---|---|---|
+| Hides | balances, amounts, counterparties | amounts and balances |
+| Circuit | Circom `policy_tx_2_2` (2-in/2-out) | 6 Noir circuits + gadgets |
+| Proof system | Groth16 over BN254 | UltraHonk (Barretenberg) |
+| Prover | Rust→WASM, in a Web Worker | `bb.js`, keccak transcript |
+| Balance model | note commitments + nullifiers (Merkle tree) | Pedersen commitments `C = v·G + r·H` on Grumpkin |
+| On-chain verify | Soroban privacy-pool contract | Soroban confidential-token + UltraHonk verifier |
+| Networks | testnet **and** mainnet | testnet only |
 
-- **Circuit:** a 2-in/2-out "policy transaction" — every operation (deposit, transfer,
-  withdrawal) is the same circuit with different public amounts. Change returns as a hidden
-  note.
-- **Prover:** Rust compiled to WebAssembly, running in the browser (in a worker on web/mobile,
-  in an offscreen document in the extension). A proof takes ~6 seconds on a laptop.
-- **Verifier:** the Soroban pool contract verifies the Groth16 proof on-chain over BN254 with
-  Poseidon2 hashing — the primitives Stellar added natively in Protocols 25/26.
+<Mermaid
+  chart={`flowchart TB
+    subgraph SP["Shielded Pools"]
+      sp1["notes + nullifiers"] --> sp2["Circom policy_tx_2_2"] --> sp3["Groth16 · Rust→WASM worker"] --> sp4["Soroban privacy pool"]
+    end
+    subgraph CT["Confidential Tokens"]
+      ct1["Pedersen commitments (Grumpkin)"] --> ct2["6 Noir circuits"] --> ct3["UltraHonk · bb.js"] --> ct4["Soroban confidential-token"]
+    end
+    core["packages/core"] -.-> sp3
+    core -.-> ct3`}
+/>
+
+## Shielded Pools — Circom / Groth16
+
+- **Circuit:** a 2-in/2-out "policy transaction" — deposit, transfer, and withdrawal are
+  all the *same* circuit with different public amounts; change returns as a hidden note.
+- **Prover:** a Rust prover compiled to WebAssembly runs in a **Web Worker** (an offscreen
+  document in the extension). A proof takes ~6 seconds on a laptop. `packages/core` supplies
+  the high-level inputs and receives back an uncompressed Groth16 proof plus a ready-to-sign
+  Soroban transaction.
+- **Verifier:** the Soroban pool contract verifies the Groth16 proof on-chain over BN254
+  with Poseidon2 hashing — the primitives Stellar added natively in Protocols 25/26.
 - **Binding:** the recipient and amount of a withdrawal are hashed into the proof
-  (`ext_data_hash`), so nobody — not even a submitting service — can redirect funds.
+  (`ext_data_hash`), so nobody — not even a submitting relayer — can redirect funds.
 
-## Confidential tokens: Noir / UltraHonk
+The engine (circuits, WASM prover, pool + ASP contracts) is reused from Nethermind's
+open-source [`stellar-private-payments`](https://github.com/NethermindEth/stellar-private-payments)
+reference, credited openly. What is ZK Freighter's own code is the entire wallet-side
+runtime: BN254 Poseidon2, HD key derivation, ASP membership, the shield prerequisite flow,
+and Soroban submission. See [Shielded pools, end to end](/docs/architecture/shielding-internals).
 
-The second mode (testnet-only preview) is original ZK Freighter work: Noir circuits
-(`circuits/`) proved with Barretenberg's UltraHonk via `bb.js`, verified on-chain by a Soroban
-verifier, with balances as homomorphic commitments on the Grumpkin curve
-(`contracts/confidential-token`). Operations: register, deposit, merge, transfer, withdraw.
+## Confidential Tokens — Noir / UltraHonk
+
+- **Circuits:** six Noir circuits — register, withdraw, transfer, plus the spender-delegation
+  set (set_spender, spender_transfer, revoke_spender) — with a shared primitives library.
+  (Deposit and merge are proof-*less* public-boundary contract ops, not circuits.) Balances are homomorphic Pedersen
+  commitments on the **Grumpkin** curve, whose base field equals BN254's scalar field so the
+  point math is native in-circuit.
+- **Prover:** UltraHonk via `bb.js`, always with a **keccak** Fiat–Shamir transcript because
+  that is what the on-chain verifier expects (bb's default Poseidon2 transcript is rejected).
+- **Verifier:** a Soroban confidential-token contract delegates proof checking to a separate
+  UltraHonk verifier-registry contract, and resolves auditor keys from an auditor registry.
+
+The **circuits are vendored** from the OpenZeppelin / Stellar Development Foundation
+Confidential Tokens preview (credited in [`circuits/ATTRIBUTION.md`](https://github.com/Blockchain-Oracle/zk-freighter/blob/main/circuits/ATTRIBUTION.md)); the **Soroban contract and the wallet-side runtime are ZK Freighter's own work**. See
+[Confidential tokens, end to end](/docs/architecture/confidential-internals) and the
+[`circuits/README`](https://github.com/Blockchain-Oracle/zk-freighter/blob/main/circuits/README.md).
 
 ## Why proofs never leave your device
 
-Both stacks generate proofs locally. A server-side prover would see your amounts and
-counterparties — the exact thing the product exists to protect. The trade-off is honest: the
-first load pulls multi-megabyte WASM artifacts, and proving costs a few seconds of CPU. The
-wallet shows real progress for both.
+Both stacks prove locally. The trade-off is honest: the first load pulls multi-megabyte
+WASM artifacts, and proving costs a few seconds of CPU. The wallet shows real progress for
+both, and verifies the on-device artifacts by SHA-256 before use
+([`packages/core/src/prover.ts`](https://github.com/Blockchain-Oracle/zk-freighter/blob/main/packages/core/src/prover.ts)).

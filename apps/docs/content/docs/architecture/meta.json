@@ -1,4 +1,4 @@
 {
   "title": "Architecture",
-  "pages": ["overview", "proving", "extension", "services"]
+  "pages": ["overview", "proving", "shielding-internals", "confidential-internals", "extension", "services"]
 }

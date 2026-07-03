@@ -1,0 +1,28 @@
+sequenceDiagram
+    participant U as Wallet (device)
+    participant C as packages/core
+    participant W as Prover worker (Groth16 WASM)
+    participant A as ASP membership and bootnode index
+    participant P as Soroban privacy pool
+    rect rgba(229, 180, 92, 0.14)
+        Note over U,P: SHIELD · public boundary
+        U->>C: shield amount
+        C->>A: insert membership leaf, wait for index
+        C->>W: build witness (note, keys, Merkle path)
+        W-->>C: Groth16 proof and ext_data
+        C->>P: deposit and proof (amount visible on-chain)
+    end
+    rect rgba(94, 124, 250, 0.14)
+        Note over U,P: SHIELDED TRANSFER · inside the pool
+        C->>A: sync pool events (bootnode getEvents)
+        C->>W: witness spends existing notes
+        W-->>C: proof, nullifiers, new commitments
+        Note over C,W: ext_data_hash binds recipient and amount<br/>so no relayer can redirect funds
+        C->>P: proof (amount and counterparty stay private)
+    end
+    rect rgba(229, 180, 92, 0.14)
+        Note over U,P: UNSHIELD · public boundary
+        C->>W: withdrawal witness
+        W-->>C: proof bound to recipient address
+        C->>P: withdraw proof, pool pays a public address
+    end

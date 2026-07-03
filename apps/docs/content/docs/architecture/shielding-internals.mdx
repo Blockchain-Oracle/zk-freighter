@@ -1,0 +1,104 @@
+---
+title: Shielded pools, end to end
+description: A shield / transfer / unshield, traced from the tap through the circuit to on-chain verification — with the code.
+---
+
+This is the flagship stack (shielded XLM/USDC). It reuses Nethermind's
+[`stellar-private-payments`](https://github.com/NethermindEth/stellar-private-payments)
+engine for the circuit, WASM prover, and on-chain contracts; everything in
+[`packages/core`](https://github.com/Blockchain-Oracle/zk-freighter/blob/main/packages/core/src)
+is ZK Freighter's own orchestration around it. Every step below links to the real file.
+
+<Mermaid
+  chart={`sequenceDiagram
+    participant U as Wallet (device)
+    participant C as packages/core
+    participant W as Prover worker (Groth16 WASM)
+    participant A as ASP membership + bootnode
+    participant P as Soroban privacy pool
+    rect rgba(229,180,92,0.08)
+        Note over U,P: SHIELD — public boundary
+        U->>C: shield amount
+        C->>A: insert membership leaf, wait for index
+        C->>W: build witness (note, keys, Merkle path)
+        W-->>C: Groth16 proof + ext_data
+        C->>P: deposit + proof (amount visible)
+    end
+    rect rgba(94,124,250,0.08)
+        Note over U,P: SHIELDED TRANSFER — inside the pool
+        C->>A: sync pool events (bootnode getEvents)
+        C->>W: witness spends existing notes
+        W-->>C: proof + nullifiers + new commitments
+        C->>P: proof (amount + counterparty private)
+    end
+    rect rgba(229,180,92,0.08)
+        Note over U,P: UNSHIELD — public boundary
+        C->>W: withdrawal witness
+        W-->>C: proof bound to recipient
+        C->>P: withdraw; pool pays a public address
+    end`}
+/>
+
+## 1. Keys and the note model
+
+On unlock, the wallet derives a private-receive identity from the seed: a note keypair, an
+x25519 encryption key, and a membership blinding scalar — all BN254 scalars via a genuine
+in-repo **Poseidon2** implementation (a KAT vector pins it to Nethermind's).
+
+- Key derivation — [`identity.ts`](https://github.com/Blockchain-Oracle/zk-freighter/blob/main/packages/core/src/identity.ts)
+- Poseidon2 over BN254 — [`poseidon2-bn254.ts`](https://github.com/Blockchain-Oracle/zk-freighter/blob/main/packages/core/src/poseidon2-bn254.ts)
+
+The note itself (amount, blinding) and its **commitment / nullifier** are computed *inside*
+the WASM engine — that logic is Nethermind's. The repo owns the keypair and the ASP leaf.
+
+## 2. Shield access (first-time setup)
+
+Before the first deposit, the wallet inserts a **membership leaf** into the on-chain
+association-set (ASP) contract and waits for it to be indexed, so the pool can include
+known-good participants. This runs as one continuous sequence — insert → wait-for-index →
+deposit — with a cached access state so later shields skip re-insertion.
+
+- Leaf = `Poseidon2(notePublicKey, membershipBlinding, domain=1)` — [`asp-membership.ts`](https://github.com/Blockchain-Oracle/zk-freighter/blob/main/packages/core/src/asp-membership.ts)
+- Insert + orchestration — [`asp-membership-insert.ts`](https://github.com/Blockchain-Oracle/zk-freighter/blob/main/packages/core/src/asp-membership-insert.ts), [`shield-orchestration.ts`](https://github.com/Blockchain-Oracle/zk-freighter/blob/main/packages/core/src/shield-orchestration.ts)
+- Index polling (via the bootnode) — [`asp-access-indexing.ts`](https://github.com/Blockchain-Oracle/zk-freighter/blob/main/packages/core/src/asp-access-indexing.ts), state cache [`asp-access-state.ts`](https://github.com/Blockchain-Oracle/zk-freighter/blob/main/packages/core/src/asp-access-state.ts)
+
+## 3. Witness building
+
+`packages/core` never assembles raw circuit inputs — it hands high-level parameters to the
+engine's `executeDeposit` / `executeTransfer` / `executeWithdraw`, which build the witness
+inside WASM. A transfer decodes the recipient's keys from a receive code first; a spend syncs
+pool events so the engine has the Merkle path.
+
+- Shield — [`xlm-shield.ts`](https://github.com/Blockchain-Oracle/zk-freighter/blob/main/packages/core/src/xlm-shield.ts)
+- Transfer / withdraw — [`xlm-private.ts`](https://github.com/Blockchain-Oracle/zk-freighter/blob/main/packages/core/src/xlm-private.ts), helpers [`xlm-private-support.ts`](https://github.com/Blockchain-Oracle/zk-freighter/blob/main/packages/core/src/xlm-private-support.ts)
+- Engine entry-point types — [`nethermind-runtime-types.ts`](https://github.com/Blockchain-Oracle/zk-freighter/blob/main/packages/core/src/nethermind-runtime-types.ts)
+
+## 4. Proof generation
+
+The engine is loaded and its jobs serialized through a queue; the Groth16 proof runs in a
+dedicated **prover worker** off the main thread (an offscreen document in the extension).
+The wallet observes progress via status callbacks and detects the `prepare_tx` / `prove`
+stages. The engine returns an uncompressed Groth16 proof plus a fully built, **unsigned**
+Soroban transaction (`ext_data` binds the public transaction data into the proof).
+
+- Runtime + worker capture — [`nethermind-runtime.ts`](https://github.com/Blockchain-Oracle/zk-freighter/blob/main/packages/core/src/nethermind-runtime.ts)
+- Artifact integrity preflight (SHA-256) — [`prover.ts`](https://github.com/Blockchain-Oracle/zk-freighter/blob/main/packages/core/src/prover.ts)
+
+## 5. Submit + on-chain verification
+
+The wallet signs the required Soroban **authorization entries** and the envelope with the
+seed-derived keypair, submits with retry, and polls for confirmation. On-chain, the pool
+contract verifies the Groth16 proof against its embedded verifying key over BN254/Poseidon2.
+
+- Auth-entry signing, submit, confirm — [`soroban-submit.ts`](https://github.com/Blockchain-Oracle/zk-freighter/blob/main/packages/core/src/soroban-submit.ts)
+- Pool + ASP contract IDs per network — [`privacy-contracts.ts`](https://github.com/Blockchain-Oracle/zk-freighter/blob/main/packages/core/src/privacy-contracts.ts), [`networks.ts`](https://github.com/Blockchain-Oracle/zk-freighter/blob/main/packages/core/src/networks.ts)
+
+## 6. Where the bootnode fits
+
+The engine needs historical `getEvents` to rebuild the note Merkle tree and to watch for ASP
+leaf indexing, but public Soroban RPC only retains events briefly. A fetch router transparently
+redirects just those calls to the warmed **bootnode** index, leaving simulate/submit on the
+normal RPC.
+
+- Fetch router — [`nethermind-fetch-router.ts`](https://github.com/Blockchain-Oracle/zk-freighter/blob/main/packages/core/src/nethermind-fetch-router.ts)
+- The service — [`apps/bootnode`](https://github.com/Blockchain-Oracle/zk-freighter/blob/main/apps/bootnode/README.md)

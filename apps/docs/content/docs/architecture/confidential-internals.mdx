@@ -1,0 +1,90 @@
+---
+title: Confidential tokens, end to end
+description: The Noir / UltraHonk mode — Grumpkin commitments, the six circuits, and on-chain verification, with the code.
+---
+
+Confidential Token mode is the second privacy stack (**testnet-only preview**). Balances are
+homomorphic Pedersen commitments on Grumpkin; every spend is authorised by an UltraHonk proof.
+The **circuits are vendored** from the OpenZeppelin / SDF Confidential Tokens preview; the
+**Soroban contract and wallet-side runtime are ZK Freighter's own work**.
+
+- Circuits + full crypto model — [`circuits/README`](https://github.com/Blockchain-Oracle/zk-freighter/blob/main/circuits/README.md)
+- Soroban contract — [`contracts/README`](https://github.com/Blockchain-Oracle/zk-freighter/blob/main/contracts/README.md)
+
+<Mermaid
+  chart={`sequenceDiagram
+    participant U as Wallet (device)
+    participant N as Noir + bb.js (UltraHonk)
+    participant T as confidential-token contract
+    participant V as verifier + auditor registry
+    rect rgba(94,124,250,0.08)
+        Note over U,T: REGISTER
+        U->>N: prove Y=sk·H, vk=Poseidon2(VK,sk,addr_f), PVK=vk·H
+        N-->>U: proof
+        U->>T: register(keys, proof)
+        T->>V: verify_proof(Register)
+    end
+    rect rgba(229,180,92,0.08)
+        Note over U,T: DEPOSIT — public boundary (no proof)
+        U->>T: deposit(amount) then merge
+    end
+    rect rgba(94,124,250,0.08)
+        Note over U,T: TRANSFER — confidential to confidential
+        U->>N: prove conservation + range + dual auditor block
+        N-->>U: proof + commitments
+        U->>T: transfer(payload, proof)
+        T->>V: rebuild 24 public inputs, verify_proof(Transfer)
+    end
+    rect rgba(229,180,92,0.08)
+        Note over U,T: WITHDRAW — public boundary
+        U->>N: prove ownership + 0 ≤ amount ≤ v < 2^127
+        U->>T: withdraw(amount, proof) then pay real tokens out
+    end`}
+/>
+
+## The commitment model in one screen
+
+A balance is never a number on-chain — it is a Pedersen commitment `C = v·G + r·H` on
+**Grumpkin**, a curve whose base field equals BN254's scalar field, so the point math is
+native inside a Noir circuit. Commitments are homomorphic, so the contract advances balances
+(deposit adds `amount·G`, transfers point-add commitments) without ever opening them. Every
+hash goes through one domain-separated Poseidon2 funnel; amounts travel as additive Poseidon2
+masks; each operation also emits an **auditor** ciphertext so a designated auditor — and only
+the auditor — can recover amounts. The full model, key hierarchy, and the domain-tag table are
+in the [circuits README](https://github.com/Blockchain-Oracle/zk-freighter/blob/main/circuits/README.md#the-cryptographic-model).
+
+## Proving (bb.js UltraHonk)
+
+The runtime lazy-imports `@aztec/bb.js` + `@noir-lang/noir_js` so the WASM never enters the
+eager bundle, solves the witness with `Noir.execute`, and builds the proof with
+`UltraHonkBackend`. **Every proof uses the keccak transcript** (`{ keccak: true }`) — the
+on-chain verifier uses a Keccak-256 Fiat–Shamir transcript and rejects bb's default Poseidon2
+one. Off-circuit hashing uses bb's own Poseidon2 so it is byte-identical to the circuits.
+
+- Prover wrapper — [`confidential/prover.ts`](https://github.com/Blockchain-Oracle/zk-freighter/blob/main/packages/core/src/confidential/prover.ts)
+- Grumpkin / keys / encryption (TS mirrors of the circuits, KAT-pinned) — [`grumpkin.ts`](https://github.com/Blockchain-Oracle/zk-freighter/blob/main/packages/core/src/confidential/grumpkin.ts), [`keys.ts`](https://github.com/Blockchain-Oracle/zk-freighter/blob/main/packages/core/src/confidential/keys.ts), [`encrypt.ts`](https://github.com/Blockchain-Oracle/zk-freighter/blob/main/packages/core/src/confidential/encrypt.ts)
+- Per-operation proof clients — [`register.ts`](https://github.com/Blockchain-Oracle/zk-freighter/blob/main/packages/core/src/confidential/register.ts), [`transfer.ts`](https://github.com/Blockchain-Oracle/zk-freighter/blob/main/packages/core/src/confidential/transfer.ts), [`withdraw.ts`](https://github.com/Blockchain-Oracle/zk-freighter/blob/main/packages/core/src/confidential/withdraw.ts)
+- Public-input encoding — [`contract-data.ts`](https://github.com/Blockchain-Oracle/zk-freighter/blob/main/packages/core/src/confidential/contract-data.ts)
+
+The compiled ACIR is loaded from `circuits/target/*.json`; three circuits ship to the apps as
+`public/circuits/circuit_{register,transfer,withdraw}.json`. Verification keys live in
+[`circuits/vks/`](https://github.com/Blockchain-Oracle/zk-freighter/blob/main/circuits/vks/README.md).
+
+## On-chain verification
+
+The contract, not the prover, reassembles the public-input blob from stored account state, the
+registered auditor key, and the prover's outputs — then delegates to the verifier registry via
+`verify_proof(circuit_type, public_inputs, proof)`. Prover-supplied values are checked to be
+canonical BN254 representatives first. Every proof's `addr_f` public input must equal the
+contract's one-shot bound field, which is what stops a proof made for one instance being
+replayed against another.
+
+- Contract — [`contracts/confidential-token/src/lib.rs`](https://github.com/Blockchain-Oracle/zk-freighter/blob/main/contracts/confidential-token/src/lib.rs)
+
+## What's real, and what isn't yet
+
+The TS crypto layer and end-to-end proof paths (register/transfer/withdraw) execute for real
+in the test suite against the actual compiled circuits. Contract logic is unit-tested against a
+real SAC, but with a **mock verifier** — real UltraHonk acceptance is proven on testnet, not in
+the committed suite. Three of six circuits are wired into the apps; the spender-delegation set
+is circuit-complete but not yet exposed. This is unaudited preview software — testnet only.

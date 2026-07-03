@@ -1,0 +1,31 @@
+sequenceDiagram
+    participant U as Wallet (device)
+    participant N as Noir + bb.js<br/>UltraHonk prover
+    participant T as confidential-token<br/>Soroban contract
+    participant V as UltraHonk verifier<br/>+ auditor registry
+    rect rgba(94, 124, 250, 0.14)
+        Note over U,T: REGISTER
+        U->>N: prove Y=sk·H, vk=Poseidon2(VK,sk,addr_f), PVK=vk·H
+        N-->>U: proof
+        U->>T: register(keys, proof)
+        T->>V: verify_proof(Register)
+    end
+    rect rgba(229, 180, 92, 0.14)
+        Note over U,T: DEPOSIT · public boundary (no proof)
+        U->>T: deposit(amount) — pulls SAC in, adds amount·G
+        U->>T: merge — receiving folds into spendable
+    end
+    rect rgba(94, 124, 250, 0.14)
+        Note over U,T: TRANSFER · confidential to confidential
+        U->>N: prove balance conservation + range + dual auditor block
+        N-->>U: proof + commitments (C_spend', C_tx)
+        U->>T: transfer(payload, proof)
+        T->>V: rebuild 24-field public inputs, verify_proof(Transfer)
+        Note over T: recipient scans emitted (R_e, v_tilde, sigma)
+    end
+    rect rgba(229, 180, 92, 0.14)
+        Note over U,T: WITHDRAW · public boundary
+        U->>N: prove ownership + 0 ≤ amount ≤ v < 2^127
+        N-->>U: proof
+        U->>T: withdraw(amount, proof) — verify, then pay real tokens out
+    end

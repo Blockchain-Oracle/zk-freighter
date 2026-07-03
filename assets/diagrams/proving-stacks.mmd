@@ -1,0 +1,20 @@
+flowchart TB
+  subgraph SP["Shielded Pools — flagship (testnet + mainnet)"]
+    direction TB
+    sp_note["Note commitments + nullifiers<br/>(Merkle tree)"]
+    sp_circ["Circom policy_tx_2_2<br/>2-in / 2-out"]
+    sp_prove["Groth16 prover<br/>Rust to WASM, in a Web Worker"]
+    sp_verify["Soroban privacy-pool contract<br/>BN254 + Poseidon2, on-chain"]
+    sp_note --> sp_circ --> sp_prove --> sp_verify
+  end
+  subgraph CT["Confidential Tokens — preview (testnet only)"]
+    direction TB
+    ct_note["Balances as Pedersen commitments<br/>C = v·G + r·H on Grumpkin"]
+    ct_circ["6 Noir circuits + gadgets<br/>circuits/"]
+    ct_prove["UltraHonk prover<br/>bb.js, keccak transcript"]
+    ct_verify["Soroban confidential-token<br/>+ UltraHonk verifier registry"]
+    ct_note --> ct_circ --> ct_prove --> ct_verify
+  end
+  core["packages/core<br/>witness building · key model · submit"]
+  core -.-> sp_prove
+  core -.-> ct_prove

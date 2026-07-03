@@ -4,6 +4,15 @@ Hosted warmed event indexer and narrow RPC for ZK Freighter privacy pools.
 
 The bootnode keeps pool event history available even when a public Stellar RPC drops older events from its short retention window. It warms a Postgres-backed event table from the configured pool deployment ledger, then serves compatible `getEvents` calls from that table once the indexed range is caught up. It only exposes the methods needed by the wallet runtime and only for configured ZK Freighter pool contracts.
 
+## Role in proving
+
+The shielded-pool prover can't build a spend proof without the pool's history. Two flows depend on `getEvents` reaching all the way back to the pool's deployment ledger:
+
+- **Note Merkle tree** — to spend a shielded note, the WASM engine reconstructs the pool's commitment Merkle tree from the pool's historical commitment events, so it can produce the membership path the circuit proves against. A public RPC that has aged those events out silently breaks spends.
+- **Shield access (ASP) indexing** — after inserting a membership leaf, the wallet polls for the `LeafAdded` event to confirm the leaf is indexed before it deposits.
+
+The wallet doesn't route *everything* here — a fetch router in `packages/core` redirects only `getEvents` and `getLatestLedger` to the bootnode and leaves `simulateTransaction` / `sendTransaction` on the normal RPC ([`nethermind-fetch-router.ts`](https://github.com/Blockchain-Oracle/zk-freighter/blob/main/packages/core/src/nethermind-fetch-router.ts)). So the bootnode is a narrow, read-only history shim, not a full node the wallet trusts for submission. See [Shielded pools, end to end](https://github.com/Blockchain-Oracle/zk-freighter/blob/main/apps/docs/content/docs/architecture/shielding-internals.mdx) for where it sits in the full flow.
+
 ## Commands
 
 ```bash

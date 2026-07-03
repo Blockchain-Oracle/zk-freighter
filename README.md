@@ -133,6 +133,19 @@ Circle CCTP V2 moves USDC from Ethereum, Base, Arbitrum, or OP Sepolia to Stella
 
 Auto-shield moves your **public balance** into your shielded balance for you. It is off by default (**Settings → Privacy**), and it shields the balance you already have — not only new arrivals — each time the wallet opens or refreshes. The first shield stays manual (it runs the ~90s shield-access setup), then auto-shield is live. Each deposit is a public boundary, capped at the pool's 100-unit limit, keeps a 5 XLM reserve holdback, and stops with an honest banner on any failure. Full behavior: [docs.zkfreighter.app → How it works → Auto-shield](https://docs.zkfreighter.app/docs/how-it-works/auto-shield).
 
+### Under the hood: the circuits and proofs
+
+Two independent zero-knowledge stacks, both proving on-device and verifying on-chain:
+
+![The two proving stacks](https://raw.githubusercontent.com/Blockchain-Oracle/zk-freighter/main/assets/diagrams/proving-stacks.png)
+
+Rather than clutter this README, the deep dives live next to the code and in the docs:
+
+- **[`circuits/README`](circuits/README.md)** — the six Noir circuits + gadgets, the Grumpkin/Poseidon2 model, and how each proof's constraints work, with links to every `main.nr`.
+- **[`contracts/README`](contracts/README.md)** — the Soroban confidential-token contract: operations, the `addr_f` replay binding, and the commitment storage model.
+- **[Shielded pools, end to end](https://docs.zkfreighter.app/docs/architecture/shielding-internals)** — a shield/transfer/unshield traced from the tap through the Groth16 prover to on-chain verification.
+- **[Confidential tokens, end to end](https://docs.zkfreighter.app/docs/architecture/confidential-internals)** — the Noir/UltraHonk mode walkthrough.
+
 ## Two privacy modes
 
 | | Shielded Pools (flagship) | Confidential Tokens (testnet preview) |
@@ -141,7 +154,7 @@ Auto-shield moves your **public balance** into your shielded balance for you. It
 | Assets | XLM + USDC | wrapped USDC |
 | Proving | Circom/Groth16, Rust→WASM in-browser | Noir + UltraHonk (bb.js) in-browser |
 | Networks | testnet + mainnet (deployed) | testnet only, unaudited preview |
-| Source | Nethermind privacy-pool engine (reused; credited below) | original Soroban SEP-41 wrapper in `contracts/` + `circuits/` |
+| Source | Nethermind privacy-pool engine (reused; credited below) | vendored [`circuits/`](circuits/README.md) (OpenZeppelin/SDF preview) + original Soroban contract in [`contracts/`](contracts/README.md) |
 
 Compliance is user-held on both: selective **disclosure receipts** prove ownership of a specific note to an auditor — read-only, no spend authority, nothing uploaded.
 

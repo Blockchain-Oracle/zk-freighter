@@ -1,0 +1,19 @@
+flowchart TB
+  subgraph LIB["circuits/lib — stellar_confidential_lib"]
+    prim["commit · scalar_mul · ecdh<br/>poseidon_with_domain (funnel)<br/>vk_from_sk · encrypt_* · sponge_squeeze_2"]
+  end
+  subgraph CIRC["The 6 circuits"]
+    reg["register"]
+    wd["withdraw"]
+    tr["transfer"]
+    ss["set_spender"]
+    st["spender_transfer"]
+    rv["revoke_spender"]
+  end
+  LIB --> CIRC
+  CIRC --> bb["bb.js UltraHonk backend<br/>keccak Fiat–Shamir transcript"]
+  bb --> vk["circuits/vks<br/>.vk.json (CI-diffed) · .vk.bin (on-chain)"]
+  bb --> proof["proof + public inputs"]
+  proof --> ver["UltraHonk verifier registry"]
+  vk --> ver
+  ver --> ct["confidential-token contract<br/>stores Pedersen commitments"]
