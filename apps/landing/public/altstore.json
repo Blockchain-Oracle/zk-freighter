@@ -1,0 +1,30 @@
+{
+  "name": "ZK Freighter",
+  "identifier": "app.zkfreighter.source",
+  "sourceURL": "https://zkfreighter.app/altstore.json",
+  "website": "https://zkfreighter.app",
+  "tintColor": "5E7CFA",
+  "apps": [
+    {
+      "name": "ZK Freighter",
+      "bundleIdentifier": "com.zkfreighter.wallet",
+      "developerName": "Blockchain Oracle",
+      "subtitle": "Shielded XLM & USDC payments on Stellar.",
+      "localizedDescription": "A privacy-by-default, self-custody wallet for shielded XLM and USDC payments on Stellar. Zero-knowledge proofs are generated on your device and verified on-chain; balances, amounts, and counterparties stay inside the pool. Shield in, send privately, unshield out — with every public boundary named. Early, unaudited software; testnet recommended.",
+      "iconURL": "https://zkfreighter.app/altstore-icon.png",
+      "tintColor": "5E7CFA",
+      "category": "finance",
+      "versions": [
+        {
+          "version": "1.0",
+          "date": "2026-07-03",
+          "localizedDescription": "First AltStore build. Shielded XLM & USDC on Stellar testnet.",
+          "downloadURL": "https://github.com/Blockchain-Oracle/zk-freighter/releases/latest/download/zk-freighter.ipa",
+          "size": 27392550,
+          "minOSVersion": "15.0"
+        }
+      ]
+    }
+  ],
+  "news": []
+}
