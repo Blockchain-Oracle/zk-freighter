@@ -9,6 +9,9 @@ export default defineConfig({
   vite: () => ({ resolve: { dedupe: ['react', 'react-dom'] }, plugins: [tailwindcss()] }),
   manifest: {
     name: 'ZK Freighter',
+    // Chrome Web Store rejects 0.0.0 (WXT's default from package.json). Plain
+    // dotted digits only — the store version, no "-alpha" suffix.
+    version: '0.1.0',
     description: 'Compact wallet for shielded Stellar payments.',
     icons: {
       16: 'extension-icons/zkf-icon-16.png',
