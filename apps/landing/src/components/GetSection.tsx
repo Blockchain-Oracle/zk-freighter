@@ -1,5 +1,5 @@
 import { QRCodeSVG } from 'qrcode.react'
-import { androidUrl, extensionUrl } from '../links'
+import { androidUrl, extensionUrl, installUrl, iosUrl } from '../links'
 import { BrandIcon, BrowserIcons } from './BrandIcon'
 import { MockScreen } from './MockScreen'
 import { useReveal } from './useReveal'
@@ -19,13 +19,14 @@ export function GetSection() {
               <a className="get-pill" href={androidUrl}>
                 <BrandIcon name="android" /> Get Android
               </a>
-              <span className="get-pill get-pill-soon" title="iOS distribution via TestFlight is being prepared">
-                <BrandIcon name="apple" /> iOS · soon
-              </span>
+              <a className="get-pill" href={iosUrl} title="Open the web wallet in Safari and Add to Home Screen">
+                <BrandIcon name="apple" /> iOS · web app
+              </a>
             </div>
             <small>
               Scan to grab the Android build (APK) — allow “install unknown apps” when your
-              browser asks. Play Store listing is in the works.
+              browser asks. On iPhone, open in Safari and Add to Home Screen.{' '}
+              <a href={installUrl}>Install help ›</a>
             </small>
           </div>
           <div className="get-qr" aria-label="QR code linking to the Android download">

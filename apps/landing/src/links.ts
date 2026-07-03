@@ -1,12 +1,16 @@
-export const appUrl = import.meta.env.VITE_ZKF_APP_URL ?? 'https://app.zkfreighter.dev'
-export const docsUrl = import.meta.env.VITE_ZKF_DOCS_URL ?? 'https://docs.zkfreighter.dev'
+export const appUrl = import.meta.env.VITE_ZKF_APP_URL ?? 'https://app.zkfreighter.app'
+export const docsUrl = import.meta.env.VITE_ZKF_DOCS_URL ?? 'https://docs.zkfreighter.app'
 export const sourceUrl = 'https://github.com/Blockchain-Oracle/zk-freighter'
 export const releasesUrl = import.meta.env.VITE_ZKF_RELEASES_URL ?? `${sourceUrl}/releases`
-/** Direct Android APK download (v0.1.0-alpha release asset). */
+/** Stable Android APK download — always the newest release asset (Obtainium-trackable). */
 export const androidUrl =
   import.meta.env.VITE_ZKF_ANDROID_URL ??
-  `${sourceUrl}/releases/download/v0.1.0-alpha/zk-freighter-android-alpha.apk`
-/** Direct extension zip download (v0.1.0-alpha release asset). */
+  `${sourceUrl}/releases/latest/download/zk-freighter.apk`
+/** Stable extension zip download — always the newest release asset. */
 export const extensionUrl =
   import.meta.env.VITE_ZKF_EXTENSION_URL ??
-  `${sourceUrl}/releases/download/v0.1.0-alpha/zk-freighter-extension-chrome-alpha.zip`
+  `${sourceUrl}/releases/latest/download/zk-freighter-extension-chrome.zip`
+/** iPhone: the web wallet (Add to Home Screen); native TestFlight is a later step. */
+export const iosUrl = import.meta.env.VITE_ZKF_IOS_URL ?? appUrl
+/** Install instructions per platform. */
+export const installUrl = `${docsUrl}/docs/install`

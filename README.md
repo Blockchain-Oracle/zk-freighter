@@ -21,6 +21,16 @@ This is not a general public-purpose wallet, not an "anonymous" or "untraceable"
 
 The hosted web wallet is built against these endpoints (`VITE_ZKF_TESTNET_FUNDING_API_URL`, `VITE_ZKF_TESTNET_BOOTNODE_URL`, `VITE_ZKF_MAINNET_BOOTNODE_URL`). Local builds fall back to public Stellar RPC and localhost services, so nothing below requires the hosted stack.
 
+## Install
+
+Nothing to install to try it — the [web wallet](https://app.zkfreighter.app) runs in any browser. For an app-like experience:
+
+- **Android:** [`zk-freighter.apk`](https://github.com/Blockchain-Oracle/zk-freighter/releases/latest/download/zk-freighter.apk) (or scan the QR on [zkfreighter.app](https://zkfreighter.app)). Allow "install unknown apps" when your browser asks; [Obtainium](https://github.com/ImranR98/Obtainium) auto-updates it.
+- **Browser extension:** [Chrome/Edge zip](https://github.com/Blockchain-Oracle/zk-freighter/releases/latest/download/zk-freighter-extension-chrome.zip) — unzip, `chrome://extensions`, Developer mode, Load unpacked (Chrome Web Store listing pending review).
+- **iPhone:** open [app.zkfreighter.app](https://app.zkfreighter.app) in Safari → Share → Add to Home Screen.
+
+Full per-platform steps: [docs.zkfreighter.app/docs/install](https://docs.zkfreighter.app/docs/install).
+
 ## Quickstart
 
 Prerequisites: **Node 22+** and **pnpm 10** (`corepack enable` or `npm i -g pnpm`). The repo enforces pnpm.
