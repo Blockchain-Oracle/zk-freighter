@@ -1,6 +1,14 @@
-# ZK Freighter
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Blockchain-Oracle/zk-freighter/main/assets/logo.png" width="112" alt="ZK Freighter" />
+</p>
 
-**A privacy-by-default, self-custody wallet for shielded XLM and USDC payments on Stellar.**
+<h1 align="center">ZK Freighter</h1>
+
+<p align="center"><b>A privacy-by-default, self-custody wallet for shielded XLM and USDC payments on Stellar.</b></p>
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Blockchain-Oracle/zk-freighter/main/assets/zkf-home.png" alt="ZK Freighter across web, extension, and mobile" width="960" />
+</p>
 
 Hold it. Send it. Nobody sees it. Zero-knowledge proofs are generated on your own device (~6s in the browser), verified on-chain by Soroban contracts, and your shielded balances, amounts, and counterparties stay inside the pool. The public moments are named every time: **shield-in (deposit)**, **unshield-out (withdraw)**, and **bridge arrivals** are visible on Stellar — everything between them is a shielded transfer.
 
@@ -32,6 +40,10 @@ Nothing to install to try it — the [web wallet](https://app.zkfreighter.app) r
 - **Browser extension:** [download the zip](https://github.com/Blockchain-Oracle/zk-freighter/releases/latest/download/zk-freighter-extension-chrome.zip) — unzip, `chrome://extensions`, Developer mode, Load unpacked. Store listings land after review.
 
 Every build (Android app, iPhone app, extension) also lives on the [**Releases page**](https://github.com/Blockchain-Oracle/zk-freighter/releases/latest). Full per-platform steps: [docs.zkfreighter.app/docs/install](https://docs.zkfreighter.app/docs/install).
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Blockchain-Oracle/zk-freighter/main/assets/zkf-install.png" alt="Install ZK Freighter on mobile and browser" width="960" />
+</p>
 
 ## Quickstart
 
@@ -77,66 +89,21 @@ packages/
   ui/           shared design system (tokens, components, theme)
 circuits/       Noir circuits for Confidential Token mode
 contracts/      Soroban contract for Confidential Token mode (Rust)
-docs/           concept docs, glossary, verified facts, deploy notes
+docs/           concept docs, glossary, submission package, deploy notes
+assets/          logo, screenshots, and rendered architecture diagrams
 ```
 
 ## Architecture
 
 Every app is a thin presentation layer over `@zk-freighter/core`, which owns identity, proving, and transactions:
 
-```mermaid
-flowchart LR
-  subgraph Surfaces
-    web["apps/web"]
-    ext["apps/extension"]
-    mob["apps/mobile"]
-  end
-  subgraph Shared
-    core["packages/core<br/>identity · vault · proofs · tx"]
-    ui["packages/ui<br/>design system"]
-  end
-  subgraph Services
-    boot["apps/bootnode<br/>warmed event index"]
-    fund["apps/funding-api<br/>testnet faucet"]
-  end
-  web --> core
-  ext --> core
-  mob --> core
-  web --> ui
-  ext --> ui
-  mob --> ui
-  core -->|"getEvents (warmed)"| boot
-  core -->|"demo funding"| fund
-  core --> stellar[("Stellar / Soroban<br/>privacy pool contracts")]
-  core --> cctp["Circle CCTP<br/>USDC from Ethereum · Base · Arbitrum · OP"]
-```
+![ZK Freighter monorepo architecture](https://raw.githubusercontent.com/Blockchain-Oracle/zk-freighter/main/assets/diagrams/architecture-monorepo.png)
 
 ### The shielded lifecycle
 
 Proofs are Groth16 (BN254), generated in-browser by a Rust→WASM prover (Nethermind privacy-pool engine), and verified on-chain. Recipients are addressed by a private `zkf1…` receive code (Bech32m), never by their public account:
 
-```mermaid
-sequenceDiagram
-    participant S as Sender wallet
-    participant P as Soroban privacy pool
-    participant R as Recipient wallet
-    rect rgba(229, 180, 92, 0.14)
-        Note over S,P: SHIELD · public boundary
-        S->>P: deposit XLM/USDC + note commitment (visible on-chain)
-    end
-    rect rgba(94, 124, 250, 0.14)
-        Note over S,R: SHIELDED TRANSFER · inside the pool
-        S->>S: generate Groth16 proof on-device (~6s)
-        S->>P: proof + nullifiers + new commitments
-        Note over P: amount & counterparty stay off the public surface
-        R->>P: discover notes via encrypted outputs (zkf1… code)
-    end
-    rect rgba(229, 180, 92, 0.14)
-        Note over R,P: UNSHIELD · public boundary
-        R->>P: withdrawal proof
-        P->>R: XLM/USDC to a public address (visible on-chain)
-    end
-```
+![Shielded payment lifecycle](https://raw.githubusercontent.com/Blockchain-Oracle/zk-freighter/main/assets/diagrams/shielded-lifecycle.png)
 
 First-time shielding also registers a pool-access leaf with the ASP (association-set) contract — setup, confirmation, and the deposit run as one continuous flow in the UI.
 
@@ -144,29 +111,13 @@ First-time shielding also registers a pool-access leaf with the ASP (association
 
 MV3 popups are short-lived, so the heavy WASM prover runs in an offscreen document; the popup stays a fast glance surface:
 
-```mermaid
-flowchart LR
-  popup["Popup / side panel UI"] --> bg["Background service worker"]
-  bg --> off["Offscreen document<br/>WASM prover + pool runtime"]
-  off --> rpc[("Stellar RPC / Horizon")]
-  dapp["dApp page"] -.->|"public-key access & signing<br/>fail closed by design"| bg
-```
+![Extension offscreen prover architecture](https://raw.githubusercontent.com/Blockchain-Oracle/zk-freighter/main/assets/diagrams/extension-offscreen.png)
 
 ### Bridge: USDC in from EVM chains
 
 Circle CCTP V2 moves USDC from Ethereum, Base, Arbitrum, or OP Sepolia to Stellar; the burn is signed by a seed-derived EVM key (no MetaMask needed). Arrival is public; shielding is a separate, explicit step:
 
-```mermaid
-sequenceDiagram
-    participant E as EVM chain (Base / Arbitrum / OP / Ethereum)
-    participant I as Circle Iris attestation
-    participant X as Stellar
-    E->>E: USDC approve + depositForBurn
-    E-->>I: burn message
-    I-->>X: signed attestation
-    X->>X: receiveMessage → USDC mint (public arrival)
-    X->>X: separate shield/deposit into the privacy pool
-```
+![CCTP bridge-then-shield sequence](https://raw.githubusercontent.com/Blockchain-Oracle/zk-freighter/main/assets/diagrams/bridge-cctp.png)
 
 ### Auto-shield (optional)
 
