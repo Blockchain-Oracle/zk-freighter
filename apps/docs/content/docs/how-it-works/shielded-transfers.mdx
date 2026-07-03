@@ -49,24 +49,11 @@ Before your first shield, the wallet registers a membership leaf with the on-cha
 known-good participants and exclude flagged funds. The wallet handles it in one continuous run:
 setup transaction → wait for on-chain indexing → deposit, with live progress.
 
-## Auto-shield (optional)
+## Auto-shield
 
-Auto-shield moves public funds into your shielded balance for you, so you don't have to
-remember to shield after every deposit. It is **off by default** — turn it on in
-**Settings → Privacy**.
-
-- **First shield stays manual.** Auto-shield stays dormant until the wallet has shielded at
-  least once, because the first shield runs the ~90-second [shield-access setup](#first-time-setup-shield-access)
-  and an extra transaction — steps that should never happen silently in the background. After
-  that one manual shield, auto-shield is live for the wallet.
-- **When it runs.** On wallet open/unlock and on balance refresh. Enabling the toggle while the
-  wallet is already open does not fire it retroactively — it runs on the next open.
-- **What it does.** Shields available public XLM/USDC in one step, leaving a small XLM holdback
-  for the account reserve and fees, capping each deposit at the pool limit, one deposit per
-  trigger (with a short cooldown and a per-session cap).
-- **Still a public boundary.** Each auto-shield is a normal deposit — visible on Stellar, and
-  the confirmation banner says so. If a deposit can't complete, the wallet tells you and stops
-  for the session; it never silently retries.
+Auto-shield can move your public balance into your shielded balance for you, so you don't have
+to shield by hand every time. It is off by default. See the dedicated
+[Auto-shield](/docs/how-it-works/auto-shield) page for exactly how it behaves.
 
 ## Change stays private
 

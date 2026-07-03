@@ -68,7 +68,7 @@ export function MobileSettings({ network, address, syncStatus, onNetwork, onSync
       </section>
       <section className="settings-card">
         <label>Auto-shield</label>
-        <p style={{ margin: '0 0 4px', fontSize: 11.5, lineHeight: 1.45, color: 'var(--tx2)' }}>When public funds arrive, automatically move them to your shielded balance. Each deposit is a public transaction (up to 100 per run). You can turn this off anytime.</p>
+        <p style={{ margin: '0 0 4px', fontSize: 11.5, lineHeight: 1.45, color: 'var(--tx2)' }}>Each time you open the wallet, move your available public balance into your shielded balance. Requires one manual shield first. Each deposit is public and shields up to 100 at a time. You can turn this off anytime.</p>
         <div className="settings-segment">
           <button className={autoShieldOn ? 'on' : ''} onClick={() => setAutoShield(true)}>On</button>
           <button className={!autoShieldOn ? 'on' : ''} onClick={() => setAutoShield(false)}>Off</button>

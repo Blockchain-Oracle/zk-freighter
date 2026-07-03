@@ -78,7 +78,7 @@ export function ExtensionSettingsScreen({ status, sendRuntimeMessage, lockWallet
       </SettingBlock>
 
       <SettingBlock label="Auto-shield">
-        <Copy>When public funds arrive, automatically move them to your shielded balance. Each deposit is a public transaction (up to 100 per run). You can turn this off anytime.</Copy>
+        <Copy>Each time you open the wallet, move your available public balance into your shielded balance. Requires one manual shield first. Each deposit is public and shields up to 100 at a time. You can turn this off anytime.</Copy>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
           <ChoiceButton active={autoShieldOn === true} loading={autoShieldOn === null} onClick={() => void setAutoShield(true)}>on</ChoiceButton>
           <ChoiceButton active={autoShieldOn === false} loading={autoShieldOn === null} onClick={() => void setAutoShield(false)}>off</ChoiceButton>

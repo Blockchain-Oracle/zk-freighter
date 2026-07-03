@@ -1,0 +1,71 @@
+---
+title: Auto-shield
+description: Automatically move your public balance into your shielded balance — how it triggers, its limits, and its boundaries.
+---
+
+Auto-shield is an optional convenience: instead of shielding by hand every time, the wallet
+does it for you. It is **off by default**. Turn it on in **Settings → Privacy** (web) or the
+Auto-shield setting on the extension and mobile.
+
+## What it actually does
+
+When auto-shield runs, it looks at your **current public balance** and moves what it can into
+your shielded balance — as a normal shield deposit.
+
+The key thing to understand: it shields **the balance you already have**, not only "incoming"
+funds. There is no background watcher waiting for a new payment to land. Each time the trigger
+fires, it takes a fresh look at your public balance and shields what's available.
+
+## When it triggers
+
+Auto-shield runs **when the wallet opens or unlocks, and when balances refresh** — not
+continuously.
+
+- Turning the toggle **on while the wallet is already open does not fire it retroactively**. It
+  runs on the **next** open/refresh. (This surprises people: enable it, then refresh the wallet,
+  and you'll see it happen with the balance you already had.)
+- It is opportunistic, not a daemon: close the wallet and nothing runs.
+
+## The first shield is always manual
+
+Auto-shield stays dormant until the wallet has shielded **at least once**.
+
+The first-ever shield does extra work — it sets up your **shield access** (registers you with
+the association-set contract), which takes about 90 seconds and submits its own setup
+transaction. Doing that silently in the background is fragile (close the tab mid-setup and it
+orphans), so the first shield must be a deliberate, manual action. After one successful manual
+shield, auto-shield is live for that wallet.
+
+## Limits and safety
+
+Each auto-shield deposit is bounded so it can never strand you or move more than the pool
+allows:
+
+| Guard | Value | Why |
+|---|---|---|
+| **Per-deposit cap** | **100 units** (100 XLM or 100 USDC) | The privacy pool's maximum deposit size. A larger public balance is shielded across several refreshes, 100 at a time. |
+| **XLM holdback** | **5 XLM** kept public | Covers the account's base reserve and transaction fees so auto-shield never empties the account below what Stellar requires. |
+| **Minimum to trigger** | floor per asset (default 5 XLM / 1 USDC of *spendable* balance) | Avoids shielding dust. |
+| **Per-session cap** | 3 deposits per asset | A hard stop so it can't loop. |
+| **Cooldown** | 30 seconds between attempts | Prevents rapid re-fires. |
+
+So for XLM specifically: you need at least ~10 XLM public (5 held back + 5 floor) before
+anything happens, and each deposit shields up to 100, leaving the 5 XLM holdback in place.
+
+## It is still a public boundary
+
+Shielding in is **always** a public moment on Stellar — auto-shield does not change that. Each
+auto-shield is an ordinary deposit transaction, visible on-chain, and the confirmation banner
+says so explicitly. What stays private is everything *after* the deposit, inside the pool.
+
+## When something goes wrong
+
+If an auto-shield can't complete, the wallet **tells you** with a banner carrying the reason,
+and then **stops trying for the session** — it does not silently retry in a way that could
+double-deposit. Your funds are untouched on your public balance; you can shield manually from
+the Shield screen. A failure banner is never hidden by a later success.
+
+## Turning it off
+
+Flip the setting off at any time. It takes effect on the next trigger; anything mid-flight
+finishes, and nothing new starts.

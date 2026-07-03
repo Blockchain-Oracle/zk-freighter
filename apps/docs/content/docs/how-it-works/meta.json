@@ -1,5 +1,5 @@
 {
   "title": "How it works",
   "defaultOpen": true,
-  "pages": ["shielded-transfers", "receive-codes", "disclosure", "bridge"]
+  "pages": ["shielded-transfers", "auto-shield", "receive-codes", "disclosure", "bridge"]
 }

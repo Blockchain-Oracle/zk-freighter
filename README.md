@@ -156,6 +156,10 @@ sequenceDiagram
     X->>X: separate shield/deposit into the privacy pool
 ```
 
+### Auto-shield (optional)
+
+Auto-shield moves your **public balance** into your shielded balance for you. It is off by default (**Settings → Privacy**), and it shields the balance you already have — not only new arrivals — each time the wallet opens or refreshes. The first shield stays manual (it runs the ~90s shield-access setup), then auto-shield is live. Each deposit is a public boundary, capped at the pool's 100-unit limit, keeps a 5 XLM reserve holdback, and stops with an honest banner on any failure. Full behavior: [docs.zkfreighter.app → How it works → Auto-shield](https://docs.zkfreighter.app/docs/how-it-works/auto-shield).
+
 ## Two privacy modes
 
 | | Shielded Pools (flagship) | Confidential Tokens (testnet preview) |

@@ -99,12 +99,12 @@ export function SettingsScreen({ identity, network, receiveCode, onChangeNetwork
             <div style={groupHeader}>PRIVACY</div>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, padding: '16px 18px' }}>
               <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--tx)' }}>Auto-shield incoming funds</div>
+                <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--tx)' }}>Auto-shield public balance</div>
                 <div style={{ marginTop: 4, fontSize: 11.5, lineHeight: 1.55, color: 'var(--tx2)' }}>
-                  When public funds arrive, automatically move them to your shielded balance. Each deposit is a public transaction (up to 100 per run). You can turn this off anytime.
+                  Each time you open the wallet, move your available public balance into your shielded balance. Requires one manual shield first. Each deposit is public and shields up to 100 at a time. You can turn this off anytime.
                 </div>
               </div>
-              <ToggleSwitch on={autoShieldOn} onChange={setAutoShield} label="Auto-shield incoming funds" />
+              <ToggleSwitch on={autoShieldOn} onChange={setAutoShield} label="Auto-shield public balance" />
             </div>
           </div>
 
