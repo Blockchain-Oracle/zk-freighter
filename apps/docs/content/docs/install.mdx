@@ -1,0 +1,54 @@
+---
+title: Install
+description: How to install ZK Freighter on each platform today — extension, Android, iPhone.
+---
+
+ZK Freighter runs on the web, as a browser extension, and as a mobile app. You don't have to
+install anything to use it — the [web wallet](https://app.zkfreighter.app) works in any modern
+browser. The installs below are for a more app-like experience.
+
+> This is early, unaudited software. Testnet is the recommended surface.
+
+## Web wallet — nothing to install
+
+Open **[app.zkfreighter.app](https://app.zkfreighter.app)**. That's the full wallet. On a phone
+you can add it to your home screen (below) to run it full-screen like an app.
+
+## Browser extension — Chrome, Edge, Brave
+
+The extension adds a popup and side panel and can respond to dapp requests.
+
+- **Chrome / Brave / any Chromium browser:** install from the Chrome Web Store listing (link
+  published once the store review completes). Until then, load the packaged build:
+  download the extension zip from the [latest release](https://github.com/Blockchain-Oracle/zk-freighter/releases/latest),
+  unzip it, open `chrome://extensions`, enable **Developer mode**, and choose **Load unpacked**.
+- **Edge:** the same build installs from the Edge Add-ons store (link published after review).
+
+## Android
+
+Install the signed APK directly — no Play Store account needed:
+
+1. On your phone, open the **[latest release](https://github.com/Blockchain-Oracle/zk-freighter/releases/latest)**
+   and download `zk-freighter.apk` (or scan the QR code on [zkfreighter.app](https://zkfreighter.app)).
+2. Android will ask **once** to allow installs from your browser — allow it.
+3. Play Protect may offer to scan the app. This is normal for any app installed outside the Play
+   Store; the wallet requests no SMS, contacts, or accessibility permissions.
+
+**Stay up to date automatically:** install [Obtainium](https://github.com/ImranR98/Obtainium)
+and point it at this repository — it watches for new releases and updates the app for you. (This
+works because every release is signed with the same key.)
+
+## iPhone
+
+Apple does not allow installing a persistent native app without a paid developer account, so
+today there are two honest options:
+
+- **Recommended — use the web app.** Open **[app.zkfreighter.app](https://app.zkfreighter.app)**
+  in Safari, tap the **Share** button, then **Add to Home Screen**. It runs full-screen like a
+  native app, and every wallet feature works (proofs run on-device in the browser).
+- **Sideload the native build (advanced).** With [AltStore](https://altstore.io) or Sideloadly
+  and your own Apple ID you can install the `.ipa` from the latest release. A free Apple ID
+  signature expires after **7 days** and must be refreshed; a paid Apple Developer account
+  removes that limit (and enables TestFlight).
+
+A proper TestFlight link will be added once a Developer account is in place.
