@@ -11,7 +11,9 @@ export function ExtensionOnboarding() {
   const [done, setDone] = useState(() => hasExtensionOnboarded())
 
   if (!done) {
-    return <BrandOnboarding storageKey={extensionOnboardingKey} onComplete={() => setDone(true)} />
+    // The chime lives at the extension root (public dir) — /intro-welcome.mp3
+    // resolves to chrome-extension://<id>/intro-welcome.mp3. Matches web/mobile.
+    return <BrandOnboarding storageKey={extensionOnboardingKey} soundSrc="/intro-welcome.mp3" onComplete={() => setDone(true)} />
   }
 
   return (

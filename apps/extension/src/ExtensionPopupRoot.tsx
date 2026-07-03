@@ -37,7 +37,7 @@ export function ExtensionPopupRoot() {
   if (gate === 'onboard') return <ExtensionFinishSetup />
   return (
     <>
-      <BrandIntro storageKey="zkf.intro.extension.v1" />
+      <BrandIntro storageKey="zkf.intro.extension.v1" soundSrc="/intro-welcome.mp3" />
       <ExtensionApp />
     </>
   )
