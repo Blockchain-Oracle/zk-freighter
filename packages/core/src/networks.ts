@@ -263,9 +263,17 @@ export function getCctpSource(
   return key && cctp ? cctp.evmSources[key] : undefined
 }
 
+// Base and Optimism lead the bridge source list: they have testnet faucets in
+// the wallet, so surfacing them first is the lowest-friction path for users.
+const CCTP_SOURCE_ORDER: readonly CctpSourceKey[] = ['base', 'optimism', 'ethereum', 'arbitrum']
+
 export function getEnabledCctpSources(network: NetworkKey): readonly EvmCctpSourceConfig[] {
   const cctp = NETWORKS[network].cctp
-  return cctp ? Object.values(cctp.evmSources) : []
+  if (!cctp) return []
+  const sources = cctp.evmSources
+  const ordered = CCTP_SOURCE_ORDER.filter((key) => key in sources).map((key) => sources[key])
+  const rest = Object.values(sources).filter((source) => !CCTP_SOURCE_ORDER.includes(source.key))
+  return [...ordered, ...rest]
 }
 
 export function isCctpSourceKey(value: string | undefined): value is CctpSourceKey {

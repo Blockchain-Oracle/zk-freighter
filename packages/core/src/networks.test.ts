@@ -78,16 +78,16 @@ describe('NETWORKS', () => {
 
   it('records verified EVM CCTP source chains', () => {
     expect(getEnabledCctpSources('testnet').map((source) => source.key)).toEqual([
-      'ethereum',
       'base',
-      'arbitrum',
       'optimism',
+      'ethereum',
+      'arbitrum',
     ])
     expect(getEnabledCctpSources('mainnet').map((source) => source.key)).toEqual([
-      'ethereum',
       'base',
-      'arbitrum',
       'optimism',
+      'ethereum',
+      'arbitrum',
     ])
     expect(getCctpSource('testnet', 'ethereum')?.domain).toBe(0)
     expect(getCctpSource('testnet', 'ethereum')?.chainIdHex).toBe('0xaa36a7')
