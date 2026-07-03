@@ -1,5 +1,21 @@
+import { execSync } from 'node:child_process'
 import { defineConfig } from 'wxt'
 import tailwindcss from '@tailwindcss/vite'
+
+// Auto-increment the store version: 0.1.<total commit count>. Every commit bumps
+// the patch, so each rebuilt zip is strictly newer than the last published one
+// and the Chrome Web Store / Edge accept the update (and auto-push it to users)
+// without ever hand-editing a version. Chrome needs plain dotted integers, and
+// a commit count is far under the 65535 per-part limit. Falls back to 0.1.0 when
+// git isn't available (e.g. a source tarball build).
+function extensionVersion(): string {
+  try {
+    const count = execSync('git rev-list --count HEAD', { encoding: 'utf8' }).trim()
+    return /^\d+$/u.test(count) ? `0.1.${count}` : '0.1.0'
+  } catch {
+    return '0.1.0'
+  }
+}
 
 export default defineConfig({
   modules: ['@wxt-dev/module-react'],
@@ -9,9 +25,8 @@ export default defineConfig({
   vite: () => ({ resolve: { dedupe: ['react', 'react-dom'] }, plugins: [tailwindcss()] }),
   manifest: {
     name: 'ZK Freighter',
-    // Chrome Web Store rejects 0.0.0 (WXT's default from package.json). Plain
-    // dotted digits only — the store version, no "-alpha" suffix.
-    version: '0.1.0',
+    // Auto-derived per build (see extensionVersion) so you never hand-bump it.
+    version: extensionVersion(),
     description: 'Compact wallet for shielded Stellar payments.',
     icons: {
       16: 'extension-icons/zkf-icon-16.png',
