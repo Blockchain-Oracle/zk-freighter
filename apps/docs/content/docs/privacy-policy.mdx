@@ -1,0 +1,64 @@
+---
+title: Privacy Policy
+description: What data ZK Freighter does and does not collect. Short, because we collect almost nothing.
+---
+
+_Last updated: 2026-07-03._
+
+ZK Freighter is a self-custody wallet — for the web, as a browser extension, and as a mobile
+app. It is built so that we never see your money or your keys. This policy explains exactly what
+that means.
+
+## We do not collect personal data
+
+- **No account, no sign-up, no email.** You are never asked to identify yourself.
+- **No analytics, telemetry, tracking, ads, or third-party trackers** of any kind.
+- We do not sell, rent, or share any data, because we do not collect any to begin with.
+
+## Your keys and seed phrase never leave your device
+
+Your seed phrase and private keys are generated on your device, encrypted with your password,
+and stored **locally** (browser storage / the app's local storage). They are never transmitted
+to us or anyone else. Zero-knowledge proofs are generated **on your device**; no server sees
+your payment contents.
+
+## What does leave your device
+
+Using any wallet means broadcasting transactions to a public blockchain. Specifically:
+
+- **Stellar network.** Transactions you make are submitted to public Stellar RPC/Horizon and are
+  visible on-chain, exactly as with any Stellar wallet. Shield and unshield deposits are public
+  boundaries by design — the wallet says so each time.
+- **Optional hosted services**, which make the wallet faster but are not required:
+  - **Bootnode** — serves the public event history of the privacy pool contracts. It receives
+    ordinary read requests; it holds no keys and stores no personal data about you.
+  - **Testnet faucet (funding API)** — if you request free testnet funds, it receives the
+    destination address and your IP address **solely to rate-limit abuse**. This is testnet
+    only and involves no real value.
+
+You can point the wallet at your own services or public infrastructure instead; see the
+[Install](/docs/install) and [Services](/docs/architecture/services) pages.
+
+## Browser-extension permissions
+
+The extension requests the minimum it needs:
+
+- **`storage`** — to keep your encrypted vault and settings on your device.
+- **`offscreen`** — to run the WebAssembly zero-knowledge prover off the popup so proving does
+  not block the UI.
+
+It does **not** request access to your browsing history, tabs, or the content of websites, and
+it **fails closed** for external dapp key-access and signing requests — it is a privacy wallet,
+not a general signer.
+
+## Honest limits
+
+ZK Freighter provides **shielded transfers**, not anonymity. Shielding in, unshielding out, and
+bridge arrivals are public on-chain moments, and on-chain analysis (amounts, timing, pool size)
+is always possible. We never claim the wallet is "anonymous," "untraceable," or "fully private."
+It is early, unaudited software; use testnet.
+
+## Changes and contact
+
+If this policy changes, the date above changes with it. Questions or reports:
+[github.com/Blockchain-Oracle/zk-freighter](https://github.com/Blockchain-Oracle/zk-freighter).
