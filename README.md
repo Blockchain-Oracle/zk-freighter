@@ -54,7 +54,7 @@ Nothing to install to try it — the [web wallet](https://app.zkfreighter.app) r
 - **Any phone (iPhone + Android), no install:** [m.zkfreighter.app](https://m.zkfreighter.app) — the responsive mobile app; Share → Add to Home Screen.
 - **Android native:** [`zk-freighter.apk`](https://github.com/Blockchain-Oracle/zk-freighter/releases/latest/download/zk-freighter.apk) (or scan the QR on [zkfreighter.app](https://zkfreighter.app)); allow "install unknown apps"; [Obtainium](https://github.com/ImranR98/Obtainium) auto-updates it.
 - **iPhone native:** in [AltStore](https://altstore.io), add the source `https://zkfreighter.app/altstore.json` and install — or just use the mobile web app above.
-- **Browser extension:** [download the zip](https://github.com/Blockchain-Oracle/zk-freighter/releases/latest/download/zk-freighter-extension-chrome.zip) — unzip, `chrome://extensions`, Developer mode, Load unpacked. Store listings land after review.
+- **Browser extension:** install from the [**Chrome Web Store**](https://chromewebstore.google.com/detail/zk-freighter/gokjpinnopbmpmadbieeojfaehbmnjmd) (works in Chrome and Brave; Edge listing in review) — or [download the zip](https://github.com/Blockchain-Oracle/zk-freighter/releases/latest/download/zk-freighter-extension-chrome.zip) and Load unpacked via `chrome://extensions`.
 
 Every build (Android app, iPhone app, extension) also lives on the [**Releases page**](https://github.com/Blockchain-Oracle/zk-freighter/releases/latest). Full per-platform steps: [docs.zkfreighter.app/docs/install](https://docs.zkfreighter.app/docs/install).
 

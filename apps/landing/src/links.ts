@@ -6,10 +6,12 @@ export const releasesUrl = import.meta.env.VITE_ZKF_RELEASES_URL ?? `${sourceUrl
 export const androidUrl =
   import.meta.env.VITE_ZKF_ANDROID_URL ??
   `${sourceUrl}/releases/latest/download/zk-freighter.apk`
-/** Stable extension zip download — always the newest release asset. */
+/** Chrome Web Store listing — works for Chrome and Brave (Edge listing in review). */
 export const extensionUrl =
   import.meta.env.VITE_ZKF_EXTENSION_URL ??
-  `${sourceUrl}/releases/latest/download/zk-freighter-extension-chrome.zip`
+  'https://chromewebstore.google.com/detail/zk-freighter/gokjpinnopbmpmadbieeojfaehbmnjmd'
+/** Stable extension zip download — manual/unpacked fallback, always the newest release asset. */
+export const extensionZipUrl = `${sourceUrl}/releases/latest/download/zk-freighter-extension-chrome.zip`
 /** Responsive mobile web app (PWA) — the right phone experience for iOS + Android web. */
 export const mobileUrl = import.meta.env.VITE_ZKF_MOBILE_URL ?? 'https://m.zkfreighter.app'
 /** iPhone: open the mobile PWA in Safari and Add to Home Screen (native TestFlight is later). */
