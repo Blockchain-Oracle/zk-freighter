@@ -1,5 +1,5 @@
 import { QRCodeSVG } from 'qrcode.react'
-import { androidUrl, extensionUrl, installUrl, iosUrl } from '../links'
+import { androidUrl, extensionUrl, extensionZipUrl, installUrl, iosUrl } from '../links'
 import { BrandIcon, BrowserIcons } from './BrandIcon'
 import { MockScreen } from './MockScreen'
 import { useReveal } from './useReveal'
@@ -39,19 +39,21 @@ export function GetSection() {
 
         <article className="get-card">
           <div className="get-card-copy">
-            <h3>For browser</h3>
+            <h3>Browser extension</h3>
             <p>Glance, QuickShield, receive — heavy proving promotes to the side panel.</p>
             <div className="get-actions">
               <a className="get-pill" href={extensionUrl}>
                 <BrowserIcons /> Get extension
               </a>
             </div>
-            <ol className="get-steps">
-              <li>Unzip the download</li>
-              <li>Open <code>chrome://extensions</code> · Developer mode</li>
-              <li>Load unpacked · pick the folder — ~30 seconds</li>
-            </ol>
-            <small>Chrome Web Store listing is in the works.</small>
+            <small>
+              One click from the Chrome Web Store — works in Chrome and Brave, auto-updates.
+              Edge listing is in review. Prefer manual?{' '}
+              <a href={extensionZipUrl}>Download the zip</a> and Load unpacked.
+            </small>
+          </div>
+          <div className="get-qr" aria-label="QR code linking to the Chrome Web Store listing">
+            <QRCodeSVG value={extensionUrl} size={92} level="M" marginSize={0} />
           </div>
           <div className="get-shot get-shot-popup">
             <MockScreen src="/mock-extension.html" width={360} height={735} radius={16} />
