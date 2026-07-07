@@ -39,6 +39,12 @@ function endpointFor(network: NetworkKey, env: RuntimeEnv, key: string): string 
     env[`ZKF_${key}`]
 
   if (explicit) return trimTrailingSlash(explicit)
+  // Local-dev convenience ONLY: fall back to a bootnode/funder on localhost when the
+  // app is served from a dev host. Each app's bundler injects `import.meta.env.PROD`,
+  // so writing that literal lets it dead-code-strip this whole block from production
+  // builds — a shipped bundle (extension, web, mobile) must never silently point at a
+  // developer's machine. (Core ships no Vite types of its own, hence the inline cast.)
+  if ((import.meta as ImportMeta & { readonly env: { readonly PROD?: boolean } }).env.PROD) return undefined
   const localHost = localServiceHost()
   if (key === 'FUNDING_API_URL' && network === 'testnet' && localHost) return `http://${localHost}:8787`
   if (key === 'BOOTNODE_URL' && network === 'testnet' && localHost) return `http://${localHost}:8788/rpc`
