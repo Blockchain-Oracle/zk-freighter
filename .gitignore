@@ -14,6 +14,9 @@ dist/
 .env
 .env.*
 !.env.example
+# Extension ships as a static build (not deployed via Coolify), so its production
+# service endpoints must be committed and baked in at build time — public URLs only.
+!apps/extension/.env.production
 
 # OS
 .DS_Store
