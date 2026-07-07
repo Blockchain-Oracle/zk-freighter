@@ -9,6 +9,7 @@ import { describe, expect, it } from 'vitest'
 import { deriveWalletIdentity } from './identity'
 import { getNetworkConfig } from './networks'
 import {
+  bumpInclusionFee,
   signTransactionXdrWithWallet,
   submitPreparedSorobanTx,
   type SorobanSubmitStatus,
@@ -104,6 +105,16 @@ describe('Soroban submit helpers', () => {
     expect(result.hash).toBe(hash)
     expect(submitAttempts).toBe(2)
     expect(statuses.filter((event) => event.stage === 'submit')).toHaveLength(2)
+  })
+
+  it('bumps the tx inclusion fee before signing and is a no-op for zero/negative', () => {
+    const base = Number(BASE_FEE)
+    const bumped = new Transaction(bumpInclusionFee(unsignedTransactionXdr(), 1_000_000), getNetworkConfig('testnet').passphrase)
+    expect(Number(bumped.fee)).toBe(base + 1_000_000)
+
+    const original = unsignedTransactionXdr()
+    expect(bumpInclusionFee(original, 0)).toBe(original)
+    expect(bumpInclusionFee(original, -5)).toBe(original)
   })
 
   it('fails closed for malformed prepared transactions', async () => {

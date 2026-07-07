@@ -15,6 +15,13 @@ const defaultSubmissionAttempts = 3
 const defaultSubmissionRetryDelayMs = 1_000
 const defaultConfirmationPolls = 30
 const defaultPollIntervalMs = 1_000
+// Mainnet has a real fee market, and a shielded withdraw is a heavy Soroban tx
+// (it verifies a Groth16 proof on-chain), so it competes for scarce per-ledger
+// resources. The engine bids close to the inclusion floor, which loses the auction
+// under any load — the tx is accepted, then expires unmined. Add a generous fixed
+// inclusion-fee headroom on mainnet so the heavy tx reliably wins its slot. Testnet
+// is uncongested, so no bump is needed there. 0.1 XLM is negligible per transfer.
+const defaultMainnetInclusionFeeBumpStroops = 1_000_000
 
 export type SorobanSubmitStage = 'sign_auth' | 'sign_tx' | 'submit' | 'confirm'
 
@@ -46,6 +53,9 @@ export interface SubmitPreparedSorobanTxOptions {
   readonly submissionRetryDelayMs?: number
   readonly confirmationPolls?: number
   readonly pollIntervalMs?: number
+  /** Extra stroops added to the tx inclusion fee before signing. Defaults to a
+   *  mainnet-only bump so heavy shielded txs win the fee auction; 0 disables it. */
+  readonly inclusionFeeBumpStroops?: number
 }
 
 function defaultSleep(ms: number): Promise<void> {
@@ -178,6 +188,27 @@ function patchAuthEntries(txXdr: string, signedAuthEntries: readonly string[]): 
   throw new Error('No invokeHostFunction operation found to attach auth entries')
 }
 
+/** Increase the total tx fee (which raises the Soroban inclusion-fee headroom
+ *  above the fixed resource fee) by `extraStroops`, before the envelope is signed.
+ *  Must run pre-signing — changing the fee after signing invalidates the signature. */
+export function bumpInclusionFee(txXdr: string, extraStroops: number): string {
+  if (!Number.isFinite(extraStroops) || extraStroops <= 0) {
+    return txXdr
+  }
+
+  const envelope = xdr.TransactionEnvelope.fromXDR(txXdr, 'base64')
+  const v1 = envelope.v1()
+  if (!v1) {
+    return txXdr
+  }
+
+  const tx = v1.tx()
+  const bumped = Number(tx.fee()) + Math.floor(extraStroops)
+  // Transaction.fee is a uint32; clamp so a large bump can never overflow it.
+  tx.fee(Math.min(bumped, 0xffffffff))
+  return envelope.toXDR('base64')
+}
+
 export function signTransactionXdrWithWallet(
   txXdr: string,
   identity: WalletIdentity,
@@ -226,7 +257,10 @@ export async function submitPreparedSorobanTx(
     )
   }
 
-  const txXdr = walletAuthTotal > 0 ? patchAuthEntries(prepared.txXdr, signedAuthEntries) : prepared.txXdr
+  const patchedTxXdr = walletAuthTotal > 0 ? patchAuthEntries(prepared.txXdr, signedAuthEntries) : prepared.txXdr
+  const inclusionFeeBump = options.inclusionFeeBumpStroops ??
+    (options.network === 'mainnet' ? defaultMainnetInclusionFeeBumpStroops : 0)
+  const txXdr = bumpInclusionFee(patchedTxXdr, inclusionFeeBump)
   emit({ stage: 'sign_tx', message: 'Signing transaction envelope' })
   const signedTxXdr = signTransactionXdrWithWallet(txXdr, options.identity, network.passphrase)
 
